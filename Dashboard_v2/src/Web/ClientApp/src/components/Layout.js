@@ -1,18 +1,22 @@
-import React, { Component } from 'react';
-import { Container } from 'reactstrap';
-import { NavMenu } from './NavMenu';
+import React, { useState } from 'react';
+import Sidebar from './Sidebar';
+import TopBar from './TopBar';
 
-export class Layout extends Component {
-  static displayName = Layout.name;
+export function Layout({ children, pageTitle }) {
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  render() {
-    return (
-      <div>
-        <NavMenu />
-        <Container tag="main">
-          {this.props.children}
-        </Container>
+  return (
+    <div className={`app-shell${sidebarCollapsed ? ' app-shell--collapsed' : ''}`}>
+      <Sidebar
+        collapsed={sidebarCollapsed}
+        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+      />
+      <div className="app-shell__main">
+        <TopBar pageTitle={pageTitle} />
+        <main className="app-shell__content">
+          {children}
+        </main>
       </div>
-    );
-  }
+    </div>
+  );
 }

@@ -12,6 +12,10 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<User> Users => Set<User>();
     public DbSet<UserRole> UserRoles => Set<UserRole>();
     public DbSet<Resource> Resources => Set<Resource>();
+    public DbSet<Publication> Publications => Set<Publication>();
+    public DbSet<PublicationType> PublicationTypes => Set<PublicationType>();
+    public DbSet<Author> Authors => Set<Author>();
+    public DbSet<AuthorPublication> AuthorPublications => Set<AuthorPublication>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

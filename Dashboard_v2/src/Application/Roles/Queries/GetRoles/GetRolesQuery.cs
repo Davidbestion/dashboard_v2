@@ -1,4 +1,4 @@
-using Dashboard_v2.Domain.Enums;
+using RolesEnum = global::Dashboard_v2.Domain.Enums.Roles;
 
 namespace Dashboard_v2.Application.Roles.Queries.GetRoles;
 
@@ -21,8 +21,8 @@ public class GetRolesQueryHandler : IRequestHandler<GetRolesQuery, List<RoleDto>
     /// <summary>Itera el enum Roles, filtra los excluidos, convierte a DTO y ordena alfabéticamente.</summary>
     public Task<List<RoleDto>> Handle(GetRolesQuery request, CancellationToken cancellationToken)
     {
-        var roles = Enum.GetValues<Roles>()
-            .Where(r => r != Roles.None && r != Roles.Superuser)
+        var roles = Enum.GetValues<RolesEnum>()
+            .Where(r => r != RolesEnum.None && r != RolesEnum.Superuser)
             .Select(r => new RoleDto { Name = r.ToString() })
             .OrderBy(r => r.Name)
             .ToList();

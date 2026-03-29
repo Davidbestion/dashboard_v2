@@ -4,6 +4,7 @@ import AppRoutes from './AppRoutes';
 import { Layout } from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
+import ProfesorRoute from './components/ProfesorRoute';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import { AuthProvider } from './contexts/AuthContext';
@@ -19,8 +20,8 @@ export default function App() {
 
         {/* Protected routes — wrapped in dashboard layout */}
         {AppRoutes.map((route, index) => {
-          const { element, pageTitle, adminOnly, ...rest } = route;
-          const Guard = adminOnly ? AdminRoute : ProtectedRoute;
+          const { element, pageTitle, adminOnly, profesorOnly, ...rest } = route;
+          const Guard = adminOnly ? AdminRoute : profesorOnly ? ProfesorRoute : ProtectedRoute;
           return (
             <Route
               key={index}

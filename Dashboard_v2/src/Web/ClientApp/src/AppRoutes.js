@@ -1,6 +1,7 @@
 import DashboardHome from "./pages/DashboardHome";
 import { Counter } from "./components/Counter";
 import UsersPage from "./pages/UsersPage";
+import PublicationsPage from "./pages/PublicationsPage";
 
 const AppRoutes = [
   {
@@ -18,6 +19,12 @@ const AppRoutes = [
     element: <UsersPage />,
     pageTitle: 'Usuarios',
     adminOnly: true,
+  },
+  {
+    path: '/publications',
+    element: <PublicationsPage />,
+    pageTitle: 'Mis publicaciones',
+    profesorOnly: true,
   },
 ];
 

@@ -24,8 +24,8 @@ public class User
 
     // Navegación
     public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
-    // public ICollection<UserScientificCat> UserScientificCats { get; set; } = new List<UserScientificCat>();
-    // public ICollection<UserTeachingCat> UserTeachingCats { get; set; } = new List<UserTeachingCat>();
-    // public ICollection<UserInvestigationCat> UserInvestigationCats { get; set; } = new List<UserInvestigationCat>();
     public ICollection<Resource> OwnedResources { get; set; } = new List<Resource>();
+
+    // Si el usuario es también un autor académico registrado, este es su perfil.
+    public Author? AuthorProfile { get; set; }
 }

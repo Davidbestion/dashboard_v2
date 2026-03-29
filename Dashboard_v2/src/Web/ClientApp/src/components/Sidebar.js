@@ -1,13 +1,26 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
-const navGroups = [
+const baseGroups = [
   {
     heading: 'Principal',
     items: [
       { to: '/', icon: 'bi-house-door', label: 'Inicio', end: true },
     ],
   },
+];
+
+const profesorGroups = [
+  {
+    heading: 'Actividad académica',
+    items: [
+      { to: '/publications', icon: 'bi-journal-text', label: 'Mis publicaciones' },
+    ],
+  },
+];
+
+const adminGroups = [
   {
     heading: 'Administración',
     items: [
@@ -24,6 +37,14 @@ const navGroups = [
 ];
 
 export default function Sidebar({ collapsed, onToggle }) {
+  const { user } = useAuth();
+
+  const groups = [
+    ...baseGroups,
+    ...(user?.role === 'Profesor' ? profesorGroups : []),
+    ...(user?.role === 'Superuser' ? adminGroups : []),
+  ];
+
   return (
     <aside className={`sidebar${collapsed ? ' sidebar--collapsed' : ''}`}>
       <div className="sidebar__brand">
@@ -40,7 +61,7 @@ export default function Sidebar({ collapsed, onToggle }) {
       </div>
 
       <nav className="sidebar__nav">
-        {navGroups.map((group) => (
+        {groups.map((group) => (
           <div key={group.heading} className="sidebar__group">
             {!collapsed && (
               <span className="sidebar__group-heading">{group.heading}</span>

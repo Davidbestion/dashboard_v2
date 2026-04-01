@@ -17,6 +17,9 @@ public interface IApplicationDbContext
     DbSet<Event> Events { get; }
     DbSet<Presentation> Presentations { get; }
     DbSet<AuthorPresentation> AuthorPresentations { get; }
+    DbSet<IndexedPublication> IndexedPublications { get; }
+    DbSet<JournalPublication> JournalPublications { get; }
+    DbSet<JournalGroup1Publication> JournalGroup1Publications { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

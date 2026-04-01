@@ -25,6 +25,18 @@ public record CreatePublicationCommand : IRequest<(Result Result, string? Public
     /// Si el usuario ya tiene perfil de autor se reutiliza; si no, se crea automáticamente.
     /// </summary>
     public List<string> AdditionalUserIds { get; init; } = [];
+
+    // ── Campos de especialización ─────────────────────────────────────────────────────────────
+    /// <summary>Indexación. Obligatorio para tipos Libro, Monografía, Capítulo, Artículo de Divulgación.</summary>
+    public string? Index { get; init; }
+    /// <summary>Nombre de la revista. Obligatorio para tipo Diario.</summary>
+    public string? JournalName { get; init; }
+    /// <summary>Base de datos donde aparece la revista. Obligatorio para tipo Diario.</summary>
+    public string? DataBase { get; init; }
+    /// <summary>Grupo de la revista (1–4). Obligatorio para tipo Diario.</summary>
+    public int? Group { get; init; }
+    /// <summary>Cuartil Scimago. Obligatorio para tipo Diario con grupo 1.</summary>
+    public Cuartil? Cuartil { get; init; }
 }
 
 public class CreatePublicationCommandHandler : IRequestHandler<CreatePublicationCommand, (Result Result, string? PublicationId)>
@@ -44,6 +56,21 @@ public class CreatePublicationCommandHandler : IRequestHandler<CreatePublication
         // Validar que el tipo de publicación es válido
         if (!Enum.IsDefined(typeof(PublicationType), request.PublicationType))
             return (Result.Failure(["Tipo de publicación no válido."]), null);
+
+        // Validar campos de especialización
+        if (request.PublicationType == PublicationType.Diario)
+        {
+            if (string.IsNullOrWhiteSpace(request.JournalName) ||
+                string.IsNullOrWhiteSpace(request.DataBase) ||
+                request.Group is null or < 1 or > 4)
+                return (Result.Failure(["Datos de la revista son obligatorios: nombre, base de datos y grupo (1–4)."]), null);
+            if (request.Group == 1 && (request.Cuartil is null || !Enum.IsDefined(typeof(Cuartil), request.Cuartil.Value)))
+                return (Result.Failure(["Cuartil es obligatorio para revistas de grupo 1."]), null);
+        }
+        else if (string.IsNullOrWhiteSpace(request.Index))
+        {
+            return (Result.Failure(["La indexación es obligatoria para este tipo de publicación."]), null);
+        }
 
         // Obtener o crear el perfil de autor del usuario actual
         var author = await _context.Authors
@@ -124,6 +151,29 @@ public class CreatePublicationCommandHandler : IRequestHandler<CreatePublication
 
             if (publication.AuthorPublications.All(ap => ap.AuthorId != coAuthor.Id))
                 publication.AuthorPublications.Add(new AuthorPublication { AuthorId = coAuthor.Id });
+        }
+
+        // Agregar especialización según el tipo
+        if (request.PublicationType == PublicationType.Diario)
+        {
+            publication.JournalPublication = new JournalPublication
+            {
+                PublicationId = publication.Id,
+                Name = request.JournalName!.Trim(),
+                DataBase = request.DataBase!.Trim(),
+                Group = request.Group!.Value,
+                JournalGroup1Publication = request.Group == 1
+                    ? new JournalGroup1Publication { PublicationId = publication.Id, Cuartil = request.Cuartil!.Value }
+                    : null
+            };
+        }
+        else
+        {
+            publication.IndexedPublication = new IndexedPublication
+            {
+                PublicationId = publication.Id,
+                Index = request.Index!.Trim()
+            };
         }
 
         _context.Publications.Add(publication);

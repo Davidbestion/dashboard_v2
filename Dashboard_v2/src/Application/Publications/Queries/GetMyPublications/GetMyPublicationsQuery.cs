@@ -50,7 +50,20 @@ public class GetMyPublicationsQueryHandler : IRequestHandler<GetMyPublicationsQu
                         Name = ap.Author.Name,
                         UserId = ap.Author.UserId
                     })
-                    .ToList()
+                    .ToList(),
+                IndexedPublication = p.IndexedPublication == null ? null : new IndexedPublicationDto
+                {
+                    Index = p.IndexedPublication.Index
+                },
+                JournalPublication = p.JournalPublication == null ? null : new JournalPublicationDto
+                {
+                    Name = p.JournalPublication.Name,
+                    DataBase = p.JournalPublication.DataBase,
+                    Group = p.JournalPublication.Group,
+                    Cuartil = p.JournalPublication.JournalGroup1Publication != null
+                        ? (int?)p.JournalPublication.JournalGroup1Publication.Cuartil
+                        : null
+                }
             })
             .OrderBy(p => p.Title)
             .ToListAsync(cancellationToken);

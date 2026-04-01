@@ -25,6 +25,13 @@ public record UpdatePublicationCommand : IRequest<Result>
     /// Si el usuario ya tiene perfil de autor se reutiliza; si no, se crea automáticamente.
     /// </summary>
     public List<string> AdditionalUserIds { get; init; } = [];
+
+    // ── Campos de especialización ─────────────────────────────────────────────────────────────
+    public string? Index { get; init; }
+    public string? JournalName { get; init; }
+    public string? DataBase { get; init; }
+    public int? Group { get; init; }
+    public Cuartil? Cuartil { get; init; }
 }
 
 public class UpdatePublicationCommandHandler : IRequestHandler<UpdatePublicationCommand, Result>
@@ -60,6 +67,9 @@ public class UpdatePublicationCommandHandler : IRequestHandler<UpdatePublication
 
         var publication = await _context.Publications
             .Include(p => p.AuthorPublications)
+            .Include(p => p.JournalPublication)
+                .ThenInclude(jp => jp!.JournalGroup1Publication)
+            .Include(p => p.IndexedPublication)
             .FirstOrDefaultAsync(p => p.Id == request.Id, cancellationToken);
 
         if (publication == null)
@@ -73,6 +83,89 @@ public class UpdatePublicationCommandHandler : IRequestHandler<UpdatePublication
         publication.PublicationData = request.PublicationData;
         publication.PublicationType = request.PublicationType;
         publication.UrlDoi = string.IsNullOrWhiteSpace(request.UrlDoi) ? null : request.UrlDoi.Trim();
+
+        // ── Actualizar especialización ────────────────────────────────────────────────────────
+        var isNowJournal = request.PublicationType == PublicationType.Diario;
+        var wasJournal = publication.JournalPublication != null;
+
+        if (isNowJournal)
+        {
+            if (string.IsNullOrWhiteSpace(request.JournalName) ||
+                string.IsNullOrWhiteSpace(request.DataBase) ||
+                request.Group is null or < 1 or > 4)
+                return Result.Failure(["Datos de la revista son obligatorios: nombre, base de datos y grupo (1–4)."]);
+            if (request.Group == 1 && (request.Cuartil is null || !Enum.IsDefined(typeof(Cuartil), request.Cuartil.Value)))
+                return Result.Failure(["Cuartil es obligatorio para revistas de grupo 1."]);
+        }
+        else if (string.IsNullOrWhiteSpace(request.Index))
+        {
+            return Result.Failure(["La indexación es obligatoria para este tipo de publicación."]);
+        }
+
+        if (wasJournal && !isNowJournal)
+        {
+            if (publication.JournalPublication!.JournalGroup1Publication != null)
+                _context.JournalGroup1Publications.Remove(publication.JournalPublication.JournalGroup1Publication);
+            _context.JournalPublications.Remove(publication.JournalPublication);
+            publication.JournalPublication = null;
+        }
+        else if (!wasJournal && isNowJournal && publication.IndexedPublication != null)
+        {
+            _context.IndexedPublications.Remove(publication.IndexedPublication);
+            publication.IndexedPublication = null;
+        }
+
+        if (isNowJournal)
+        {
+            if (publication.JournalPublication == null)
+            {
+                publication.JournalPublication = new JournalPublication
+                {
+                    PublicationId = publication.Id,
+                    Name = request.JournalName!.Trim(),
+                    DataBase = request.DataBase!.Trim(),
+                    Group = request.Group!.Value
+                };
+            }
+            else
+            {
+                publication.JournalPublication.Name = request.JournalName!.Trim();
+                publication.JournalPublication.DataBase = request.DataBase!.Trim();
+                publication.JournalPublication.Group = request.Group!.Value;
+            }
+
+            if (request.Group == 1)
+            {
+                if (publication.JournalPublication.JournalGroup1Publication == null)
+                {
+                    var g1 = new JournalGroup1Publication { PublicationId = publication.Id, Cuartil = request.Cuartil!.Value };
+                    publication.JournalPublication.JournalGroup1Publication = g1;
+                    _context.JournalGroup1Publications.Add(g1);
+                }
+                else
+                {
+                    publication.JournalPublication.JournalGroup1Publication.Cuartil = request.Cuartil!.Value;
+                }
+            }
+            else if (publication.JournalPublication.JournalGroup1Publication != null)
+            {
+                _context.JournalGroup1Publications.Remove(publication.JournalPublication.JournalGroup1Publication);
+                publication.JournalPublication.JournalGroup1Publication = null;
+            }
+        }
+        else
+        {
+            if (publication.IndexedPublication == null)
+            {
+                var indexed = new IndexedPublication { PublicationId = publication.Id, Index = request.Index!.Trim() };
+                publication.IndexedPublication = indexed;
+                _context.IndexedPublications.Add(indexed);
+            }
+            else
+            {
+                publication.IndexedPublication.Index = request.Index!.Trim();
+            }
+        }
 
         // Reemplazar coautores: conservar solo el autor actual y añadir los nuevos
         var removedAuthorIds = publication.AuthorPublications

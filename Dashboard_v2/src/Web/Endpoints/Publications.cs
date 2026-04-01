@@ -99,7 +99,12 @@ public class Publications : EndpointGroupBase
             UrlDoi = body.UrlDoi,
             AdditionalAuthorIds = body.AdditionalAuthorIds ?? [],
             AdditionalAuthorNames = body.AdditionalAuthorNames ?? [],
-            AdditionalUserIds = body.AdditionalUserIds ?? []
+            AdditionalUserIds = body.AdditionalUserIds ?? [],
+            Index = body.Index,
+            JournalName = body.JournalName,
+            DataBase = body.DataBase,
+            Group = body.Group,
+            Cuartil = body.Cuartil.HasValue ? (Cuartil)body.Cuartil.Value : null
         });
 
         if (!result.Succeeded)
@@ -127,4 +132,10 @@ public record UpdatePublicationBody(
     string? UrlDoi,
     List<string>? AdditionalAuthorIds,
     List<string>? AdditionalAuthorNames,
-    List<string>? AdditionalUserIds);
+    List<string>? AdditionalUserIds,
+    // Especialización
+    string? Index,
+    string? JournalName,
+    string? DataBase,
+    int? Group,
+    int? Cuartil);

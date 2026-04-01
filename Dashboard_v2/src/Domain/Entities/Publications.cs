@@ -12,4 +12,8 @@ public class Publication
 
     // Navegación: autores de esta publicación
     public ICollection<AuthorPublication> AuthorPublications { get; set; } = new List<AuthorPublication>();
+
+    // Especializaciones (solo una estará presente según PublicationType)
+    public IndexedPublication? IndexedPublication { get; set; }
+    public JournalPublication? JournalPublication { get; set; }
 }

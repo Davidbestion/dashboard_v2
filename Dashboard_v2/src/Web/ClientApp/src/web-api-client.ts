@@ -2668,6 +2668,8 @@ export class PublicationDto implements IPublicationDto {
     urlDoi?: string | undefined;
     publicationType?: number;
     authors?: AuthorDto[];
+    indexedPublication?: IndexedPublicationDto | undefined;
+    journalPublication?: JournalPublicationDto | undefined;
 
     constructor(data?: IPublicationDto) {
         if (data) {
@@ -2690,6 +2692,8 @@ export class PublicationDto implements IPublicationDto {
                 for (let item of _data["authors"])
                     this.authors!.push(AuthorDto.fromJS(item));
             }
+            this.indexedPublication = _data["indexedPublication"] ? IndexedPublicationDto.fromJS(_data["indexedPublication"]) : undefined as any;
+            this.journalPublication = _data["journalPublication"] ? JournalPublicationDto.fromJS(_data["journalPublication"]) : undefined as any;
         }
     }
 
@@ -2712,6 +2716,8 @@ export class PublicationDto implements IPublicationDto {
             for (let item of this.authors)
                 data["authors"].push(item ? item.toJSON() : undefined as any);
         }
+        data["indexedPublication"] = this.indexedPublication ? this.indexedPublication.toJSON() : undefined as any;
+        data["journalPublication"] = this.journalPublication ? this.journalPublication.toJSON() : undefined as any;
         return data;
     }
 }
@@ -2723,6 +2729,8 @@ export interface IPublicationDto {
     urlDoi?: string | undefined;
     publicationType?: number;
     authors?: AuthorDto[];
+    indexedPublication?: IndexedPublicationDto | undefined;
+    journalPublication?: JournalPublicationDto | undefined;
 }
 
 export class AuthorDto implements IAuthorDto {
@@ -2769,6 +2777,90 @@ export interface IAuthorDto {
     userId?: string | undefined;
 }
 
+export class IndexedPublicationDto implements IIndexedPublicationDto {
+    index?: string;
+
+    constructor(data?: IIndexedPublicationDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.index = _data["index"];
+        }
+    }
+
+    static fromJS(data: any): IndexedPublicationDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new IndexedPublicationDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["index"] = this.index;
+        return data;
+    }
+}
+
+export interface IIndexedPublicationDto {
+    index?: string;
+}
+
+export class JournalPublicationDto implements IJournalPublicationDto {
+    name?: string;
+    dataBase?: string;
+    group?: number;
+    cuartil?: number | undefined;
+
+    constructor(data?: IJournalPublicationDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.name = _data["name"];
+            this.dataBase = _data["dataBase"];
+            this.group = _data["group"];
+            this.cuartil = _data["cuartil"];
+        }
+    }
+
+    static fromJS(data: any): JournalPublicationDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new JournalPublicationDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["name"] = this.name;
+        data["dataBase"] = this.dataBase;
+        data["group"] = this.group;
+        data["cuartil"] = this.cuartil;
+        return data;
+    }
+}
+
+export interface IJournalPublicationDto {
+    name?: string;
+    dataBase?: string;
+    group?: number;
+    cuartil?: number | undefined;
+}
+
 export class CreatePublicationCommand implements ICreatePublicationCommand {
     title?: string;
     publicationData?: string;
@@ -2777,6 +2869,11 @@ export class CreatePublicationCommand implements ICreatePublicationCommand {
     additionalAuthorIds?: string[];
     additionalAuthorNames?: string[];
     additionalUserIds?: string[];
+    index?: string | undefined;
+    journalName?: string | undefined;
+    dataBase?: string | undefined;
+    group?: number | undefined;
+    cuartil?: Cuartil | undefined;
 
     constructor(data?: ICreatePublicationCommand) {
         if (data) {
@@ -2808,6 +2905,11 @@ export class CreatePublicationCommand implements ICreatePublicationCommand {
                 for (let item of _data["additionalUserIds"])
                     this.additionalUserIds!.push(item);
             }
+            this.index = _data["index"];
+            this.journalName = _data["journalName"];
+            this.dataBase = _data["dataBase"];
+            this.group = _data["group"];
+            this.cuartil = _data["cuartil"];
         }
     }
 
@@ -2839,6 +2941,11 @@ export class CreatePublicationCommand implements ICreatePublicationCommand {
             for (let item of this.additionalUserIds)
                 data["additionalUserIds"].push(item);
         }
+        data["index"] = this.index;
+        data["journalName"] = this.journalName;
+        data["dataBase"] = this.dataBase;
+        data["group"] = this.group;
+        data["cuartil"] = this.cuartil;
         return data;
     }
 }
@@ -2851,6 +2958,11 @@ export interface ICreatePublicationCommand {
     additionalAuthorIds?: string[];
     additionalAuthorNames?: string[];
     additionalUserIds?: string[];
+    index?: string | undefined;
+    journalName?: string | undefined;
+    dataBase?: string | undefined;
+    group?: number | undefined;
+    cuartil?: Cuartil | undefined;
 }
 
 export enum PublicationType {
@@ -2861,6 +2973,13 @@ export enum PublicationType {
     Artículo_de_Divulgación = 4,
 }
 
+export enum Cuartil {
+    Q1 = 1,
+    Q2 = 2,
+    Q3 = 3,
+    Q4 = 4,
+}
+
 export class UpdatePublicationBody implements IUpdatePublicationBody {
     title?: string;
     publicationData?: string;
@@ -2869,6 +2988,11 @@ export class UpdatePublicationBody implements IUpdatePublicationBody {
     additionalAuthorIds?: string[] | undefined;
     additionalAuthorNames?: string[] | undefined;
     additionalUserIds?: string[] | undefined;
+    index?: string | undefined;
+    journalName?: string | undefined;
+    dataBase?: string | undefined;
+    group?: number | undefined;
+    cuartil?: number | undefined;
 
     constructor(data?: IUpdatePublicationBody) {
         if (data) {
@@ -2900,6 +3024,11 @@ export class UpdatePublicationBody implements IUpdatePublicationBody {
                 for (let item of _data["additionalUserIds"])
                     this.additionalUserIds!.push(item);
             }
+            this.index = _data["index"];
+            this.journalName = _data["journalName"];
+            this.dataBase = _data["dataBase"];
+            this.group = _data["group"];
+            this.cuartil = _data["cuartil"];
         }
     }
 
@@ -2931,6 +3060,11 @@ export class UpdatePublicationBody implements IUpdatePublicationBody {
             for (let item of this.additionalUserIds)
                 data["additionalUserIds"].push(item);
         }
+        data["index"] = this.index;
+        data["journalName"] = this.journalName;
+        data["dataBase"] = this.dataBase;
+        data["group"] = this.group;
+        data["cuartil"] = this.cuartil;
         return data;
     }
 }
@@ -2943,6 +3077,11 @@ export interface IUpdatePublicationBody {
     additionalAuthorIds?: string[] | undefined;
     additionalAuthorNames?: string[] | undefined;
     additionalUserIds?: string[] | undefined;
+    index?: string | undefined;
+    journalName?: string | undefined;
+    dataBase?: string | undefined;
+    group?: number | undefined;
+    cuartil?: number | undefined;
 }
 
 export class RoleDto implements IRoleDto {

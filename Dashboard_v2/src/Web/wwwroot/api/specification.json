@@ -1640,6 +1640,22 @@
             "items": {
               "$ref": "#/components/schemas/AuthorDto"
             }
+          },
+          "indexedPublication": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/IndexedPublicationDto"
+              }
+            ]
+          },
+          "journalPublication": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/JournalPublicationDto"
+              }
+            ]
           }
         }
       },
@@ -1655,6 +1671,36 @@
           },
           "userId": {
             "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "IndexedPublicationDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "index": {
+            "type": "string"
+          }
+        }
+      },
+      "JournalPublicationDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "dataBase": {
+            "type": "string"
+          },
+          "group": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "cuartil": {
+            "type": "integer",
+            "format": "int32",
             "nullable": true
           }
         }
@@ -1693,6 +1739,31 @@
             "items": {
               "type": "string"
             }
+          },
+          "index": {
+            "type": "string",
+            "nullable": true
+          },
+          "journalName": {
+            "type": "string",
+            "nullable": true
+          },
+          "dataBase": {
+            "type": "string",
+            "nullable": true
+          },
+          "group": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "cuartil": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Cuartil"
+              }
+            ]
           }
         }
       },
@@ -1708,6 +1779,22 @@
         ],
         "enum": [
           0,
+          1,
+          2,
+          3,
+          4
+        ]
+      },
+      "Cuartil": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "Q1",
+          "Q2",
+          "Q3",
+          "Q4"
+        ],
+        "enum": [
           1,
           2,
           3,
@@ -1752,6 +1839,28 @@
             "items": {
               "type": "string"
             }
+          },
+          "index": {
+            "type": "string",
+            "nullable": true
+          },
+          "journalName": {
+            "type": "string",
+            "nullable": true
+          },
+          "dataBase": {
+            "type": "string",
+            "nullable": true
+          },
+          "group": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "cuartil": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
           }
         }
       },

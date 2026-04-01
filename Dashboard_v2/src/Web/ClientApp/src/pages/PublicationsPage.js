@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Card, CardBody, CardHeader,
+  Nav, NavItem, NavLink,
+  TabContent, TabPane,
   Table, Button, Badge,
   Spinner, Alert,
   Modal, ModalHeader, ModalBody, ModalFooter,
@@ -40,6 +42,13 @@ const EMPTY_FORM = {
   publicationData: '',
   urlDoi: '',
   publicationType: 0,
+  // Indexadas (tipos 1-4)
+  index: '',
+  // Revista (tipo 0)
+  journalName: '',
+  dataBase: '',
+  group: '',
+  cuartil: '',
 };
 
 export default function PublicationsPage() {
@@ -61,6 +70,9 @@ export default function PublicationsPage() {
   const [toDelete, setToDelete] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState('');
+  // Pestañas
+  const [activeType, setActiveType] = useState(0);
+  const [activeGroup, setActiveGroup] = useState(1);
   // Tag-picker de coautores
   const [coauthorTags, setCoauthorTags] = useState([]); // [{id?, name}]
   const [coauthorInput, setCoauthorInput] = useState('');
@@ -88,9 +100,13 @@ export default function PublicationsPage() {
 
   // ── helpers de formulario ──────────────────────────────────────────────────
 
-  function openCreate() {
+  function openCreate(typeVal, groupVal) {
     setEditing(null);
-    setForm({ ...EMPTY_FORM, publicationType: types[0]?.value ?? 0 });
+    setForm({
+      ...EMPTY_FORM,
+      publicationType: typeVal ?? types[0]?.value ?? 0,
+      group: groupVal != null ? String(groupVal) : '',
+    });
     setFormError('');
     setCoauthorTags([]);
     setCoauthorInput('');
@@ -105,6 +121,13 @@ export default function PublicationsPage() {
       publicationData: pub.publicationData,
       urlDoi: pub.urlDoi ?? '',
       publicationType: pub.publicationType,
+      // Indexadas
+      index: pub.indexedPublication?.index ?? '',
+      // Revista
+      journalName: pub.journalPublication?.name ?? '',
+      dataBase: pub.journalPublication?.dataBase ?? '',
+      group: pub.journalPublication?.group ?? '',
+      cuartil: pub.journalPublication?.cuartil ?? '',
     });
     setFormError('');
     // Pre-cargar coautores (todos excepto el usuario actual)
@@ -145,6 +168,12 @@ export default function PublicationsPage() {
             additionalAuthorIds: coauthorTags.filter(t => t.type === 'author').map(t => t.id),
             additionalAuthorNames: coauthorTags.filter(t => !t.type).map(t => t.name),
             additionalUserIds: coauthorTags.filter(t => t.type === 'user').map(t => t.id),
+            // Especialización
+            index: parseInt(form.publicationType, 10) !== 0 ? form.index || null : null,
+            journalName: parseInt(form.publicationType, 10) === 0 ? form.journalName || null : null,
+            dataBase: parseInt(form.publicationType, 10) === 0 ? form.dataBase || null : null,
+            group: parseInt(form.publicationType, 10) === 0 ? parseInt(form.group, 10) || null : null,
+            cuartil: parseInt(form.publicationType, 10) === 0 && parseInt(form.group, 10) === 1 ? parseInt(form.cuartil, 10) || null : null,
           }),
         });
       } else {
@@ -159,6 +188,12 @@ export default function PublicationsPage() {
             additionalAuthorIds: coauthorTags.filter(t => t.type === 'author').map(t => t.id),
             additionalAuthorNames: coauthorTags.filter(t => !t.type).map(t => t.name),
             additionalUserIds: coauthorTags.filter(t => t.type === 'user').map(t => t.id),
+            // Especialización
+            index: parseInt(form.publicationType, 10) !== 0 ? form.index || null : null,
+            journalName: parseInt(form.publicationType, 10) === 0 ? form.journalName || null : null,
+            dataBase: parseInt(form.publicationType, 10) === 0 ? form.dataBase || null : null,
+            group: parseInt(form.publicationType, 10) === 0 ? parseInt(form.group, 10) || null : null,
+            cuartil: parseInt(form.publicationType, 10) === 0 && parseInt(form.group, 10) === 1 ? parseInt(form.cuartil, 10) || null : null,
           }),
         });
       }
@@ -247,85 +282,186 @@ export default function PublicationsPage() {
 
   // ── render ─────────────────────────────────────────────────────────────────
 
+  const pubsByType = (typeVal) => publications.filter(p => p.publicationType === typeVal);
+  const journalByGroup = (g) => publications.filter(p => p.publicationType === 0 && p.journalPublication?.group === g);
+
+  const authorsList = (authors) => authors.map((a, i) => (
+    <span key={a.id}>
+      {i > 0 && <span className="text-muted me-1">,</span>}
+      {a.name}
+      {a.userId && (
+        <i className="bi bi-person-check ms-1 text-success" title="Usuario registrado"></i>
+      )}
+    </span>
+  ));
+
+  const actionBtns = (pub) => (
+    <>
+      <Button color="outline-primary" size="sm" className="me-1" onClick={() => openEdit(pub)}>
+        <i className="bi bi-pencil"></i>
+      </Button>
+      <Button color="outline-danger" size="sm" onClick={() => openDelete(pub)}>
+        <i className="bi bi-trash"></i>
+      </Button>
+    </>
+  );
+
+  const urlCell = (urlDoi) => urlDoi
+    ? <a href={urlDoi} target="_blank" rel="noopener noreferrer"
+         className="text-truncate d-block" style={{ maxWidth: 170 }} title={urlDoi}>{urlDoi}</a>
+    : <span className="text-muted">—</span>;
+
   return (
     <>
       <Card className="shadow-sm">
-        <CardHeader className="d-flex justify-content-between align-items-center">
-          <strong>Mis publicaciones</strong>
-          <Button color="primary" size="sm" onClick={openCreate} disabled={loading}>
-            <i className="bi bi-plus-lg me-1"></i> Nueva publicación
-          </Button>
-        </CardHeader>
+        <CardHeader><strong>Mis publicaciones</strong></CardHeader>
         <CardBody>
           {loading && <div className="text-center py-4"><Spinner /></div>}
           {error && <Alert color="danger">{error}</Alert>}
 
-          {!loading && !error && publications.length === 0 && (
-            <p className="text-muted text-center py-3">
-              Aún no tienes publicaciones registradas.
-            </p>
-          )}
-
-          {!loading && publications.length > 0 && (
-            <Table hover responsive size="sm">
-              <thead>
-                <tr>
-                  <th>Título</th>
-                  <th>Tipo</th>
-                  <th>URL / DOI</th>
-                  <th>Autores</th>
-                  <th style={{ width: 130 }}></th>
-                </tr>
-              </thead>
-              <tbody>
-                {publications.map(pub => (
-                  <tr key={pub.id}>
-                    <td>{pub.title}</td>
-                    <td>
-                      <Badge color="secondary" pill>
-                        {types.find(t => t.value === pub.publicationType)?.name ?? pub.publicationType}
+          {!loading && !error && (
+            <>
+              {/* ── Pestañas de tipo ── */}
+              <Nav tabs>
+                {types.map(t => (
+                  <NavItem key={t.value}>
+                    <NavLink
+                      href="#"
+                      active={activeType === t.value}
+                      onClick={e => { e.preventDefault(); setActiveType(t.value); }}
+                    >
+                      {t.name}{' '}
+                      <Badge color="secondary" pill style={{ fontSize: '0.7em' }}>
+                        {pubsByType(t.value).length}
                       </Badge>
-                    </td>
-                    <td style={{ maxWidth: 200 }}>
-                      {pub.urlDoi
-                        ? <a href={pub.urlDoi} target="_blank" rel="noopener noreferrer"
-                             className="text-truncate d-block" style={{ maxWidth: 190 }}
-                             title={pub.urlDoi}>{pub.urlDoi}</a>
-                        : <span className="text-muted">—</span>}
-                    </td>
-                    <td>
-                      {pub.authors.map((a, i) => (
-                        <span key={a.id}>
-                          {i > 0 && <span className="text-muted me-1">,</span>}
-                          {a.name}
-                          {a.userId && (
-                            <i className="bi bi-person-check ms-1 text-success"
-                               title="Usuario registrado"></i>
-                          )}
-                        </span>
-                      ))}
-                    </td>
-                    <td className="text-end">
-                      <Button
-                        color="outline-primary"
-                        size="sm"
-                        className="me-1"
-                        onClick={() => openEdit(pub)}
-                      >
-                        <i className="bi bi-pencil"></i>
-                      </Button>
-                      <Button
-                        color="outline-danger"
-                        size="sm"
-                        onClick={() => openDelete(pub)}
-                      >
-                        <i className="bi bi-trash"></i>
-                      </Button>
-                    </td>
-                  </tr>
+                    </NavLink>
+                  </NavItem>
                 ))}
-              </tbody>
-            </Table>
+              </Nav>
+
+              <TabContent activeTab={String(activeType)} className="border border-top-0 rounded-bottom">
+
+                {/* ── Pestaña Journal (tipo 0) ── */}
+                <TabPane tabId="0" className="p-3">
+                  <div className="d-flex align-items-center mb-3">
+                    <Nav tabs className="flex-grow-1">
+                      {[1, 2, 3, 4].map(g => (
+                        <NavItem key={g}>
+                          <NavLink
+                            href="#"
+                            active={activeGroup === g}
+                            onClick={e => { e.preventDefault(); setActiveGroup(g); }}
+                          >
+                            Grupo {g}{' '}
+                            <Badge color="secondary" pill style={{ fontSize: '0.7em' }}>
+                              {journalByGroup(g).length}
+                            </Badge>
+                          </NavLink>
+                        </NavItem>
+                      ))}
+                    </Nav>
+                    <Button color="primary" size="sm" className="ms-3 flex-shrink-0"
+                      onClick={() => openCreate(0, activeGroup)} disabled={loading}>
+                      <i className="bi bi-plus-lg me-1"></i> Nueva publicación
+                    </Button>
+                  </div>
+
+                  <TabContent activeTab={String(activeGroup)}>
+                    {[1, 2, 3, 4].map(g => {
+                      const pubs = journalByGroup(g);
+                      return (
+                        <TabPane tabId={String(g)} key={g}>
+                          {pubs.length === 0
+                            ? <p className="text-muted text-center py-3">No hay publicaciones en el Grupo {g}.</p>
+                            : (
+                              <Table hover responsive size="sm" className="mt-2 mb-0">
+                                <thead>
+                                  <tr>
+                                    <th>Título</th>
+                                    <th>Datos de pub.</th>
+                                    <th>Revista</th>
+                                    <th>Base de datos</th>
+                                    {g === 1 && <th>Cuartil</th>}
+                                    <th>URL / DOI</th>
+                                    <th>Autores</th>
+                                    <th style={{ width: 90 }}></th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {pubs.map(pub => (
+                                    <tr key={pub.id}>
+                                      <td>{pub.title}</td>
+                                      <td>{pub.publicationData}</td>
+                                      <td>{pub.journalPublication?.name}</td>
+                                      <td>{pub.journalPublication?.dataBase}</td>
+                                      {g === 1 && (
+                                        <td>
+                                          {pub.journalPublication?.cuartil != null
+                                            ? <Badge color="info" pill className="text-dark">Q{pub.journalPublication.cuartil}</Badge>
+                                            : <span className="text-muted">—</span>}
+                                        </td>
+                                      )}
+                                      <td style={{ maxWidth: 180 }}>{urlCell(pub.urlDoi)}</td>
+                                      <td>{authorsList(pub.authors)}</td>
+                                      <td className="text-end">{actionBtns(pub)}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </Table>
+                            )
+                          }
+                        </TabPane>
+                      );
+                    })}
+                  </TabContent>
+                </TabPane>
+
+                {/* ── Pestañas tipos indexados (1–4) ── */}
+                {[1, 2, 3, 4].map(typeVal => {
+                  const pubs = pubsByType(typeVal);
+                  return (
+                    <TabPane tabId={String(typeVal)} key={typeVal} className="p-3">
+                      <div className="d-flex justify-content-end mb-2">
+                        <Button color="primary" size="sm"
+                          onClick={() => openCreate(typeVal, null)} disabled={loading}>
+                          <i className="bi bi-plus-lg me-1"></i> Nueva publicación
+                        </Button>
+                      </div>
+                      {pubs.length === 0
+                        ? <p className="text-muted text-center py-3">No hay publicaciones de este tipo.</p>
+                        : (
+                          <Table hover responsive size="sm" className="mb-0">
+                            <thead>
+                              <tr>
+                                <th>Título</th>
+                                <th>Datos de pub.</th>
+                                <th>Indexación</th>
+                                <th>URL / DOI</th>
+                                <th>Autores</th>
+                                <th style={{ width: 90 }}></th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {pubs.map(pub => (
+                                <tr key={pub.id}>
+                                  <td>{pub.title}</td>
+                                  <td>{pub.publicationData}</td>
+                                  <td>{pub.indexedPublication?.index ?? <span className="text-muted">—</span>}</td>
+                                  <td style={{ maxWidth: 180 }}>{urlCell(pub.urlDoi)}</td>
+                                  <td>{authorsList(pub.authors)}</td>
+                                  <td className="text-end">{actionBtns(pub)}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </Table>
+                        )
+                      }
+                    </TabPane>
+                  );
+                })}
+
+              </TabContent>
+            </>
           )}
         </CardBody>
       </Card>
@@ -374,6 +510,76 @@ export default function PublicationsPage() {
                 placeholder="https://doi.org/10.xxxx/... o URL de la publicación"
               />
             </FormGroup>
+
+            {/* ── Campos dinámicos por tipo ── */}
+            {parseInt(form.publicationType, 10) === 0 ? (
+              <>
+                <FormGroup>
+                  <Label for="journalName">Nombre de la revista <span className="text-danger">*</span></Label>
+                  <Input
+                    id="journalName"
+                    name="journalName"
+                    value={form.journalName}
+                    onChange={handleFormChange}
+                    placeholder="Ej. Nature, Science..."
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <Label for="dataBase">Base de datos <span className="text-danger">*</span></Label>
+                  <Input
+                    id="dataBase"
+                    name="dataBase"
+                    value={form.dataBase}
+                    onChange={handleFormChange}
+                    placeholder="Ej. Scopus, Web of Science..."
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <Label for="group">Grupo (1–4) <span className="text-danger">*</span></Label>
+                  <Input
+                    type="select"
+                    id="group"
+                    name="group"
+                    value={form.group}
+                    onChange={handleFormChange}
+                  >
+                    <option value="">Selecciona grupo...</option>
+                    {[1, 2, 3, 4].map(g => (
+                      <option key={g} value={g}>Grupo {g}</option>
+                    ))}
+                  </Input>
+                </FormGroup>
+                {parseInt(form.group, 10) === 1 && (
+                  <FormGroup>
+                    <Label for="cuartil">Cuartil Scimago <span className="text-danger">*</span></Label>
+                    <Input
+                      type="select"
+                      id="cuartil"
+                      name="cuartil"
+                      value={form.cuartil}
+                      onChange={handleFormChange}
+                    >
+                      <option value="">Selecciona cuartil...</option>
+                      {[1, 2, 3, 4].map(q => (
+                        <option key={q} value={q}>Q{q}</option>
+                      ))}
+                    </Input>
+                  </FormGroup>
+                )}
+              </>
+            ) : (
+              <FormGroup>
+                <Label for="index">Indexación <span className="text-danger">*</span></Label>
+                <Input
+                  id="index"
+                  name="index"
+                  value={form.index}
+                  onChange={handleFormChange}
+                  placeholder="Ej. Scopus, SciELO, Latindex..."
+                />
+              </FormGroup>
+            )}
+
             <FormGroup>
               <Label for="publicationData">Datos / Resumen</Label>
               <Input

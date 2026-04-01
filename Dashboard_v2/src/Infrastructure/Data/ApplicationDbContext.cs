@@ -21,6 +21,9 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<Event> Events => Set<Event>();
     public DbSet<Presentation> Presentations => Set<Presentation>();
     public DbSet<AuthorPresentation> AuthorPresentations => Set<AuthorPresentation>();
+    public DbSet<IndexedPublication> IndexedPublications => Set<IndexedPublication>();
+    public DbSet<JournalPublication> JournalPublications => Set<JournalPublication>();
+    public DbSet<JournalGroup1Publication> JournalGroup1Publications => Set<JournalGroup1Publication>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

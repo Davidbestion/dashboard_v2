@@ -26,6 +26,9 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<IndexedPublication> IndexedPublications => Set<IndexedPublication>();
     public DbSet<JournalPublication> JournalPublications => Set<JournalPublication>();
     public DbSet<JournalGroup1Publication> JournalGroup1Publications => Set<JournalGroup1Publication>();
+    public DbSet<Universidad> Universidades => Set<Universidad>();
+    public DbSet<Area> Areas => Set<Area>();
+    public DbSet<GrupoDeInvestigacion> GruposDeInvestigacion => Set<GrupoDeInvestigacion>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

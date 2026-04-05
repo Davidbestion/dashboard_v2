@@ -13,12 +13,12 @@ namespace Dashboard_v2.Infrastructure.Identity;
 /// Usa BCrypt para hashear contraseñas y EF Core para persistir en PostgreSQL.
 /// No usa ASP.NET Identity — el manejo de usuarios es custom.
 /// </summary>
-public class AuthService : IIdentityService
+public class LocalAuthService : IIdentityService
 {
     private readonly IApplicationDbContext _context;
     private readonly IJwtService _jwtService;
 
-    public AuthService(IApplicationDbContext context, IJwtService jwtService)
+    public LocalAuthService(IApplicationDbContext context, IJwtService jwtService)
     {
         _context = context;
         _jwtService = jwtService;

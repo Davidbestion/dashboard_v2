@@ -33,7 +33,13 @@ public static class DependencyInjection
         builder.Services.AddScoped<ApplicationDbContextInitialiser>();
 
         builder.Services.AddSingleton(TimeProvider.System);
-        builder.Services.AddTransient<IIdentityService, AuthService>();
+
+        var authProvider = builder.Configuration["Auth:Provider"] ?? "Ldap";
+        if (authProvider.Equals("Ldap", StringComparison.OrdinalIgnoreCase))
+            builder.Services.AddTransient<IIdentityService, LdapAuthService>();
+        else
+            builder.Services.AddTransient<IIdentityService, LocalAuthService>();
+
         builder.Services.AddSingleton<IJwtService, JwtService>();
         builder.Services.AddScoped<IPermissionService, PermissionService>();
         builder.Services.AddScoped<IAuthorCleanupService, AuthorCleanupService>();

@@ -14,7 +14,7 @@ public class User
     /// <summary>Segundo apellido (opcional).</summary>
     public string? UserLastName2 { get; set; }
     public string Email { get; set; } = default!;
-    public string PasswordHash { get; set; } = default!;
+    public string? PasswordHash { get; set; }
     public DateTime BirthDate { get; set; }
     //bool de si es adiestrado (no posee categoria cientifica ni docente) o no
     public bool IsTrained { get; set; } = false;

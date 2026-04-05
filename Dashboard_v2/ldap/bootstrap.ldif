@@ -1,0 +1,33 @@
+# Unidad organizativa para usuarios
+dn: ou=people,dc=matcom,dc=uh,dc=cu
+objectClass: organizationalUnit
+ou: people
+
+# ── Usuarios de prueba ───────────────────────────────────────────────────────
+
+# Superusuario (equivale al superuser sembrado en la BD)
+dn: uid=superuser,ou=people,dc=matcom,dc=uh,dc=cu
+objectClass: inetOrgPerson
+uid: superuser
+cn: Super User
+sn: User
+mail: superuser@localhost
+userPassword: Superuser1!
+
+# Profesor de prueba
+dn: uid=jperez,ou=people,dc=matcom,dc=uh,dc=cu
+objectClass: inetOrgPerson
+uid: jperez
+cn: Juan Perez
+sn: Perez
+mail: jperez@matcom.uh.cu
+userPassword: Profesor1!
+
+# Investigador de prueba
+dn: uid=mgarcia,ou=people,dc=matcom,dc=uh,dc=cu
+objectClass: inetOrgPerson
+uid: mgarcia
+cn: Maria Garcia
+sn: Garcia
+mail: mgarcia@matcom.uh.cu
+userPassword: Investigador1!

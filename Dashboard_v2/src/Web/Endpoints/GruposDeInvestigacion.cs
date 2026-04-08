@@ -5,7 +5,6 @@ using Dashboard_v2.Application.GruposDeInvestigacion.Commands.SetGrupoMiembros;
 using Dashboard_v2.Application.GruposDeInvestigacion.Commands.UpdateGrupoDeInvestigacion;
 using Dashboard_v2.Application.GruposDeInvestigacion.Queries.GetGruposDeInvestigacion;
 using Dashboard_v2.Application.GruposDeInvestigacion.Queries.GetMisGruposDeInvestigacion;
-using Dashboard_v2.Application.Common.Interfaces;
 using Dashboard_v2.Web.Infrastructure;
 
 namespace Dashboard_v2.Web.Endpoints;
@@ -21,7 +20,7 @@ public class GruposDeInvestigacion : EndpointGroupBase
     public override void Map(RouteGroupBuilder groupBuilder)
     {
         groupBuilder.MapGet("", GetGruposDeInvestigacion)
-            .RequireAuthorization(p => p.RequireRole("Superuser"))
+            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Grupo_de_investigacion"))
             .WithName("GetGruposDeInvestigacion")
             .Produces<List<GrupoDeInvestigacionDto>>(200);
 
@@ -69,20 +68,13 @@ public class GruposDeInvestigacion : EndpointGroupBase
         return Results.Ok(list);
     }
 
-    private async Task<IResult> CreateGrupoDeInvestigacion(ISender sender, IUser currentUser, CreateGrupoDeInvestigacionBody body)
+    private async Task<IResult> CreateGrupoDeInvestigacion(ISender sender, CreateGrupoDeInvestigacionBody body)
     {
-        // Jefe se auto-incluye como primer miembro al crear su grupo
-        var isSuperuser = currentUser.Roles?.Contains("Superuser") == true;
-        var usuariosIds = (!isSuperuser && currentUser.Id is not null)
-            ? new List<string> { currentUser.Id }
-            : new List<string>();
-
         var (result, id) = await sender.Send(new CreateGrupoDeInvestigacionCommand
         {
             Nombre = body.Nombre,
             AreaId = body.AreaId,
             LineasDeInvestigacionIds = body.LineasDeInvestigacionIds ?? [],
-            UsuariosIds = usuariosIds
         });
 
         if (!result.Succeeded)

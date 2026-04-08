@@ -34,16 +34,12 @@ public class SetGrupoMiembrosCommandHandler : IRequestHandler<SetGrupoMiembrosCo
             return Result.Failure(["Grupo de investigación no encontrado."]);
 
         var isSuperuser = _currentUser.Roles?.Contains("Superuser") == true;
-        if (!isSuperuser && !grupo.Usuarios.Any(u => u.Id == _currentUser.Id))
+        var isJefe = _currentUser.Roles?.Contains("Jefe_de_Grupo_de_investigacion") == true;
+        if (!isSuperuser && !isJefe)
             return Result.Failure(["No tienes permisos para gestionar los miembros de este grupo."]);
 
-        // Non-superusers can never remove themselves from their own group
-        var finalIds = request.UsuariosIds.ToList();
-        if (!isSuperuser && _currentUser.Id is not null && !finalIds.Contains(_currentUser.Id))
-            finalIds.Add(_currentUser.Id);
-
         var newUsuarios = await _context.Users
-            .Where(u => finalIds.Contains(u.Id))
+            .Where(u => request.UsuariosIds.Contains(u.Id))
             .ToListAsync(cancellationToken);
 
         grupo.Usuarios.Clear();

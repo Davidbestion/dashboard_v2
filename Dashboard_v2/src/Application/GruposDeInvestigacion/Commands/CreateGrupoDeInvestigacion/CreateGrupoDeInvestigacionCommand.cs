@@ -10,18 +10,18 @@ public record CreateGrupoDeInvestigacionCommand : IRequest<(Result Result, strin
     public string AreaId { get; init; } = default!;
     /// <summary>Ids de las Líneas de Investigación que estudia este grupo (relación N:N).</summary>
     public IList<string> LineasDeInvestigacionIds { get; init; } = [];
-    /// <summary>Ids de los Usuarios miembros de este grupo (relación N:N).</summary>
-    public IList<string> UsuariosIds { get; init; } = [];
 }
 
 public class CreateGrupoDeInvestigacionCommandHandler
     : IRequestHandler<CreateGrupoDeInvestigacionCommand, (Result Result, string? Id)>
 {
     private readonly IApplicationDbContext _context;
+    private readonly IUser _currentUser;
 
-    public CreateGrupoDeInvestigacionCommandHandler(IApplicationDbContext context)
+    public CreateGrupoDeInvestigacionCommandHandler(IApplicationDbContext context, IUser currentUser)
     {
         _context = context;
+        _currentUser = currentUser;
     }
 
     public async Task<(Result Result, string? Id)> Handle(
@@ -36,7 +36,8 @@ public class CreateGrupoDeInvestigacionCommandHandler
         var grupo = new GrupoDeInvestigacion
         {
             Nombre = request.Nombre.Trim(),
-            AreaId = request.AreaId
+            AreaId = request.AreaId,
+            CreadorId = _currentUser.Id
         };
 
         if (request.LineasDeInvestigacionIds.Count > 0)
@@ -45,14 +46,6 @@ public class CreateGrupoDeInvestigacionCommandHandler
                 .Where(l => request.LineasDeInvestigacionIds.Contains(l.Id))
                 .ToListAsync(cancellationToken);
             grupo.LineasDeInvestigacion = lineas;
-        }
-
-        if (request.UsuariosIds.Count > 0)
-        {
-            var usuarios = await _context.Users
-                .Where(u => request.UsuariosIds.Contains(u.Id))
-                .ToListAsync(cancellationToken);
-            grupo.Usuarios = usuarios;
         }
 
         _context.GruposDeInvestigacion.Add(grupo);

@@ -2497,6 +2497,10 @@
             "items": {
               "type": "string"
             }
+          },
+          "creadorId": {
+            "type": "string",
+            "nullable": true
           }
         }
       },
@@ -2974,11 +2978,33 @@
           "userName": {
             "type": "string"
           },
+          "userLastName1": {
+            "type": "string"
+          },
+          "userLastName2": {
+            "type": "string",
+            "nullable": true
+          },
           "email": {
             "type": "string"
           },
           "isActive": {
             "type": "boolean"
+          },
+          "isTrained": {
+            "type": "boolean"
+          },
+          "scientificCategory": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "teachingCategory": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "investigationCategory": {
+            "type": "integer",
+            "format": "int32"
           },
           "roles": {
             "type": "array",

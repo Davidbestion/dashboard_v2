@@ -35,7 +35,7 @@ const jefeGroups = [
   {
     heading: 'Investigación',
     items: [
-      { to: '/mis-grupos', icon: 'bi-people-fill', label: 'Mis Grupos de Investigación' },
+      { to: '/grupos-investigacion', icon: 'bi-people-fill', label: 'Grupos de Investigación' },
     ],
   },
 ];

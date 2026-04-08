@@ -1,4 +1,5 @@
 using Dashboard_v2.Application.Common.Interfaces;
+using Dashboard_v2.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Dashboard_v2.Application.Users.Queries.GetUsers;
@@ -8,8 +9,14 @@ public record UserWithRolesDto
 {
     public string Id { get; init; } = default!;
     public string UserName { get; init; } = default!;
+    public string UserLastName1 { get; init; } = default!;
+    public string? UserLastName2 { get; init; }
     public string Email { get; init; } = default!;
     public bool IsActive { get; init; }
+    public bool IsTrained { get; init; }
+    public int ScientificCategory { get; init; }
+    public int TeachingCategory { get; init; }
+    public int InvestigationCategory { get; init; }
     public List<string> Roles { get; init; } = [];
 }
 
@@ -38,8 +45,14 @@ public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, List<UserWith
             {
                 Id = u.Id,
                 UserName = u.UserName,
+                UserLastName1 = u.UserLastName1,
+                UserLastName2 = u.UserLastName2,
                 Email = u.Email,
                 IsActive = u.IsActive,
+                IsTrained = u.IsTrained,
+                ScientificCategory = (int)u.ScientificCategory,
+                TeachingCategory = (int)u.TeachingCategory,
+                InvestigationCategory = (int)u.InvestigationCategory,
                 Roles = u.UserRoles.Select(ur => ur.Role.ToString()).ToList()
             })
             .OrderBy(u => u.UserName)

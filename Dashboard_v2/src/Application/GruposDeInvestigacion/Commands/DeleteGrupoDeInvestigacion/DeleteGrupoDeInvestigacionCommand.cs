@@ -19,20 +19,16 @@ public class DeleteGrupoDeInvestigacionCommandHandler : IRequestHandler<DeleteGr
     public async Task<Result> Handle(DeleteGrupoDeInvestigacionCommand request, CancellationToken cancellationToken)
     {
         var grupo = await _context.GruposDeInvestigacion
-            .Include(g => g.Usuarios)
             .FirstOrDefaultAsync(g => g.Id == request.Id, cancellationToken);
 
         if (grupo is null)
             return Result.Failure(["Grupo de investigación no encontrado."]);
 
-        // Si no es Superuser, verificar que el usuario actual es miembro del grupo
+        // Superuser o Jefe pueden eliminar cualquier grupo
         var isSuperuser = _currentUser.Roles?.Contains("Superuser") == true;
-        if (!isSuperuser)
-        {
-            var userId = _currentUser.Id;
-            if (!grupo.Usuarios.Any(u => u.Id == userId))
-                return Result.Failure(["No tienes permisos para eliminar este grupo."]);
-        }
+        var isJefe = _currentUser.Roles?.Contains("Jefe_de_Grupo_de_investigacion") == true;
+        if (!isSuperuser && !isJefe)
+            return Result.Failure(["No tienes permisos para eliminar este grupo."]);
 
         _context.GruposDeInvestigacion.Remove(grupo);
         await _context.SaveChangesAsync(cancellationToken);

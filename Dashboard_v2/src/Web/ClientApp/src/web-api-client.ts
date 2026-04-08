@@ -3818,6 +3818,7 @@ export class GrupoDeInvestigacionDto implements IGrupoDeInvestigacionDto {
     areaNombre?: string;
     lineasDeInvestigacionIds?: string[];
     usuariosIds?: string[];
+    creadorId?: string | undefined;
 
     constructor(data?: IGrupoDeInvestigacionDto) {
         if (data) {
@@ -3844,6 +3845,7 @@ export class GrupoDeInvestigacionDto implements IGrupoDeInvestigacionDto {
                 for (let item of _data["usuariosIds"])
                     this.usuariosIds!.push(item);
             }
+            this.creadorId = _data["creadorId"];
         }
     }
 
@@ -3870,6 +3872,7 @@ export class GrupoDeInvestigacionDto implements IGrupoDeInvestigacionDto {
             for (let item of this.usuariosIds)
                 data["usuariosIds"].push(item);
         }
+        data["creadorId"] = this.creadorId;
         return data;
     }
 }
@@ -3881,6 +3884,7 @@ export interface IGrupoDeInvestigacionDto {
     areaNombre?: string;
     lineasDeInvestigacionIds?: string[];
     usuariosIds?: string[];
+    creadorId?: string | undefined;
 }
 
 export class CreateGrupoDeInvestigacionBody implements ICreateGrupoDeInvestigacionBody {
@@ -4986,8 +4990,14 @@ export interface IUpdateUniversidadBody {
 export class UserWithRolesDto implements IUserWithRolesDto {
     id?: string;
     userName?: string;
+    userLastName1?: string;
+    userLastName2?: string | undefined;
     email?: string;
     isActive?: boolean;
+    isTrained?: boolean;
+    scientificCategory?: number;
+    teachingCategory?: number;
+    investigationCategory?: number;
     roles?: string[];
 
     constructor(data?: IUserWithRolesDto) {
@@ -5003,8 +5013,14 @@ export class UserWithRolesDto implements IUserWithRolesDto {
         if (_data) {
             this.id = _data["id"];
             this.userName = _data["userName"];
+            this.userLastName1 = _data["userLastName1"];
+            this.userLastName2 = _data["userLastName2"];
             this.email = _data["email"];
             this.isActive = _data["isActive"];
+            this.isTrained = _data["isTrained"];
+            this.scientificCategory = _data["scientificCategory"];
+            this.teachingCategory = _data["teachingCategory"];
+            this.investigationCategory = _data["investigationCategory"];
             if (Array.isArray(_data["roles"])) {
                 this.roles = [] as any;
                 for (let item of _data["roles"])
@@ -5024,8 +5040,14 @@ export class UserWithRolesDto implements IUserWithRolesDto {
         data = typeof data === 'object' ? data : {};
         data["id"] = this.id;
         data["userName"] = this.userName;
+        data["userLastName1"] = this.userLastName1;
+        data["userLastName2"] = this.userLastName2;
         data["email"] = this.email;
         data["isActive"] = this.isActive;
+        data["isTrained"] = this.isTrained;
+        data["scientificCategory"] = this.scientificCategory;
+        data["teachingCategory"] = this.teachingCategory;
+        data["investigationCategory"] = this.investigationCategory;
         if (Array.isArray(this.roles)) {
             data["roles"] = [];
             for (let item of this.roles)
@@ -5038,8 +5060,14 @@ export class UserWithRolesDto implements IUserWithRolesDto {
 export interface IUserWithRolesDto {
     id?: string;
     userName?: string;
+    userLastName1?: string;
+    userLastName2?: string | undefined;
     email?: string;
     isActive?: boolean;
+    isTrained?: boolean;
+    scientificCategory?: number;
+    teachingCategory?: number;
+    investigationCategory?: number;
     roles?: string[];
 }
 

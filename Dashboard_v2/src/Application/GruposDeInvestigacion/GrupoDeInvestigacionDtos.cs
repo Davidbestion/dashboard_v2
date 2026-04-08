@@ -8,4 +8,5 @@ public record GrupoDeInvestigacionDto
     public string AreaNombre { get; init; } = default!;
     public IReadOnlyList<string> LineasDeInvestigacionIds { get; init; } = [];
     public IReadOnlyList<string> UsuariosIds { get; init; } = [];
+    public string? CreadorId { get; init; }
 }

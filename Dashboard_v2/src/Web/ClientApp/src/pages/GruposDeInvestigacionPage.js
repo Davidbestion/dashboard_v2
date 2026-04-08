@@ -6,6 +6,7 @@ import {
   Form, FormGroup, Label, Input,
 } from 'reactstrap';
 import Select from 'react-select';
+import UserCard from '../components/UserCard';
 
 async function apiFetch(url, options = {}) {
   const response = await fetch(url, {
@@ -39,11 +40,11 @@ export default function GruposDeInvestigacionPage() {
 
   const [membrosModal, setMembrosModal] = useState(false);
   const [membrosGrupo, setMembrosGrupo] = useState(null);
-  const [membrosSelected, setMembrosSelected] = useState([]);
+  const [membrosSelectedIds, setMembrosSelectedIds] = useState(new Set());
+  const [membrosOriginalIds, setMembrosOriginalIds] = useState(new Set());
   const [savingMiembros, setSavingMiembros] = useState(false);
   const [membrosError, setMembrosError] = useState('');
-  const [membrosInput, setMembrosInput] = useState('');
-  const [membrosSuggestionsOpen, setMembrosSuggestionsOpen] = useState(false);
+  const [membrosFilter, setMembrosFilter] = useState('');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -113,15 +114,11 @@ export default function GruposDeInvestigacionPage() {
 
   function openMembros(item) {
     setMembrosGrupo(item);
-    setMembrosSelected(
-      (item.usuariosIds ?? []).map(id => {
-        const u = usuarios.find(x => x.id === id);
-        return u ? { value: u.id, label: `${u.userName} (${u.email})` } : null;
-      }).filter(Boolean)
-    );
+    const initial = new Set(item.usuariosIds ?? []);
+    setMembrosSelectedIds(initial);
+    setMembrosOriginalIds(new Set(initial));
     setMembrosError('');
-    setMembrosInput('');
-    setMembrosSuggestionsOpen(false);
+    setMembrosFilter('');
     setMembrosModal(true);
   }
 
@@ -131,7 +128,7 @@ export default function GruposDeInvestigacionPage() {
     try {
       await apiFetch(`/api/GruposDeInvestigacion/${membrosGrupo.id}/miembros`, {
         method: 'PUT',
-        body: JSON.stringify({ usuariosIds: membrosSelected.map(s => s.value) }),
+        body: JSON.stringify({ usuariosIds: [...membrosSelectedIds] }),
       });
       setMembrosModal(false);
       await load();
@@ -142,25 +139,22 @@ export default function GruposDeInvestigacionPage() {
     }
   }
 
-  const membrosSuggestions = membrosInput.trim().length > 0
-    ? usuarios
-        .filter(u =>
-          !membrosSelected.some(s => s.value === u.id) &&
-          `${u.userName} ${u.email}`.toLowerCase().includes(membrosInput.toLowerCase())
-        )
-        .slice(0, 8)
-    : [];
-
-  function addMiembro(u) {
-    if (membrosSelected.some(s => s.value === u.id)) return;
-    setMembrosSelected(prev => [...prev, { value: u.id, label: `${u.userName} (${u.email})` }]);
-    setMembrosInput('');
-    setMembrosSuggestionsOpen(false);
+  function toggleMiembro(userId) {
+    setMembrosSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(userId)) next.delete(userId);
+      else next.add(userId);
+      return next;
+    });
   }
 
-  function removeMiembro(id) {
-    setMembrosSelected(prev => prev.filter(s => s.value !== id));
-  }
+  const filteredUsuarios = membrosFilter.trim()
+    ? usuarios.filter(u =>
+        `${u.userName} ${u.userLastName1 ?? ''} ${u.userLastName2 ?? ''} ${u.email}`
+          .toLowerCase()
+          .includes(membrosFilter.toLowerCase())
+      )
+    : usuarios;
 
   if (loading) {
     return (
@@ -296,53 +290,46 @@ export default function GruposDeInvestigacionPage() {
         </ModalFooter>
       </Modal>
 
-      {/* Modal: Gestionar miembros */}
-      <Modal isOpen={membrosModal} toggle={() => setMembrosModal(false)} size="lg">
+      {/* Modal: Gestionar miembros — fichas de usuario */}
+      <Modal isOpen={membrosModal} toggle={() => setMembrosModal(false)} size="xl" scrollable>
         <ModalHeader toggle={() => setMembrosModal(false)}>
           Miembros de «{membrosGrupo?.nombre}»
+          {membrosSelectedIds.size > 0 && (
+            <Badge color="primary" pill className="ms-2">{membrosSelectedIds.size} seleccionado{membrosSelectedIds.size !== 1 ? 's' : ''}</Badge>
+          )}
         </ModalHeader>
         <ModalBody>
           {membrosError && <Alert color="danger">{membrosError}</Alert>}
-          <p className="text-muted small mb-2">
-            Busca y selecciona los usuarios que forman parte de este grupo.
+          <p className="text-muted small mb-3">
+            Haz clic en una ficha para agregar o quitar miembros.
+            <span style={{ color: '#198754', fontWeight: 600 }}> Verde</span> = ya es miembro,
+            <span style={{ color: '#0d6efd', fontWeight: 600 }}> Azul</span> = recién agregado,
+            <span style={{ color: '#dc3545', fontWeight: 600 }}> Rojo</span> = se eliminará,
+            <span style={{ color: '#d97706', fontWeight: 600 }}> ★</span> = creador del grupo.
           </p>
-          <div className="mb-2 d-flex flex-wrap gap-1">
-            {membrosSelected.length === 0
-              ? <span className="text-muted small">Ningún miembro seleccionado</span>
-              : membrosSelected.map(s => (
-                  <span key={s.value} className="badge bg-primary d-inline-flex align-items-center gap-1 py-1 px-2" style={{ fontSize: '0.85rem' }}>
-                    {s.label}
-                    <button type="button" className="btn-close btn-close-white ms-1" style={{ fontSize: '0.55rem' }}
-                      onClick={() => removeMiembro(s.value)} aria-label="Eliminar" />
-                  </span>
-                ))
-            }
-          </div>
-          <div className="position-relative">
-            <Input
-              placeholder="Buscar usuario para agregar..."
-              value={membrosInput}
-              autoComplete="off"
-              onChange={e => { setMembrosInput(e.target.value); setMembrosSuggestionsOpen(true); }}
-              onFocus={() => { if (membrosInput.trim()) setMembrosSuggestionsOpen(true); }}
-              onBlur={() => setTimeout(() => setMembrosSuggestionsOpen(false), 150)}
-              onKeyDown={e => { if (e.key === 'Escape') setMembrosSuggestionsOpen(false); }}
-            />
-            {membrosSuggestionsOpen && membrosSuggestions.length > 0 && (
-              <div className="position-absolute w-100 border rounded shadow-sm bg-white"
-                style={{ zIndex: 1000, maxHeight: 200, overflowY: 'auto', top: '100%' }}>
-                {membrosSuggestions.map(u => (
-                  <div key={u.id} className="px-3 py-2"
-                    style={{ cursor: 'pointer' }}
-                    onMouseDown={e => { e.preventDefault(); addMiembro(u); }}
-                    onMouseEnter={e => e.currentTarget.style.backgroundColor = '#f8f9fa'}
-                    onMouseLeave={e => e.currentTarget.style.backgroundColor = ''}>
-                    <strong>{u.userName}</strong> <span className="text-muted small">{u.email}</span>
-                  </div>
+          <Input
+            placeholder="Filtrar por nombre, apellido o correo..."
+            value={membrosFilter}
+            onChange={e => setMembrosFilter(e.target.value)}
+            className="mb-3"
+          />
+          {filteredUsuarios.length === 0
+            ? <p className="text-muted text-center py-3">No hay usuarios que coincidan.</p>
+            : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: '0.75rem' }}>
+                {filteredUsuarios.map(u => (
+                  <UserCard
+                    key={u.id}
+                    user={u}
+                    isSelected={membrosSelectedIds.has(u.id)}
+                    isOriginal={membrosOriginalIds.has(u.id)}
+                    isCreator={u.id === membrosGrupo?.creadorId}
+                    onClick={toggleMiembro}
+                  />
                 ))}
               </div>
-            )}
-          </div>
+            )
+          }
         </ModalBody>
         <ModalFooter>
           <Button color="primary" onClick={handleSaveMiembros} disabled={savingMiembros}>

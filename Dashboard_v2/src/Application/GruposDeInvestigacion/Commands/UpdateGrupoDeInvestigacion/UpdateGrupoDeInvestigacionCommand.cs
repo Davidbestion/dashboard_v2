@@ -31,20 +31,16 @@ public class UpdateGrupoDeInvestigacionCommandHandler : IRequestHandler<UpdateGr
 
         var grupo = await _context.GruposDeInvestigacion
             .Include(g => g.LineasDeInvestigacion)
-            .Include(g => g.Usuarios)
             .FirstOrDefaultAsync(g => g.Id == request.Id, cancellationToken);
 
         if (grupo is null)
             return Result.Failure(["Grupo de investigación no encontrado."]);
 
-        // Si no es Superuser, verificar que el usuario actual es miembro del grupo
+        // Superuser o Jefe pueden editar cualquier grupo
         var isSuperuser = _currentUser.Roles?.Contains("Superuser") == true;
-        if (!isSuperuser)
-        {
-            var userId = _currentUser.Id;
-            if (!grupo.Usuarios.Any(u => u.Id == userId))
-                return Result.Failure(["No tienes permisos para editar este grupo."]);
-        }
+        var isJefe = _currentUser.Roles?.Contains("Jefe_de_Grupo_de_investigacion") == true;
+        if (!isSuperuser && !isJefe)
+            return Result.Failure(["No tienes permisos para editar este grupo."]);
 
         if (!await _context.Areas.AnyAsync(a => a.Id == request.AreaId, cancellationToken))
             return Result.Failure(["El área indicada no existe."]);

@@ -14,6 +14,13 @@ public class GrupoDeInvestigacionConfiguration : IEntityTypeConfiguration<GrupoD
         builder.Property(g => g.Id).HasMaxLength(450);
         builder.Property(g => g.Nombre).IsRequired().HasMaxLength(500);
         builder.Property(g => g.AreaId).IsRequired().HasMaxLength(450);
+        builder.Property(g => g.CreadorId).HasMaxLength(450);
+
+        // Creador (nullable FK a User)
+        builder.HasOne(g => g.Creador)
+            .WithMany()
+            .HasForeignKey(g => g.CreadorId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         // Posee: GrupoDeInvestigacion → Area (1,1)
         builder.HasOne(g => g.Area)

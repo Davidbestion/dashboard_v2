@@ -14,4 +14,8 @@ public class GrupoDeInvestigacion
 
     // un Grupo de Investigación tiene como miembros a 0 o muchos Usuarios
     public ICollection<User> Usuarios { get; set; } = new List<User>();
+
+    /// <summary>Id del usuario que creó el grupo (puede ser null si fue creado antes de este campo).</summary>
+    public string? CreadorId { get; set; }
+    public User? Creador { get; set; }
 }

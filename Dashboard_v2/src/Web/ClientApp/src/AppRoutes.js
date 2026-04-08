@@ -60,7 +60,7 @@ const AppRoutes = [
     path: '/grupos-investigacion',
     element: <GruposDeInvestigacionPage />,
     pageTitle: 'Grupos de Investigación',
-    adminOnly: true,
+    jefeOrAdminOnly: true,
   },
   {
     path: '/mis-grupos',

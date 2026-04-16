@@ -7,6 +7,9 @@ public record ProyectoResumenDto
 {
     public string Id { get; init; } = default!;
     public string Titulo { get; init; } = default!;
+    /// <summary>ID del usuario jefe (FK).</summary>
+    public string JefeId { get; init; } = default!;
+    /// <summary>Nombre completo del jefe, derivado del usuario.</summary>
     public string Jefe { get; init; } = default!;
     public string CorreoJefe { get; init; } = default!;
     public int NumeroMiembros { get; init; }
@@ -25,6 +28,9 @@ public abstract record ProyectoBaseDto
 {
     public string Id { get; init; } = default!;
     public string Titulo { get; init; } = default!;
+    /// <summary>ID del usuario jefe (FK a Users).</summary>
+    public string JefeId { get; init; } = default!;
+    /// <summary>Nombre completo del jefe, construido a partir de UserName + apellidos.</summary>
     public string Jefe { get; init; } = default!;
     public string CorreoJefe { get; init; } = default!;
     public int NumeroMiembros { get; init; }

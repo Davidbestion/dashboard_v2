@@ -8,19 +8,29 @@ public record GetProyectoPNAPQuery(string Id) : IRequest<ProyectoPNAPDto?>;
 public class GetProyectoPNAPQueryHandler : IRequestHandler<GetProyectoPNAPQuery, ProyectoPNAPDto?>
 {
     private readonly IApplicationDbContext _context;
-    public GetProyectoPNAPQueryHandler(IApplicationDbContext context) => _context = context;
+    private readonly IUser _currentUser;
+    public GetProyectoPNAPQueryHandler(IApplicationDbContext context, IUser currentUser)
+    {
+        _context = context;
+        _currentUser = currentUser;
+    }
 
     public async Task<ProyectoPNAPDto?> Handle(GetProyectoPNAPQuery request, CancellationToken ct)
     {
+        var ownerFilter = ProyectoHelper.GetOwnerFilter(_currentUser);
         var p = await _context.Proyectos.OfType<ProyectoPNAP>()
             .Include(x => x.Clasificacion)
-            .FirstOrDefaultAsync(x => x.Id == request.Id, ct);
+            .Include(x => x.JefeUsuario)
+            .FirstOrDefaultAsync(x => x.Id == request.Id && (ownerFilter == null || x.JefeId == ownerFilter), ct);
 
         if (p is null) return null;
 
         return new ProyectoPNAPDto
         {
-            Id = p.Id, Titulo = p.Titulo, Jefe = p.Jefe, CorreoJefe = p.CorreoJefe,
+            Id = p.Id, Titulo = p.Titulo,
+            JefeId = p.JefeId,
+            Jefe = p.JefeUsuario.UserName + " " + p.JefeUsuario.UserLastName1 + (p.JefeUsuario.UserLastName2 != null ? " " + p.JefeUsuario.UserLastName2 : ""),
+            CorreoJefe = p.JefeUsuario.Email,
             NumeroMiembros = p.NumeroMiembros, CantidadMiembrosUH = p.CantidadMiembrosUH,
             CantidadEstudiantes = p.CantidadEstudiantes,
             CantidadEstudiantesContratados = p.CantidadEstudiantesContratados,

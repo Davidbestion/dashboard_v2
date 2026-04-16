@@ -85,7 +85,7 @@ const AppRoutes = [
     path: '/proyectos',
     element: <ProyectosPage />,
     pageTitle: 'Proyectos',
-    adminOnly: true,
+    jefeDeProyectoOrAdminOnly: true,
   },
   {
     path: '/clasificaciones',

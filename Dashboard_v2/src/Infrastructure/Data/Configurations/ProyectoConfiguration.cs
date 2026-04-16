@@ -16,9 +16,14 @@ public class ProyectoConfiguration : IEntityTypeConfiguration<Proyecto>
         builder.HasKey(p => p.Id);
         builder.Property(p => p.Id).HasMaxLength(450);
         builder.Property(p => p.Titulo).IsRequired().HasMaxLength(500);
-        builder.Property(p => p.Jefe).IsRequired().HasMaxLength(200);
-        builder.Property(p => p.CorreoJefe).IsRequired().HasMaxLength(200);
+        builder.Property(p => p.JefeId).IsRequired().HasMaxLength(450);
         builder.Property(p => p.ClasificacionId).IsRequired().HasMaxLength(450);
+
+        // FK: Proyecto → User (jefe). Restrict: no se puede eliminar un usuario que sea jefe de un proyecto.
+        builder.HasOne(p => p.JefeUsuario)
+            .WithMany(u => u.ProyectosComoJefe)
+            .HasForeignKey(p => p.JefeId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(p => p.Clasificacion)
             .WithMany(c => c.Proyectos)

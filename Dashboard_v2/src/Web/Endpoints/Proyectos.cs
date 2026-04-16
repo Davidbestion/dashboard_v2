@@ -34,126 +34,126 @@ public class Proyectos : EndpointGroupBase
     {
         // ── Listado general ───────────────────────────────────────────
         g.MapGet("", GetProyectos)
-            .RequireAuthorization(p => p.RequireRole("Superuser"))
+            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
             .WithName("GetProyectos")
             .Produces<List<ProyectoResumenDto>>(200);
 
         // ── Delete compartido ─────────────────────────────────────────
         g.MapDelete("{id}", DeleteProyecto)
-            .RequireAuthorization(p => p.RequireRole("Superuser"))
+            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
             .WithName("DeleteProyecto")
             .Produces(200)
             .ProducesProblem(404);
 
         // ── En Revisión ───────────────────────────────────────────────
         g.MapGet("en-revision/{id}", GetEnRevision)
-            .RequireAuthorization(p => p.RequireRole("Superuser"))
+            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
             .WithName("GetProyectoEnRevision")
             .Produces<ProyectoEnRevisionDto>(200).ProducesProblem(404);
 
         g.MapPost("en-revision", CreateEnRevision)
-            .RequireAuthorization(p => p.RequireRole("Superuser"))
+            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
             .WithName("CreateProyectoEnRevision")
             .Produces(201).ProducesProblem(400);
 
         g.MapPut("en-revision/{id}", UpdateEnRevision)
-            .RequireAuthorization(p => p.RequireRole("Superuser"))
+            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
             .WithName("UpdateProyectoEnRevision")
             .Produces(200).ProducesProblem(400).ProducesProblem(404);
 
         // ── Empresarial (PE) ──────────────────────────────────────────
         g.MapGet("empresariales/{id}", GetEmpresarial)
-            .RequireAuthorization(p => p.RequireRole("Superuser"))
+            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
             .WithName("GetProyectoEmpresarial")
             .Produces<ProyectoEmpresarialDto>(200).ProducesProblem(404);
 
         g.MapPost("empresariales", CreateEmpresarial)
-            .RequireAuthorization(p => p.RequireRole("Superuser"))
+            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
             .WithName("CreateProyectoEmpresarial")
             .Produces(201).ProducesProblem(400);
 
         g.MapPut("empresariales/{id}", UpdateEmpresarial)
-            .RequireAuthorization(p => p.RequireRole("Superuser"))
+            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
             .WithName("UpdateProyectoEmpresarial")
             .Produces(200).ProducesProblem(400).ProducesProblem(404);
 
         // ── Apoyo a Programa (PAP) ────────────────────────────────────
         g.MapGet("apoyo-programa/{id}", GetApoyoPrograma)
-            .RequireAuthorization(p => p.RequireRole("Superuser"))
+            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
             .WithName("GetProyectoApoyoPrograma")
             .Produces<ProyectoApoyoProgramaDto>(200).ProducesProblem(404);
 
         g.MapPost("apoyo-programa", CreateApoyoPrograma)
-            .RequireAuthorization(p => p.RequireRole("Superuser"))
+            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
             .WithName("CreateProyectoApoyoPrograma")
             .Produces(201).ProducesProblem(400);
 
         g.MapPut("apoyo-programa/{id}", UpdateApoyoPrograma)
-            .RequireAuthorization(p => p.RequireRole("Superuser"))
+            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
             .WithName("UpdateProyectoApoyoPrograma")
             .Produces(200).ProducesProblem(400).ProducesProblem(404);
 
         // ── Desarrollo Local (PDL) ────────────────────────────────────
         g.MapGet("desarrollo-local/{id}", GetDesarrolloLocal)
-            .RequireAuthorization(p => p.RequireRole("Superuser"))
+            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
             .WithName("GetProyectoDesarrolloLocal")
             .Produces<ProyectoDesarrolloLocalDto>(200).ProducesProblem(404);
 
         g.MapPost("desarrollo-local", CreateDesarrolloLocal)
-            .RequireAuthorization(p => p.RequireRole("Superuser"))
+            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
             .WithName("CreateProyectoDesarrolloLocal")
             .Produces(201).ProducesProblem(400);
 
         g.MapPut("desarrollo-local/{id}", UpdateDesarrolloLocal)
-            .RequireAuthorization(p => p.RequireRole("Superuser"))
+            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
             .WithName("UpdateProyectoDesarrolloLocal")
             .Produces(200).ProducesProblem(400).ProducesProblem(404);
 
         // ── No Empresarial (PNE) ──────────────────────────────────────
         g.MapGet("no-empresariales/{id}", GetNoEmpresarial)
-            .RequireAuthorization(p => p.RequireRole("Superuser"))
+            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
             .WithName("GetProyectoNoEmpresarial")
             .Produces<ProyectoNoEmpresarialDto>(200).ProducesProblem(404);
 
         g.MapPost("no-empresariales", CreateNoEmpresarial)
-            .RequireAuthorization(p => p.RequireRole("Superuser"))
+            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
             .WithName("CreateProyectoNoEmpresarial")
             .Produces(201).ProducesProblem(400);
 
         g.MapPut("no-empresariales/{id}", UpdateNoEmpresarial)
-            .RequireAuthorization(p => p.RequireRole("Superuser"))
+            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
             .WithName("UpdateProyectoNoEmpresarial")
             .Produces(200).ProducesProblem(400).ProducesProblem(404);
 
         // ── Colaboración Internacional (PRCI) ─────────────────────────
         g.MapGet("colaboracion-internacional/{id}", GetColabInternacional)
-            .RequireAuthorization(p => p.RequireRole("Superuser"))
+            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
             .WithName("GetProyectoColabInternacional")
             .Produces<ProyectoColabInternacionalDto>(200).ProducesProblem(404);
 
         g.MapPost("colaboracion-internacional", CreateColabInternacional)
-            .RequireAuthorization(p => p.RequireRole("Superuser"))
+            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
             .WithName("CreateProyectoColabInternacional")
             .Produces(201).ProducesProblem(400);
 
         g.MapPut("colaboracion-internacional/{id}", UpdateColabInternacional)
-            .RequireAuthorization(p => p.RequireRole("Superuser"))
+            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
             .WithName("UpdateProyectoColabInternacional")
             .Produces(200).ProducesProblem(400).ProducesProblem(404);
 
         // ── PNAP ──────────────────────────────────────────────────────
         g.MapGet("pnap/{id}", GetPNAP)
-            .RequireAuthorization(p => p.RequireRole("Superuser"))
+            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
             .WithName("GetProyectoPNAP")
             .Produces<ProyectoPNAPDto>(200).ProducesProblem(404);
 
         g.MapPost("pnap", CreatePNAP)
-            .RequireAuthorization(p => p.RequireRole("Superuser"))
+            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
             .WithName("CreateProyectoPNAP")
             .Produces(201).ProducesProblem(400);
 
         g.MapPut("pnap/{id}", UpdatePNAP)
-            .RequireAuthorization(p => p.RequireRole("Superuser"))
+            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
             .WithName("UpdateProyectoPNAP")
             .Produces(200).ProducesProblem(400).ProducesProblem(404);
     }
@@ -185,7 +185,7 @@ public class Proyectos : EndpointGroupBase
     {
         var (result, id) = await sender.Send(new CreateProyectoEnRevisionCommand
         {
-            Titulo = b.Titulo, Jefe = b.Jefe, CorreoJefe = b.CorreoJefe,
+            Titulo = b.Titulo, JefeId = b.JefeId,
             NumeroMiembros = b.NumeroMiembros, CantidadMiembrosUH = b.CantidadMiembrosUH,
             CantidadEstudiantes = b.CantidadEstudiantes,
             CantidadEstudiantesContratados = b.CantidadEstudiantesContratados,
@@ -200,7 +200,7 @@ public class Proyectos : EndpointGroupBase
     {
         var result = await sender.Send(new UpdateProyectoEnRevisionCommand
         {
-            Id = id, Titulo = b.Titulo, Jefe = b.Jefe, CorreoJefe = b.CorreoJefe,
+            Id = id, Titulo = b.Titulo, JefeId = b.JefeId,
             NumeroMiembros = b.NumeroMiembros, CantidadMiembrosUH = b.CantidadMiembrosUH,
             CantidadEstudiantes = b.CantidadEstudiantes,
             CantidadEstudiantesContratados = b.CantidadEstudiantesContratados,
@@ -226,7 +226,7 @@ public class Proyectos : EndpointGroupBase
     {
         var (result, id) = await sender.Send(new CreateProyectoEmpresarialCommand
         {
-            Titulo = b.Titulo, Jefe = b.Jefe, CorreoJefe = b.CorreoJefe,
+            Titulo = b.Titulo, JefeId = b.JefeId,
             NumeroMiembros = b.NumeroMiembros, CantidadMiembrosUH = b.CantidadMiembrosUH,
             CantidadEstudiantes = b.CantidadEstudiantes,
             CantidadEstudiantesContratados = b.CantidadEstudiantesContratados,
@@ -249,7 +249,7 @@ public class Proyectos : EndpointGroupBase
     {
         var result = await sender.Send(new UpdateProyectoEmpresarialCommand
         {
-            Id = id, Titulo = b.Titulo, Jefe = b.Jefe, CorreoJefe = b.CorreoJefe,
+            Id = id, Titulo = b.Titulo, JefeId = b.JefeId,
             NumeroMiembros = b.NumeroMiembros, CantidadMiembrosUH = b.CantidadMiembrosUH,
             CantidadEstudiantes = b.CantidadEstudiantes,
             CantidadEstudiantesContratados = b.CantidadEstudiantesContratados,
@@ -283,7 +283,7 @@ public class Proyectos : EndpointGroupBase
     {
         var (result, id) = await sender.Send(new CreateProyectoApoyoProgramaCommand
         {
-            Titulo = b.Titulo, Jefe = b.Jefe, CorreoJefe = b.CorreoJefe,
+            Titulo = b.Titulo, JefeId = b.JefeId,
             NumeroMiembros = b.NumeroMiembros, CantidadMiembrosUH = b.CantidadMiembrosUH,
             CantidadEstudiantes = b.CantidadEstudiantes,
             CantidadEstudiantesContratados = b.CantidadEstudiantesContratados,
@@ -306,7 +306,7 @@ public class Proyectos : EndpointGroupBase
     {
         var result = await sender.Send(new UpdateProyectoApoyoProgramaCommand
         {
-            Id = id, Titulo = b.Titulo, Jefe = b.Jefe, CorreoJefe = b.CorreoJefe,
+            Id = id, Titulo = b.Titulo, JefeId = b.JefeId,
             NumeroMiembros = b.NumeroMiembros, CantidadMiembrosUH = b.CantidadMiembrosUH,
             CantidadEstudiantes = b.CantidadEstudiantes,
             CantidadEstudiantesContratados = b.CantidadEstudiantesContratados,
@@ -340,7 +340,7 @@ public class Proyectos : EndpointGroupBase
     {
         var (result, id) = await sender.Send(new CreateProyectoDesarrolloLocalCommand
         {
-            Titulo = b.Titulo, Jefe = b.Jefe, CorreoJefe = b.CorreoJefe,
+            Titulo = b.Titulo, JefeId = b.JefeId,
             NumeroMiembros = b.NumeroMiembros, CantidadMiembrosUH = b.CantidadMiembrosUH,
             CantidadEstudiantes = b.CantidadEstudiantes,
             CantidadEstudiantesContratados = b.CantidadEstudiantesContratados,
@@ -362,7 +362,7 @@ public class Proyectos : EndpointGroupBase
     {
         var result = await sender.Send(new UpdateProyectoDesarrolloLocalCommand
         {
-            Id = id, Titulo = b.Titulo, Jefe = b.Jefe, CorreoJefe = b.CorreoJefe,
+            Id = id, Titulo = b.Titulo, JefeId = b.JefeId,
             NumeroMiembros = b.NumeroMiembros, CantidadMiembrosUH = b.CantidadMiembrosUH,
             CantidadEstudiantes = b.CantidadEstudiantes,
             CantidadEstudiantesContratados = b.CantidadEstudiantesContratados,
@@ -395,7 +395,7 @@ public class Proyectos : EndpointGroupBase
     {
         var (result, id) = await sender.Send(new CreateProyectoNoEmpresarialCommand
         {
-            Titulo = b.Titulo, Jefe = b.Jefe, CorreoJefe = b.CorreoJefe,
+            Titulo = b.Titulo, JefeId = b.JefeId,
             NumeroMiembros = b.NumeroMiembros, CantidadMiembrosUH = b.CantidadMiembrosUH,
             CantidadEstudiantes = b.CantidadEstudiantes,
             CantidadEstudiantesContratados = b.CantidadEstudiantesContratados,
@@ -418,7 +418,7 @@ public class Proyectos : EndpointGroupBase
     {
         var result = await sender.Send(new UpdateProyectoNoEmpresarialCommand
         {
-            Id = id, Titulo = b.Titulo, Jefe = b.Jefe, CorreoJefe = b.CorreoJefe,
+            Id = id, Titulo = b.Titulo, JefeId = b.JefeId,
             NumeroMiembros = b.NumeroMiembros, CantidadMiembrosUH = b.CantidadMiembrosUH,
             CantidadEstudiantes = b.CantidadEstudiantes,
             CantidadEstudiantesContratados = b.CantidadEstudiantesContratados,
@@ -452,7 +452,7 @@ public class Proyectos : EndpointGroupBase
     {
         var (result, id) = await sender.Send(new CreateProyectoColabInternacionalCommand
         {
-            Titulo = b.Titulo, Jefe = b.Jefe, CorreoJefe = b.CorreoJefe,
+            Titulo = b.Titulo, JefeId = b.JefeId,
             NumeroMiembros = b.NumeroMiembros, CantidadMiembrosUH = b.CantidadMiembrosUH,
             CantidadEstudiantes = b.CantidadEstudiantes,
             CantidadEstudiantesContratados = b.CantidadEstudiantesContratados,
@@ -475,7 +475,7 @@ public class Proyectos : EndpointGroupBase
     {
         var result = await sender.Send(new UpdateProyectoColabInternacionalCommand
         {
-            Id = id, Titulo = b.Titulo, Jefe = b.Jefe, CorreoJefe = b.CorreoJefe,
+            Id = id, Titulo = b.Titulo, JefeId = b.JefeId,
             NumeroMiembros = b.NumeroMiembros, CantidadMiembrosUH = b.CantidadMiembrosUH,
             CantidadEstudiantes = b.CantidadEstudiantes,
             CantidadEstudiantesContratados = b.CantidadEstudiantesContratados,
@@ -509,7 +509,7 @@ public class Proyectos : EndpointGroupBase
     {
         var (result, id) = await sender.Send(new CreateProyectoPNAPCommand
         {
-            Titulo = b.Titulo, Jefe = b.Jefe, CorreoJefe = b.CorreoJefe,
+            Titulo = b.Titulo, JefeId = b.JefeId,
             NumeroMiembros = b.NumeroMiembros, CantidadMiembrosUH = b.CantidadMiembrosUH,
             CantidadEstudiantes = b.CantidadEstudiantes,
             CantidadEstudiantesContratados = b.CantidadEstudiantesContratados,
@@ -532,7 +532,7 @@ public class Proyectos : EndpointGroupBase
     {
         var result = await sender.Send(new UpdateProyectoPNAPCommand
         {
-            Id = id, Titulo = b.Titulo, Jefe = b.Jefe, CorreoJefe = b.CorreoJefe,
+            Id = id, Titulo = b.Titulo, JefeId = b.JefeId,
             NumeroMiembros = b.NumeroMiembros, CantidadMiembrosUH = b.CantidadMiembrosUH,
             CantidadEstudiantes = b.CantidadEstudiantes,
             CantidadEstudiantesContratados = b.CantidadEstudiantesContratados,
@@ -559,14 +559,14 @@ public class Proyectos : EndpointGroupBase
 // ── Request body records ───────────────────────────────────────────────
 
 internal record ProyectoEnRevisionBody(
-    string Titulo, string Jefe, string CorreoJefe,
+    string Titulo, string JefeId,
     int NumeroMiembros, int CantidadMiembrosUH, int CantidadEstudiantes,
     int CantidadEstudiantesContratados, bool TributaFormacionDoctoral,
     string ClasificacionId,
     string Situacion, string Tipo);
 
 internal record ProyectoEmpresarialBody(
-    string Titulo, string Jefe, string CorreoJefe,
+    string Titulo, string JefeId,
     int NumeroMiembros, int CantidadMiembrosUH, int CantidadEstudiantes,
     int CantidadEstudiantesContratados, bool TributaFormacionDoctoral,
     string ClasificacionId,
@@ -578,7 +578,7 @@ internal record ProyectoEmpresarialBody(
     string Empresa);
 
 internal record ProyectoApoyoProgramaBody(
-    string Titulo, string Jefe, string CorreoJefe,
+    string Titulo, string JefeId,
     int NumeroMiembros, int CantidadMiembrosUH, int CantidadEstudiantes,
     int CantidadEstudiantesContratados, bool TributaFormacionDoctoral,
     string ClasificacionId,
@@ -590,7 +590,7 @@ internal record ProyectoApoyoProgramaBody(
     string NombrePrograma, TipoPAP TipoPAP);
 
 internal record ProyectoDesarrolloLocalBody(
-    string Titulo, string Jefe, string CorreoJefe,
+    string Titulo, string JefeId,
     int NumeroMiembros, int CantidadMiembrosUH, int CantidadEstudiantes,
     int CantidadEstudiantesContratados, bool TributaFormacionDoctoral,
     string ClasificacionId,
@@ -601,7 +601,7 @@ internal record ProyectoDesarrolloLocalBody(
     string Municipio);
 
 internal record ProyectoNoEmpresarialBody(
-    string Titulo, string Jefe, string CorreoJefe,
+    string Titulo, string JefeId,
     int NumeroMiembros, int CantidadMiembrosUH, int CantidadEstudiantes,
     int CantidadEstudiantesContratados, bool TributaFormacionDoctoral,
     string ClasificacionId,
@@ -613,7 +613,7 @@ internal record ProyectoNoEmpresarialBody(
     string EntidadNoEmpresarial);
 
 internal record ProyectoColabInternacionalBody(
-    string Titulo, string Jefe, string CorreoJefe,
+    string Titulo, string JefeId,
     int NumeroMiembros, int CantidadMiembrosUH, int CantidadEstudiantes,
     int CantidadEstudiantesContratados, bool TributaFormacionDoctoral,
     string ClasificacionId,
@@ -625,7 +625,7 @@ internal record ProyectoColabInternacionalBody(
     string FuenteFinanciacion, string TerminosReferencia);
 
 internal record ProyectoPNAPBody(
-    string Titulo, string Jefe, string CorreoJefe,
+    string Titulo, string JefeId,
     int NumeroMiembros, int CantidadMiembrosUH, int CantidadEstudiantes,
     int CantidadEstudiantesContratados, bool TributaFormacionDoctoral,
     string ClasificacionId,

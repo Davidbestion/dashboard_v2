@@ -3,4 +3,5 @@
 public abstract class Roles
 {
     public const string Superuser = nameof(Superuser);
+    public const string JefeDeProyecto = "Jefe_de_Proyecto";
 }

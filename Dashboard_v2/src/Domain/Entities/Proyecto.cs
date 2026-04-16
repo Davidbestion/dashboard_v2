@@ -9,9 +9,16 @@ public abstract class Proyecto
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
     public string Titulo { get; set; } = default!;
-    /// <summary>Nombre completo del jefe del proyecto.</summary>
-    public string Jefe { get; set; } = default!;
-    public string CorreoJefe { get; set; } = default!;
+
+    /// <summary>
+    /// FK al usuario que ejerce como jefe del proyecto.
+    /// El jefe debe tener el rol <c>Jefe_de_Proyecto</c>.
+    /// Un usuario puede dirigir varios proyectos, pero cada proyecto tiene exactamente un jefe.
+    /// </summary>
+    public string JefeId { get; set; } = default!;
+
+    /// <summary>Navegación al usuario jefe. Cargado explícitamente en los queries.</summary>
+    public User JefeUsuario { get; set; } = default!;
 
     public int NumeroMiembros { get; set; }
     public int CantidadMiembrosUH { get; set; }

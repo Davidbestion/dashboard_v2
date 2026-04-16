@@ -3852,6 +3852,48 @@ export class UsersClient {
         }
         return Promise.resolve<void>(null as any);
     }
+
+    getJefesDeProyecto(): Promise<JefeDeProyectoDto[]> {
+        let url_ = this.baseUrl + "/api/Users/jefes-de-proyecto";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetJefesDeProyecto(_response);
+        });
+    }
+
+    protected processGetJefesDeProyecto(response: Response): Promise<JefeDeProyectoDto[]> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(JefeDeProyectoDto.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<JefeDeProyectoDto[]>(null as any);
+    }
 }
 
 export class AreaDto implements IAreaDto {
@@ -5736,6 +5778,7 @@ export interface IUpdatePresentationBody {
 export class ProyectoResumenDto implements IProyectoResumenDto {
     id?: string;
     titulo?: string;
+    jefeId?: string;
     jefe?: string;
     correoJefe?: string;
     numeroMiembros?: number;
@@ -5759,6 +5802,7 @@ export class ProyectoResumenDto implements IProyectoResumenDto {
         if (_data) {
             this.id = _data["id"];
             this.titulo = _data["titulo"];
+            this.jefeId = _data["jefeId"];
             this.jefe = _data["jefe"];
             this.correoJefe = _data["correoJefe"];
             this.numeroMiembros = _data["numeroMiembros"];
@@ -5782,6 +5826,7 @@ export class ProyectoResumenDto implements IProyectoResumenDto {
         data = typeof data === 'object' ? data : {};
         data["id"] = this.id;
         data["titulo"] = this.titulo;
+        data["jefeId"] = this.jefeId;
         data["jefe"] = this.jefe;
         data["correoJefe"] = this.correoJefe;
         data["numeroMiembros"] = this.numeroMiembros;
@@ -5798,6 +5843,7 @@ export class ProyectoResumenDto implements IProyectoResumenDto {
 export interface IProyectoResumenDto {
     id?: string;
     titulo?: string;
+    jefeId?: string;
     jefe?: string;
     correoJefe?: string;
     numeroMiembros?: number;
@@ -5812,6 +5858,7 @@ export interface IProyectoResumenDto {
 export abstract class ProyectoBaseDto implements IProyectoBaseDto {
     id?: string;
     titulo?: string;
+    jefeId?: string;
     jefe?: string;
     correoJefe?: string;
     numeroMiembros?: number;
@@ -5835,6 +5882,7 @@ export abstract class ProyectoBaseDto implements IProyectoBaseDto {
         if (_data) {
             this.id = _data["id"];
             this.titulo = _data["titulo"];
+            this.jefeId = _data["jefeId"];
             this.jefe = _data["jefe"];
             this.correoJefe = _data["correoJefe"];
             this.numeroMiembros = _data["numeroMiembros"];
@@ -5856,6 +5904,7 @@ export abstract class ProyectoBaseDto implements IProyectoBaseDto {
         data = typeof data === 'object' ? data : {};
         data["id"] = this.id;
         data["titulo"] = this.titulo;
+        data["jefeId"] = this.jefeId;
         data["jefe"] = this.jefe;
         data["correoJefe"] = this.correoJefe;
         data["numeroMiembros"] = this.numeroMiembros;
@@ -5872,6 +5921,7 @@ export abstract class ProyectoBaseDto implements IProyectoBaseDto {
 export interface IProyectoBaseDto {
     id?: string;
     titulo?: string;
+    jefeId?: string;
     jefe?: string;
     correoJefe?: string;
     numeroMiembros?: number;
@@ -5922,8 +5972,7 @@ export interface IProyectoEnRevisionDto extends IProyectoBaseDto {
 
 export class ProyectoEnRevisionBody implements IProyectoEnRevisionBody {
     titulo?: string;
-    jefe?: string;
-    correoJefe?: string;
+    jefeId?: string;
     numeroMiembros?: number;
     cantidadMiembrosUH?: number;
     cantidadEstudiantes?: number;
@@ -5945,8 +5994,7 @@ export class ProyectoEnRevisionBody implements IProyectoEnRevisionBody {
     init(_data?: any) {
         if (_data) {
             this.titulo = _data["titulo"];
-            this.jefe = _data["jefe"];
-            this.correoJefe = _data["correoJefe"];
+            this.jefeId = _data["jefeId"];
             this.numeroMiembros = _data["numeroMiembros"];
             this.cantidadMiembrosUH = _data["cantidadMiembrosUH"];
             this.cantidadEstudiantes = _data["cantidadEstudiantes"];
@@ -5968,8 +6016,7 @@ export class ProyectoEnRevisionBody implements IProyectoEnRevisionBody {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["titulo"] = this.titulo;
-        data["jefe"] = this.jefe;
-        data["correoJefe"] = this.correoJefe;
+        data["jefeId"] = this.jefeId;
         data["numeroMiembros"] = this.numeroMiembros;
         data["cantidadMiembrosUH"] = this.cantidadMiembrosUH;
         data["cantidadEstudiantes"] = this.cantidadEstudiantes;
@@ -5984,8 +6031,7 @@ export class ProyectoEnRevisionBody implements IProyectoEnRevisionBody {
 
 export interface IProyectoEnRevisionBody {
     titulo?: string;
-    jefe?: string;
-    correoJefe?: string;
+    jefeId?: string;
     numeroMiembros?: number;
     cantidadMiembrosUH?: number;
     cantidadEstudiantes?: number;
@@ -6094,8 +6140,7 @@ export interface IProyectoEmpresarialDto extends IProyectoEnEjecucionBaseDto {
 
 export class ProyectoEmpresarialBody implements IProyectoEmpresarialBody {
     titulo?: string;
-    jefe?: string;
-    correoJefe?: string;
+    jefeId?: string;
     numeroMiembros?: number;
     cantidadMiembrosUH?: number;
     cantidadEstudiantes?: number;
@@ -6125,8 +6170,7 @@ export class ProyectoEmpresarialBody implements IProyectoEmpresarialBody {
     init(_data?: any) {
         if (_data) {
             this.titulo = _data["titulo"];
-            this.jefe = _data["jefe"];
-            this.correoJefe = _data["correoJefe"];
+            this.jefeId = _data["jefeId"];
             this.numeroMiembros = _data["numeroMiembros"];
             this.cantidadMiembrosUH = _data["cantidadMiembrosUH"];
             this.cantidadEstudiantes = _data["cantidadEstudiantes"];
@@ -6156,8 +6200,7 @@ export class ProyectoEmpresarialBody implements IProyectoEmpresarialBody {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["titulo"] = this.titulo;
-        data["jefe"] = this.jefe;
-        data["correoJefe"] = this.correoJefe;
+        data["jefeId"] = this.jefeId;
         data["numeroMiembros"] = this.numeroMiembros;
         data["cantidadMiembrosUH"] = this.cantidadMiembrosUH;
         data["cantidadEstudiantes"] = this.cantidadEstudiantes;
@@ -6180,8 +6223,7 @@ export class ProyectoEmpresarialBody implements IProyectoEmpresarialBody {
 
 export interface IProyectoEmpresarialBody {
     titulo?: string;
-    jefe?: string;
-    correoJefe?: string;
+    jefeId?: string;
     numeroMiembros?: number;
     cantidadMiembrosUH?: number;
     cantidadEstudiantes?: number;
@@ -6245,8 +6287,7 @@ export enum TipoPAP {
 
 export class ProyectoApoyoProgramaBody implements IProyectoApoyoProgramaBody {
     titulo?: string;
-    jefe?: string;
-    correoJefe?: string;
+    jefeId?: string;
     numeroMiembros?: number;
     cantidadMiembrosUH?: number;
     cantidadEstudiantes?: number;
@@ -6277,8 +6318,7 @@ export class ProyectoApoyoProgramaBody implements IProyectoApoyoProgramaBody {
     init(_data?: any) {
         if (_data) {
             this.titulo = _data["titulo"];
-            this.jefe = _data["jefe"];
-            this.correoJefe = _data["correoJefe"];
+            this.jefeId = _data["jefeId"];
             this.numeroMiembros = _data["numeroMiembros"];
             this.cantidadMiembrosUH = _data["cantidadMiembrosUH"];
             this.cantidadEstudiantes = _data["cantidadEstudiantes"];
@@ -6309,8 +6349,7 @@ export class ProyectoApoyoProgramaBody implements IProyectoApoyoProgramaBody {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["titulo"] = this.titulo;
-        data["jefe"] = this.jefe;
-        data["correoJefe"] = this.correoJefe;
+        data["jefeId"] = this.jefeId;
         data["numeroMiembros"] = this.numeroMiembros;
         data["cantidadMiembrosUH"] = this.cantidadMiembrosUH;
         data["cantidadEstudiantes"] = this.cantidadEstudiantes;
@@ -6334,8 +6373,7 @@ export class ProyectoApoyoProgramaBody implements IProyectoApoyoProgramaBody {
 
 export interface IProyectoApoyoProgramaBody {
     titulo?: string;
-    jefe?: string;
-    correoJefe?: string;
+    jefeId?: string;
     numeroMiembros?: number;
     cantidadMiembrosUH?: number;
     cantidadEstudiantes?: number;
@@ -6390,8 +6428,7 @@ export interface IProyectoDesarrolloLocalDto extends IProyectoEnEjecucionBaseDto
 
 export class ProyectoDesarrolloLocalBody implements IProyectoDesarrolloLocalBody {
     titulo?: string;
-    jefe?: string;
-    correoJefe?: string;
+    jefeId?: string;
     numeroMiembros?: number;
     cantidadMiembrosUH?: number;
     cantidadEstudiantes?: number;
@@ -6420,8 +6457,7 @@ export class ProyectoDesarrolloLocalBody implements IProyectoDesarrolloLocalBody
     init(_data?: any) {
         if (_data) {
             this.titulo = _data["titulo"];
-            this.jefe = _data["jefe"];
-            this.correoJefe = _data["correoJefe"];
+            this.jefeId = _data["jefeId"];
             this.numeroMiembros = _data["numeroMiembros"];
             this.cantidadMiembrosUH = _data["cantidadMiembrosUH"];
             this.cantidadEstudiantes = _data["cantidadEstudiantes"];
@@ -6450,8 +6486,7 @@ export class ProyectoDesarrolloLocalBody implements IProyectoDesarrolloLocalBody
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["titulo"] = this.titulo;
-        data["jefe"] = this.jefe;
-        data["correoJefe"] = this.correoJefe;
+        data["jefeId"] = this.jefeId;
         data["numeroMiembros"] = this.numeroMiembros;
         data["cantidadMiembrosUH"] = this.cantidadMiembrosUH;
         data["cantidadEstudiantes"] = this.cantidadEstudiantes;
@@ -6473,8 +6508,7 @@ export class ProyectoDesarrolloLocalBody implements IProyectoDesarrolloLocalBody
 
 export interface IProyectoDesarrolloLocalBody {
     titulo?: string;
-    jefe?: string;
-    correoJefe?: string;
+    jefeId?: string;
     numeroMiembros?: number;
     cantidadMiembrosUH?: number;
     cantidadEstudiantes?: number;
@@ -6527,8 +6561,7 @@ export interface IProyectoNoEmpresarialDto extends IProyectoEnEjecucionBaseDto {
 
 export class ProyectoNoEmpresarialBody implements IProyectoNoEmpresarialBody {
     titulo?: string;
-    jefe?: string;
-    correoJefe?: string;
+    jefeId?: string;
     numeroMiembros?: number;
     cantidadMiembrosUH?: number;
     cantidadEstudiantes?: number;
@@ -6558,8 +6591,7 @@ export class ProyectoNoEmpresarialBody implements IProyectoNoEmpresarialBody {
     init(_data?: any) {
         if (_data) {
             this.titulo = _data["titulo"];
-            this.jefe = _data["jefe"];
-            this.correoJefe = _data["correoJefe"];
+            this.jefeId = _data["jefeId"];
             this.numeroMiembros = _data["numeroMiembros"];
             this.cantidadMiembrosUH = _data["cantidadMiembrosUH"];
             this.cantidadEstudiantes = _data["cantidadEstudiantes"];
@@ -6589,8 +6621,7 @@ export class ProyectoNoEmpresarialBody implements IProyectoNoEmpresarialBody {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["titulo"] = this.titulo;
-        data["jefe"] = this.jefe;
-        data["correoJefe"] = this.correoJefe;
+        data["jefeId"] = this.jefeId;
         data["numeroMiembros"] = this.numeroMiembros;
         data["cantidadMiembrosUH"] = this.cantidadMiembrosUH;
         data["cantidadEstudiantes"] = this.cantidadEstudiantes;
@@ -6613,8 +6644,7 @@ export class ProyectoNoEmpresarialBody implements IProyectoNoEmpresarialBody {
 
 export interface IProyectoNoEmpresarialBody {
     titulo?: string;
-    jefe?: string;
-    correoJefe?: string;
+    jefeId?: string;
     numeroMiembros?: number;
     cantidadMiembrosUH?: number;
     cantidadEstudiantes?: number;
@@ -6672,8 +6702,7 @@ export interface IProyectoColabInternacionalDto extends IProyectoEnEjecucionBase
 
 export class ProyectoColabInternacionalBody implements IProyectoColabInternacionalBody {
     titulo?: string;
-    jefe?: string;
-    correoJefe?: string;
+    jefeId?: string;
     numeroMiembros?: number;
     cantidadMiembrosUH?: number;
     cantidadEstudiantes?: number;
@@ -6704,8 +6733,7 @@ export class ProyectoColabInternacionalBody implements IProyectoColabInternacion
     init(_data?: any) {
         if (_data) {
             this.titulo = _data["titulo"];
-            this.jefe = _data["jefe"];
-            this.correoJefe = _data["correoJefe"];
+            this.jefeId = _data["jefeId"];
             this.numeroMiembros = _data["numeroMiembros"];
             this.cantidadMiembrosUH = _data["cantidadMiembrosUH"];
             this.cantidadEstudiantes = _data["cantidadEstudiantes"];
@@ -6736,8 +6764,7 @@ export class ProyectoColabInternacionalBody implements IProyectoColabInternacion
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["titulo"] = this.titulo;
-        data["jefe"] = this.jefe;
-        data["correoJefe"] = this.correoJefe;
+        data["jefeId"] = this.jefeId;
         data["numeroMiembros"] = this.numeroMiembros;
         data["cantidadMiembrosUH"] = this.cantidadMiembrosUH;
         data["cantidadEstudiantes"] = this.cantidadEstudiantes;
@@ -6761,8 +6788,7 @@ export class ProyectoColabInternacionalBody implements IProyectoColabInternacion
 
 export interface IProyectoColabInternacionalBody {
     titulo?: string;
-    jefe?: string;
-    correoJefe?: string;
+    jefeId?: string;
     numeroMiembros?: number;
     cantidadMiembrosUH?: number;
     cantidadEstudiantes?: number;
@@ -6817,8 +6843,7 @@ export interface IProyectoPNAPDto extends IProyectoEnEjecucionBaseDto {
 
 export class ProyectoPNAPBody implements IProyectoPNAPBody {
     titulo?: string;
-    jefe?: string;
-    correoJefe?: string;
+    jefeId?: string;
     numeroMiembros?: number;
     cantidadMiembrosUH?: number;
     cantidadEstudiantes?: number;
@@ -6848,8 +6873,7 @@ export class ProyectoPNAPBody implements IProyectoPNAPBody {
     init(_data?: any) {
         if (_data) {
             this.titulo = _data["titulo"];
-            this.jefe = _data["jefe"];
-            this.correoJefe = _data["correoJefe"];
+            this.jefeId = _data["jefeId"];
             this.numeroMiembros = _data["numeroMiembros"];
             this.cantidadMiembrosUH = _data["cantidadMiembrosUH"];
             this.cantidadEstudiantes = _data["cantidadEstudiantes"];
@@ -6879,8 +6903,7 @@ export class ProyectoPNAPBody implements IProyectoPNAPBody {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["titulo"] = this.titulo;
-        data["jefe"] = this.jefe;
-        data["correoJefe"] = this.correoJefe;
+        data["jefeId"] = this.jefeId;
         data["numeroMiembros"] = this.numeroMiembros;
         data["cantidadMiembrosUH"] = this.cantidadMiembrosUH;
         data["cantidadEstudiantes"] = this.cantidadEstudiantes;
@@ -6903,8 +6926,7 @@ export class ProyectoPNAPBody implements IProyectoPNAPBody {
 
 export interface IProyectoPNAPBody {
     titulo?: string;
-    jefe?: string;
-    correoJefe?: string;
+    jefeId?: string;
     numeroMiembros?: number;
     cantidadMiembrosUH?: number;
     cantidadEstudiantes?: number;
@@ -7633,6 +7655,50 @@ export class AssignRoleRequest implements IAssignRoleRequest {
 
 export interface IAssignRoleRequest {
     roleName?: string;
+}
+
+export class JefeDeProyectoDto implements IJefeDeProyectoDto {
+    id?: string;
+    nombreCompleto?: string;
+    email?: string;
+
+    constructor(data?: IJefeDeProyectoDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.nombreCompleto = _data["nombreCompleto"];
+            this.email = _data["email"];
+        }
+    }
+
+    static fromJS(data: any): JefeDeProyectoDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new JefeDeProyectoDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["nombreCompleto"] = this.nombreCompleto;
+        data["email"] = this.email;
+        return data;
+    }
+}
+
+export interface IJefeDeProyectoDto {
+    id?: string;
+    nombreCompleto?: string;
+    email?: string;
 }
 
 function formatDate(d: Date) {

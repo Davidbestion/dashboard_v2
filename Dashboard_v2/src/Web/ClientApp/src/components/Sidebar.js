@@ -40,6 +40,15 @@ const jefeGroups = [
   },
 ];
 
+const jefeDeProyectoGroups = [
+  {
+    heading: 'Gestión de Proyectos',
+    items: [
+      { to: '/proyectos', icon: 'bi-kanban', label: 'Mis Proyectos' },
+    ],
+  },
+];
+
 const adminGroups = [
   {
     heading: 'Administración',
@@ -80,6 +89,7 @@ export default function Sidebar({ collapsed, onToggle }) {
     ...baseGroups,
     ...(user?.role === 'Profesor' ? [...profesorGroups, ...investigacionGroups] : []),
     ...(user?.role === 'Jefe_de_Grupo_de_investigacion' ? jefeGroups : []),
+    ...(user?.role === 'Jefe_de_Proyecto' ? jefeDeProyectoGroups : []),
     ...(user?.role === 'Superuser' ? adminGroups : []),
   ];
 

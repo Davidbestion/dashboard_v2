@@ -9,8 +9,7 @@ public record UpdateProyectoApoyoProgramaCommand : IRequest<Result>
 {
     public string Id { get; init; } = default!;
     public string Titulo { get; init; } = default!;
-    public string Jefe { get; init; } = default!;
-    public string CorreoJefe { get; init; } = default!;
+    public string JefeId { get; init; } = default!;
     public int NumeroMiembros { get; init; }
     public int CantidadMiembrosUH { get; init; }
     public int CantidadEstudiantes { get; init; }
@@ -34,9 +33,13 @@ public class UpdateProyectoApoyoProgramaCommandHandler
     : IRequestHandler<UpdateProyectoApoyoProgramaCommand, Result>
 {
     private readonly IApplicationDbContext _context;
+    private readonly IUser _currentUser;
 
-    public UpdateProyectoApoyoProgramaCommandHandler(IApplicationDbContext context)
-        => _context = context;
+    public UpdateProyectoApoyoProgramaCommandHandler(IApplicationDbContext context, IUser currentUser)
+    {
+        _context = context;
+        _currentUser = currentUser;
+    }
 
     public async Task<Result> Handle(
         UpdateProyectoApoyoProgramaCommand request, CancellationToken cancellationToken)
@@ -47,10 +50,19 @@ public class UpdateProyectoApoyoProgramaCommandHandler
         if (proyecto is null)
             return Result.Failure(["Proyecto no encontrado."]);
 
+        var ownerFilter = ProyectoHelper.GetOwnerFilter(_currentUser);
+        if (ownerFilter is not null && proyecto.JefeId != ownerFilter)
+            return Result.Failure(["No tiene permiso para modificar este proyecto."]);
+
         if (!await _context.Clasificaciones.AnyAsync(c => c.Id == request.ClasificacionId, cancellationToken))
             return Result.Failure(["La clasificación indicada no existe."]);
 
-        ProyectoHelper.SetBase(proyecto, request.Titulo, request.Jefe, request.CorreoJefe,
+        var jefeId = ProyectoHelper.ResolveJefeId(request.JefeId, _currentUser);
+        var jefeValidation = await ProyectoHelper.ValidateJefeAsync(_context, jefeId, cancellationToken);
+        if (jefeValidation is not null)
+            return jefeValidation;
+
+        ProyectoHelper.SetBase(proyecto, request.Titulo, jefeId,
             request.NumeroMiembros, request.CantidadMiembrosUH, request.CantidadEstudiantes,
             request.CantidadEstudiantesContratados, request.TributaFormacionDoctoral,
             request.ClasificacionId);

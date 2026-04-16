@@ -3048,6 +3048,29 @@
           }
         }
       }
+    },
+    "/api/Users/jefes-de-proyecto": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "operationId": "GetJefesDeProyecto",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/JefeDeProyectoDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -3851,6 +3874,9 @@
           "titulo": {
             "type": "string"
           },
+          "jefeId": {
+            "type": "string"
+          },
           "jefe": {
             "type": "string"
           },
@@ -3914,6 +3940,9 @@
           "titulo": {
             "type": "string"
           },
+          "jefeId": {
+            "type": "string"
+          },
           "jefe": {
             "type": "string"
           },
@@ -3954,10 +3983,7 @@
           "titulo": {
             "type": "string"
           },
-          "jefe": {
-            "type": "string"
-          },
-          "correoJefe": {
+          "jefeId": {
             "type": "string"
           },
           "numeroMiembros": {
@@ -4060,10 +4086,7 @@
           "titulo": {
             "type": "string"
           },
-          "jefe": {
-            "type": "string"
-          },
-          "correoJefe": {
+          "jefeId": {
             "type": "string"
           },
           "numeroMiembros": {
@@ -4166,10 +4189,7 @@
           "titulo": {
             "type": "string"
           },
-          "jefe": {
-            "type": "string"
-          },
-          "correoJefe": {
+          "jefeId": {
             "type": "string"
           },
           "numeroMiembros": {
@@ -4258,10 +4278,7 @@
           "titulo": {
             "type": "string"
           },
-          "jefe": {
-            "type": "string"
-          },
-          "correoJefe": {
+          "jefeId": {
             "type": "string"
           },
           "numeroMiembros": {
@@ -4344,10 +4361,7 @@
           "titulo": {
             "type": "string"
           },
-          "jefe": {
-            "type": "string"
-          },
-          "correoJefe": {
+          "jefeId": {
             "type": "string"
           },
           "numeroMiembros": {
@@ -4436,10 +4450,7 @@
           "titulo": {
             "type": "string"
           },
-          "jefe": {
-            "type": "string"
-          },
-          "correoJefe": {
+          "jefeId": {
             "type": "string"
           },
           "numeroMiembros": {
@@ -4528,10 +4539,7 @@
           "titulo": {
             "type": "string"
           },
-          "jefe": {
-            "type": "string"
-          },
-          "correoJefe": {
+          "jefeId": {
             "type": "string"
           },
           "numeroMiembros": {
@@ -4914,6 +4922,21 @@
         "additionalProperties": false,
         "properties": {
           "roleName": {
+            "type": "string"
+          }
+        }
+      },
+      "JefeDeProyectoDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "nombreCompleto": {
+            "type": "string"
+          },
+          "email": {
             "type": "string"
           }
         }

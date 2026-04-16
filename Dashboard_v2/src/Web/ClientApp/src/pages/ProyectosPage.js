@@ -5,6 +5,7 @@ import {
   Modal, ModalHeader, ModalBody, ModalFooter,
   Form, FormGroup, Label, Input,
 } from 'reactstrap';
+import { useAuth } from '../contexts/AuthContext';
 
 async function apiFetch(url, options = {}) {
   const response = await fetch(url, {
@@ -44,7 +45,7 @@ const isEjecucion = (tipo) => tipo !== 'en-revision'; // all except EnRevision
 
 const emptyForm = {
   tipo: 'en-revision',
-  titulo: '', jefe: '', correoJefe: '',
+  titulo: '', jefeId: '',
   numeroMiembros: 0, cantidadMiembrosUH: 0,
   cantidadEstudiantes: 0, cantidadEstudiantesContratados: 0,
   tributaFormacionDoctoral: false,
@@ -53,7 +54,7 @@ const emptyForm = {
   // EnRevision
   situacion: '', tipoRevision: '',
   // EnEjecucion
-  fechaInicio: '', fechaCierre: '',
+  fechaInicio: '', fechaInicioDay: '', fechaCierre: '', fechaCierreDay: '',
   estadoDeEjecucion: '', codigoProyecto: '',
   entidadEjecutoraPrincipal: '', entidadEjecutoraParticipante: '',
   contribucionSectoresEstrategicos: '', contribucionEjesEstrategicos: '',
@@ -72,8 +73,11 @@ const emptyForm = {
 };
 
 export default function ProyectosPage() {
+  const { user } = useAuth();
+  const isJefeDeProyecto = user?.role === 'Jefe_de_Proyecto';
   const [items, setItems] = useState([]);
   const [clasificaciones, setClasificaciones] = useState([]);
+  const [jefes, setJefes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -91,12 +95,14 @@ export default function ProyectosPage() {
     setLoading(true);
     setError('');
     try {
-      const [proyData, clasData] = await Promise.all([
+      const [proyData, clasData, jefesData] = await Promise.all([
         apiFetch('/api/Proyectos'),
         apiFetch('/api/Clasificaciones'),
+        apiFetch('/api/Users/jefes-de-proyecto'),
       ]);
       setItems(proyData);
       setClasificaciones(clasData);
+      setJefes(jefesData);
     } catch (e) {
       setError(e.message);
     } finally {
@@ -108,7 +114,12 @@ export default function ProyectosPage() {
 
   function openCreate() {
     setEditing(null);
-    setForm({ ...emptyForm, clasificacionId: clasificaciones[0]?.id ?? '' });
+    setForm({
+      ...emptyForm,
+      clasificacionId: clasificaciones[0]?.id ?? '',
+      // For Jefe_de_Proyecto the server will override jefeId, but pre-fill for clarity
+      jefeId: isJefeDeProyecto ? (user?.id ?? '') : '',
+    });
     setFormError('');
     setModal(true);
   }
@@ -122,8 +133,7 @@ export default function ProyectosPage() {
       setForm({
         tipo: item.tipo,
         titulo: full.titulo ?? '',
-        jefe: full.jefe ?? '',
-        correoJefe: full.correoJefe ?? '',
+        jefeId: full.jefeId ?? '',
         numeroMiembros: full.numeroMiembros ?? 0,
         cantidadMiembrosUH: full.cantidadMiembrosUH ?? 0,
         cantidadEstudiantes: full.cantidadEstudiantes ?? 0,
@@ -133,8 +143,10 @@ export default function ProyectosPage() {
         clasificacionId: full.clasificacionId ?? '',
         situacion: full.situacion ?? '',
         tipoRevision: full.tipo ?? '',
-        fechaInicio: full.fechaInicio ?? '',
-        fechaCierre: full.fechaCierre ?? '',
+        fechaInicio: full.fechaInicio ? full.fechaInicio.substring(0, 7) : '',
+        fechaInicioDay: full.fechaInicio ? String(parseInt(full.fechaInicio.substring(8, 10))) : '',
+        fechaCierre: full.fechaCierre ? full.fechaCierre.substring(0, 7) : '',
+        fechaCierreDay: full.fechaCierre ? String(parseInt(full.fechaCierre.substring(8, 10))) : '',
         estadoDeEjecucion: full.estadoDeEjecucion ?? '',
         codigoProyecto: full.codigoProyecto ?? '',
         entidadEjecutoraPrincipal: full.entidadEjecutoraPrincipal ?? '',
@@ -166,8 +178,7 @@ export default function ProyectosPage() {
     const t = form.tipo;
     const base = {
       titulo: form.titulo,
-      jefe: form.jefe,
-      correoJefe: form.correoJefe,
+      jefeId: form.jefeId,
       numeroMiembros: form.numeroMiembros,
       cantidadMiembrosUH: form.cantidadMiembrosUH,
       cantidadEstudiantes: form.cantidadEstudiantes,
@@ -178,8 +189,8 @@ export default function ProyectosPage() {
     if (t === 'en-revision') return { ...base, situacion: form.situacion, tipo: form.tipoRevision };
     const ejecucion = {
       ...base,
-      fechaInicio: form.fechaInicio || null,
-      fechaCierre: form.fechaCierre || null,
+      fechaInicio: form.fechaInicio ? `${form.fechaInicio}-${String(parseInt(form.fechaInicioDay) || 1).padStart(2, '0')}` : null,
+      fechaCierre: form.fechaCierre ? `${form.fechaCierre}-${String(parseInt(form.fechaCierreDay) || 1).padStart(2, '0')}` : null,
       estadoDeEjecucion: form.estadoDeEjecucion,
       codigoProyecto: form.codigoProyecto,
       entidadEjecutoraPrincipal: form.entidadEjecutoraPrincipal,
@@ -308,20 +319,20 @@ export default function ProyectosPage() {
               <Label>Título *</Label>
               <Input value={form.titulo} onChange={set('titulo')} placeholder="Título del proyecto" />
             </FormGroup>
-            <div className="row">
-              <div className="col-md-6">
-                <FormGroup>
-                  <Label>Jefe</Label>
-                  <Input value={form.jefe} onChange={set('jefe')} placeholder="Nombre del jefe" />
-                </FormGroup>
-              </div>
-              <div className="col-md-6">
-                <FormGroup>
-                  <Label>Correo del jefe</Label>
-                  <Input type="email" value={form.correoJefe} onChange={set('correoJefe')} placeholder="correo@ejemplo.com" />
-                </FormGroup>
-              </div>
-            </div>
+            <FormGroup>
+              <Label>Jefe de proyecto *</Label>
+              {isJefeDeProyecto ? (
+                // Jefe_de_Proyecto always creates/edits as themselves — no selector needed
+                <Input plaintext readOnly value={`${user?.userName ?? ''} (${user?.email ?? ''})`} />
+              ) : (
+                <Input type="select" value={form.jefeId} onChange={set('jefeId')}>
+                  <option value="">-- Seleccionar jefe --</option>
+                  {jefes.map(j => (
+                    <option key={j.id} value={j.id}>{j.nombreCompleto} ({j.email})</option>
+                  ))}
+                </Input>
+              )}
+            </FormGroup>
 
             <div className="row">
               <div className="col-md-4">
@@ -389,13 +400,31 @@ export default function ProyectosPage() {
                   <div className="col-md-6">
                     <FormGroup>
                       <Label>Fecha de inicio *</Label>
-                      <Input type="date" value={form.fechaInicio} onChange={set('fechaInicio')} />
+                      <Input type="month" value={form.fechaInicio} onChange={set('fechaInicio')} />
+                      <div className="d-flex align-items-center gap-2 mt-1">
+                        <small className="text-muted text-nowrap">Día (opcional):</small>
+                        <Input
+                          type="number" min={1} max={31} placeholder="1–31"
+                          value={form.fechaInicioDay}
+                          onChange={e => setForm(f => ({ ...f, fechaInicioDay: e.target.value }))}
+                          style={{ width: '5rem' }}
+                        />
+                      </div>
                     </FormGroup>
                   </div>
                   <div className="col-md-6">
                     <FormGroup>
                       <Label>Fecha de cierre</Label>
-                      <Input type="date" value={form.fechaCierre} onChange={set('fechaCierre')} />
+                      <Input type="month" value={form.fechaCierre} onChange={set('fechaCierre')} />
+                      <div className="d-flex align-items-center gap-2 mt-1">
+                        <small className="text-muted text-nowrap">Día (opcional):</small>
+                        <Input
+                          type="number" min={1} max={31} placeholder="1–31"
+                          value={form.fechaCierreDay}
+                          onChange={e => setForm(f => ({ ...f, fechaCierreDay: e.target.value }))}
+                          style={{ width: '5rem' }}
+                        />
+                      </div>
                     </FormGroup>
                   </div>
                 </div>

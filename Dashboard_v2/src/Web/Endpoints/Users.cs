@@ -1,5 +1,6 @@
 using Dashboard_v2.Application.Users.Commands.AssignRole;
 using Dashboard_v2.Application.Users.Commands.RemoveRole;
+using Dashboard_v2.Application.Users.Queries.GetJefesDeProyecto;
 using Dashboard_v2.Application.Users.Queries.GetUsers;
 using Dashboard_v2.Web.Infrastructure;
 
@@ -30,6 +31,18 @@ public class Users : EndpointGroupBase
             .WithName("RemoveRole")
             .Produces(200)
             .ProducesProblem(400);
+
+        groupBuilder.MapGet("jefes-de-proyecto", GetJefesDeProyecto)
+            .RequireAuthorization(policy => policy.RequireRole("Superuser", "Jefe_de_Proyecto"))
+            .WithName("GetJefesDeProyecto")
+            .Produces<List<JefeDeProyectoDto>>(200);
+    }
+
+    /// <summary>GET /api/Users/jefes-de-proyecto — Retorna usuarios activos con rol Jefe_de_Proyecto.</summary>
+    private async Task<IResult> GetJefesDeProyecto(ISender sender)
+    {
+        var jefes = await sender.Send(new GetJefesDeProyectoQuery());
+        return Results.Ok(jefes);
     }
 
     /// <summary>GET /api/Users — Retorna todos los usuarios con sus roles. Solo Superuser.</summary>

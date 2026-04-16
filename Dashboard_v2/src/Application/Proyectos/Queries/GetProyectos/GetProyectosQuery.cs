@@ -8,18 +8,30 @@ public record GetProyectosQuery : IRequest<List<ProyectoResumenDto>>;
 public class GetProyectosQueryHandler : IRequestHandler<GetProyectosQuery, List<ProyectoResumenDto>>
 {
     private readonly IApplicationDbContext _context;
+    private readonly IUser _currentUser;
 
-    public GetProyectosQueryHandler(IApplicationDbContext context) => _context = context;
+    public GetProyectosQueryHandler(IApplicationDbContext context, IUser currentUser)
+    {
+        _context = context;
+        _currentUser = currentUser;
+    }
 
     public async Task<List<ProyectoResumenDto>> Handle(GetProyectosQuery request, CancellationToken ct)
     {
+        var ownerFilter = ProyectoHelper.GetOwnerFilter(_currentUser);
+
         // Consultas separadas por tipo para evitar el LEFT JOIN masivo que genera TPT
         // al consultar el DbSet base polimórficamente.
         var enRevision = await _context.Proyectos.OfType<ProyectoEnRevision>()
             .Include(p => p.Clasificacion)
+            .Include(p => p.JefeUsuario)
+            .Where(p => ownerFilter == null || p.JefeId == ownerFilter)
             .Select(p => new ProyectoResumenDto
             {
-                Id = p.Id, Titulo = p.Titulo, Jefe = p.Jefe, CorreoJefe = p.CorreoJefe,
+                Id = p.Id, Titulo = p.Titulo,
+                JefeId = p.JefeId,
+                Jefe = p.JefeUsuario.UserName + " " + p.JefeUsuario.UserLastName1 + (p.JefeUsuario.UserLastName2 != null ? " " + p.JefeUsuario.UserLastName2 : ""),
+                CorreoJefe = p.JefeUsuario.Email,
                 NumeroMiembros = p.NumeroMiembros,
                 ClasificacionId = p.ClasificacionId, ClasificacionNombre = p.Clasificacion.Nombre,
                 Tipo = "en-revision",
@@ -28,9 +40,14 @@ public class GetProyectosQueryHandler : IRequestHandler<GetProyectosQuery, List<
 
         var empresariales = await _context.Proyectos.OfType<ProyectoEmpresarial>()
             .Include(p => p.Clasificacion)
+            .Include(p => p.JefeUsuario)
+            .Where(p => ownerFilter == null || p.JefeId == ownerFilter)
             .Select(p => new ProyectoResumenDto
             {
-                Id = p.Id, Titulo = p.Titulo, Jefe = p.Jefe, CorreoJefe = p.CorreoJefe,
+                Id = p.Id, Titulo = p.Titulo,
+                JefeId = p.JefeId,
+                Jefe = p.JefeUsuario.UserName + " " + p.JefeUsuario.UserLastName1 + (p.JefeUsuario.UserLastName2 != null ? " " + p.JefeUsuario.UserLastName2 : ""),
+                CorreoJefe = p.JefeUsuario.Email,
                 NumeroMiembros = p.NumeroMiembros,
                 ClasificacionId = p.ClasificacionId, ClasificacionNombre = p.Clasificacion.Nombre,
                 Tipo = "empresariales",
@@ -39,9 +56,14 @@ public class GetProyectosQueryHandler : IRequestHandler<GetProyectosQuery, List<
 
         var apoyoPrograma = await _context.Proyectos.OfType<ProyectoApoyoPrograma>()
             .Include(p => p.Clasificacion)
+            .Include(p => p.JefeUsuario)
+            .Where(p => ownerFilter == null || p.JefeId == ownerFilter)
             .Select(p => new ProyectoResumenDto
             {
-                Id = p.Id, Titulo = p.Titulo, Jefe = p.Jefe, CorreoJefe = p.CorreoJefe,
+                Id = p.Id, Titulo = p.Titulo,
+                JefeId = p.JefeId,
+                Jefe = p.JefeUsuario.UserName + " " + p.JefeUsuario.UserLastName1 + (p.JefeUsuario.UserLastName2 != null ? " " + p.JefeUsuario.UserLastName2 : ""),
+                CorreoJefe = p.JefeUsuario.Email,
                 NumeroMiembros = p.NumeroMiembros,
                 ClasificacionId = p.ClasificacionId, ClasificacionNombre = p.Clasificacion.Nombre,
                 Tipo = "apoyo-programa",
@@ -50,9 +72,14 @@ public class GetProyectosQueryHandler : IRequestHandler<GetProyectosQuery, List<
 
         var desarrolloLocal = await _context.Proyectos.OfType<ProyectoDesarrolloLocal>()
             .Include(p => p.Clasificacion)
+            .Include(p => p.JefeUsuario)
+            .Where(p => ownerFilter == null || p.JefeId == ownerFilter)
             .Select(p => new ProyectoResumenDto
             {
-                Id = p.Id, Titulo = p.Titulo, Jefe = p.Jefe, CorreoJefe = p.CorreoJefe,
+                Id = p.Id, Titulo = p.Titulo,
+                JefeId = p.JefeId,
+                Jefe = p.JefeUsuario.UserName + " " + p.JefeUsuario.UserLastName1 + (p.JefeUsuario.UserLastName2 != null ? " " + p.JefeUsuario.UserLastName2 : ""),
+                CorreoJefe = p.JefeUsuario.Email,
                 NumeroMiembros = p.NumeroMiembros,
                 ClasificacionId = p.ClasificacionId, ClasificacionNombre = p.Clasificacion.Nombre,
                 Tipo = "desarrollo-local",
@@ -61,9 +88,14 @@ public class GetProyectosQueryHandler : IRequestHandler<GetProyectosQuery, List<
 
         var noEmpresariales = await _context.Proyectos.OfType<ProyectoNoEmpresarial>()
             .Include(p => p.Clasificacion)
+            .Include(p => p.JefeUsuario)
+            .Where(p => ownerFilter == null || p.JefeId == ownerFilter)
             .Select(p => new ProyectoResumenDto
             {
-                Id = p.Id, Titulo = p.Titulo, Jefe = p.Jefe, CorreoJefe = p.CorreoJefe,
+                Id = p.Id, Titulo = p.Titulo,
+                JefeId = p.JefeId,
+                Jefe = p.JefeUsuario.UserName + " " + p.JefeUsuario.UserLastName1 + (p.JefeUsuario.UserLastName2 != null ? " " + p.JefeUsuario.UserLastName2 : ""),
+                CorreoJefe = p.JefeUsuario.Email,
                 NumeroMiembros = p.NumeroMiembros,
                 ClasificacionId = p.ClasificacionId, ClasificacionNombre = p.Clasificacion.Nombre,
                 Tipo = "no-empresariales",
@@ -72,9 +104,14 @@ public class GetProyectosQueryHandler : IRequestHandler<GetProyectosQuery, List<
 
         var colabInternacional = await _context.Proyectos.OfType<ProyectoColabInternacional>()
             .Include(p => p.Clasificacion)
+            .Include(p => p.JefeUsuario)
+            .Where(p => ownerFilter == null || p.JefeId == ownerFilter)
             .Select(p => new ProyectoResumenDto
             {
-                Id = p.Id, Titulo = p.Titulo, Jefe = p.Jefe, CorreoJefe = p.CorreoJefe,
+                Id = p.Id, Titulo = p.Titulo,
+                JefeId = p.JefeId,
+                Jefe = p.JefeUsuario.UserName + " " + p.JefeUsuario.UserLastName1 + (p.JefeUsuario.UserLastName2 != null ? " " + p.JefeUsuario.UserLastName2 : ""),
+                CorreoJefe = p.JefeUsuario.Email,
                 NumeroMiembros = p.NumeroMiembros,
                 ClasificacionId = p.ClasificacionId, ClasificacionNombre = p.Clasificacion.Nombre,
                 Tipo = "colaboracion-internacional",
@@ -83,9 +120,14 @@ public class GetProyectosQueryHandler : IRequestHandler<GetProyectosQuery, List<
 
         var pnap = await _context.Proyectos.OfType<ProyectoPNAP>()
             .Include(p => p.Clasificacion)
+            .Include(p => p.JefeUsuario)
+            .Where(p => ownerFilter == null || p.JefeId == ownerFilter)
             .Select(p => new ProyectoResumenDto
             {
-                Id = p.Id, Titulo = p.Titulo, Jefe = p.Jefe, CorreoJefe = p.CorreoJefe,
+                Id = p.Id, Titulo = p.Titulo,
+                JefeId = p.JefeId,
+                Jefe = p.JefeUsuario.UserName + " " + p.JefeUsuario.UserLastName1 + (p.JefeUsuario.UserLastName2 != null ? " " + p.JefeUsuario.UserLastName2 : ""),
+                CorreoJefe = p.JefeUsuario.Email,
                 NumeroMiembros = p.NumeroMiembros,
                 ClasificacionId = p.ClasificacionId, ClasificacionNombre = p.Clasificacion.Nombre,
                 Tipo = "pnap",

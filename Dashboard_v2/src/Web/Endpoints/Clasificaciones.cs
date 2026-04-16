@@ -12,7 +12,7 @@ public class Clasificaciones : EndpointGroupBase
     public override void Map(RouteGroupBuilder groupBuilder)
     {
         groupBuilder.MapGet("", GetClasificaciones)
-            .RequireAuthorization(p => p.RequireRole("Superuser"))
+            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
             .WithName("GetClasificaciones")
             .Produces<List<ClasificacionDto>>(200);
 

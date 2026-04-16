@@ -8,19 +8,29 @@ public record GetProyectoEmpresarialQuery(string Id) : IRequest<ProyectoEmpresar
 public class GetProyectoEmpresarialQueryHandler : IRequestHandler<GetProyectoEmpresarialQuery, ProyectoEmpresarialDto?>
 {
     private readonly IApplicationDbContext _context;
-    public GetProyectoEmpresarialQueryHandler(IApplicationDbContext context) => _context = context;
+    private readonly IUser _currentUser;
+    public GetProyectoEmpresarialQueryHandler(IApplicationDbContext context, IUser currentUser)
+    {
+        _context = context;
+        _currentUser = currentUser;
+    }
 
     public async Task<ProyectoEmpresarialDto?> Handle(GetProyectoEmpresarialQuery request, CancellationToken ct)
     {
+        var ownerFilter = ProyectoHelper.GetOwnerFilter(_currentUser);
         var p = await _context.Proyectos.OfType<ProyectoEmpresarial>()
             .Include(x => x.Clasificacion)
-            .FirstOrDefaultAsync(x => x.Id == request.Id, ct);
+            .Include(x => x.JefeUsuario)
+            .FirstOrDefaultAsync(x => x.Id == request.Id && (ownerFilter == null || x.JefeId == ownerFilter), ct);
 
         if (p is null) return null;
 
         return new ProyectoEmpresarialDto
         {
-            Id = p.Id, Titulo = p.Titulo, Jefe = p.Jefe, CorreoJefe = p.CorreoJefe,
+            Id = p.Id, Titulo = p.Titulo,
+            JefeId = p.JefeId,
+            Jefe = p.JefeUsuario.UserName + " " + p.JefeUsuario.UserLastName1 + (p.JefeUsuario.UserLastName2 != null ? " " + p.JefeUsuario.UserLastName2 : ""),
+            CorreoJefe = p.JefeUsuario.Email,
             NumeroMiembros = p.NumeroMiembros, CantidadMiembrosUH = p.CantidadMiembrosUH,
             CantidadEstudiantes = p.CantidadEstudiantes,
             CantidadEstudiantesContratados = p.CantidadEstudiantesContratados,

@@ -25,6 +25,7 @@ using Dashboard_v2.Application.Proyectos.Queries.GetProyectoNoEmpresarial;
 using Dashboard_v2.Application.Proyectos.Queries.GetProyectoPNAP;
 using Dashboard_v2.Application.Proyectos.Queries.GetProyectos;
 using Dashboard_v2.Domain.Enums;
+using RolesEnum = Dashboard_v2.Domain.Enums.Roles;
 using Dashboard_v2.Web.Infrastructure;
 
 namespace Dashboard_v2.Web.Endpoints;
@@ -40,154 +41,154 @@ public class Proyectos : EndpointGroupBase
     {
         // ── Listado general ───────────────────────────────────────────
         g.MapGet("", GetProyectos)
-            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Proyecto)))
             .WithName("GetProyectos")
             .Produces<List<ProyectoResumenDto>>(200);
         // ── Catálogo mínimo para vinculación desde publicaciones ──────────────────
         g.MapGet("catalogo", GetCatalogo)
-            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto", "Profesor"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Proyecto), nameof(RolesEnum.Profesor)))
             .WithName("GetProyectosCatalogo")
             .Produces<List<ProyectoCatalogoDto>>(200);
 
         // ── Publicaciones derivadas por proyecto ────────────────────────
         g.MapGet("{id}/publicaciones", GetPublicacionesDelProyecto)
-            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Proyecto)))
             .WithName("GetPublicacionesDelProyecto")
             .Produces(200);
 
         g.MapGet("publicaciones-disponibles", GetPublicacionesDisponibles)
-            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Proyecto)))
             .WithName("GetPublicacionesDisponibles")
             .Produces(200);
 
         g.MapPost("{id}/publicaciones/{pubId}", LinkPublicacion)
-            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Proyecto)))
             .WithName("LinkPublicacion")
             .Produces(204)
             .ProducesProblem(400)
             .ProducesProblem(404);
 
         g.MapDelete("{id}/publicaciones/{pubId}", UnlinkPublicacion)
-            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Proyecto)))
             .WithName("UnlinkPublicacion")
             .Produces(204)
             .ProducesProblem(404);
         // ── Delete compartido ─────────────────────────────────────────
         g.MapDelete("{id}", DeleteProyecto)
-            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Proyecto)))
             .WithName("DeleteProyecto")
             .Produces(200)
             .ProducesProblem(404);
 
         // ── En Revisión ───────────────────────────────────────────────
         g.MapGet("en-revision/{id}", GetEnRevision)
-            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Proyecto)))
             .WithName("GetProyectoEnRevision")
             .Produces<ProyectoEnRevisionDto>(200).ProducesProblem(404);
 
         g.MapPost("en-revision", CreateEnRevision)
-            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Proyecto)))
             .WithName("CreateProyectoEnRevision")
             .Produces(201).ProducesProblem(400);
 
         g.MapPut("en-revision/{id}", UpdateEnRevision)
-            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Proyecto)))
             .WithName("UpdateProyectoEnRevision")
             .Produces(200).ProducesProblem(400).ProducesProblem(404);
 
         // ── Empresarial (PE) ──────────────────────────────────────────
         g.MapGet("empresariales/{id}", GetEmpresarial)
-            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Proyecto)))
             .WithName("GetProyectoEmpresarial")
             .Produces<ProyectoEmpresarialDto>(200).ProducesProblem(404);
 
         g.MapPost("empresariales", CreateEmpresarial)
-            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Proyecto)))
             .WithName("CreateProyectoEmpresarial")
             .Produces(201).ProducesProblem(400);
 
         g.MapPut("empresariales/{id}", UpdateEmpresarial)
-            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Proyecto)))
             .WithName("UpdateProyectoEmpresarial")
             .Produces(200).ProducesProblem(400).ProducesProblem(404);
 
         // ── Apoyo a Programa (PAP) ────────────────────────────────────
         g.MapGet("apoyo-programa/{id}", GetApoyoPrograma)
-            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Proyecto)))
             .WithName("GetProyectoApoyoPrograma")
             .Produces<ProyectoApoyoProgramaDto>(200).ProducesProblem(404);
 
         g.MapPost("apoyo-programa", CreateApoyoPrograma)
-            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Proyecto)))
             .WithName("CreateProyectoApoyoPrograma")
             .Produces(201).ProducesProblem(400);
 
         g.MapPut("apoyo-programa/{id}", UpdateApoyoPrograma)
-            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Proyecto)))
             .WithName("UpdateProyectoApoyoPrograma")
             .Produces(200).ProducesProblem(400).ProducesProblem(404);
 
         // ── Desarrollo Local (PDL) ────────────────────────────────────
         g.MapGet("desarrollo-local/{id}", GetDesarrolloLocal)
-            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Proyecto)))
             .WithName("GetProyectoDesarrolloLocal")
             .Produces<ProyectoDesarrolloLocalDto>(200).ProducesProblem(404);
 
         g.MapPost("desarrollo-local", CreateDesarrolloLocal)
-            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Proyecto)))
             .WithName("CreateProyectoDesarrolloLocal")
             .Produces(201).ProducesProblem(400);
 
         g.MapPut("desarrollo-local/{id}", UpdateDesarrolloLocal)
-            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Proyecto)))
             .WithName("UpdateProyectoDesarrolloLocal")
             .Produces(200).ProducesProblem(400).ProducesProblem(404);
 
         // ── No Empresarial (PNE) ──────────────────────────────────────
         g.MapGet("no-empresariales/{id}", GetNoEmpresarial)
-            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Proyecto)))
             .WithName("GetProyectoNoEmpresarial")
             .Produces<ProyectoNoEmpresarialDto>(200).ProducesProblem(404);
 
         g.MapPost("no-empresariales", CreateNoEmpresarial)
-            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Proyecto)))
             .WithName("CreateProyectoNoEmpresarial")
             .Produces(201).ProducesProblem(400);
 
         g.MapPut("no-empresariales/{id}", UpdateNoEmpresarial)
-            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Proyecto)))
             .WithName("UpdateProyectoNoEmpresarial")
             .Produces(200).ProducesProblem(400).ProducesProblem(404);
 
         // ── Colaboración Internacional (PRCI) ─────────────────────────
         g.MapGet("colaboracion-internacional/{id}", GetColabInternacional)
-            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Proyecto)))
             .WithName("GetProyectoColabInternacional")
             .Produces<ProyectoColabInternacionalDto>(200).ProducesProblem(404);
 
         g.MapPost("colaboracion-internacional", CreateColabInternacional)
-            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Proyecto)))
             .WithName("CreateProyectoColabInternacional")
             .Produces(201).ProducesProblem(400);
 
         g.MapPut("colaboracion-internacional/{id}", UpdateColabInternacional)
-            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Proyecto)))
             .WithName("UpdateProyectoColabInternacional")
             .Produces(200).ProducesProblem(400).ProducesProblem(404);
 
         // ── PNAP ──────────────────────────────────────────────────────
         g.MapGet("pnap/{id}", GetPNAP)
-            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Proyecto)))
             .WithName("GetProyectoPNAP")
             .Produces<ProyectoPNAPDto>(200).ProducesProblem(404);
 
         g.MapPost("pnap", CreatePNAP)
-            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Proyecto)))
             .WithName("CreateProyectoPNAP")
             .Produces(201).ProducesProblem(400);
 
         g.MapPut("pnap/{id}", UpdatePNAP)
-            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Proyecto)))
             .WithName("UpdateProyectoPNAP")
             .Produces(200).ProducesProblem(400).ProducesProblem(404);
     }

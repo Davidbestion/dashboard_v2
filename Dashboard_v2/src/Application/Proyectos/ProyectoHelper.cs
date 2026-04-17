@@ -1,7 +1,6 @@
 using Dashboard_v2.Application.Common.Interfaces;
 using Dashboard_v2.Application.Common.Models;
 using Dashboard_v2.Domain.Entities;
-using Dashboard_v2.Domain.Constants;
 using RolesEnum = global::Dashboard_v2.Domain.Enums.Roles;
 
 namespace Dashboard_v2.Application.Proyectos;
@@ -72,7 +71,7 @@ internal static class ProyectoHelper
     /// </summary>
     internal static string? GetOwnerFilter(IUser currentUser)
     {
-        if (currentUser.Roles?.Contains(Domain.Constants.Roles.JefeDeProyecto) == true)
+        if (currentUser.Roles?.Contains(nameof(RolesEnum.Jefe_de_Proyecto)) == true)
             return currentUser.Id;
         return null;
     }
@@ -87,7 +86,7 @@ internal static class ProyectoHelper
     /// </summary>
     internal static string ResolveJefeId(string requestedJefeId, IUser currentUser)
     {
-        if (currentUser.Roles?.Contains(Domain.Constants.Roles.JefeDeProyecto) == true)
+        if (currentUser.Roles?.Contains(nameof(RolesEnum.Jefe_de_Proyecto)) == true)
             return currentUser.Id ?? requestedJefeId;
         return requestedJefeId;
     }

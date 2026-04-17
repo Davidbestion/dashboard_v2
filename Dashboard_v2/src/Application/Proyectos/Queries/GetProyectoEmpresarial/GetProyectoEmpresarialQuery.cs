@@ -3,8 +3,10 @@ using Dashboard_v2.Domain.Entities;
 
 namespace Dashboard_v2.Application.Proyectos.Queries.GetProyectoEmpresarial;
 
+/// <summary>Devuelve el detalle de un <see cref="Dashboard_v2.Domain.Entities.ProyectoEmpresarial"/> por su ID.</summary>
 public record GetProyectoEmpresarialQuery(string Id) : IRequest<ProyectoEmpresarialDto?>;
 
+/// <summary>Manejador de <see cref="GetProyectoEmpresarialQuery"/>.</summary>
 public class GetProyectoEmpresarialQueryHandler : IRequestHandler<GetProyectoEmpresarialQuery, ProyectoEmpresarialDto?>
 {
     private readonly IApplicationDbContext _context;

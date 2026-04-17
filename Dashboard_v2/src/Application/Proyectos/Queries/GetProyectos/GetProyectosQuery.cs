@@ -3,8 +3,10 @@ using Dashboard_v2.Domain.Entities;
 
 namespace Dashboard_v2.Application.Proyectos.Queries.GetProyectos;
 
+/// <summary>Devuelve el listado resumen de todos los proyectos visibles para el usuario actual (filtrado por rol).</summary>
 public record GetProyectosQuery : IRequest<List<ProyectoResumenDto>>;
 
+/// <summary>Manejador de <see cref="GetProyectosQuery"/>.</summary>
 public class GetProyectosQueryHandler : IRequestHandler<GetProyectosQuery, List<ProyectoResumenDto>>
 {
     private readonly IApplicationDbContext _context;
@@ -39,95 +41,12 @@ public class GetProyectosQueryHandler : IRequestHandler<GetProyectosQuery, List<
                 PublicacionesDerivadas = p.PublicacionesDerivadas.Select(pub => pub.UrlDoi ?? pub.Title).ToList(),
             }).ToListAsync(ct);
 
-        var empresariales = await _context.Proyectos.OfType<ProyectoEmpresarial>()
-            .Where(p => ownerFilter == null || p.JefeId == ownerFilter)
-            .Select(p => new ProyectoResumenDto
-            {
-                Id = p.Id, Titulo = p.Titulo,
-                JefeId = p.JefeId,
-                Jefe = p.JefeUsuario.UserName + " " + p.JefeUsuario.UserLastName1 + (p.JefeUsuario.UserLastName2 != null ? " " + p.JefeUsuario.UserLastName2 : ""),
-                CorreoJefe = p.JefeUsuario.Email,
-                NumeroMiembros = p.NumeroMiembros,
-                ClasificacionId = p.ClasificacionId, ClasificacionNombre = p.Clasificacion.Nombre,
-                Tipo = "empresariales",
-                CodigoProyecto = p.CodigoProyecto, EstadoDeEjecucion = p.EstadoDeEjecucion,
-                PublicacionesDerivadas = p.PublicacionesDerivadas.Select(pub => pub.UrlDoi ?? pub.Title).ToList(),
-            }).ToListAsync(ct);
-
-        var apoyoPrograma = await _context.Proyectos.OfType<ProyectoApoyoPrograma>()
-            .Where(p => ownerFilter == null || p.JefeId == ownerFilter)
-            .Select(p => new ProyectoResumenDto
-            {
-                Id = p.Id, Titulo = p.Titulo,
-                JefeId = p.JefeId,
-                Jefe = p.JefeUsuario.UserName + " " + p.JefeUsuario.UserLastName1 + (p.JefeUsuario.UserLastName2 != null ? " " + p.JefeUsuario.UserLastName2 : ""),
-                CorreoJefe = p.JefeUsuario.Email,
-                NumeroMiembros = p.NumeroMiembros,
-                ClasificacionId = p.ClasificacionId, ClasificacionNombre = p.Clasificacion.Nombre,
-                Tipo = "apoyo-programa",
-                CodigoProyecto = p.CodigoProyecto, EstadoDeEjecucion = p.EstadoDeEjecucion,
-                PublicacionesDerivadas = p.PublicacionesDerivadas.Select(pub => pub.UrlDoi ?? pub.Title).ToList(),
-            }).ToListAsync(ct);
-
-        var desarrolloLocal = await _context.Proyectos.OfType<ProyectoDesarrolloLocal>()
-            .Where(p => ownerFilter == null || p.JefeId == ownerFilter)
-            .Select(p => new ProyectoResumenDto
-            {
-                Id = p.Id, Titulo = p.Titulo,
-                JefeId = p.JefeId,
-                Jefe = p.JefeUsuario.UserName + " " + p.JefeUsuario.UserLastName1 + (p.JefeUsuario.UserLastName2 != null ? " " + p.JefeUsuario.UserLastName2 : ""),
-                CorreoJefe = p.JefeUsuario.Email,
-                NumeroMiembros = p.NumeroMiembros,
-                ClasificacionId = p.ClasificacionId, ClasificacionNombre = p.Clasificacion.Nombre,
-                Tipo = "desarrollo-local",
-                CodigoProyecto = p.CodigoProyecto, EstadoDeEjecucion = p.EstadoDeEjecucion,
-                PublicacionesDerivadas = p.PublicacionesDerivadas.Select(pub => pub.UrlDoi ?? pub.Title).ToList(),
-            }).ToListAsync(ct);
-
-        var noEmpresariales = await _context.Proyectos.OfType<ProyectoNoEmpresarial>()
-            .Where(p => ownerFilter == null || p.JefeId == ownerFilter)
-            .Select(p => new ProyectoResumenDto
-            {
-                Id = p.Id, Titulo = p.Titulo,
-                JefeId = p.JefeId,
-                Jefe = p.JefeUsuario.UserName + " " + p.JefeUsuario.UserLastName1 + (p.JefeUsuario.UserLastName2 != null ? " " + p.JefeUsuario.UserLastName2 : ""),
-                CorreoJefe = p.JefeUsuario.Email,
-                NumeroMiembros = p.NumeroMiembros,
-                ClasificacionId = p.ClasificacionId, ClasificacionNombre = p.Clasificacion.Nombre,
-                Tipo = "no-empresariales",
-                CodigoProyecto = p.CodigoProyecto, EstadoDeEjecucion = p.EstadoDeEjecucion,
-                PublicacionesDerivadas = p.PublicacionesDerivadas.Select(pub => pub.UrlDoi ?? pub.Title).ToList(),
-            }).ToListAsync(ct);
-
-        var colabInternacional = await _context.Proyectos.OfType<ProyectoColabInternacional>()
-            .Where(p => ownerFilter == null || p.JefeId == ownerFilter)
-            .Select(p => new ProyectoResumenDto
-            {
-                Id = p.Id, Titulo = p.Titulo,
-                JefeId = p.JefeId,
-                Jefe = p.JefeUsuario.UserName + " " + p.JefeUsuario.UserLastName1 + (p.JefeUsuario.UserLastName2 != null ? " " + p.JefeUsuario.UserLastName2 : ""),
-                CorreoJefe = p.JefeUsuario.Email,
-                NumeroMiembros = p.NumeroMiembros,
-                ClasificacionId = p.ClasificacionId, ClasificacionNombre = p.Clasificacion.Nombre,
-                Tipo = "colaboracion-internacional",
-                CodigoProyecto = p.CodigoProyecto, EstadoDeEjecucion = p.EstadoDeEjecucion,
-                PublicacionesDerivadas = p.PublicacionesDerivadas.Select(pub => pub.UrlDoi ?? pub.Title).ToList(),
-            }).ToListAsync(ct);
-
-        var pnap = await _context.Proyectos.OfType<ProyectoPNAP>()
-            .Where(p => ownerFilter == null || p.JefeId == ownerFilter)
-            .Select(p => new ProyectoResumenDto
-            {
-                Id = p.Id, Titulo = p.Titulo,
-                JefeId = p.JefeId,
-                Jefe = p.JefeUsuario.UserName + " " + p.JefeUsuario.UserLastName1 + (p.JefeUsuario.UserLastName2 != null ? " " + p.JefeUsuario.UserLastName2 : ""),
-                CorreoJefe = p.JefeUsuario.Email,
-                NumeroMiembros = p.NumeroMiembros,
-                ClasificacionId = p.ClasificacionId, ClasificacionNombre = p.Clasificacion.Nombre,
-                Tipo = "pnap",
-                CodigoProyecto = p.CodigoProyecto, EstadoDeEjecucion = p.EstadoDeEjecucion,
-                PublicacionesDerivadas = p.PublicacionesDerivadas.Select(pub => pub.UrlDoi ?? pub.Title).ToList(),
-            }).ToListAsync(ct);
+        var empresariales      = await QueryEjecucion(_context.Proyectos.OfType<ProyectoEmpresarial>(),       ownerFilter, "empresariales",             ct);
+        var apoyoPrograma      = await QueryEjecucion(_context.Proyectos.OfType<ProyectoApoyoPrograma>(),     ownerFilter, "apoyo-programa",            ct);
+        var desarrolloLocal    = await QueryEjecucion(_context.Proyectos.OfType<ProyectoDesarrolloLocal>(),   ownerFilter, "desarrollo-local",          ct);
+        var noEmpresariales    = await QueryEjecucion(_context.Proyectos.OfType<ProyectoNoEmpresarial>(),     ownerFilter, "no-empresariales",          ct);
+        var colabInternacional = await QueryEjecucion(_context.Proyectos.OfType<ProyectoColabInternacional>(), ownerFilter, "colaboracion-internacional", ct);
+        var pnap               = await QueryEjecucion(_context.Proyectos.OfType<ProyectoPNAP>(),              ownerFilter, "pnap",                       ct);
 
         return enRevision
             .Concat(empresariales)
@@ -139,4 +58,28 @@ public class GetProyectosQueryHandler : IRequestHandler<GetProyectosQuery, List<
             .OrderBy(p => p.Titulo)
             .ToList();
     }
+
+    /// <summary>
+    /// Proyecta un <see cref="IQueryable{T}"/> de subtipos <see cref="ProyectoEnEjecucion"/> al
+    /// <see cref="ProyectoResumenDto"/> común. El constraint <c>where T : ProyectoEnEjecucion</c>
+    /// garantiza que <c>CodigoProyecto</c> y <c>EstadoDeEjecucion</c> existen en <c>T</c>,
+    /// y que EF Core genera una sola JOIN a la tabla del subtipo (sin LEFT JOINs a todas las tablas TPT).
+    /// </summary>
+    private static Task<List<ProyectoResumenDto>> QueryEjecucion<T>(
+        IQueryable<T> source, string? ownerFilter, string tipo, CancellationToken ct)
+        where T : ProyectoEnEjecucion
+        => source
+            .Where(p => ownerFilter == null || p.JefeId == ownerFilter)
+            .Select(p => new ProyectoResumenDto
+            {
+                Id = p.Id, Titulo = p.Titulo,
+                JefeId = p.JefeId,
+                Jefe = p.JefeUsuario.UserName + " " + p.JefeUsuario.UserLastName1 + (p.JefeUsuario.UserLastName2 != null ? " " + p.JefeUsuario.UserLastName2 : ""),
+                CorreoJefe = p.JefeUsuario.Email,
+                NumeroMiembros = p.NumeroMiembros,
+                ClasificacionId = p.ClasificacionId, ClasificacionNombre = p.Clasificacion.Nombre,
+                Tipo = tipo,
+                CodigoProyecto = p.CodigoProyecto, EstadoDeEjecucion = p.EstadoDeEjecucion,
+                PublicacionesDerivadas = p.PublicacionesDerivadas.Select(pub => pub.UrlDoi ?? pub.Title).ToList(),
+            }).ToListAsync(ct);
 }

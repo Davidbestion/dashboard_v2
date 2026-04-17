@@ -4,6 +4,7 @@ using Dashboard_v2.Application.Clasificaciones.Commands.DeleteClasificacion;
 using Dashboard_v2.Application.Clasificaciones.Commands.UpdateClasificacion;
 using Dashboard_v2.Application.Clasificaciones.Queries.GetClasificaciones;
 using Dashboard_v2.Web.Infrastructure;
+using RolesEnum = Dashboard_v2.Domain.Enums.Roles;
 
 namespace Dashboard_v2.Web.Endpoints;
 
@@ -12,25 +13,25 @@ public class Clasificaciones : EndpointGroupBase
     public override void Map(RouteGroupBuilder groupBuilder)
     {
         groupBuilder.MapGet("", GetClasificaciones)
-            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Proyecto"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Proyecto)))
             .WithName("GetClasificaciones")
             .Produces<List<ClasificacionDto>>(200);
 
         groupBuilder.MapPost("", CreateClasificacion)
-            .RequireAuthorization(p => p.RequireRole("Superuser"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser)))
             .WithName("CreateClasificacion")
             .Produces(201)
             .ProducesProblem(400);
 
         groupBuilder.MapPut("{id}", UpdateClasificacion)
-            .RequireAuthorization(p => p.RequireRole("Superuser"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser)))
             .WithName("UpdateClasificacion")
             .Produces(200)
             .ProducesProblem(400)
             .ProducesProblem(404);
 
         groupBuilder.MapDelete("{id}", DeleteClasificacion)
-            .RequireAuthorization(p => p.RequireRole("Superuser"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser)))
             .WithName("DeleteClasificacion")
             .Produces(200)
             .ProducesProblem(400)

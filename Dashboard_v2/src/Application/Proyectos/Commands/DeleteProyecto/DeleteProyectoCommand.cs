@@ -3,8 +3,10 @@ using Dashboard_v2.Application.Common.Models;
 
 namespace Dashboard_v2.Application.Proyectos.Commands.DeleteProyecto;
 
+/// <summary>Elimina un proyecto por su ID. Solo el jefe del proyecto o un Superuser puede ejecutarlo.</summary>
 public record DeleteProyectoCommand(string Id) : IRequest<Result>;
 
+/// <summary>Manejador de <see cref="DeleteProyectoCommand"/>.</summary>
 public class DeleteProyectoCommandHandler : IRequestHandler<DeleteProyectoCommand, Result>
 {
     private readonly IApplicationDbContext _context;

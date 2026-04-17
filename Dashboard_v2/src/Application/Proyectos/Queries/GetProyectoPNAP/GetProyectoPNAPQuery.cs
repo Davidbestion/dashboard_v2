@@ -3,8 +3,10 @@ using Dashboard_v2.Domain.Entities;
 
 namespace Dashboard_v2.Application.Proyectos.Queries.GetProyectoPNAP;
 
+/// <summary>Devuelve el detalle de un <see cref="Dashboard_v2.Domain.Entities.ProyectoPNAP"/> por su ID.</summary>
 public record GetProyectoPNAPQuery(string Id) : IRequest<ProyectoPNAPDto?>;
 
+/// <summary>Manejador de <see cref="GetProyectoPNAPQuery"/>.</summary>
 public class GetProyectoPNAPQueryHandler : IRequestHandler<GetProyectoPNAPQuery, ProyectoPNAPDto?>
 {
     private readonly IApplicationDbContext _context;

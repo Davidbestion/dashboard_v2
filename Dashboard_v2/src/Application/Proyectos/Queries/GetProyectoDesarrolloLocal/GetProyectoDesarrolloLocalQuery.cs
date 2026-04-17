@@ -3,8 +3,10 @@ using Dashboard_v2.Domain.Entities;
 
 namespace Dashboard_v2.Application.Proyectos.Queries.GetProyectoDesarrolloLocal;
 
+/// <summary>Devuelve el detalle de un <see cref="Dashboard_v2.Domain.Entities.ProyectoDesarrolloLocal"/> por su ID.</summary>
 public record GetProyectoDesarrolloLocalQuery(string Id) : IRequest<ProyectoDesarrolloLocalDto?>;
 
+/// <summary>Manejador de <see cref="GetProyectoDesarrolloLocalQuery"/>.</summary>
 public class GetProyectoDesarrolloLocalQueryHandler : IRequestHandler<GetProyectoDesarrolloLocalQuery, ProyectoDesarrolloLocalDto?>
 {
     private readonly IApplicationDbContext _context;

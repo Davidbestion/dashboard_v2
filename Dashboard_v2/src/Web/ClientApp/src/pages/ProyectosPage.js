@@ -15,8 +15,12 @@ async function apiFetch(url, options = {}) {
   });
   const data = await response.json().catch(() => null);
   if (!response.ok) {
-    const errors = data?.errors ?? ['Error desconocido.'];
-    throw new Error(Array.isArray(errors) ? errors.join(' ') : String(errors));
+    let errors = data?.errors ?? ['Error desconocido.'];
+    // ValidationProblemDetails devuelve errors como { campo: [msg, ...], ... }
+    if (!Array.isArray(errors) && typeof errors === 'object' && errors !== null) {
+      errors = Object.values(errors).flat();
+    }
+    throw new Error(errors.join(' '));
   }
   return data;
 }

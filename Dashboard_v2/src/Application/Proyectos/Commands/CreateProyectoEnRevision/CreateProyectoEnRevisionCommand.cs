@@ -4,7 +4,8 @@ using Dashboard_v2.Domain.Entities;
 
 namespace Dashboard_v2.Application.Proyectos.Commands.CreateProyectoEnRevision;
 
-public record CreateProyectoEnRevisionCommand : IRequest<(Result Result, string? Id)>
+/// <summary>Crea un nuevo <see cref="Dashboard_v2.Domain.Entities.ProyectoEnRevision"/>. Devuelve el ID generado.</summary>
+public record CreateProyectoEnRevisionCommand : IRequest<(Result Result, string? Id)>, IProyectoCommand
 {
     public string Titulo { get; init; } = default!;
     public string JefeId { get; init; } = default!;
@@ -18,6 +19,7 @@ public record CreateProyectoEnRevisionCommand : IRequest<(Result Result, string?
     public string Tipo { get; init; } = default!;
 }
 
+/// <summary>Manejador de <see cref="CreateProyectoEnRevisionCommand"/>.</summary>
 public class CreateProyectoEnRevisionCommandHandler
     : IRequestHandler<CreateProyectoEnRevisionCommand, (Result Result, string? Id)>
 {
@@ -33,12 +35,6 @@ public class CreateProyectoEnRevisionCommandHandler
     public async Task<(Result Result, string? Id)> Handle(
         CreateProyectoEnRevisionCommand request, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(request.Titulo))
-            return (Result.Failure(["El título es obligatorio."]), null);
-
-        if (!await _context.Clasificaciones.AnyAsync(c => c.Id == request.ClasificacionId, cancellationToken))
-            return (Result.Failure(["La clasificación indicada no existe."]), null);
-
         var jefeId = ProyectoHelper.ResolveJefeId(request.JefeId, _currentUser);
         var jefeValidation = await ProyectoHelper.ValidateJefeAsync(_context, jefeId, cancellationToken);
         if (jefeValidation is not null)

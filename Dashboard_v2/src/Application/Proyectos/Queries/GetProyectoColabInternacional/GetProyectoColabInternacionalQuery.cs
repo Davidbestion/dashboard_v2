@@ -3,8 +3,10 @@ using Dashboard_v2.Domain.Entities;
 
 namespace Dashboard_v2.Application.Proyectos.Queries.GetProyectoColabInternacional;
 
+/// <summary>Devuelve el detalle de un <see cref="Dashboard_v2.Domain.Entities.ProyectoColabInternacional"/> por su ID.</summary>
 public record GetProyectoColabInternacionalQuery(string Id) : IRequest<ProyectoColabInternacionalDto?>;
 
+/// <summary>Manejador de <see cref="GetProyectoColabInternacionalQuery"/>.</summary>
 public class GetProyectoColabInternacionalQueryHandler : IRequestHandler<GetProyectoColabInternacionalQuery, ProyectoColabInternacionalDto?>
 {
     private readonly IApplicationDbContext _context;

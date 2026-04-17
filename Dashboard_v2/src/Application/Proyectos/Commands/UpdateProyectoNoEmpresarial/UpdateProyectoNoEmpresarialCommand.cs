@@ -4,7 +4,8 @@ using Dashboard_v2.Domain.Entities;
 
 namespace Dashboard_v2.Application.Proyectos.Commands.UpdateProyectoNoEmpresarial;
 
-public record UpdateProyectoNoEmpresarialCommand : IRequest<Result>
+/// <summary>Actualiza los campos de un <see cref="Dashboard_v2.Domain.Entities.ProyectoNoEmpresarial"/> existente.</summary>
+public record UpdateProyectoNoEmpresarialCommand : IRequest<Result>, IProyectoCommand
 {
     public string Id { get; init; } = default!;
     public string Titulo { get; init; } = default!;
@@ -27,6 +28,7 @@ public record UpdateProyectoNoEmpresarialCommand : IRequest<Result>
     public string EntidadNoEmpresarial { get; init; } = default!;
 }
 
+/// <summary>Manejador de <see cref="UpdateProyectoNoEmpresarialCommand"/>.</summary>
 public class UpdateProyectoNoEmpresarialCommandHandler
     : IRequestHandler<UpdateProyectoNoEmpresarialCommand, Result>
 {
@@ -51,9 +53,6 @@ public class UpdateProyectoNoEmpresarialCommandHandler
         var ownerFilter = ProyectoHelper.GetOwnerFilter(_currentUser);
         if (ownerFilter is not null && proyecto.JefeId != ownerFilter)
             return Result.Failure(["No tiene permiso para modificar este proyecto."]);
-
-        if (!await _context.Clasificaciones.AnyAsync(c => c.Id == request.ClasificacionId, cancellationToken))
-            return Result.Failure(["La clasificación indicada no existe."]);
 
         var jefeId = ProyectoHelper.ResolveJefeId(request.JefeId, _currentUser);
         var jefeValidation = await ProyectoHelper.ValidateJefeAsync(_context, jefeId, cancellationToken);

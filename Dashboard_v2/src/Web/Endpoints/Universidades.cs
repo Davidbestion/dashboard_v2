@@ -4,6 +4,7 @@ using Dashboard_v2.Application.Universidades.Commands.DeleteUniversidad;
 using Dashboard_v2.Application.Universidades.Commands.UpdateUniversidad;
 using Dashboard_v2.Application.Universidades.Queries.GetUniversidades;
 using Dashboard_v2.Web.Infrastructure;
+using RolesEnum = Dashboard_v2.Domain.Enums.Roles;
 
 namespace Dashboard_v2.Web.Endpoints;
 
@@ -15,25 +16,25 @@ public class Universidades : EndpointGroupBase
     public override void Map(RouteGroupBuilder groupBuilder)
     {
         groupBuilder.MapGet("", GetUniversidades)
-            .RequireAuthorization(p => p.RequireRole("Superuser"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser)))
             .WithName("GetUniversidades")
             .Produces<List<UniversidadDto>>(200);
 
         groupBuilder.MapPost("", CreateUniversidad)
-            .RequireAuthorization(p => p.RequireRole("Superuser"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser)))
             .WithName("CreateUniversidad")
             .Produces(201)
             .ProducesProblem(400);
 
         groupBuilder.MapPut("{id}", UpdateUniversidad)
-            .RequireAuthorization(p => p.RequireRole("Superuser"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser)))
             .WithName("UpdateUniversidad")
             .Produces(200)
             .ProducesProblem(400)
             .ProducesProblem(404);
 
         groupBuilder.MapDelete("{id}", DeleteUniversidad)
-            .RequireAuthorization(p => p.RequireRole("Superuser"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser)))
             .WithName("DeleteUniversidad")
             .Produces(200)
             .ProducesProblem(404);

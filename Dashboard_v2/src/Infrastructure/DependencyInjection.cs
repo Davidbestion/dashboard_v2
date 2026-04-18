@@ -1,6 +1,7 @@
 ﻿using Dashboard_v2.Application.Common.Interfaces;
 using Dashboard_v2.Domain.Constants;
 using Dashboard_v2.Infrastructure.Data;
+using RolesEnum = Dashboard_v2.Domain.Enums.Roles;
 using Dashboard_v2.Infrastructure.Data.Interceptors;
 using Dashboard_v2.Infrastructure.Identity;
 using Dashboard_v2.Infrastructure.Services;
@@ -46,6 +47,6 @@ public static class DependencyInjection
         builder.Services.AddScoped<IAuthorResolutionService, AuthorResolutionService>();
 
         builder.Services.AddAuthorization(options =>
-            options.AddPolicy(Policies.CanPurge, policy => policy.RequireRole(Roles.Superuser)));
+            options.AddPolicy(Policies.CanPurge, policy => policy.RequireRole(nameof(RolesEnum.Superuser))));
     }
 }

@@ -923,6 +923,201 @@ export class AwardsClient {
     }
 }
 
+export class ClasificacionesClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "";
+    }
+
+    getClasificaciones(): Promise<ClasificacionDto[]> {
+        let url_ = this.baseUrl + "/api/Clasificaciones";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetClasificaciones(_response);
+        });
+    }
+
+    protected processGetClasificaciones(response: Response): Promise<ClasificacionDto[]> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(ClasificacionDto.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<ClasificacionDto[]>(null as any);
+    }
+
+    createClasificacion(body: CreateClasificacionBody): Promise<void> {
+        let url_ = this.baseUrl + "/api/Clasificaciones";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processCreateClasificacion(_response);
+        });
+    }
+
+    protected processCreateClasificacion(response: Response): Promise<void> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 201) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    updateClasificacion(id: string, body: CreateClasificacionBody): Promise<void> {
+        let url_ = this.baseUrl + "/api/Clasificaciones/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processUpdateClasificacion(_response);
+        });
+    }
+
+    protected processUpdateClasificacion(response: Response): Promise<void> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    deleteClasificacion(id: string): Promise<void> {
+        let url_ = this.baseUrl + "/api/Clasificaciones/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "DELETE",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processDeleteClasificacion(_response);
+        });
+    }
+
+    protected processDeleteClasificacion(response: Response): Promise<void> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+}
+
 export class EventsClient {
     private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
     private baseUrl: string;
@@ -1927,6 +2122,1317 @@ export class PresentationsClient {
     }
 }
 
+export class ProyectosClient {
+    private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
+        this.http = http ? http : window as any;
+        this.baseUrl = baseUrl ?? "";
+    }
+
+    getProyectos(): Promise<ProyectoResumenDto[]> {
+        let url_ = this.baseUrl + "/api/Proyectos";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetProyectos(_response);
+        });
+    }
+
+    protected processGetProyectos(response: Response): Promise<ProyectoResumenDto[]> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(ProyectoResumenDto.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<ProyectoResumenDto[]>(null as any);
+    }
+
+    getTiposEjecucion(): Promise<string[]> {
+        let url_ = this.baseUrl + "/api/Proyectos/tipos-ejecucion";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetTiposEjecucion(_response);
+        });
+    }
+
+    protected processGetTiposEjecucion(response: Response): Promise<string[]> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(item);
+            }
+            else {
+                result200 = null as any;
+            }
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<string[]>(null as any);
+    }
+
+    getProyectosCatalogo(): Promise<ProyectoCatalogoDto[]> {
+        let url_ = this.baseUrl + "/api/Proyectos/catalogo";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetProyectosCatalogo(_response);
+        });
+    }
+
+    protected processGetProyectosCatalogo(response: Response): Promise<ProyectoCatalogoDto[]> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(ProyectoCatalogoDto.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<ProyectoCatalogoDto[]>(null as any);
+    }
+
+    getPublicacionesDelProyecto(id: string): Promise<void> {
+        let url_ = this.baseUrl + "/api/Proyectos/{id}/publicaciones";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetPublicacionesDelProyecto(_response);
+        });
+    }
+
+    protected processGetPublicacionesDelProyecto(response: Response): Promise<void> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    getPublicacionesDisponibles(): Promise<void> {
+        let url_ = this.baseUrl + "/api/Proyectos/publicaciones-disponibles";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetPublicacionesDisponibles(_response);
+        });
+    }
+
+    protected processGetPublicacionesDisponibles(response: Response): Promise<void> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    linkPublicacion(id: string, pubId: string): Promise<void> {
+        let url_ = this.baseUrl + "/api/Proyectos/{id}/publicaciones/{pubId}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        if (pubId === undefined || pubId === null)
+            throw new globalThis.Error("The parameter 'pubId' must be defined.");
+        url_ = url_.replace("{pubId}", encodeURIComponent("" + pubId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "POST",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processLinkPublicacion(_response);
+        });
+    }
+
+    protected processLinkPublicacion(response: Response): Promise<void> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    unlinkPublicacion(id: string, pubId: string): Promise<void> {
+        let url_ = this.baseUrl + "/api/Proyectos/{id}/publicaciones/{pubId}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        if (pubId === undefined || pubId === null)
+            throw new globalThis.Error("The parameter 'pubId' must be defined.");
+        url_ = url_.replace("{pubId}", encodeURIComponent("" + pubId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "DELETE",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processUnlinkPublicacion(_response);
+        });
+    }
+
+    protected processUnlinkPublicacion(response: Response): Promise<void> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    deleteProyecto(id: string): Promise<void> {
+        let url_ = this.baseUrl + "/api/Proyectos/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "DELETE",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processDeleteProyecto(_response);
+        });
+    }
+
+    protected processDeleteProyecto(response: Response): Promise<void> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    getProyectoEnRevision(id: string): Promise<ProyectoEnRevisionDto> {
+        let url_ = this.baseUrl + "/api/Proyectos/en-revision/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetProyectoEnRevision(_response);
+        });
+    }
+
+    protected processGetProyectoEnRevision(response: Response): Promise<ProyectoEnRevisionDto> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = ProyectoEnRevisionDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<ProyectoEnRevisionDto>(null as any);
+    }
+
+    updateProyectoEnRevision(id: string, b: ProyectoEnRevisionBody): Promise<void> {
+        let url_ = this.baseUrl + "/api/Proyectos/en-revision/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(b);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processUpdateProyectoEnRevision(_response);
+        });
+    }
+
+    protected processUpdateProyectoEnRevision(response: Response): Promise<void> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    createProyectoEnRevision(b: ProyectoEnRevisionBody): Promise<void> {
+        let url_ = this.baseUrl + "/api/Proyectos/en-revision";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(b);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processCreateProyectoEnRevision(_response);
+        });
+    }
+
+    protected processCreateProyectoEnRevision(response: Response): Promise<void> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 201) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    getProyectoEmpresarial(id: string): Promise<ProyectoEmpresarialDto> {
+        let url_ = this.baseUrl + "/api/Proyectos/empresariales/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetProyectoEmpresarial(_response);
+        });
+    }
+
+    protected processGetProyectoEmpresarial(response: Response): Promise<ProyectoEmpresarialDto> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = ProyectoEmpresarialDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<ProyectoEmpresarialDto>(null as any);
+    }
+
+    updateProyectoEmpresarial(id: string, b: ProyectoEmpresarialBody): Promise<void> {
+        let url_ = this.baseUrl + "/api/Proyectos/empresariales/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(b);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processUpdateProyectoEmpresarial(_response);
+        });
+    }
+
+    protected processUpdateProyectoEmpresarial(response: Response): Promise<void> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    createProyectoEmpresarial(b: ProyectoEmpresarialBody): Promise<void> {
+        let url_ = this.baseUrl + "/api/Proyectos/empresariales";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(b);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processCreateProyectoEmpresarial(_response);
+        });
+    }
+
+    protected processCreateProyectoEmpresarial(response: Response): Promise<void> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 201) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    getProyectoApoyoPrograma(id: string): Promise<ProyectoApoyoProgramaDto> {
+        let url_ = this.baseUrl + "/api/Proyectos/apoyo-programa/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetProyectoApoyoPrograma(_response);
+        });
+    }
+
+    protected processGetProyectoApoyoPrograma(response: Response): Promise<ProyectoApoyoProgramaDto> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = ProyectoApoyoProgramaDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<ProyectoApoyoProgramaDto>(null as any);
+    }
+
+    updateProyectoApoyoPrograma(id: string, b: ProyectoApoyoProgramaBody): Promise<void> {
+        let url_ = this.baseUrl + "/api/Proyectos/apoyo-programa/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(b);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processUpdateProyectoApoyoPrograma(_response);
+        });
+    }
+
+    protected processUpdateProyectoApoyoPrograma(response: Response): Promise<void> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    createProyectoApoyoPrograma(b: ProyectoApoyoProgramaBody): Promise<void> {
+        let url_ = this.baseUrl + "/api/Proyectos/apoyo-programa";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(b);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processCreateProyectoApoyoPrograma(_response);
+        });
+    }
+
+    protected processCreateProyectoApoyoPrograma(response: Response): Promise<void> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 201) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    getProyectoDesarrolloLocal(id: string): Promise<ProyectoDesarrolloLocalDto> {
+        let url_ = this.baseUrl + "/api/Proyectos/desarrollo-local/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetProyectoDesarrolloLocal(_response);
+        });
+    }
+
+    protected processGetProyectoDesarrolloLocal(response: Response): Promise<ProyectoDesarrolloLocalDto> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = ProyectoDesarrolloLocalDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<ProyectoDesarrolloLocalDto>(null as any);
+    }
+
+    updateProyectoDesarrolloLocal(id: string, b: ProyectoDesarrolloLocalBody): Promise<void> {
+        let url_ = this.baseUrl + "/api/Proyectos/desarrollo-local/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(b);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processUpdateProyectoDesarrolloLocal(_response);
+        });
+    }
+
+    protected processUpdateProyectoDesarrolloLocal(response: Response): Promise<void> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    createProyectoDesarrolloLocal(b: ProyectoDesarrolloLocalBody): Promise<void> {
+        let url_ = this.baseUrl + "/api/Proyectos/desarrollo-local";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(b);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processCreateProyectoDesarrolloLocal(_response);
+        });
+    }
+
+    protected processCreateProyectoDesarrolloLocal(response: Response): Promise<void> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 201) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    getProyectoNoEmpresarial(id: string): Promise<ProyectoNoEmpresarialDto> {
+        let url_ = this.baseUrl + "/api/Proyectos/no-empresariales/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetProyectoNoEmpresarial(_response);
+        });
+    }
+
+    protected processGetProyectoNoEmpresarial(response: Response): Promise<ProyectoNoEmpresarialDto> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = ProyectoNoEmpresarialDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<ProyectoNoEmpresarialDto>(null as any);
+    }
+
+    updateProyectoNoEmpresarial(id: string, b: ProyectoNoEmpresarialBody): Promise<void> {
+        let url_ = this.baseUrl + "/api/Proyectos/no-empresariales/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(b);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processUpdateProyectoNoEmpresarial(_response);
+        });
+    }
+
+    protected processUpdateProyectoNoEmpresarial(response: Response): Promise<void> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    createProyectoNoEmpresarial(b: ProyectoNoEmpresarialBody): Promise<void> {
+        let url_ = this.baseUrl + "/api/Proyectos/no-empresariales";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(b);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processCreateProyectoNoEmpresarial(_response);
+        });
+    }
+
+    protected processCreateProyectoNoEmpresarial(response: Response): Promise<void> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 201) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    getProyectoColabInternacional(id: string): Promise<ProyectoColabInternacionalDto> {
+        let url_ = this.baseUrl + "/api/Proyectos/colaboracion-internacional/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetProyectoColabInternacional(_response);
+        });
+    }
+
+    protected processGetProyectoColabInternacional(response: Response): Promise<ProyectoColabInternacionalDto> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = ProyectoColabInternacionalDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<ProyectoColabInternacionalDto>(null as any);
+    }
+
+    updateProyectoColabInternacional(id: string, b: ProyectoColabInternacionalBody): Promise<void> {
+        let url_ = this.baseUrl + "/api/Proyectos/colaboracion-internacional/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(b);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processUpdateProyectoColabInternacional(_response);
+        });
+    }
+
+    protected processUpdateProyectoColabInternacional(response: Response): Promise<void> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    createProyectoColabInternacional(b: ProyectoColabInternacionalBody): Promise<void> {
+        let url_ = this.baseUrl + "/api/Proyectos/colaboracion-internacional";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(b);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processCreateProyectoColabInternacional(_response);
+        });
+    }
+
+    protected processCreateProyectoColabInternacional(response: Response): Promise<void> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 201) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    getProyectoPNAP(id: string): Promise<ProyectoPNAPDto> {
+        let url_ = this.baseUrl + "/api/Proyectos/pnap/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetProyectoPNAP(_response);
+        });
+    }
+
+    protected processGetProyectoPNAP(response: Response): Promise<ProyectoPNAPDto> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = ProyectoPNAPDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<ProyectoPNAPDto>(null as any);
+    }
+
+    updateProyectoPNAP(id: string, b: ProyectoPNAPBody): Promise<void> {
+        let url_ = this.baseUrl + "/api/Proyectos/pnap/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(b);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processUpdateProyectoPNAP(_response);
+        });
+    }
+
+    protected processUpdateProyectoPNAP(response: Response): Promise<void> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    createProyectoPNAP(b: ProyectoPNAPBody): Promise<void> {
+        let url_ = this.baseUrl + "/api/Proyectos/pnap";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(b);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processCreateProyectoPNAP(_response);
+        });
+    }
+
+    protected processCreateProyectoPNAP(response: Response): Promise<void> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 201) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+}
+
 export class PublicationsClient {
     private http: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> };
     private baseUrl: string;
@@ -1977,6 +3483,48 @@ export class PublicationsClient {
             });
         }
         return Promise.resolve<PublicationTypeDto[]>(null as any);
+    }
+
+    getTodasLasPublicaciones(): Promise<PublicacionResumenDto[]> {
+        let url_ = this.baseUrl + "/api/Publications/todas";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetTodasLasPublicaciones(_response);
+        });
+    }
+
+    protected processGetTodasLasPublicaciones(response: Response): Promise<PublicacionResumenDto[]> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(PublicacionResumenDto.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<PublicacionResumenDto[]>(null as any);
     }
 
     getMyPublications(): Promise<PublicationDto[]> {
@@ -2589,6 +4137,48 @@ export class UsersClient {
             });
         }
         return Promise.resolve<void>(null as any);
+    }
+
+    getJefesDeProyecto(): Promise<JefeDeProyectoDto[]> {
+        let url_ = this.baseUrl + "/api/Users/jefes-de-proyecto";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetJefesDeProyecto(_response);
+        });
+    }
+
+    protected processGetJefesDeProyecto(response: Response): Promise<JefeDeProyectoDto[]> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(JefeDeProyectoDto.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<JefeDeProyectoDto[]>(null as any);
     }
 }
 
@@ -3511,6 +5101,82 @@ export interface IUpdateAwardBody {
     awardedAt?: Date;
 }
 
+export class ClasificacionDto implements IClasificacionDto {
+    id?: string;
+    nombre?: string;
+
+    constructor(data?: IClasificacionDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.nombre = _data["nombre"];
+        }
+    }
+
+    static fromJS(data: any): ClasificacionDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new ClasificacionDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["nombre"] = this.nombre;
+        return data;
+    }
+}
+
+export interface IClasificacionDto {
+    id?: string;
+    nombre?: string;
+}
+
+export class CreateClasificacionBody implements ICreateClasificacionBody {
+    nombre?: string;
+
+    constructor(data?: ICreateClasificacionBody) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.nombre = _data["nombre"];
+        }
+    }
+
+    static fromJS(data: any): CreateClasificacionBody {
+        data = typeof data === 'object' ? data : {};
+        let result = new CreateClasificacionBody();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["nombre"] = this.nombre;
+        return data;
+    }
+}
+
+export interface ICreateClasificacionBody {
+    nombre?: string;
+}
+
 export class EventDto implements IEventDto {
     id?: number;
     name?: string;
@@ -4395,6 +6061,1240 @@ export interface IUpdatePresentationBody {
     coauthorNames?: string[];
 }
 
+export class ProyectoResumenDto implements IProyectoResumenDto {
+    id?: string;
+    titulo?: string;
+    jefeId?: string;
+    jefe?: string;
+    correoJefe?: string;
+    numeroMiembros?: number;
+    clasificacionId?: string;
+    clasificacionNombre?: string;
+    tipo?: string;
+    codigoProyecto?: string | undefined;
+    estadoDeEjecucion?: string | undefined;
+    situacion?: string | undefined;
+    publicacionesDerivadas?: string[];
+
+    constructor(data?: IProyectoResumenDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.titulo = _data["titulo"];
+            this.jefeId = _data["jefeId"];
+            this.jefe = _data["jefe"];
+            this.correoJefe = _data["correoJefe"];
+            this.numeroMiembros = _data["numeroMiembros"];
+            this.clasificacionId = _data["clasificacionId"];
+            this.clasificacionNombre = _data["clasificacionNombre"];
+            this.tipo = _data["tipo"];
+            this.codigoProyecto = _data["codigoProyecto"];
+            this.estadoDeEjecucion = _data["estadoDeEjecucion"];
+            this.situacion = _data["situacion"];
+            if (Array.isArray(_data["publicacionesDerivadas"])) {
+                this.publicacionesDerivadas = [] as any;
+                for (let item of _data["publicacionesDerivadas"])
+                    this.publicacionesDerivadas!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): ProyectoResumenDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new ProyectoResumenDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["titulo"] = this.titulo;
+        data["jefeId"] = this.jefeId;
+        data["jefe"] = this.jefe;
+        data["correoJefe"] = this.correoJefe;
+        data["numeroMiembros"] = this.numeroMiembros;
+        data["clasificacionId"] = this.clasificacionId;
+        data["clasificacionNombre"] = this.clasificacionNombre;
+        data["tipo"] = this.tipo;
+        data["codigoProyecto"] = this.codigoProyecto;
+        data["estadoDeEjecucion"] = this.estadoDeEjecucion;
+        data["situacion"] = this.situacion;
+        if (Array.isArray(this.publicacionesDerivadas)) {
+            data["publicacionesDerivadas"] = [];
+            for (let item of this.publicacionesDerivadas)
+                data["publicacionesDerivadas"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface IProyectoResumenDto {
+    id?: string;
+    titulo?: string;
+    jefeId?: string;
+    jefe?: string;
+    correoJefe?: string;
+    numeroMiembros?: number;
+    clasificacionId?: string;
+    clasificacionNombre?: string;
+    tipo?: string;
+    codigoProyecto?: string | undefined;
+    estadoDeEjecucion?: string | undefined;
+    situacion?: string | undefined;
+    publicacionesDerivadas?: string[];
+}
+
+export class ProyectoCatalogoDto implements IProyectoCatalogoDto {
+    id?: string;
+    titulo?: string;
+
+    constructor(data?: IProyectoCatalogoDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.titulo = _data["titulo"];
+        }
+    }
+
+    static fromJS(data: any): ProyectoCatalogoDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new ProyectoCatalogoDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["titulo"] = this.titulo;
+        return data;
+    }
+}
+
+export interface IProyectoCatalogoDto {
+    id?: string;
+    titulo?: string;
+}
+
+export abstract class ProyectoBaseDto implements IProyectoBaseDto {
+    id?: string;
+    titulo?: string;
+    jefeId?: string;
+    jefe?: string;
+    correoJefe?: string;
+    numeroMiembros?: number;
+    cantidadMiembrosUH?: number;
+    cantidadEstudiantes?: number;
+    cantidadEstudiantesContratados?: number;
+    tributaFormacionDoctoral?: boolean;
+    clasificacionId?: string;
+    clasificacionNombre?: string;
+    publicacionesDerivadas?: string[];
+
+    constructor(data?: IProyectoBaseDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.titulo = _data["titulo"];
+            this.jefeId = _data["jefeId"];
+            this.jefe = _data["jefe"];
+            this.correoJefe = _data["correoJefe"];
+            this.numeroMiembros = _data["numeroMiembros"];
+            this.cantidadMiembrosUH = _data["cantidadMiembrosUH"];
+            this.cantidadEstudiantes = _data["cantidadEstudiantes"];
+            this.cantidadEstudiantesContratados = _data["cantidadEstudiantesContratados"];
+            this.tributaFormacionDoctoral = _data["tributaFormacionDoctoral"];
+            this.clasificacionId = _data["clasificacionId"];
+            this.clasificacionNombre = _data["clasificacionNombre"];
+            if (Array.isArray(_data["publicacionesDerivadas"])) {
+                this.publicacionesDerivadas = [] as any;
+                for (let item of _data["publicacionesDerivadas"])
+                    this.publicacionesDerivadas!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): ProyectoBaseDto {
+        data = typeof data === 'object' ? data : {};
+        throw new Error("The abstract class 'ProyectoBaseDto' cannot be instantiated.");
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["titulo"] = this.titulo;
+        data["jefeId"] = this.jefeId;
+        data["jefe"] = this.jefe;
+        data["correoJefe"] = this.correoJefe;
+        data["numeroMiembros"] = this.numeroMiembros;
+        data["cantidadMiembrosUH"] = this.cantidadMiembrosUH;
+        data["cantidadEstudiantes"] = this.cantidadEstudiantes;
+        data["cantidadEstudiantesContratados"] = this.cantidadEstudiantesContratados;
+        data["tributaFormacionDoctoral"] = this.tributaFormacionDoctoral;
+        data["clasificacionId"] = this.clasificacionId;
+        data["clasificacionNombre"] = this.clasificacionNombre;
+        if (Array.isArray(this.publicacionesDerivadas)) {
+            data["publicacionesDerivadas"] = [];
+            for (let item of this.publicacionesDerivadas)
+                data["publicacionesDerivadas"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface IProyectoBaseDto {
+    id?: string;
+    titulo?: string;
+    jefeId?: string;
+    jefe?: string;
+    correoJefe?: string;
+    numeroMiembros?: number;
+    cantidadMiembrosUH?: number;
+    cantidadEstudiantes?: number;
+    cantidadEstudiantesContratados?: number;
+    tributaFormacionDoctoral?: boolean;
+    clasificacionId?: string;
+    clasificacionNombre?: string;
+    publicacionesDerivadas?: string[];
+}
+
+export class ProyectoEnRevisionDto extends ProyectoBaseDto implements IProyectoEnRevisionDto {
+    situacion?: string;
+    tipo?: string;
+
+    constructor(data?: IProyectoEnRevisionDto) {
+        super(data);
+    }
+
+    override init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.situacion = _data["situacion"];
+            this.tipo = _data["tipo"];
+        }
+    }
+
+    static override fromJS(data: any): ProyectoEnRevisionDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new ProyectoEnRevisionDto();
+        result.init(data);
+        return result;
+    }
+
+    override toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["situacion"] = this.situacion;
+        data["tipo"] = this.tipo;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IProyectoEnRevisionDto extends IProyectoBaseDto {
+    situacion?: string;
+    tipo?: string;
+}
+
+export class ProyectoEnRevisionBody implements IProyectoEnRevisionBody {
+    titulo?: string;
+    jefeId?: string;
+    numeroMiembros?: number;
+    cantidadMiembrosUH?: number;
+    cantidadEstudiantes?: number;
+    cantidadEstudiantesContratados?: number;
+    tributaFormacionDoctoral?: boolean;
+    clasificacionId?: string;
+    situacion?: string;
+    tipo?: string;
+
+    constructor(data?: IProyectoEnRevisionBody) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.titulo = _data["titulo"];
+            this.jefeId = _data["jefeId"];
+            this.numeroMiembros = _data["numeroMiembros"];
+            this.cantidadMiembrosUH = _data["cantidadMiembrosUH"];
+            this.cantidadEstudiantes = _data["cantidadEstudiantes"];
+            this.cantidadEstudiantesContratados = _data["cantidadEstudiantesContratados"];
+            this.tributaFormacionDoctoral = _data["tributaFormacionDoctoral"];
+            this.clasificacionId = _data["clasificacionId"];
+            this.situacion = _data["situacion"];
+            this.tipo = _data["tipo"];
+        }
+    }
+
+    static fromJS(data: any): ProyectoEnRevisionBody {
+        data = typeof data === 'object' ? data : {};
+        let result = new ProyectoEnRevisionBody();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["titulo"] = this.titulo;
+        data["jefeId"] = this.jefeId;
+        data["numeroMiembros"] = this.numeroMiembros;
+        data["cantidadMiembrosUH"] = this.cantidadMiembrosUH;
+        data["cantidadEstudiantes"] = this.cantidadEstudiantes;
+        data["cantidadEstudiantesContratados"] = this.cantidadEstudiantesContratados;
+        data["tributaFormacionDoctoral"] = this.tributaFormacionDoctoral;
+        data["clasificacionId"] = this.clasificacionId;
+        data["situacion"] = this.situacion;
+        data["tipo"] = this.tipo;
+        return data;
+    }
+}
+
+export interface IProyectoEnRevisionBody {
+    titulo?: string;
+    jefeId?: string;
+    numeroMiembros?: number;
+    cantidadMiembrosUH?: number;
+    cantidadEstudiantes?: number;
+    cantidadEstudiantesContratados?: number;
+    tributaFormacionDoctoral?: boolean;
+    clasificacionId?: string;
+    situacion?: string;
+    tipo?: string;
+}
+
+export abstract class ProyectoEnEjecucionBaseDto extends ProyectoBaseDto implements IProyectoEnEjecucionBaseDto {
+    fechaInicio?: Date;
+    fechaCierre?: Date | undefined;
+    estadoDeEjecucion?: string;
+    codigoProyecto?: string;
+    entidadEjecutoraPrincipal?: string;
+    entidadEjecutoraParticipante?: string | undefined;
+    contribucionSectoresEstrategicos?: string | undefined;
+    contribucionEjesEstrategicos?: string | undefined;
+    tributaDesarrolloLocal?: boolean;
+
+    constructor(data?: IProyectoEnEjecucionBaseDto) {
+        super(data);
+    }
+
+    override init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.fechaInicio = _data["fechaInicio"] ? new Date(_data["fechaInicio"].toString()) : undefined as any;
+            this.fechaCierre = _data["fechaCierre"] ? new Date(_data["fechaCierre"].toString()) : undefined as any;
+            this.estadoDeEjecucion = _data["estadoDeEjecucion"];
+            this.codigoProyecto = _data["codigoProyecto"];
+            this.entidadEjecutoraPrincipal = _data["entidadEjecutoraPrincipal"];
+            this.entidadEjecutoraParticipante = _data["entidadEjecutoraParticipante"];
+            this.contribucionSectoresEstrategicos = _data["contribucionSectoresEstrategicos"];
+            this.contribucionEjesEstrategicos = _data["contribucionEjesEstrategicos"];
+            this.tributaDesarrolloLocal = _data["tributaDesarrolloLocal"];
+        }
+    }
+
+    static override fromJS(data: any): ProyectoEnEjecucionBaseDto {
+        data = typeof data === 'object' ? data : {};
+        throw new Error("The abstract class 'ProyectoEnEjecucionBaseDto' cannot be instantiated.");
+    }
+
+    override toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["fechaInicio"] = this.fechaInicio ? formatDate(this.fechaInicio) : undefined as any;
+        data["fechaCierre"] = this.fechaCierre ? formatDate(this.fechaCierre) : undefined as any;
+        data["estadoDeEjecucion"] = this.estadoDeEjecucion;
+        data["codigoProyecto"] = this.codigoProyecto;
+        data["entidadEjecutoraPrincipal"] = this.entidadEjecutoraPrincipal;
+        data["entidadEjecutoraParticipante"] = this.entidadEjecutoraParticipante;
+        data["contribucionSectoresEstrategicos"] = this.contribucionSectoresEstrategicos;
+        data["contribucionEjesEstrategicos"] = this.contribucionEjesEstrategicos;
+        data["tributaDesarrolloLocal"] = this.tributaDesarrolloLocal;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IProyectoEnEjecucionBaseDto extends IProyectoBaseDto {
+    fechaInicio?: Date;
+    fechaCierre?: Date | undefined;
+    estadoDeEjecucion?: string;
+    codigoProyecto?: string;
+    entidadEjecutoraPrincipal?: string;
+    entidadEjecutoraParticipante?: string | undefined;
+    contribucionSectoresEstrategicos?: string | undefined;
+    contribucionEjesEstrategicos?: string | undefined;
+    tributaDesarrolloLocal?: boolean;
+}
+
+export class ProyectoEmpresarialDto extends ProyectoEnEjecucionBaseDto implements IProyectoEmpresarialDto {
+    empresa?: string;
+
+    constructor(data?: IProyectoEmpresarialDto) {
+        super(data);
+    }
+
+    override init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.empresa = _data["empresa"];
+        }
+    }
+
+    static override fromJS(data: any): ProyectoEmpresarialDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new ProyectoEmpresarialDto();
+        result.init(data);
+        return result;
+    }
+
+    override toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["empresa"] = this.empresa;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IProyectoEmpresarialDto extends IProyectoEnEjecucionBaseDto {
+    empresa?: string;
+}
+
+export class ProyectoEmpresarialBody implements IProyectoEmpresarialBody {
+    titulo?: string;
+    jefeId?: string;
+    numeroMiembros?: number;
+    cantidadMiembrosUH?: number;
+    cantidadEstudiantes?: number;
+    cantidadEstudiantesContratados?: number;
+    tributaFormacionDoctoral?: boolean;
+    clasificacionId?: string;
+    fechaInicio?: Date;
+    fechaCierre?: Date | undefined;
+    estadoDeEjecucion?: string;
+    codigoProyecto?: string;
+    entidadEjecutoraPrincipal?: string;
+    entidadEjecutoraParticipante?: string | undefined;
+    contribucionSectoresEstrategicos?: string | undefined;
+    contribucionEjesEstrategicos?: string | undefined;
+    tributaDesarrolloLocal?: boolean;
+    empresa?: string;
+
+    constructor(data?: IProyectoEmpresarialBody) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.titulo = _data["titulo"];
+            this.jefeId = _data["jefeId"];
+            this.numeroMiembros = _data["numeroMiembros"];
+            this.cantidadMiembrosUH = _data["cantidadMiembrosUH"];
+            this.cantidadEstudiantes = _data["cantidadEstudiantes"];
+            this.cantidadEstudiantesContratados = _data["cantidadEstudiantesContratados"];
+            this.tributaFormacionDoctoral = _data["tributaFormacionDoctoral"];
+            this.clasificacionId = _data["clasificacionId"];
+            this.fechaInicio = _data["fechaInicio"] ? new Date(_data["fechaInicio"].toString()) : undefined as any;
+            this.fechaCierre = _data["fechaCierre"] ? new Date(_data["fechaCierre"].toString()) : undefined as any;
+            this.estadoDeEjecucion = _data["estadoDeEjecucion"];
+            this.codigoProyecto = _data["codigoProyecto"];
+            this.entidadEjecutoraPrincipal = _data["entidadEjecutoraPrincipal"];
+            this.entidadEjecutoraParticipante = _data["entidadEjecutoraParticipante"];
+            this.contribucionSectoresEstrategicos = _data["contribucionSectoresEstrategicos"];
+            this.contribucionEjesEstrategicos = _data["contribucionEjesEstrategicos"];
+            this.tributaDesarrolloLocal = _data["tributaDesarrolloLocal"];
+            this.empresa = _data["empresa"];
+        }
+    }
+
+    static fromJS(data: any): ProyectoEmpresarialBody {
+        data = typeof data === 'object' ? data : {};
+        let result = new ProyectoEmpresarialBody();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["titulo"] = this.titulo;
+        data["jefeId"] = this.jefeId;
+        data["numeroMiembros"] = this.numeroMiembros;
+        data["cantidadMiembrosUH"] = this.cantidadMiembrosUH;
+        data["cantidadEstudiantes"] = this.cantidadEstudiantes;
+        data["cantidadEstudiantesContratados"] = this.cantidadEstudiantesContratados;
+        data["tributaFormacionDoctoral"] = this.tributaFormacionDoctoral;
+        data["clasificacionId"] = this.clasificacionId;
+        data["fechaInicio"] = this.fechaInicio ? formatDate(this.fechaInicio) : undefined as any;
+        data["fechaCierre"] = this.fechaCierre ? formatDate(this.fechaCierre) : undefined as any;
+        data["estadoDeEjecucion"] = this.estadoDeEjecucion;
+        data["codigoProyecto"] = this.codigoProyecto;
+        data["entidadEjecutoraPrincipal"] = this.entidadEjecutoraPrincipal;
+        data["entidadEjecutoraParticipante"] = this.entidadEjecutoraParticipante;
+        data["contribucionSectoresEstrategicos"] = this.contribucionSectoresEstrategicos;
+        data["contribucionEjesEstrategicos"] = this.contribucionEjesEstrategicos;
+        data["tributaDesarrolloLocal"] = this.tributaDesarrolloLocal;
+        data["empresa"] = this.empresa;
+        return data;
+    }
+}
+
+export interface IProyectoEmpresarialBody {
+    titulo?: string;
+    jefeId?: string;
+    numeroMiembros?: number;
+    cantidadMiembrosUH?: number;
+    cantidadEstudiantes?: number;
+    cantidadEstudiantesContratados?: number;
+    tributaFormacionDoctoral?: boolean;
+    clasificacionId?: string;
+    fechaInicio?: Date;
+    fechaCierre?: Date | undefined;
+    estadoDeEjecucion?: string;
+    codigoProyecto?: string;
+    entidadEjecutoraPrincipal?: string;
+    entidadEjecutoraParticipante?: string | undefined;
+    contribucionSectoresEstrategicos?: string | undefined;
+    contribucionEjesEstrategicos?: string | undefined;
+    tributaDesarrolloLocal?: boolean;
+    empresa?: string;
+}
+
+export class ProyectoApoyoProgramaDto extends ProyectoEnEjecucionBaseDto implements IProyectoApoyoProgramaDto {
+    nombrePrograma?: string;
+    tipoPAP?: TipoPAP;
+
+    constructor(data?: IProyectoApoyoProgramaDto) {
+        super(data);
+    }
+
+    override init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.nombrePrograma = _data["nombrePrograma"];
+            this.tipoPAP = _data["tipoPAP"];
+        }
+    }
+
+    static override fromJS(data: any): ProyectoApoyoProgramaDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new ProyectoApoyoProgramaDto();
+        result.init(data);
+        return result;
+    }
+
+    override toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["nombrePrograma"] = this.nombrePrograma;
+        data["tipoPAP"] = this.tipoPAP;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IProyectoApoyoProgramaDto extends IProyectoEnEjecucionBaseDto {
+    nombrePrograma?: string;
+    tipoPAP?: TipoPAP;
+}
+
+export enum TipoPAP {
+    Nacional = 1,
+    Sectorial = 2,
+    Territorial = 3,
+}
+
+export class ProyectoApoyoProgramaBody implements IProyectoApoyoProgramaBody {
+    titulo?: string;
+    jefeId?: string;
+    numeroMiembros?: number;
+    cantidadMiembrosUH?: number;
+    cantidadEstudiantes?: number;
+    cantidadEstudiantesContratados?: number;
+    tributaFormacionDoctoral?: boolean;
+    clasificacionId?: string;
+    fechaInicio?: Date;
+    fechaCierre?: Date | undefined;
+    estadoDeEjecucion?: string;
+    codigoProyecto?: string;
+    entidadEjecutoraPrincipal?: string;
+    entidadEjecutoraParticipante?: string | undefined;
+    contribucionSectoresEstrategicos?: string | undefined;
+    contribucionEjesEstrategicos?: string | undefined;
+    tributaDesarrolloLocal?: boolean;
+    nombrePrograma?: string;
+    tipoPAP?: TipoPAP;
+
+    constructor(data?: IProyectoApoyoProgramaBody) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.titulo = _data["titulo"];
+            this.jefeId = _data["jefeId"];
+            this.numeroMiembros = _data["numeroMiembros"];
+            this.cantidadMiembrosUH = _data["cantidadMiembrosUH"];
+            this.cantidadEstudiantes = _data["cantidadEstudiantes"];
+            this.cantidadEstudiantesContratados = _data["cantidadEstudiantesContratados"];
+            this.tributaFormacionDoctoral = _data["tributaFormacionDoctoral"];
+            this.clasificacionId = _data["clasificacionId"];
+            this.fechaInicio = _data["fechaInicio"] ? new Date(_data["fechaInicio"].toString()) : undefined as any;
+            this.fechaCierre = _data["fechaCierre"] ? new Date(_data["fechaCierre"].toString()) : undefined as any;
+            this.estadoDeEjecucion = _data["estadoDeEjecucion"];
+            this.codigoProyecto = _data["codigoProyecto"];
+            this.entidadEjecutoraPrincipal = _data["entidadEjecutoraPrincipal"];
+            this.entidadEjecutoraParticipante = _data["entidadEjecutoraParticipante"];
+            this.contribucionSectoresEstrategicos = _data["contribucionSectoresEstrategicos"];
+            this.contribucionEjesEstrategicos = _data["contribucionEjesEstrategicos"];
+            this.tributaDesarrolloLocal = _data["tributaDesarrolloLocal"];
+            this.nombrePrograma = _data["nombrePrograma"];
+            this.tipoPAP = _data["tipoPAP"];
+        }
+    }
+
+    static fromJS(data: any): ProyectoApoyoProgramaBody {
+        data = typeof data === 'object' ? data : {};
+        let result = new ProyectoApoyoProgramaBody();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["titulo"] = this.titulo;
+        data["jefeId"] = this.jefeId;
+        data["numeroMiembros"] = this.numeroMiembros;
+        data["cantidadMiembrosUH"] = this.cantidadMiembrosUH;
+        data["cantidadEstudiantes"] = this.cantidadEstudiantes;
+        data["cantidadEstudiantesContratados"] = this.cantidadEstudiantesContratados;
+        data["tributaFormacionDoctoral"] = this.tributaFormacionDoctoral;
+        data["clasificacionId"] = this.clasificacionId;
+        data["fechaInicio"] = this.fechaInicio ? formatDate(this.fechaInicio) : undefined as any;
+        data["fechaCierre"] = this.fechaCierre ? formatDate(this.fechaCierre) : undefined as any;
+        data["estadoDeEjecucion"] = this.estadoDeEjecucion;
+        data["codigoProyecto"] = this.codigoProyecto;
+        data["entidadEjecutoraPrincipal"] = this.entidadEjecutoraPrincipal;
+        data["entidadEjecutoraParticipante"] = this.entidadEjecutoraParticipante;
+        data["contribucionSectoresEstrategicos"] = this.contribucionSectoresEstrategicos;
+        data["contribucionEjesEstrategicos"] = this.contribucionEjesEstrategicos;
+        data["tributaDesarrolloLocal"] = this.tributaDesarrolloLocal;
+        data["nombrePrograma"] = this.nombrePrograma;
+        data["tipoPAP"] = this.tipoPAP;
+        return data;
+    }
+}
+
+export interface IProyectoApoyoProgramaBody {
+    titulo?: string;
+    jefeId?: string;
+    numeroMiembros?: number;
+    cantidadMiembrosUH?: number;
+    cantidadEstudiantes?: number;
+    cantidadEstudiantesContratados?: number;
+    tributaFormacionDoctoral?: boolean;
+    clasificacionId?: string;
+    fechaInicio?: Date;
+    fechaCierre?: Date | undefined;
+    estadoDeEjecucion?: string;
+    codigoProyecto?: string;
+    entidadEjecutoraPrincipal?: string;
+    entidadEjecutoraParticipante?: string | undefined;
+    contribucionSectoresEstrategicos?: string | undefined;
+    contribucionEjesEstrategicos?: string | undefined;
+    tributaDesarrolloLocal?: boolean;
+    nombrePrograma?: string;
+    tipoPAP?: TipoPAP;
+}
+
+export class ProyectoDesarrolloLocalDto extends ProyectoEnEjecucionBaseDto implements IProyectoDesarrolloLocalDto {
+    municipio?: string;
+
+    constructor(data?: IProyectoDesarrolloLocalDto) {
+        super(data);
+    }
+
+    override init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.municipio = _data["municipio"];
+        }
+    }
+
+    static override fromJS(data: any): ProyectoDesarrolloLocalDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new ProyectoDesarrolloLocalDto();
+        result.init(data);
+        return result;
+    }
+
+    override toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["municipio"] = this.municipio;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IProyectoDesarrolloLocalDto extends IProyectoEnEjecucionBaseDto {
+    municipio?: string;
+}
+
+export class ProyectoDesarrolloLocalBody implements IProyectoDesarrolloLocalBody {
+    titulo?: string;
+    jefeId?: string;
+    numeroMiembros?: number;
+    cantidadMiembrosUH?: number;
+    cantidadEstudiantes?: number;
+    cantidadEstudiantesContratados?: number;
+    tributaFormacionDoctoral?: boolean;
+    clasificacionId?: string;
+    fechaInicio?: Date;
+    fechaCierre?: Date | undefined;
+    estadoDeEjecucion?: string;
+    codigoProyecto?: string;
+    entidadEjecutoraPrincipal?: string;
+    entidadEjecutoraParticipante?: string | undefined;
+    contribucionSectoresEstrategicos?: string | undefined;
+    contribucionEjesEstrategicos?: string | undefined;
+    municipio?: string;
+
+    constructor(data?: IProyectoDesarrolloLocalBody) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.titulo = _data["titulo"];
+            this.jefeId = _data["jefeId"];
+            this.numeroMiembros = _data["numeroMiembros"];
+            this.cantidadMiembrosUH = _data["cantidadMiembrosUH"];
+            this.cantidadEstudiantes = _data["cantidadEstudiantes"];
+            this.cantidadEstudiantesContratados = _data["cantidadEstudiantesContratados"];
+            this.tributaFormacionDoctoral = _data["tributaFormacionDoctoral"];
+            this.clasificacionId = _data["clasificacionId"];
+            this.fechaInicio = _data["fechaInicio"] ? new Date(_data["fechaInicio"].toString()) : undefined as any;
+            this.fechaCierre = _data["fechaCierre"] ? new Date(_data["fechaCierre"].toString()) : undefined as any;
+            this.estadoDeEjecucion = _data["estadoDeEjecucion"];
+            this.codigoProyecto = _data["codigoProyecto"];
+            this.entidadEjecutoraPrincipal = _data["entidadEjecutoraPrincipal"];
+            this.entidadEjecutoraParticipante = _data["entidadEjecutoraParticipante"];
+            this.contribucionSectoresEstrategicos = _data["contribucionSectoresEstrategicos"];
+            this.contribucionEjesEstrategicos = _data["contribucionEjesEstrategicos"];
+            this.municipio = _data["municipio"];
+        }
+    }
+
+    static fromJS(data: any): ProyectoDesarrolloLocalBody {
+        data = typeof data === 'object' ? data : {};
+        let result = new ProyectoDesarrolloLocalBody();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["titulo"] = this.titulo;
+        data["jefeId"] = this.jefeId;
+        data["numeroMiembros"] = this.numeroMiembros;
+        data["cantidadMiembrosUH"] = this.cantidadMiembrosUH;
+        data["cantidadEstudiantes"] = this.cantidadEstudiantes;
+        data["cantidadEstudiantesContratados"] = this.cantidadEstudiantesContratados;
+        data["tributaFormacionDoctoral"] = this.tributaFormacionDoctoral;
+        data["clasificacionId"] = this.clasificacionId;
+        data["fechaInicio"] = this.fechaInicio ? formatDate(this.fechaInicio) : undefined as any;
+        data["fechaCierre"] = this.fechaCierre ? formatDate(this.fechaCierre) : undefined as any;
+        data["estadoDeEjecucion"] = this.estadoDeEjecucion;
+        data["codigoProyecto"] = this.codigoProyecto;
+        data["entidadEjecutoraPrincipal"] = this.entidadEjecutoraPrincipal;
+        data["entidadEjecutoraParticipante"] = this.entidadEjecutoraParticipante;
+        data["contribucionSectoresEstrategicos"] = this.contribucionSectoresEstrategicos;
+        data["contribucionEjesEstrategicos"] = this.contribucionEjesEstrategicos;
+        data["municipio"] = this.municipio;
+        return data;
+    }
+}
+
+export interface IProyectoDesarrolloLocalBody {
+    titulo?: string;
+    jefeId?: string;
+    numeroMiembros?: number;
+    cantidadMiembrosUH?: number;
+    cantidadEstudiantes?: number;
+    cantidadEstudiantesContratados?: number;
+    tributaFormacionDoctoral?: boolean;
+    clasificacionId?: string;
+    fechaInicio?: Date;
+    fechaCierre?: Date | undefined;
+    estadoDeEjecucion?: string;
+    codigoProyecto?: string;
+    entidadEjecutoraPrincipal?: string;
+    entidadEjecutoraParticipante?: string | undefined;
+    contribucionSectoresEstrategicos?: string | undefined;
+    contribucionEjesEstrategicos?: string | undefined;
+    municipio?: string;
+}
+
+export class ProyectoNoEmpresarialDto extends ProyectoEnEjecucionBaseDto implements IProyectoNoEmpresarialDto {
+    entidadNoEmpresarial?: string;
+
+    constructor(data?: IProyectoNoEmpresarialDto) {
+        super(data);
+    }
+
+    override init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.entidadNoEmpresarial = _data["entidadNoEmpresarial"];
+        }
+    }
+
+    static override fromJS(data: any): ProyectoNoEmpresarialDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new ProyectoNoEmpresarialDto();
+        result.init(data);
+        return result;
+    }
+
+    override toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["entidadNoEmpresarial"] = this.entidadNoEmpresarial;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IProyectoNoEmpresarialDto extends IProyectoEnEjecucionBaseDto {
+    entidadNoEmpresarial?: string;
+}
+
+export class ProyectoNoEmpresarialBody implements IProyectoNoEmpresarialBody {
+    titulo?: string;
+    jefeId?: string;
+    numeroMiembros?: number;
+    cantidadMiembrosUH?: number;
+    cantidadEstudiantes?: number;
+    cantidadEstudiantesContratados?: number;
+    tributaFormacionDoctoral?: boolean;
+    clasificacionId?: string;
+    fechaInicio?: Date;
+    fechaCierre?: Date | undefined;
+    estadoDeEjecucion?: string;
+    codigoProyecto?: string;
+    entidadEjecutoraPrincipal?: string;
+    entidadEjecutoraParticipante?: string | undefined;
+    contribucionSectoresEstrategicos?: string | undefined;
+    contribucionEjesEstrategicos?: string | undefined;
+    tributaDesarrolloLocal?: boolean;
+    entidadNoEmpresarial?: string;
+
+    constructor(data?: IProyectoNoEmpresarialBody) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.titulo = _data["titulo"];
+            this.jefeId = _data["jefeId"];
+            this.numeroMiembros = _data["numeroMiembros"];
+            this.cantidadMiembrosUH = _data["cantidadMiembrosUH"];
+            this.cantidadEstudiantes = _data["cantidadEstudiantes"];
+            this.cantidadEstudiantesContratados = _data["cantidadEstudiantesContratados"];
+            this.tributaFormacionDoctoral = _data["tributaFormacionDoctoral"];
+            this.clasificacionId = _data["clasificacionId"];
+            this.fechaInicio = _data["fechaInicio"] ? new Date(_data["fechaInicio"].toString()) : undefined as any;
+            this.fechaCierre = _data["fechaCierre"] ? new Date(_data["fechaCierre"].toString()) : undefined as any;
+            this.estadoDeEjecucion = _data["estadoDeEjecucion"];
+            this.codigoProyecto = _data["codigoProyecto"];
+            this.entidadEjecutoraPrincipal = _data["entidadEjecutoraPrincipal"];
+            this.entidadEjecutoraParticipante = _data["entidadEjecutoraParticipante"];
+            this.contribucionSectoresEstrategicos = _data["contribucionSectoresEstrategicos"];
+            this.contribucionEjesEstrategicos = _data["contribucionEjesEstrategicos"];
+            this.tributaDesarrolloLocal = _data["tributaDesarrolloLocal"];
+            this.entidadNoEmpresarial = _data["entidadNoEmpresarial"];
+        }
+    }
+
+    static fromJS(data: any): ProyectoNoEmpresarialBody {
+        data = typeof data === 'object' ? data : {};
+        let result = new ProyectoNoEmpresarialBody();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["titulo"] = this.titulo;
+        data["jefeId"] = this.jefeId;
+        data["numeroMiembros"] = this.numeroMiembros;
+        data["cantidadMiembrosUH"] = this.cantidadMiembrosUH;
+        data["cantidadEstudiantes"] = this.cantidadEstudiantes;
+        data["cantidadEstudiantesContratados"] = this.cantidadEstudiantesContratados;
+        data["tributaFormacionDoctoral"] = this.tributaFormacionDoctoral;
+        data["clasificacionId"] = this.clasificacionId;
+        data["fechaInicio"] = this.fechaInicio ? formatDate(this.fechaInicio) : undefined as any;
+        data["fechaCierre"] = this.fechaCierre ? formatDate(this.fechaCierre) : undefined as any;
+        data["estadoDeEjecucion"] = this.estadoDeEjecucion;
+        data["codigoProyecto"] = this.codigoProyecto;
+        data["entidadEjecutoraPrincipal"] = this.entidadEjecutoraPrincipal;
+        data["entidadEjecutoraParticipante"] = this.entidadEjecutoraParticipante;
+        data["contribucionSectoresEstrategicos"] = this.contribucionSectoresEstrategicos;
+        data["contribucionEjesEstrategicos"] = this.contribucionEjesEstrategicos;
+        data["tributaDesarrolloLocal"] = this.tributaDesarrolloLocal;
+        data["entidadNoEmpresarial"] = this.entidadNoEmpresarial;
+        return data;
+    }
+}
+
+export interface IProyectoNoEmpresarialBody {
+    titulo?: string;
+    jefeId?: string;
+    numeroMiembros?: number;
+    cantidadMiembrosUH?: number;
+    cantidadEstudiantes?: number;
+    cantidadEstudiantesContratados?: number;
+    tributaFormacionDoctoral?: boolean;
+    clasificacionId?: string;
+    fechaInicio?: Date;
+    fechaCierre?: Date | undefined;
+    estadoDeEjecucion?: string;
+    codigoProyecto?: string;
+    entidadEjecutoraPrincipal?: string;
+    entidadEjecutoraParticipante?: string | undefined;
+    contribucionSectoresEstrategicos?: string | undefined;
+    contribucionEjesEstrategicos?: string | undefined;
+    tributaDesarrolloLocal?: boolean;
+    entidadNoEmpresarial?: string;
+}
+
+export class ProyectoColabInternacionalDto extends ProyectoEnEjecucionBaseDto implements IProyectoColabInternacionalDto {
+    fuenteFinanciacion?: string;
+    terminosReferencia?: string;
+
+    constructor(data?: IProyectoColabInternacionalDto) {
+        super(data);
+    }
+
+    override init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.fuenteFinanciacion = _data["fuenteFinanciacion"];
+            this.terminosReferencia = _data["terminosReferencia"];
+        }
+    }
+
+    static override fromJS(data: any): ProyectoColabInternacionalDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new ProyectoColabInternacionalDto();
+        result.init(data);
+        return result;
+    }
+
+    override toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["fuenteFinanciacion"] = this.fuenteFinanciacion;
+        data["terminosReferencia"] = this.terminosReferencia;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IProyectoColabInternacionalDto extends IProyectoEnEjecucionBaseDto {
+    fuenteFinanciacion?: string;
+    terminosReferencia?: string;
+}
+
+export class ProyectoColabInternacionalBody implements IProyectoColabInternacionalBody {
+    titulo?: string;
+    jefeId?: string;
+    numeroMiembros?: number;
+    cantidadMiembrosUH?: number;
+    cantidadEstudiantes?: number;
+    cantidadEstudiantesContratados?: number;
+    tributaFormacionDoctoral?: boolean;
+    clasificacionId?: string;
+    fechaInicio?: Date;
+    fechaCierre?: Date | undefined;
+    estadoDeEjecucion?: string;
+    codigoProyecto?: string;
+    entidadEjecutoraPrincipal?: string;
+    entidadEjecutoraParticipante?: string | undefined;
+    contribucionSectoresEstrategicos?: string | undefined;
+    contribucionEjesEstrategicos?: string | undefined;
+    tributaDesarrolloLocal?: boolean;
+    fuenteFinanciacion?: string;
+    terminosReferencia?: string;
+
+    constructor(data?: IProyectoColabInternacionalBody) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.titulo = _data["titulo"];
+            this.jefeId = _data["jefeId"];
+            this.numeroMiembros = _data["numeroMiembros"];
+            this.cantidadMiembrosUH = _data["cantidadMiembrosUH"];
+            this.cantidadEstudiantes = _data["cantidadEstudiantes"];
+            this.cantidadEstudiantesContratados = _data["cantidadEstudiantesContratados"];
+            this.tributaFormacionDoctoral = _data["tributaFormacionDoctoral"];
+            this.clasificacionId = _data["clasificacionId"];
+            this.fechaInicio = _data["fechaInicio"] ? new Date(_data["fechaInicio"].toString()) : undefined as any;
+            this.fechaCierre = _data["fechaCierre"] ? new Date(_data["fechaCierre"].toString()) : undefined as any;
+            this.estadoDeEjecucion = _data["estadoDeEjecucion"];
+            this.codigoProyecto = _data["codigoProyecto"];
+            this.entidadEjecutoraPrincipal = _data["entidadEjecutoraPrincipal"];
+            this.entidadEjecutoraParticipante = _data["entidadEjecutoraParticipante"];
+            this.contribucionSectoresEstrategicos = _data["contribucionSectoresEstrategicos"];
+            this.contribucionEjesEstrategicos = _data["contribucionEjesEstrategicos"];
+            this.tributaDesarrolloLocal = _data["tributaDesarrolloLocal"];
+            this.fuenteFinanciacion = _data["fuenteFinanciacion"];
+            this.terminosReferencia = _data["terminosReferencia"];
+        }
+    }
+
+    static fromJS(data: any): ProyectoColabInternacionalBody {
+        data = typeof data === 'object' ? data : {};
+        let result = new ProyectoColabInternacionalBody();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["titulo"] = this.titulo;
+        data["jefeId"] = this.jefeId;
+        data["numeroMiembros"] = this.numeroMiembros;
+        data["cantidadMiembrosUH"] = this.cantidadMiembrosUH;
+        data["cantidadEstudiantes"] = this.cantidadEstudiantes;
+        data["cantidadEstudiantesContratados"] = this.cantidadEstudiantesContratados;
+        data["tributaFormacionDoctoral"] = this.tributaFormacionDoctoral;
+        data["clasificacionId"] = this.clasificacionId;
+        data["fechaInicio"] = this.fechaInicio ? formatDate(this.fechaInicio) : undefined as any;
+        data["fechaCierre"] = this.fechaCierre ? formatDate(this.fechaCierre) : undefined as any;
+        data["estadoDeEjecucion"] = this.estadoDeEjecucion;
+        data["codigoProyecto"] = this.codigoProyecto;
+        data["entidadEjecutoraPrincipal"] = this.entidadEjecutoraPrincipal;
+        data["entidadEjecutoraParticipante"] = this.entidadEjecutoraParticipante;
+        data["contribucionSectoresEstrategicos"] = this.contribucionSectoresEstrategicos;
+        data["contribucionEjesEstrategicos"] = this.contribucionEjesEstrategicos;
+        data["tributaDesarrolloLocal"] = this.tributaDesarrolloLocal;
+        data["fuenteFinanciacion"] = this.fuenteFinanciacion;
+        data["terminosReferencia"] = this.terminosReferencia;
+        return data;
+    }
+}
+
+export interface IProyectoColabInternacionalBody {
+    titulo?: string;
+    jefeId?: string;
+    numeroMiembros?: number;
+    cantidadMiembrosUH?: number;
+    cantidadEstudiantes?: number;
+    cantidadEstudiantesContratados?: number;
+    tributaFormacionDoctoral?: boolean;
+    clasificacionId?: string;
+    fechaInicio?: Date;
+    fechaCierre?: Date | undefined;
+    estadoDeEjecucion?: string;
+    codigoProyecto?: string;
+    entidadEjecutoraPrincipal?: string;
+    entidadEjecutoraParticipante?: string | undefined;
+    contribucionSectoresEstrategicos?: string | undefined;
+    contribucionEjesEstrategicos?: string | undefined;
+    tributaDesarrolloLocal?: boolean;
+    fuenteFinanciacion?: string;
+    terminosReferencia?: string;
+}
+
+export class ProyectoPNAPDto extends ProyectoEnEjecucionBaseDto implements IProyectoPNAPDto {
+    financiamientoUH?: string;
+
+    constructor(data?: IProyectoPNAPDto) {
+        super(data);
+    }
+
+    override init(_data?: any) {
+        super.init(_data);
+        if (_data) {
+            this.financiamientoUH = _data["financiamientoUH"];
+        }
+    }
+
+    static override fromJS(data: any): ProyectoPNAPDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new ProyectoPNAPDto();
+        result.init(data);
+        return result;
+    }
+
+    override toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["financiamientoUH"] = this.financiamientoUH;
+        super.toJSON(data);
+        return data;
+    }
+}
+
+export interface IProyectoPNAPDto extends IProyectoEnEjecucionBaseDto {
+    financiamientoUH?: string;
+}
+
+export class ProyectoPNAPBody implements IProyectoPNAPBody {
+    titulo?: string;
+    jefeId?: string;
+    numeroMiembros?: number;
+    cantidadMiembrosUH?: number;
+    cantidadEstudiantes?: number;
+    cantidadEstudiantesContratados?: number;
+    tributaFormacionDoctoral?: boolean;
+    clasificacionId?: string;
+    fechaInicio?: Date;
+    fechaCierre?: Date | undefined;
+    estadoDeEjecucion?: string;
+    codigoProyecto?: string;
+    entidadEjecutoraPrincipal?: string;
+    entidadEjecutoraParticipante?: string | undefined;
+    contribucionSectoresEstrategicos?: string | undefined;
+    contribucionEjesEstrategicos?: string | undefined;
+    tributaDesarrolloLocal?: boolean;
+    financiamientoUH?: string;
+
+    constructor(data?: IProyectoPNAPBody) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.titulo = _data["titulo"];
+            this.jefeId = _data["jefeId"];
+            this.numeroMiembros = _data["numeroMiembros"];
+            this.cantidadMiembrosUH = _data["cantidadMiembrosUH"];
+            this.cantidadEstudiantes = _data["cantidadEstudiantes"];
+            this.cantidadEstudiantesContratados = _data["cantidadEstudiantesContratados"];
+            this.tributaFormacionDoctoral = _data["tributaFormacionDoctoral"];
+            this.clasificacionId = _data["clasificacionId"];
+            this.fechaInicio = _data["fechaInicio"] ? new Date(_data["fechaInicio"].toString()) : undefined as any;
+            this.fechaCierre = _data["fechaCierre"] ? new Date(_data["fechaCierre"].toString()) : undefined as any;
+            this.estadoDeEjecucion = _data["estadoDeEjecucion"];
+            this.codigoProyecto = _data["codigoProyecto"];
+            this.entidadEjecutoraPrincipal = _data["entidadEjecutoraPrincipal"];
+            this.entidadEjecutoraParticipante = _data["entidadEjecutoraParticipante"];
+            this.contribucionSectoresEstrategicos = _data["contribucionSectoresEstrategicos"];
+            this.contribucionEjesEstrategicos = _data["contribucionEjesEstrategicos"];
+            this.tributaDesarrolloLocal = _data["tributaDesarrolloLocal"];
+            this.financiamientoUH = _data["financiamientoUH"];
+        }
+    }
+
+    static fromJS(data: any): ProyectoPNAPBody {
+        data = typeof data === 'object' ? data : {};
+        let result = new ProyectoPNAPBody();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["titulo"] = this.titulo;
+        data["jefeId"] = this.jefeId;
+        data["numeroMiembros"] = this.numeroMiembros;
+        data["cantidadMiembrosUH"] = this.cantidadMiembrosUH;
+        data["cantidadEstudiantes"] = this.cantidadEstudiantes;
+        data["cantidadEstudiantesContratados"] = this.cantidadEstudiantesContratados;
+        data["tributaFormacionDoctoral"] = this.tributaFormacionDoctoral;
+        data["clasificacionId"] = this.clasificacionId;
+        data["fechaInicio"] = this.fechaInicio ? formatDate(this.fechaInicio) : undefined as any;
+        data["fechaCierre"] = this.fechaCierre ? formatDate(this.fechaCierre) : undefined as any;
+        data["estadoDeEjecucion"] = this.estadoDeEjecucion;
+        data["codigoProyecto"] = this.codigoProyecto;
+        data["entidadEjecutoraPrincipal"] = this.entidadEjecutoraPrincipal;
+        data["entidadEjecutoraParticipante"] = this.entidadEjecutoraParticipante;
+        data["contribucionSectoresEstrategicos"] = this.contribucionSectoresEstrategicos;
+        data["contribucionEjesEstrategicos"] = this.contribucionEjesEstrategicos;
+        data["tributaDesarrolloLocal"] = this.tributaDesarrolloLocal;
+        data["financiamientoUH"] = this.financiamientoUH;
+        return data;
+    }
+}
+
+export interface IProyectoPNAPBody {
+    titulo?: string;
+    jefeId?: string;
+    numeroMiembros?: number;
+    cantidadMiembrosUH?: number;
+    cantidadEstudiantes?: number;
+    cantidadEstudiantesContratados?: number;
+    tributaFormacionDoctoral?: boolean;
+    clasificacionId?: string;
+    fechaInicio?: Date;
+    fechaCierre?: Date | undefined;
+    estadoDeEjecucion?: string;
+    codigoProyecto?: string;
+    entidadEjecutoraPrincipal?: string;
+    entidadEjecutoraParticipante?: string | undefined;
+    contribucionSectoresEstrategicos?: string | undefined;
+    contribucionEjesEstrategicos?: string | undefined;
+    tributaDesarrolloLocal?: boolean;
+    financiamientoUH?: string;
+}
+
 export class PublicationTypeDto implements IPublicationTypeDto {
     value?: number;
     name?: string;
@@ -4435,6 +7335,62 @@ export interface IPublicationTypeDto {
     name?: string;
 }
 
+export class PublicacionResumenDto implements IPublicacionResumenDto {
+    id?: string;
+    titulo?: string;
+    urlDoi?: string | undefined;
+    tipo?: number;
+    proyectoId?: string | undefined;
+    proyectoTitulo?: string | undefined;
+
+    constructor(data?: IPublicacionResumenDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.titulo = _data["titulo"];
+            this.urlDoi = _data["urlDoi"];
+            this.tipo = _data["tipo"];
+            this.proyectoId = _data["proyectoId"];
+            this.proyectoTitulo = _data["proyectoTitulo"];
+        }
+    }
+
+    static fromJS(data: any): PublicacionResumenDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new PublicacionResumenDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["titulo"] = this.titulo;
+        data["urlDoi"] = this.urlDoi;
+        data["tipo"] = this.tipo;
+        data["proyectoId"] = this.proyectoId;
+        data["proyectoTitulo"] = this.proyectoTitulo;
+        return data;
+    }
+}
+
+export interface IPublicacionResumenDto {
+    id?: string;
+    titulo?: string;
+    urlDoi?: string | undefined;
+    tipo?: number;
+    proyectoId?: string | undefined;
+    proyectoTitulo?: string | undefined;
+}
+
 export class PublicationDto implements IPublicationDto {
     id?: string;
     title?: string;
@@ -4444,6 +7400,7 @@ export class PublicationDto implements IPublicationDto {
     authors?: AuthorDto[];
     indexedPublication?: IndexedPublicationDto | undefined;
     journalPublication?: JournalPublicationDto | undefined;
+    proyectoId?: string | undefined;
 
     constructor(data?: IPublicationDto) {
         if (data) {
@@ -4468,6 +7425,7 @@ export class PublicationDto implements IPublicationDto {
             }
             this.indexedPublication = _data["indexedPublication"] ? IndexedPublicationDto.fromJS(_data["indexedPublication"]) : undefined as any;
             this.journalPublication = _data["journalPublication"] ? JournalPublicationDto.fromJS(_data["journalPublication"]) : undefined as any;
+            this.proyectoId = _data["proyectoId"];
         }
     }
 
@@ -4492,6 +7450,7 @@ export class PublicationDto implements IPublicationDto {
         }
         data["indexedPublication"] = this.indexedPublication ? this.indexedPublication.toJSON() : undefined as any;
         data["journalPublication"] = this.journalPublication ? this.journalPublication.toJSON() : undefined as any;
+        data["proyectoId"] = this.proyectoId;
         return data;
     }
 }
@@ -4505,6 +7464,7 @@ export interface IPublicationDto {
     authors?: AuthorDto[];
     indexedPublication?: IndexedPublicationDto | undefined;
     journalPublication?: JournalPublicationDto | undefined;
+    proyectoId?: string | undefined;
 }
 
 export class AuthorDto implements IAuthorDto {
@@ -4643,6 +7603,7 @@ export class CreatePublicationCommand implements ICreatePublicationCommand {
     dataBase?: string | undefined;
     group?: number | undefined;
     cuartil?: string | undefined;
+    proyectoId?: string | undefined;
 
     constructor(data?: ICreatePublicationCommand) {
         if (data) {
@@ -4678,6 +7639,7 @@ export class CreatePublicationCommand implements ICreatePublicationCommand {
             this.dataBase = _data["dataBase"];
             this.group = _data["group"];
             this.cuartil = _data["cuartil"];
+            this.proyectoId = _data["proyectoId"];
         }
     }
 
@@ -4713,6 +7675,7 @@ export class CreatePublicationCommand implements ICreatePublicationCommand {
         data["dataBase"] = this.dataBase;
         data["group"] = this.group;
         data["cuartil"] = this.cuartil;
+        data["proyectoId"] = this.proyectoId;
         return data;
     }
 }
@@ -4729,6 +7692,7 @@ export interface ICreatePublicationCommand {
     dataBase?: string | undefined;
     group?: number | undefined;
     cuartil?: string | undefined;
+    proyectoId?: string | undefined;
 }
 
 export enum PublicationType {
@@ -4751,6 +7715,7 @@ export class UpdatePublicationBody implements IUpdatePublicationBody {
     dataBase?: string | undefined;
     group?: number | undefined;
     cuartil?: string | undefined;
+    proyectoId?: string | undefined;
 
     constructor(data?: IUpdatePublicationBody) {
         if (data) {
@@ -4786,6 +7751,7 @@ export class UpdatePublicationBody implements IUpdatePublicationBody {
             this.dataBase = _data["dataBase"];
             this.group = _data["group"];
             this.cuartil = _data["cuartil"];
+            this.proyectoId = _data["proyectoId"];
         }
     }
 
@@ -4821,6 +7787,7 @@ export class UpdatePublicationBody implements IUpdatePublicationBody {
         data["dataBase"] = this.dataBase;
         data["group"] = this.group;
         data["cuartil"] = this.cuartil;
+        data["proyectoId"] = this.proyectoId;
         return data;
     }
 }
@@ -4837,6 +7804,7 @@ export interface IUpdatePublicationBody {
     dataBase?: string | undefined;
     group?: number | undefined;
     cuartil?: string | undefined;
+    proyectoId?: string | undefined;
 }
 
 export class RoleDto implements IRoleDto {
@@ -5105,6 +8073,56 @@ export class AssignRoleRequest implements IAssignRoleRequest {
 
 export interface IAssignRoleRequest {
     roleName?: string;
+}
+
+export class JefeDeProyectoDto implements IJefeDeProyectoDto {
+    id?: string;
+    nombreCompleto?: string;
+    email?: string;
+
+    constructor(data?: IJefeDeProyectoDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.nombreCompleto = _data["nombreCompleto"];
+            this.email = _data["email"];
+        }
+    }
+
+    static fromJS(data: any): JefeDeProyectoDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new JefeDeProyectoDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["nombreCompleto"] = this.nombreCompleto;
+        data["email"] = this.email;
+        return data;
+    }
+}
+
+export interface IJefeDeProyectoDto {
+    id?: string;
+    nombreCompleto?: string;
+    email?: string;
+}
+
+function formatDate(d: Date) {
+    return d.getFullYear() + '-' + 
+        (d.getMonth() < 9 ? ('0' + (d.getMonth()+1)) : (d.getMonth()+1)) + '-' +
+        (d.getDate() < 10 ? ('0' + d.getDate()) : d.getDate());
 }
 
 export class SwaggerException extends Error {

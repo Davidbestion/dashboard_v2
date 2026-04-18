@@ -4,6 +4,7 @@ using Dashboard_v2.Application.AreasDelConocimiento.Commands.DeleteAreaDelConoci
 using Dashboard_v2.Application.AreasDelConocimiento.Commands.UpdateAreaDelConocimiento;
 using Dashboard_v2.Application.AreasDelConocimiento.Queries.GetAreasDelConocimiento;
 using Dashboard_v2.Web.Infrastructure;
+using RolesEnum = Dashboard_v2.Domain.Enums.Roles;
 
 namespace Dashboard_v2.Web.Endpoints;
 
@@ -20,20 +21,20 @@ public class AreasDelConocimiento : EndpointGroupBase
             .Produces<List<AreaDelConocimientoDto>>(200);
 
         groupBuilder.MapPost("", CreateAreaDelConocimiento)
-            .RequireAuthorization(p => p.RequireRole("Superuser"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser)))
             .WithName("CreateAreaDelConocimiento")
             .Produces(201)
             .ProducesProblem(400);
 
         groupBuilder.MapPut("{id}", UpdateAreaDelConocimiento)
-            .RequireAuthorization(p => p.RequireRole("Superuser"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser)))
             .WithName("UpdateAreaDelConocimiento")
             .Produces(200)
             .ProducesProblem(400)
             .ProducesProblem(404);
 
         groupBuilder.MapDelete("{id}", DeleteAreaDelConocimiento)
-            .RequireAuthorization(p => p.RequireRole("Superuser"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser)))
             .WithName("DeleteAreaDelConocimiento")
             .Produces(200)
             .ProducesProblem(404);

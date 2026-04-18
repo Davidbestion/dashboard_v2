@@ -196,6 +196,22 @@ namespace Dashboard_v2.Infrastructure.Migrations
                     b.ToTable("AwardTypes", (string)null);
                 });
 
+            modelBuilder.Entity("Dashboard_v2.Domain.Entities.Clasificacion", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Clasificaciones", (string)null);
+                });
+
             modelBuilder.Entity("Dashboard_v2.Domain.Entities.Country", b =>
                 {
                     b.Property<int>("Id")
@@ -388,9 +404,60 @@ namespace Dashboard_v2.Infrastructure.Migrations
                     b.ToTable("Presentations", (string)null);
                 });
 
+            modelBuilder.Entity("Dashboard_v2.Domain.Entities.Proyecto", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)");
+
+                    b.Property<int>("CantidadEstudiantes")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("CantidadEstudiantesContratados")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("CantidadMiembrosUH")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ClasificacionId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)");
+
+                    b.Property<string>("JefeId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)");
+
+                    b.Property<int>("NumeroMiembros")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Titulo")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<bool>("TributaFormacionDoctoral")
+                        .HasColumnType("boolean");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClasificacionId");
+
+                    b.HasIndex("JefeId");
+
+                    b.ToTable("Proyectos", (string)null);
+
+                    b.UseTptMappingStrategy();
+                });
+
             modelBuilder.Entity("Dashboard_v2.Domain.Entities.Publication", b =>
                 {
                     b.Property<string>("Id")
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)");
+
+                    b.Property<string>("ProyectoId")
                         .HasMaxLength(450)
                         .HasColumnType("character varying(450)");
 
@@ -410,6 +477,8 @@ namespace Dashboard_v2.Infrastructure.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ProyectoId");
 
                     b.ToTable("Publications", (string)null);
                 });
@@ -619,6 +688,146 @@ namespace Dashboard_v2.Infrastructure.Migrations
                     b.ToTable("GruposDeInvestigacionUsuarios", (string)null);
                 });
 
+            modelBuilder.Entity("Dashboard_v2.Domain.Entities.ProyectoEnEjecucion", b =>
+                {
+                    b.HasBaseType("Dashboard_v2.Domain.Entities.Proyecto");
+
+                    b.Property<string>("CodigoProyecto")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("ContribucionEjesEstrategicos")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("ContribucionSectoresEstrategicos")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("EntidadEjecutoraParticipante")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("EntidadEjecutoraPrincipal")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("EstadoDeEjecucion")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateOnly?>("FechaCierre")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly>("FechaInicio")
+                        .HasColumnType("date");
+
+                    b.Property<bool>("TributaDesarrolloLocal")
+                        .HasColumnType("boolean");
+
+                    b.ToTable("ProyectosEnEjecucion", (string)null);
+                });
+
+            modelBuilder.Entity("Dashboard_v2.Domain.Entities.ProyectoEnRevision", b =>
+                {
+                    b.HasBaseType("Dashboard_v2.Domain.Entities.Proyecto");
+
+                    b.Property<string>("Situacion")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.ToTable("ProyectosEnRevision", (string)null);
+                });
+
+            modelBuilder.Entity("Dashboard_v2.Domain.Entities.ProyectoApoyoPrograma", b =>
+                {
+                    b.HasBaseType("Dashboard_v2.Domain.Entities.ProyectoEnEjecucion");
+
+                    b.Property<string>("NombrePrograma")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<int>("TipoPAP")
+                        .HasColumnType("integer");
+
+                    b.ToTable("ProyectosApoyoPrograma", (string)null);
+                });
+
+            modelBuilder.Entity("Dashboard_v2.Domain.Entities.ProyectoColabInternacional", b =>
+                {
+                    b.HasBaseType("Dashboard_v2.Domain.Entities.ProyectoEnEjecucion");
+
+                    b.Property<string>("FuenteFinanciacion")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<string>("TerminosReferencia")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.ToTable("ProyectosColaboracionInternacional", (string)null);
+                });
+
+            modelBuilder.Entity("Dashboard_v2.Domain.Entities.ProyectoDesarrolloLocal", b =>
+                {
+                    b.HasBaseType("Dashboard_v2.Domain.Entities.ProyectoEnEjecucion");
+
+                    b.Property<string>("Municipio")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.ToTable("ProyectosDesarrolloLocal", (string)null);
+                });
+
+            modelBuilder.Entity("Dashboard_v2.Domain.Entities.ProyectoEmpresarial", b =>
+                {
+                    b.HasBaseType("Dashboard_v2.Domain.Entities.ProyectoEnEjecucion");
+
+                    b.Property<string>("Empresa")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.ToTable("ProyectosEmpresariales", (string)null);
+                });
+
+            modelBuilder.Entity("Dashboard_v2.Domain.Entities.ProyectoNoEmpresarial", b =>
+                {
+                    b.HasBaseType("Dashboard_v2.Domain.Entities.ProyectoEnEjecucion");
+
+                    b.Property<string>("EntidadNoEmpresarial")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.ToTable("ProyectosNoEmpresariales", (string)null);
+                });
+
+            modelBuilder.Entity("Dashboard_v2.Domain.Entities.ProyectoPNAP", b =>
+                {
+                    b.HasBaseType("Dashboard_v2.Domain.Entities.ProyectoEnEjecucion");
+
+                    b.Property<string>("FinanciamientoUH")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.ToTable("ProyectosPNAP", (string)null);
+                });
+
             modelBuilder.Entity("AreaDelConocimientoLineaDeInvestigacion", b =>
                 {
                     b.HasOne("Dashboard_v2.Domain.Entities.AreaDelConocimiento", null)
@@ -799,6 +1008,35 @@ namespace Dashboard_v2.Infrastructure.Migrations
                     b.Navigation("Event");
                 });
 
+            modelBuilder.Entity("Dashboard_v2.Domain.Entities.Proyecto", b =>
+                {
+                    b.HasOne("Dashboard_v2.Domain.Entities.Clasificacion", "Clasificacion")
+                        .WithMany("Proyectos")
+                        .HasForeignKey("ClasificacionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Dashboard_v2.Domain.Entities.User", "JefeUsuario")
+                        .WithMany("ProyectosComoJefe")
+                        .HasForeignKey("JefeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Clasificacion");
+
+                    b.Navigation("JefeUsuario");
+                });
+
+            modelBuilder.Entity("Dashboard_v2.Domain.Entities.Publication", b =>
+                {
+                    b.HasOne("Dashboard_v2.Domain.Entities.Proyecto", "Proyecto")
+                        .WithMany("PublicacionesDerivadas")
+                        .HasForeignKey("ProyectoId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Proyecto");
+                });
+
             modelBuilder.Entity("Dashboard_v2.Domain.Entities.Resource", b =>
                 {
                     b.HasOne("Dashboard_v2.Domain.Entities.User", "Owner")
@@ -870,6 +1108,78 @@ namespace Dashboard_v2.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Dashboard_v2.Domain.Entities.ProyectoEnEjecucion", b =>
+                {
+                    b.HasOne("Dashboard_v2.Domain.Entities.Proyecto", null)
+                        .WithOne()
+                        .HasForeignKey("Dashboard_v2.Domain.Entities.ProyectoEnEjecucion", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Dashboard_v2.Domain.Entities.ProyectoEnRevision", b =>
+                {
+                    b.HasOne("Dashboard_v2.Domain.Entities.Proyecto", null)
+                        .WithOne()
+                        .HasForeignKey("Dashboard_v2.Domain.Entities.ProyectoEnRevision", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Dashboard_v2.Domain.Entities.ProyectoApoyoPrograma", b =>
+                {
+                    b.HasOne("Dashboard_v2.Domain.Entities.ProyectoEnEjecucion", null)
+                        .WithOne()
+                        .HasForeignKey("Dashboard_v2.Domain.Entities.ProyectoApoyoPrograma", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Dashboard_v2.Domain.Entities.ProyectoColabInternacional", b =>
+                {
+                    b.HasOne("Dashboard_v2.Domain.Entities.ProyectoEnEjecucion", null)
+                        .WithOne()
+                        .HasForeignKey("Dashboard_v2.Domain.Entities.ProyectoColabInternacional", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Dashboard_v2.Domain.Entities.ProyectoDesarrolloLocal", b =>
+                {
+                    b.HasOne("Dashboard_v2.Domain.Entities.ProyectoEnEjecucion", null)
+                        .WithOne()
+                        .HasForeignKey("Dashboard_v2.Domain.Entities.ProyectoDesarrolloLocal", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Dashboard_v2.Domain.Entities.ProyectoEmpresarial", b =>
+                {
+                    b.HasOne("Dashboard_v2.Domain.Entities.ProyectoEnEjecucion", null)
+                        .WithOne()
+                        .HasForeignKey("Dashboard_v2.Domain.Entities.ProyectoEmpresarial", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Dashboard_v2.Domain.Entities.ProyectoNoEmpresarial", b =>
+                {
+                    b.HasOne("Dashboard_v2.Domain.Entities.ProyectoEnEjecucion", null)
+                        .WithOne()
+                        .HasForeignKey("Dashboard_v2.Domain.Entities.ProyectoNoEmpresarial", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Dashboard_v2.Domain.Entities.ProyectoPNAP", b =>
+                {
+                    b.HasOne("Dashboard_v2.Domain.Entities.ProyectoEnEjecucion", null)
+                        .WithOne()
+                        .HasForeignKey("Dashboard_v2.Domain.Entities.ProyectoPNAP", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Dashboard_v2.Domain.Entities.Area", b =>
                 {
                     b.Navigation("GruposDeInvestigacion");
@@ -890,6 +1200,11 @@ namespace Dashboard_v2.Infrastructure.Migrations
             modelBuilder.Entity("Dashboard_v2.Domain.Entities.AwardType", b =>
                 {
                     b.Navigation("Awards");
+                });
+
+            modelBuilder.Entity("Dashboard_v2.Domain.Entities.Clasificacion", b =>
+                {
+                    b.Navigation("Proyectos");
                 });
 
             modelBuilder.Entity("Dashboard_v2.Domain.Entities.Country", b =>
@@ -917,6 +1232,11 @@ namespace Dashboard_v2.Infrastructure.Migrations
                     b.Navigation("AuthorPresentations");
                 });
 
+            modelBuilder.Entity("Dashboard_v2.Domain.Entities.Proyecto", b =>
+                {
+                    b.Navigation("PublicacionesDerivadas");
+                });
+
             modelBuilder.Entity("Dashboard_v2.Domain.Entities.Publication", b =>
                 {
                     b.Navigation("AuthorPublications");
@@ -936,6 +1256,8 @@ namespace Dashboard_v2.Infrastructure.Migrations
                     b.Navigation("AuthorProfile");
 
                     b.Navigation("OwnedResources");
+
+                    b.Navigation("ProyectosComoJefe");
 
                     b.Navigation("UserRoles");
                 });

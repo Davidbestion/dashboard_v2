@@ -31,6 +31,8 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<GrupoDeInvestigacion> GruposDeInvestigacion => Set<GrupoDeInvestigacion>();
     public DbSet<LineaDeInvestigacion> LineasDeInvestigacion => Set<LineaDeInvestigacion>();
     public DbSet<AreaDelConocimiento> AreasDelConocimiento => Set<AreaDelConocimiento>();
+    public DbSet<Clasificacion> Clasificaciones => Set<Clasificacion>();
+    public DbSet<Proyecto> Proyectos => Set<Proyecto>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

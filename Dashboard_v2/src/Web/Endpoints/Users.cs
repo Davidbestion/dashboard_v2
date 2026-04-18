@@ -1,7 +1,9 @@
 using Dashboard_v2.Application.Users.Commands.AssignRole;
 using Dashboard_v2.Application.Users.Commands.RemoveRole;
+using Dashboard_v2.Application.Users.Queries.GetJefesDeProyecto;
 using Dashboard_v2.Application.Users.Queries.GetUsers;
 using Dashboard_v2.Web.Infrastructure;
+using RolesEnum = Dashboard_v2.Domain.Enums.Roles;
 
 namespace Dashboard_v2.Web.Endpoints;
 
@@ -15,21 +17,33 @@ public class Users : EndpointGroupBase
     public override void Map(RouteGroupBuilder groupBuilder)
     {
         groupBuilder.MapGet("", GetUsers)
-            .RequireAuthorization(policy => policy.RequireRole("Superuser", "Jefe_de_Grupo_de_investigacion"))
+            .RequireAuthorization(policy => policy.RequireRole(nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Grupo_de_investigacion)))
             .WithName("GetUsers")
             .Produces<List<UserWithRolesDto>>(200);
 
         groupBuilder.MapPost("{userId}/roles", AssignRole)
-            .RequireAuthorization(policy => policy.RequireRole("Superuser"))
+            .RequireAuthorization(policy => policy.RequireRole(nameof(RolesEnum.Superuser)))
             .WithName("AssignRole")
             .Produces(200)
             .ProducesProblem(400);
 
         groupBuilder.MapDelete("{userId}/roles/{roleName}", RemoveRole)
-            .RequireAuthorization(policy => policy.RequireRole("Superuser"))
+            .RequireAuthorization(policy => policy.RequireRole(nameof(RolesEnum.Superuser)))
             .WithName("RemoveRole")
             .Produces(200)
             .ProducesProblem(400);
+
+        groupBuilder.MapGet("jefes-de-proyecto", GetJefesDeProyecto)
+            .RequireAuthorization(policy => policy.RequireRole(nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Proyecto)))
+            .WithName("GetJefesDeProyecto")
+            .Produces<List<JefeDeProyectoDto>>(200);
+    }
+
+    /// <summary>GET /api/Users/jefes-de-proyecto — Retorna usuarios activos con rol Jefe_de_Proyecto.</summary>
+    private async Task<IResult> GetJefesDeProyecto(ISender sender)
+    {
+        var jefes = await sender.Send(new GetJefesDeProyectoQuery());
+        return Results.Ok(jefes);
     }
 
     /// <summary>GET /api/Users — Retorna todos los usuarios con sus roles. Solo Superuser.</summary>

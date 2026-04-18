@@ -6,6 +6,7 @@ using Dashboard_v2.Application.GruposDeInvestigacion.Commands.UpdateGrupoDeInves
 using Dashboard_v2.Application.GruposDeInvestigacion.Queries.GetGruposDeInvestigacion;
 using Dashboard_v2.Application.GruposDeInvestigacion.Queries.GetMisGruposDeInvestigacion;
 using Dashboard_v2.Web.Infrastructure;
+using RolesEnum = Dashboard_v2.Domain.Enums.Roles;
 
 namespace Dashboard_v2.Web.Endpoints;
 
@@ -20,7 +21,7 @@ public class GruposDeInvestigacion : EndpointGroupBase
     public override void Map(RouteGroupBuilder groupBuilder)
     {
         groupBuilder.MapGet("", GetGruposDeInvestigacion)
-            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Grupo_de_investigacion"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Grupo_de_investigacion)))
             .WithName("GetGruposDeInvestigacion")
             .Produces<List<GrupoDeInvestigacionDto>>(200);
 
@@ -30,26 +31,26 @@ public class GruposDeInvestigacion : EndpointGroupBase
             .Produces<List<GrupoDeInvestigacionDto>>(200);
 
         groupBuilder.MapPost("", CreateGrupoDeInvestigacion)
-            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Grupo_de_investigacion"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Grupo_de_investigacion)))
             .WithName("CreateGrupoDeInvestigacion")
             .Produces(201)
             .ProducesProblem(400);
 
         groupBuilder.MapPut("{id}", UpdateGrupoDeInvestigacion)
-            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Grupo_de_investigacion"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Grupo_de_investigacion)))
             .WithName("UpdateGrupoDeInvestigacion")
             .Produces(200)
             .ProducesProblem(400)
             .ProducesProblem(404);
 
         groupBuilder.MapDelete("{id}", DeleteGrupoDeInvestigacion)
-            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Grupo_de_investigacion"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Grupo_de_investigacion)))
             .WithName("DeleteGrupoDeInvestigacion")
             .Produces(200)
             .ProducesProblem(404);
 
         groupBuilder.MapPut("{id}/miembros", SetGrupoMiembros)
-            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Grupo_de_investigacion"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Grupo_de_investigacion)))
             .WithName("SetGrupoMiembros")
             .Produces(200)
             .ProducesProblem(400)

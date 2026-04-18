@@ -40,6 +40,16 @@ const jefeGroups = [
   },
 ];
 
+const jefeDeProyectoGroups = [
+  {
+    heading: 'Gestión de Proyectos',
+    items: [
+      { to: '/proyectos', icon: 'bi-kanban', label: 'Mis Proyectos' },
+      { to: '/publicaciones', icon: 'bi-journal-text', label: 'Publicaciones' },
+    ],
+  },
+];
+
 const adminGroups = [
   {
     heading: 'Administración',
@@ -59,6 +69,13 @@ const adminGroups = [
     ],
   },
   {
+    heading: 'Gestión de Proyectos',
+    items: [
+      { to: '/proyectos', icon: 'bi-kanban', label: 'Proyectos' },
+      { to: '/clasificaciones', icon: 'bi-tags', label: 'Clasificaciones' },
+    ],
+  },
+  {
     heading: 'Sistema',
     items: [
       { to: '/settings', icon: 'bi-gear', label: 'Configuración' },
@@ -73,6 +90,7 @@ export default function Sidebar({ collapsed, onToggle }) {
     ...baseGroups,
     ...(user?.role === 'Profesor' ? [...profesorGroups, ...investigacionGroups] : []),
     ...(user?.role === 'Jefe_de_Grupo_de_investigacion' ? jefeGroups : []),
+    ...(user?.role === 'Jefe_de_Proyecto' ? jefeDeProyectoGroups : []),
     ...(user?.role === 'Superuser' ? adminGroups : []),
   ];
 

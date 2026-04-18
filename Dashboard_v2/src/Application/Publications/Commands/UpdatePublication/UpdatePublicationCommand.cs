@@ -30,8 +30,8 @@ public record UpdatePublicationCommand : IRequest<Result>
     public string? Index { get; init; }
     public string? DataBase { get; init; }
     public int? Group { get; init; }
-    public string? Cuartil { get; init; }
-}
+    public string? Cuartil { get; init; }    /// <summary>ID del proyecto del que deriva esta publicación. Null para desvincular.</summary>
+    public string? ProyectoId { get; init; }}
 
 public class UpdatePublicationCommandHandler : IRequestHandler<UpdatePublicationCommand, Result>
 {
@@ -84,6 +84,7 @@ public class UpdatePublicationCommandHandler : IRequestHandler<UpdatePublication
         publication.PublicationData = request.PublicationData;
         publication.PublicationType = request.PublicationType;
         publication.UrlDoi = string.IsNullOrWhiteSpace(request.UrlDoi) ? null : request.UrlDoi.Trim();
+        publication.ProyectoId = string.IsNullOrWhiteSpace(request.ProyectoId) ? null : request.ProyectoId;
 
         // ── Actualizar especialización ───────────────────────────────────────────────────────────────────────────────────────
         var isNowJournal = request.PublicationType == PublicationType.Diario;

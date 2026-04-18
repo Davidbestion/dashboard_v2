@@ -1,11 +1,14 @@
 using Dashboard_v2.Application.Publications;
+using Dashboard_v2.Application.Common.Interfaces;
 using Dashboard_v2.Application.Publications.Commands.CreatePublication;
 using Dashboard_v2.Application.Publications.Commands.DeletePublication;
 using Dashboard_v2.Domain.Enums;
+using RolesEnum = Dashboard_v2.Domain.Enums.Roles;
 using Dashboard_v2.Application.Publications.Commands.UpdatePublication;
 using Dashboard_v2.Application.Publications.Queries.GetMyPublications;
 using Dashboard_v2.Application.Publications.Queries.GetPublicationById;
 using Dashboard_v2.Application.Publications.Queries.GetPublicationTypes;
+using Microsoft.EntityFrameworkCore;
 
 namespace Dashboard_v2.Web.Endpoints;
 
@@ -19,33 +22,39 @@ public class Publications : EndpointGroupBase
     {
         // GET /api/Publications/types — lista los tipos disponibles (para el selector)
         groupBuilder.MapGet("types", GetPublicationTypes)
-            .RequireAuthorization(p => p.RequireRole("Profesor"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Proyecto)))
             .WithName("GetPublicationTypes")
             .Produces<List<PublicationTypeDto>>(200);
 
+        // GET /api/Publications/todas — todas las publicaciones (lectura, Superuser + Jefe_de_Proyecto)
+        groupBuilder.MapGet("todas", GetTodasLasPublicaciones)
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Proyecto)))
+            .WithName("GetTodasLasPublicaciones")
+            .Produces<List<PublicacionResumenDto>>(200);
+
         // GET /api/Publications — publicaciones del usuario autenticado
         groupBuilder.MapGet("", GetMyPublications)
-            .RequireAuthorization(p => p.RequireRole("Profesor"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor)))
             .WithName("GetMyPublications")
             .Produces<List<PublicationDto>>(200);
 
         // GET /api/Publications/{id}
         groupBuilder.MapGet("{id}", GetPublicationById)
-            .RequireAuthorization(p => p.RequireRole("Profesor"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor)))
             .WithName("GetPublicationById")
             .Produces<PublicationDto>(200)
             .ProducesProblem(404);
 
         // POST /api/Publications
         groupBuilder.MapPost("", CreatePublication)
-            .RequireAuthorization(p => p.RequireRole("Profesor"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Proyecto)))
             .WithName("CreatePublication")
             .Produces(201)
             .ProducesProblem(400);
 
         // PUT /api/Publications/{id}
         groupBuilder.MapPut("{id}", UpdatePublication)
-            .RequireAuthorization(p => p.RequireRole("Profesor"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor)))
             .WithName("UpdatePublication")
             .Produces(200)
             .ProducesProblem(400)
@@ -53,7 +62,7 @@ public class Publications : EndpointGroupBase
 
         // DELETE /api/Publications/{id}
         groupBuilder.MapDelete("{id}", DeletePublication)
-            .RequireAuthorization(p => p.RequireRole("Profesor"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor)))
             .WithName("DeletePublication")
             .Produces(200)
             .ProducesProblem(400)
@@ -64,6 +73,22 @@ public class Publications : EndpointGroupBase
     {
         var types = await sender.Send(new GetPublicationTypesQuery());
         return Results.Ok(types);
+    }
+
+    private static async Task<IResult> GetTodasLasPublicaciones(IApplicationDbContext context)
+    {
+        var pubs = await context.Publications
+            .AsNoTracking()
+            .OrderBy(p => p.Title)
+            .Select(p => new PublicacionResumenDto(
+                p.Id,
+                p.Title,
+                p.UrlDoi,
+                (int)p.PublicationType,
+                p.ProyectoId,
+                p.Proyecto != null ? p.Proyecto.Titulo : null))
+            .ToListAsync();
+        return Results.Ok(pubs);
     }
 
     private async Task<IResult> GetMyPublications(ISender sender)
@@ -103,7 +128,8 @@ public class Publications : EndpointGroupBase
             Index = body.Index,
             DataBase = body.DataBase,
             Group = body.Group,
-            Cuartil = body.Cuartil
+            Cuartil = body.Cuartil,
+            ProyectoId = body.ProyectoId,
         });
 
         if (!result.Succeeded)
@@ -136,4 +162,14 @@ public record UpdatePublicationBody(
     string? Index,
     string? DataBase,
     int? Group,
-    string? Cuartil);
+    string? Cuartil,
+    string? ProyectoId);
+
+/// <summary>DTO de lectura rápida de publicaciones para el rol Jefe_de_Proyecto.</summary>
+public record PublicacionResumenDto(
+    string Id,
+    string Titulo,
+    string? UrlDoi,
+    int Tipo,
+    string? ProyectoId,
+    string? ProyectoTitulo);

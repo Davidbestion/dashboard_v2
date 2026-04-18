@@ -685,6 +685,160 @@
         }
       }
     },
+    "/api/Clasificaciones": {
+      "get": {
+        "tags": [
+          "Clasificaciones"
+        ],
+        "operationId": "GetClasificaciones",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ClasificacionDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Clasificaciones"
+        ],
+        "operationId": "CreateClasificacion",
+        "requestBody": {
+          "x-name": "body",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateClasificacionBody"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Clasificaciones/{id}": {
+      "put": {
+        "tags": [
+          "Clasificaciones"
+        ],
+        "operationId": "UpdateClasificacion",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "body",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateClasificacionBody"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Clasificaciones"
+        ],
+        "operationId": "DeleteClasificacion",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Events": {
       "get": {
         "tags": [
@@ -1433,6 +1587,1150 @@
         }
       }
     },
+    "/api/Proyectos": {
+      "get": {
+        "tags": [
+          "Proyectos"
+        ],
+        "operationId": "GetProyectos",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProyectoResumenDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Proyectos/tipos-ejecucion": {
+      "get": {
+        "tags": [
+          "Proyectos"
+        ],
+        "operationId": "GetTiposEjecucion",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Proyectos/catalogo": {
+      "get": {
+        "tags": [
+          "Proyectos"
+        ],
+        "operationId": "GetProyectosCatalogo",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProyectoCatalogoDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Proyectos/{id}/publicaciones": {
+      "get": {
+        "tags": [
+          "Proyectos"
+        ],
+        "operationId": "GetPublicacionesDelProyecto",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/Proyectos/publicaciones-disponibles": {
+      "get": {
+        "tags": [
+          "Proyectos"
+        ],
+        "operationId": "GetPublicacionesDisponibles",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/Proyectos/{id}/publicaciones/{pubId}": {
+      "post": {
+        "tags": [
+          "Proyectos"
+        ],
+        "operationId": "LinkPublicacion",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "pubId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 2
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Proyectos"
+        ],
+        "operationId": "UnlinkPublicacion",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "pubId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 2
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Proyectos/{id}": {
+      "delete": {
+        "tags": [
+          "Proyectos"
+        ],
+        "operationId": "DeleteProyecto",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Proyectos/en-revision/{id}": {
+      "get": {
+        "tags": [
+          "Proyectos"
+        ],
+        "operationId": "GetProyectoEnRevision",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProyectoEnRevisionDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Proyectos"
+        ],
+        "operationId": "UpdateProyectoEnRevision",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "b",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProyectoEnRevisionBody"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Proyectos/en-revision": {
+      "post": {
+        "tags": [
+          "Proyectos"
+        ],
+        "operationId": "CreateProyectoEnRevision",
+        "requestBody": {
+          "x-name": "b",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProyectoEnRevisionBody"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Proyectos/empresariales/{id}": {
+      "get": {
+        "tags": [
+          "Proyectos"
+        ],
+        "operationId": "GetProyectoEmpresarial",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProyectoEmpresarialDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Proyectos"
+        ],
+        "operationId": "UpdateProyectoEmpresarial",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "b",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProyectoEmpresarialBody"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Proyectos/empresariales": {
+      "post": {
+        "tags": [
+          "Proyectos"
+        ],
+        "operationId": "CreateProyectoEmpresarial",
+        "requestBody": {
+          "x-name": "b",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProyectoEmpresarialBody"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Proyectos/apoyo-programa/{id}": {
+      "get": {
+        "tags": [
+          "Proyectos"
+        ],
+        "operationId": "GetProyectoApoyoPrograma",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProyectoApoyoProgramaDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Proyectos"
+        ],
+        "operationId": "UpdateProyectoApoyoPrograma",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "b",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProyectoApoyoProgramaBody"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Proyectos/apoyo-programa": {
+      "post": {
+        "tags": [
+          "Proyectos"
+        ],
+        "operationId": "CreateProyectoApoyoPrograma",
+        "requestBody": {
+          "x-name": "b",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProyectoApoyoProgramaBody"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Proyectos/desarrollo-local/{id}": {
+      "get": {
+        "tags": [
+          "Proyectos"
+        ],
+        "operationId": "GetProyectoDesarrolloLocal",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProyectoDesarrolloLocalDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Proyectos"
+        ],
+        "operationId": "UpdateProyectoDesarrolloLocal",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "b",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProyectoDesarrolloLocalBody"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Proyectos/desarrollo-local": {
+      "post": {
+        "tags": [
+          "Proyectos"
+        ],
+        "operationId": "CreateProyectoDesarrolloLocal",
+        "requestBody": {
+          "x-name": "b",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProyectoDesarrolloLocalBody"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Proyectos/no-empresariales/{id}": {
+      "get": {
+        "tags": [
+          "Proyectos"
+        ],
+        "operationId": "GetProyectoNoEmpresarial",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProyectoNoEmpresarialDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Proyectos"
+        ],
+        "operationId": "UpdateProyectoNoEmpresarial",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "b",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProyectoNoEmpresarialBody"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Proyectos/no-empresariales": {
+      "post": {
+        "tags": [
+          "Proyectos"
+        ],
+        "operationId": "CreateProyectoNoEmpresarial",
+        "requestBody": {
+          "x-name": "b",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProyectoNoEmpresarialBody"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Proyectos/colaboracion-internacional/{id}": {
+      "get": {
+        "tags": [
+          "Proyectos"
+        ],
+        "operationId": "GetProyectoColabInternacional",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProyectoColabInternacionalDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Proyectos"
+        ],
+        "operationId": "UpdateProyectoColabInternacional",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "b",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProyectoColabInternacionalBody"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Proyectos/colaboracion-internacional": {
+      "post": {
+        "tags": [
+          "Proyectos"
+        ],
+        "operationId": "CreateProyectoColabInternacional",
+        "requestBody": {
+          "x-name": "b",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProyectoColabInternacionalBody"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Proyectos/pnap/{id}": {
+      "get": {
+        "tags": [
+          "Proyectos"
+        ],
+        "operationId": "GetProyectoPNAP",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProyectoPNAPDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Proyectos"
+        ],
+        "operationId": "UpdateProyectoPNAP",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "b",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProyectoPNAPBody"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Proyectos/pnap": {
+      "post": {
+        "tags": [
+          "Proyectos"
+        ],
+        "operationId": "CreateProyectoPNAP",
+        "requestBody": {
+          "x-name": "b",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProyectoPNAPBody"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Publications/types": {
       "get": {
         "tags": [
@@ -1448,6 +2746,29 @@
                   "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/PublicationTypeDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Publications/todas": {
+      "get": {
+        "tags": [
+          "Publications"
+        ],
+        "operationId": "GetTodasLasPublicaciones",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PublicacionResumenDto"
                   }
                 }
               }
@@ -1927,6 +3248,29 @@
           }
         }
       }
+    },
+    "/api/Users/jefes-de-proyecto": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "operationId": "GetJefesDeProyecto",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/JefeDeProyectoDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2352,6 +3696,27 @@
           }
         }
       },
+      "ClasificacionDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "nombre": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateClasificacionBody": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "nombre": {
+            "type": "string"
+          }
+        }
+      },
       "EventDto": {
         "type": "object",
         "additionalProperties": false,
@@ -2699,6 +4064,768 @@
           }
         }
       },
+      "ProyectoResumenDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "titulo": {
+            "type": "string"
+          },
+          "jefeId": {
+            "type": "string"
+          },
+          "jefe": {
+            "type": "string"
+          },
+          "correoJefe": {
+            "type": "string"
+          },
+          "numeroMiembros": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "clasificacionId": {
+            "type": "string"
+          },
+          "clasificacionNombre": {
+            "type": "string"
+          },
+          "tipo": {
+            "type": "string"
+          },
+          "codigoProyecto": {
+            "type": "string",
+            "nullable": true
+          },
+          "estadoDeEjecucion": {
+            "type": "string",
+            "nullable": true
+          },
+          "situacion": {
+            "type": "string",
+            "nullable": true
+          },
+          "publicacionesDerivadas": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "ProyectoCatalogoDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "titulo": {
+            "type": "string"
+          }
+        }
+      },
+      "ProyectoEnRevisionDto": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ProyectoBaseDto"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "situacion": {
+                "type": "string"
+              },
+              "tipo": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "ProyectoBaseDto": {
+        "type": "object",
+        "x-abstract": true,
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "titulo": {
+            "type": "string"
+          },
+          "jefeId": {
+            "type": "string"
+          },
+          "jefe": {
+            "type": "string"
+          },
+          "correoJefe": {
+            "type": "string"
+          },
+          "numeroMiembros": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "cantidadMiembrosUH": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "cantidadEstudiantes": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "cantidadEstudiantesContratados": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tributaFormacionDoctoral": {
+            "type": "boolean"
+          },
+          "clasificacionId": {
+            "type": "string"
+          },
+          "clasificacionNombre": {
+            "type": "string"
+          },
+          "publicacionesDerivadas": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "ProyectoEnRevisionBody": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "titulo": {
+            "type": "string"
+          },
+          "jefeId": {
+            "type": "string"
+          },
+          "numeroMiembros": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "cantidadMiembrosUH": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "cantidadEstudiantes": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "cantidadEstudiantesContratados": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tributaFormacionDoctoral": {
+            "type": "boolean"
+          },
+          "clasificacionId": {
+            "type": "string"
+          },
+          "situacion": {
+            "type": "string"
+          },
+          "tipo": {
+            "type": "string"
+          }
+        }
+      },
+      "ProyectoEmpresarialDto": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ProyectoEnEjecucionBaseDto"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "empresa": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "ProyectoEnEjecucionBaseDto": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ProyectoBaseDto"
+          },
+          {
+            "type": "object",
+            "x-abstract": true,
+            "additionalProperties": false,
+            "properties": {
+              "fechaInicio": {
+                "type": "string",
+                "format": "date"
+              },
+              "fechaCierre": {
+                "type": "string",
+                "format": "date",
+                "nullable": true
+              },
+              "estadoDeEjecucion": {
+                "type": "string"
+              },
+              "codigoProyecto": {
+                "type": "string"
+              },
+              "entidadEjecutoraPrincipal": {
+                "type": "string"
+              },
+              "entidadEjecutoraParticipante": {
+                "type": "string",
+                "nullable": true
+              },
+              "contribucionSectoresEstrategicos": {
+                "type": "string",
+                "nullable": true
+              },
+              "contribucionEjesEstrategicos": {
+                "type": "string",
+                "nullable": true
+              },
+              "tributaDesarrolloLocal": {
+                "type": "boolean"
+              }
+            }
+          }
+        ]
+      },
+      "ProyectoEmpresarialBody": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "titulo": {
+            "type": "string"
+          },
+          "jefeId": {
+            "type": "string"
+          },
+          "numeroMiembros": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "cantidadMiembrosUH": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "cantidadEstudiantes": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "cantidadEstudiantesContratados": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tributaFormacionDoctoral": {
+            "type": "boolean"
+          },
+          "clasificacionId": {
+            "type": "string"
+          },
+          "fechaInicio": {
+            "type": "string",
+            "format": "date"
+          },
+          "fechaCierre": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "estadoDeEjecucion": {
+            "type": "string"
+          },
+          "codigoProyecto": {
+            "type": "string"
+          },
+          "entidadEjecutoraPrincipal": {
+            "type": "string"
+          },
+          "entidadEjecutoraParticipante": {
+            "type": "string",
+            "nullable": true
+          },
+          "contribucionSectoresEstrategicos": {
+            "type": "string",
+            "nullable": true
+          },
+          "contribucionEjesEstrategicos": {
+            "type": "string",
+            "nullable": true
+          },
+          "tributaDesarrolloLocal": {
+            "type": "boolean"
+          },
+          "empresa": {
+            "type": "string"
+          }
+        }
+      },
+      "ProyectoApoyoProgramaDto": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ProyectoEnEjecucionBaseDto"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "nombrePrograma": {
+                "type": "string"
+              },
+              "tipoPAP": {
+                "$ref": "#/components/schemas/TipoPAP"
+              }
+            }
+          }
+        ]
+      },
+      "TipoPAP": {
+        "type": "integer",
+        "description": "",
+        "x-enumNames": [
+          "Nacional",
+          "Sectorial",
+          "Territorial"
+        ],
+        "enum": [
+          1,
+          2,
+          3
+        ]
+      },
+      "ProyectoApoyoProgramaBody": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "titulo": {
+            "type": "string"
+          },
+          "jefeId": {
+            "type": "string"
+          },
+          "numeroMiembros": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "cantidadMiembrosUH": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "cantidadEstudiantes": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "cantidadEstudiantesContratados": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tributaFormacionDoctoral": {
+            "type": "boolean"
+          },
+          "clasificacionId": {
+            "type": "string"
+          },
+          "fechaInicio": {
+            "type": "string",
+            "format": "date"
+          },
+          "fechaCierre": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "estadoDeEjecucion": {
+            "type": "string"
+          },
+          "codigoProyecto": {
+            "type": "string"
+          },
+          "entidadEjecutoraPrincipal": {
+            "type": "string"
+          },
+          "entidadEjecutoraParticipante": {
+            "type": "string",
+            "nullable": true
+          },
+          "contribucionSectoresEstrategicos": {
+            "type": "string",
+            "nullable": true
+          },
+          "contribucionEjesEstrategicos": {
+            "type": "string",
+            "nullable": true
+          },
+          "tributaDesarrolloLocal": {
+            "type": "boolean"
+          },
+          "nombrePrograma": {
+            "type": "string"
+          },
+          "tipoPAP": {
+            "$ref": "#/components/schemas/TipoPAP"
+          }
+        }
+      },
+      "ProyectoDesarrolloLocalDto": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ProyectoEnEjecucionBaseDto"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "municipio": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "ProyectoDesarrolloLocalBody": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "titulo": {
+            "type": "string"
+          },
+          "jefeId": {
+            "type": "string"
+          },
+          "numeroMiembros": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "cantidadMiembrosUH": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "cantidadEstudiantes": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "cantidadEstudiantesContratados": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tributaFormacionDoctoral": {
+            "type": "boolean"
+          },
+          "clasificacionId": {
+            "type": "string"
+          },
+          "fechaInicio": {
+            "type": "string",
+            "format": "date"
+          },
+          "fechaCierre": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "estadoDeEjecucion": {
+            "type": "string"
+          },
+          "codigoProyecto": {
+            "type": "string"
+          },
+          "entidadEjecutoraPrincipal": {
+            "type": "string"
+          },
+          "entidadEjecutoraParticipante": {
+            "type": "string",
+            "nullable": true
+          },
+          "contribucionSectoresEstrategicos": {
+            "type": "string",
+            "nullable": true
+          },
+          "contribucionEjesEstrategicos": {
+            "type": "string",
+            "nullable": true
+          },
+          "municipio": {
+            "type": "string"
+          }
+        }
+      },
+      "ProyectoNoEmpresarialDto": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ProyectoEnEjecucionBaseDto"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "entidadNoEmpresarial": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "ProyectoNoEmpresarialBody": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "titulo": {
+            "type": "string"
+          },
+          "jefeId": {
+            "type": "string"
+          },
+          "numeroMiembros": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "cantidadMiembrosUH": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "cantidadEstudiantes": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "cantidadEstudiantesContratados": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tributaFormacionDoctoral": {
+            "type": "boolean"
+          },
+          "clasificacionId": {
+            "type": "string"
+          },
+          "fechaInicio": {
+            "type": "string",
+            "format": "date"
+          },
+          "fechaCierre": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "estadoDeEjecucion": {
+            "type": "string"
+          },
+          "codigoProyecto": {
+            "type": "string"
+          },
+          "entidadEjecutoraPrincipal": {
+            "type": "string"
+          },
+          "entidadEjecutoraParticipante": {
+            "type": "string",
+            "nullable": true
+          },
+          "contribucionSectoresEstrategicos": {
+            "type": "string",
+            "nullable": true
+          },
+          "contribucionEjesEstrategicos": {
+            "type": "string",
+            "nullable": true
+          },
+          "tributaDesarrolloLocal": {
+            "type": "boolean"
+          },
+          "entidadNoEmpresarial": {
+            "type": "string"
+          }
+        }
+      },
+      "ProyectoColabInternacionalDto": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ProyectoEnEjecucionBaseDto"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "fuenteFinanciacion": {
+                "type": "string"
+              },
+              "terminosReferencia": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "ProyectoColabInternacionalBody": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "titulo": {
+            "type": "string"
+          },
+          "jefeId": {
+            "type": "string"
+          },
+          "numeroMiembros": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "cantidadMiembrosUH": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "cantidadEstudiantes": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "cantidadEstudiantesContratados": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tributaFormacionDoctoral": {
+            "type": "boolean"
+          },
+          "clasificacionId": {
+            "type": "string"
+          },
+          "fechaInicio": {
+            "type": "string",
+            "format": "date"
+          },
+          "fechaCierre": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "estadoDeEjecucion": {
+            "type": "string"
+          },
+          "codigoProyecto": {
+            "type": "string"
+          },
+          "entidadEjecutoraPrincipal": {
+            "type": "string"
+          },
+          "entidadEjecutoraParticipante": {
+            "type": "string",
+            "nullable": true
+          },
+          "contribucionSectoresEstrategicos": {
+            "type": "string",
+            "nullable": true
+          },
+          "contribucionEjesEstrategicos": {
+            "type": "string",
+            "nullable": true
+          },
+          "tributaDesarrolloLocal": {
+            "type": "boolean"
+          },
+          "fuenteFinanciacion": {
+            "type": "string"
+          },
+          "terminosReferencia": {
+            "type": "string"
+          }
+        }
+      },
+      "ProyectoPNAPDto": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ProyectoEnEjecucionBaseDto"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "financiamientoUH": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "ProyectoPNAPBody": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "titulo": {
+            "type": "string"
+          },
+          "jefeId": {
+            "type": "string"
+          },
+          "numeroMiembros": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "cantidadMiembrosUH": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "cantidadEstudiantes": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "cantidadEstudiantesContratados": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tributaFormacionDoctoral": {
+            "type": "boolean"
+          },
+          "clasificacionId": {
+            "type": "string"
+          },
+          "fechaInicio": {
+            "type": "string",
+            "format": "date"
+          },
+          "fechaCierre": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "estadoDeEjecucion": {
+            "type": "string"
+          },
+          "codigoProyecto": {
+            "type": "string"
+          },
+          "entidadEjecutoraPrincipal": {
+            "type": "string"
+          },
+          "entidadEjecutoraParticipante": {
+            "type": "string",
+            "nullable": true
+          },
+          "contribucionSectoresEstrategicos": {
+            "type": "string",
+            "nullable": true
+          },
+          "contribucionEjesEstrategicos": {
+            "type": "string",
+            "nullable": true
+          },
+          "tributaDesarrolloLocal": {
+            "type": "boolean"
+          },
+          "financiamientoUH": {
+            "type": "string"
+          }
+        }
+      },
       "PublicationTypeDto": {
         "type": "object",
         "additionalProperties": false,
@@ -2709,6 +4836,34 @@
           },
           "name": {
             "type": "string"
+          }
+        }
+      },
+      "PublicacionResumenDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "titulo": {
+            "type": "string"
+          },
+          "urlDoi": {
+            "type": "string",
+            "nullable": true
+          },
+          "tipo": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "proyectoId": {
+            "type": "string",
+            "nullable": true
+          },
+          "proyectoTitulo": {
+            "type": "string",
+            "nullable": true
           }
         }
       },
@@ -2754,6 +4909,10 @@
                 "$ref": "#/components/schemas/JournalPublicationDto"
               }
             ]
+          },
+          "proyectoId": {
+            "type": "string",
+            "nullable": true
           }
         }
       },
@@ -2850,6 +5009,10 @@
           "cuartil": {
             "type": "string",
             "nullable": true
+          },
+          "proyectoId": {
+            "type": "string",
+            "nullable": true
           }
         }
       },
@@ -2924,6 +5087,10 @@
             "nullable": true
           },
           "cuartil": {
+            "type": "string",
+            "nullable": true
+          },
+          "proyectoId": {
             "type": "string",
             "nullable": true
           }
@@ -3019,6 +5186,21 @@
         "additionalProperties": false,
         "properties": {
           "roleName": {
+            "type": "string"
+          }
+        }
+      },
+      "JefeDeProyectoDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "nombreCompleto": {
+            "type": "string"
+          },
+          "email": {
             "type": "string"
           }
         }

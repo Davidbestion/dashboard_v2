@@ -8,6 +8,9 @@ import UniversidadesPage from "./pages/UniversidadesPage";
 import AreasPage from "./pages/AreasPage";
 import GruposDeInvestigacionPage from "./pages/GruposDeInvestigacionPage";import MisGruposDeInvestigacionPage from './pages/MisGruposDeInvestigacionPage';import AreasDelConocimientoPage from "./pages/AreasDelConocimientoPage";
 import LineasDeInvestigacionPage from "./pages/LineasDeInvestigacionPage";
+import ProyectosPage from "./pages/ProyectosPage";
+import ClasificacionesPage from "./pages/ClasificacionesPage";
+import PublicacionesConsultaPage from "./pages/PublicacionesConsultaPage";
 
 const AppRoutes = [
   {
@@ -77,6 +80,24 @@ const AppRoutes = [
     path: '/lineas-investigacion',
     element: <LineasDeInvestigacionPage />,
     pageTitle: 'Líneas de Investigación',
+    adminOnly: true,
+  },
+  {
+    path: '/proyectos',
+    element: <ProyectosPage />,
+    pageTitle: 'Proyectos',
+    jefeDeProyectoOrAdminOnly: true,
+  },
+  {
+    path: '/publicaciones',
+    element: <PublicacionesConsultaPage />,
+    pageTitle: 'Publicaciones',
+    jefeDeProyectoOrAdminOnly: true,
+  },
+  {
+    path: '/clasificaciones',
+    element: <ClasificacionesPage />,
+    pageTitle: 'Clasificaciones de Proyectos',
     adminOnly: true,
   },
 ];

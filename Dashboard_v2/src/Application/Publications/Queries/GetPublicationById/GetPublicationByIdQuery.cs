@@ -60,7 +60,8 @@ public class GetPublicationByIdQueryHandler : IRequestHandler<GetPublicationById
                     Cuartil = p.JournalPublication.JournalGroup1Publication != null
                         ? p.JournalPublication.JournalGroup1Publication.Cuartil
                         : null
-                }
+                },
+                ProyectoId = p.ProyectoId
             })
             .FirstOrDefaultAsync(cancellationToken);
     }

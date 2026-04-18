@@ -42,6 +42,7 @@ const EMPTY_FORM = {
   publicationData: '',
   urlDoi: '',
   publicationType: 0,
+  proyectoId: '',
   // Indexadas (tipos 1-4)
   index: '',
   // Revista (tipo 0)
@@ -54,6 +55,8 @@ export default function PublicationsPage() {
   const { user } = useAuth();
   const [publications, setPublications] = useState([]);
   const [types, setTypes] = useState([]);
+  const [proyectos, setProyectos] = useState([]);
+  const [proyectosError, setProyectosError] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -82,12 +85,20 @@ export default function PublicationsPage() {
     setLoading(true);
     setError('');
     try {
-      const [pubs, pubTypes] = await Promise.all([
+      const [pubs, pubTypes, cats] = await Promise.all([
         apiFetch('/api/Publications'),
         apiFetch('/api/Publications/types'),
+        apiFetch('/api/Proyectos/catalogo').catch(() => null),
       ]);
       setPublications(pubs);
       setTypes(pubTypes);
+      if (cats === null) {
+        setProyectosError(true);
+        setProyectos([]);
+      } else {
+        setProyectosError(false);
+        setProyectos(cats);
+      }
     } catch (e) {
       setError(e.message);
     } finally {
@@ -120,6 +131,7 @@ export default function PublicationsPage() {
       publicationData: pub.publicationData,
       urlDoi: pub.urlDoi ?? '',
       publicationType: pub.publicationType,
+      proyectoId: pub.proyectoId ?? '',
       // Indexadas
       index: pub.indexedPublication?.index ?? '',
       // Revista
@@ -163,6 +175,7 @@ export default function PublicationsPage() {
             publicationData: form.publicationData,
             publicationType: parseInt(form.publicationType, 10),
             urlDoi: form.urlDoi || null,
+            proyectoId: form.proyectoId || null,
             additionalAuthorIds: coauthorTags.filter(t => t.type === 'author').map(t => t.id),
             additionalAuthorNames: coauthorTags.filter(t => !t.type).map(t => t.name),
             additionalUserIds: coauthorTags.filter(t => t.type === 'user').map(t => t.id),
@@ -182,6 +195,7 @@ export default function PublicationsPage() {
             publicationData: form.publicationData,
             publicationType: parseInt(form.publicationType, 10),
             urlDoi: form.urlDoi || null,
+            proyectoId: form.proyectoId || null,
             additionalAuthorIds: coauthorTags.filter(t => t.type === 'author').map(t => t.id),
             additionalAuthorNames: coauthorTags.filter(t => !t.type).map(t => t.name),
             additionalUserIds: coauthorTags.filter(t => t.type === 'user').map(t => t.id),
@@ -504,6 +518,32 @@ export default function PublicationsPage() {
                 placeholder="https://doi.org/10.xxxx/... o URL de la publicación"
               />
             </FormGroup>
+            {proyectosError ? (
+              <FormGroup>
+                <Label>Proyecto derivado <small className="text-muted">(opcional)</small></Label>
+                <Input disabled value="" />
+                <small className="text-danger">No se pudieron cargar los proyectos.</small>
+              </FormGroup>
+            ) : (
+              <FormGroup>
+                <Label for="proyectoId">Proyecto derivado <small className="text-muted">(opcional)</small></Label>
+                <Input
+                  type="select"
+                  id="proyectoId"
+                  name="proyectoId"
+                  value={form.proyectoId}
+                  onChange={handleFormChange}
+                >
+                  <option value="">— Sin proyecto asociado —</option>
+                  {proyectos.map(p => (
+                    <option key={p.id} value={p.id}>{p.titulo}</option>
+                  ))}
+                </Input>
+                {proyectos.length === 0 && (
+                  <small className="text-muted">No hay proyectos disponibles.</small>
+                )}
+              </FormGroup>
+            )}
 
             {/* ── Campos dinámicos por tipo ── */}
             {parseInt(form.publicationType, 10) === 0 ? (

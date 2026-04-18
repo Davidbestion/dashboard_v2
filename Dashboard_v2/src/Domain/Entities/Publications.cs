@@ -18,4 +18,9 @@ public class Publication
     // Especializaciones (solo una estará presente según PublicationType)
     public IndexedPublication? IndexedPublication { get; set; }
     public JournalPublication? JournalPublication { get; set; }
+
+    /// <summary>FK opcional al proyecto del que deriva esta publicación. Null si no está vinculada a ninguno.</summary>
+    public string? ProyectoId { get; set; }
+    /// <summary>Navegación al proyecto. Null si la publicación no está vinculada a un proyecto.</summary>
+    public Proyecto? Proyecto { get; set; }
 }

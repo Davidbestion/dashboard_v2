@@ -27,6 +27,8 @@ public interface IApplicationDbContext
     DbSet<GrupoDeInvestigacion> GruposDeInvestigacion { get; }
     DbSet<LineaDeInvestigacion> LineasDeInvestigacion { get; }
     DbSet<AreaDelConocimiento> AreasDelConocimiento { get; }
+    DbSet<Clasificacion> Clasificaciones { get; }
+    DbSet<Proyecto> Proyectos { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

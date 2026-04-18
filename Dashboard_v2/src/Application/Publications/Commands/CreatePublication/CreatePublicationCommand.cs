@@ -35,6 +35,8 @@ public record CreatePublicationCommand : IRequest<(Result Result, string? Public
     public int? Group { get; init; }
     /// <summary>Cuartil Scimago. Obligatorio para tipo Diario con grupo 1.</summary>
     public string? Cuartil { get; init; }
+    /// <summary>ID del proyecto del que deriva esta publicación. Null si no está vinculada a ningún proyecto.</summary>
+    public string? ProyectoId { get; init; }
 }
 
 public class CreatePublicationCommandHandler : IRequestHandler<CreatePublicationCommand, (Result Result, string? PublicationId)>
@@ -86,6 +88,7 @@ public class CreatePublicationCommandHandler : IRequestHandler<CreatePublication
             PublicationData = request.PublicationData,
             PublicationType = request.PublicationType,
             UrlDoi = string.IsNullOrWhiteSpace(request.UrlDoi) ? null : request.UrlDoi.Trim(),
+            ProyectoId = string.IsNullOrWhiteSpace(request.ProyectoId) ? null : request.ProyectoId,
             AuthorPublications = [new AuthorPublication { AuthorId = author.Id }]
         };
 

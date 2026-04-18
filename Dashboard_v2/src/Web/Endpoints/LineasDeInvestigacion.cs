@@ -4,6 +4,7 @@ using Dashboard_v2.Application.LineasDeInvestigacion.Commands.DeleteLineaDeInves
 using Dashboard_v2.Application.LineasDeInvestigacion.Commands.UpdateLineaDeInvestigacion;
 using Dashboard_v2.Application.LineasDeInvestigacion.Queries.GetLineasDeInvestigacion;
 using Dashboard_v2.Web.Infrastructure;
+using RolesEnum = Dashboard_v2.Domain.Enums.Roles;
 
 namespace Dashboard_v2.Web.Endpoints;
 
@@ -21,20 +22,20 @@ public class LineasDeInvestigacion : EndpointGroupBase
             .Produces<List<LineaDeInvestigacionDto>>(200);
 
         groupBuilder.MapPost("", CreateLineaDeInvestigacion)
-            .RequireAuthorization(p => p.RequireRole("Superuser"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser)))
             .WithName("CreateLineaDeInvestigacion")
             .Produces(201)
             .ProducesProblem(400);
 
         groupBuilder.MapPut("{id}", UpdateLineaDeInvestigacion)
-            .RequireAuthorization(p => p.RequireRole("Superuser"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser)))
             .WithName("UpdateLineaDeInvestigacion")
             .Produces(200)
             .ProducesProblem(400)
             .ProducesProblem(404);
 
         groupBuilder.MapDelete("{id}", DeleteLineaDeInvestigacion)
-            .RequireAuthorization(p => p.RequireRole("Superuser"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser)))
             .WithName("DeleteLineaDeInvestigacion")
             .Produces(200)
             .ProducesProblem(404);

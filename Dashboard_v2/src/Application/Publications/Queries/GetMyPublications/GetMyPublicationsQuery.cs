@@ -62,7 +62,8 @@ public class GetMyPublicationsQueryHandler : IRequestHandler<GetMyPublicationsQu
                     Cuartil = p.JournalPublication.JournalGroup1Publication != null
                         ? p.JournalPublication.JournalGroup1Publication.Cuartil
                         : null
-                }
+                },
+                ProyectoId = p.ProyectoId
             })
             .OrderBy(p => p.Title)
             .ToListAsync(cancellationToken);

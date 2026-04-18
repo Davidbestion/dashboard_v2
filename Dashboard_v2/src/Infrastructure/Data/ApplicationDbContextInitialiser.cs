@@ -138,5 +138,17 @@ public class ApplicationDbContextInitialiser
             );
             await _context.SaveChangesAsync();
         }
+
+        // ── Seed Clasificaciones de proyecto ─────────────────────────────────────────────────
+        if (!await _context.Clasificaciones.AnyAsync())
+        {
+            _context.Clasificaciones.AddRange(
+                new Clasificacion { Id = "clasificacion-basica",        Nombre = "Básica"         },
+                new Clasificacion { Id = "clasificacion-aplicada",      Nombre = "Aplicada"       },
+                new Clasificacion { Id = "clasificacion-experimental",  Nombre = "Experimental"   },
+                new Clasificacion { Id = "clasificacion-innovacion",    Nombre = "Innovación"     }
+            );
+            await _context.SaveChangesAsync();
+        }
     }
 }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Card, CardBody, CardHeader,
-  Table, Spinner, Alert, Badge,
+  Table, Button, Spinner, Alert, Badge,
 } from 'reactstrap';
 
 async function apiFetch(url, options = {}) {
@@ -23,6 +23,7 @@ export default function MisGruposDeInvestigacionPage() {
   const [lineasDeInvestigacion, setLineasDeInvestigacion] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [generatingAnexo, setGeneratingAnexo] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -43,6 +44,30 @@ export default function MisGruposDeInvestigacionPage() {
 
   useEffect(() => { load(); }, [load]);
 
+  async function handleGenerarAnexo() {
+    setGeneratingAnexo(true);
+    setError('');
+    try {
+      const response = await fetch('/api/Documents/anexo-grupos', { credentials: 'include' });
+      if (!response.ok) {
+        const data = await response.json().catch(() => null);
+        throw new Error(data?.error ?? 'Error al generar el Anexo 10.');
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const now = new Date();
+      a.download = `Anexo_10_Grupos_Investigacion_${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}.xlsx`;
+      a.href = url;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setGeneratingAnexo(false);
+    }
+  }
+
   if (loading) {
     return (
       <div className="d-flex justify-content-center mt-5">
@@ -53,7 +78,12 @@ export default function MisGruposDeInvestigacionPage() {
 
   return (
     <>
-      <h2 className="mb-4">Mis Grupos de Investigación</h2>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h2 className="mb-0">Mis Grupos de Investigación</h2>
+        <Button color="outline-success" onClick={handleGenerarAnexo} disabled={generatingAnexo}>
+          {generatingAnexo ? <Spinner size="sm" /> : '⬇ Generar Anexo 10'}
+        </Button>
+      </div>
 
       {error && <Alert color="danger" toggle={() => setError('')}>{error}</Alert>}
 

@@ -70,14 +70,14 @@ public static class AnexoGrupos
             s.Border.OutsideBorder = XLBorderStyleValues.Thin;
             s.Border.InsideBorder = XLBorderStyleValues.Thin;
         }
-        ws.Row(4).Height = 50;
+        ws.Row(4).Height = 50; 
 
         // ─── Fila 5: Expresiones ClosedXML.Report ─────────────────────────
         var templateCells = new (int Col, string Expression)[]
         {
             (1,  "{{item.Nombre}}"),
             (2,  "{{item.TotalIntegrantes}}"),
-            // (3)  Áreas UH — vacío (usuario)
+            // (3, "{{item.AreasUH}}"), — vacío (usuario)
             (4,  "{{item.CantDoctores}}"),
             (5,  "{{item.CantMasters}}"),
             (6,  "{{item.CantLicenciados}}"),
@@ -90,12 +90,12 @@ public static class AnexoGrupos
             (13, "{{item.CantIAGRG}}"),
             (14, "{{item.CantASP}}"),
             (15, "{{item.CantAdiestrados}}"),
-            // (16) Técnicos — vacío (usuario)
-            // (17) Estudiantes 1ro-2do — vacío (usuario)
-            // (18) Estudiantes 3ro-4to — vacío (usuario)
+            // (16, "{{item.CantTecnicos}}"), — vacío (usuario)
+            // (17, "{{item.CantNoEstudiantes12}}"), — vacío (usuario)
+            // (18, "{{item.CantNoEstudiantes34}}"), — vacío (usuario)
             (19, "{{item.AreaTematica}}"),
             (20, "{{item.LineasDeInvestigacion}}"),
-            // (21) Proyectos — vacío (usuario)
+            // (21, "{{item.Proyectos}}"), — vacío (usuario)
         };
 
         foreach (var (col, expr) in templateCells)

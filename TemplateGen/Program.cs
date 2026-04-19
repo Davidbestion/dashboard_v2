@@ -11,11 +11,17 @@
 
 using TemplateGen.Templates;
 
+// var templates = new Dictionary<string, (string Descripcion, Action Generate)>(StringComparer.OrdinalIgnoreCase)
+// {
+//     ["grupos"] = ("Anexo 10 — Grupos de Investigación  →  AnexoGrupos.xlsx", AnexoGrupos.Generate),
+//     // Próximas plantillas — descomenta o añade cuando las implementes:
+//     // ["proyectos"] = ("Anexo X — Proyectos de Investigación  →  AnexoProyectos.xlsx", AnexoProyectos.Generate),
+// };
+
 var templates = new Dictionary<string, (string Descripcion, Action Generate)>(StringComparer.OrdinalIgnoreCase)
 {
-    ["grupos"] = ("Anexo 10 — Grupos de Investigación  →  AnexoGrupos.xlsx", AnexoGrupos.Generate),
-    // Próximas plantillas — descomenta o añade cuando las implementes:
-    // ["proyectos"] = ("Anexo X — Proyectos de Investigación  →  AnexoProyectos.xlsx", AnexoProyectos.Generate),
+    ["grupos"]   = ("Anexo 10 — Grupos de Investigación", () => new AnexoGruposTemplate().Generate()),
+    ["proyectos"]= ("Anexo 4 — Proyectos de Investigación", () => new AnexoProyectosTemplate().Generate()),
 };
 
 // ─── Modo línea de comandos ────────────────────────────────────────────────
@@ -68,7 +74,7 @@ while (true)
     Console.WriteLine("║   0. Generar TODAS                               ║");
     Console.WriteLine("║   q. Salir                                       ║");
     Console.WriteLine("╚══════════════════════════════════════════════════╝");
-    Console.Write("\nElige una opción: ");
+    Console.Write("\nElige una opcion: ");
 
     var input = Console.ReadLine()?.Trim() ?? "";
 

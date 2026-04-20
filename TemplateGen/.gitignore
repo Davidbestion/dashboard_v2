@@ -1,0 +1,20 @@
+# Ignore build output and VS/IDE files for TemplateGen
+/bin/
+/obj/
+/Debug/
+/Release/
+/*.dll
+/*.pdb
+/*.exe
+/*.deps.json
+/*.runtimeconfig.json
+/*.log
+/*.tmp
+/*.user
+/*.suo
+/.vs/
+/.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db

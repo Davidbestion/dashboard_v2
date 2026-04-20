@@ -46,6 +46,8 @@ export default function GruposDeInvestigacionPage() {
   const [membrosError, setMembrosError] = useState('');
   const [membrosFilter, setMembrosFilter] = useState('');
 
+  const [generatingAnexo, setGeneratingAnexo] = useState(false);
+
   const load = useCallback(async () => {
     setLoading(true);
     setError('');
@@ -148,6 +150,30 @@ export default function GruposDeInvestigacionPage() {
     });
   }
 
+  async function handleGenerarAnexo() {
+    setGeneratingAnexo(true);
+    setError('');
+    try {
+      const response = await fetch('/api/Documents/anexo-grupos', { credentials: 'include' });
+      if (!response.ok) {
+        const data = await response.json().catch(() => null);
+        throw new Error(data?.error ?? 'Error al generar el Anexo 10.');
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const now = new Date();
+      a.download = `Anexo_10_Grupos_Investigacion_${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}.xlsx`;
+      a.href = url;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setGeneratingAnexo(false);
+    }
+  }
+
   const filteredUsuarios = membrosFilter.trim()
     ? usuarios.filter(u =>
         `${u.userName} ${u.userLastName1 ?? ''} ${u.userLastName2 ?? ''} ${u.email}`
@@ -168,9 +194,14 @@ export default function GruposDeInvestigacionPage() {
     <>
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2 className="mb-0">Grupos de Investigación</h2>
-        <Button color="primary" onClick={openCreate} disabled={areas.length === 0}>
-          + Nuevo grupo
-        </Button>
+        <div className="d-flex gap-2">
+          <Button color="outline-success" onClick={handleGenerarAnexo} disabled={generatingAnexo}>
+            {generatingAnexo ? <Spinner size="sm" /> : '⬇ Generar Anexo 10'}
+          </Button>
+          <Button color="primary" onClick={openCreate} disabled={areas.length === 0}>
+            + Nuevo grupo
+          </Button>
+        </div>
       </div>
 
       {areas.length === 0 && (

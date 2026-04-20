@@ -106,6 +106,8 @@ export default function ProyectosPage() {
   const [selectedPubToLink, setSelectedPubToLink] = useState('');
   const [linkingPub, setLinkingPub] = useState(false);
 
+  const [generatingAnexo, setGeneratingAnexo] = useState(false);
+
   const load = useCallback(async () => {
     setLoading(true);
     setError('');
@@ -126,6 +128,7 @@ export default function ProyectosPage() {
       setLoading(false);
     }
   }, []);
+  
 
   useEffect(() => { load(); }, [load]);
 
@@ -261,6 +264,30 @@ export default function ProyectosPage() {
     }
   }
 
+  async function handleGenerarAnexo() {
+    setGeneratingAnexo(true);
+    setError('');
+    try {
+      const response = await fetch('/api/Documents/anexo-proyectos', { credentials: 'include' });
+      if (!response.ok) {
+        const data = await response.json().catch(() => null);
+        throw new Error(data?.error ?? 'Error al generar el Anexo 4.');
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const now = new Date();
+      a.download = `Anexo_4_Proyectos_${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}.xlsx`;
+      a.href = url;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setGeneratingAnexo(false);
+    }
+  }
+
   const tipo = form.tipo;
 
   // ─ Publications manager helpers ────────────────────────────────────────────────
@@ -323,7 +350,12 @@ export default function ProyectosPage() {
       <Card>
         <CardHeader className="d-flex justify-content-between align-items-center">
           <strong>Proyectos</strong>
-          <Button color="primary" size="sm" onClick={openCreate}>+ Nuevo proyecto</Button>
+          <div className="d-flex gap-2 align-items-center">
+            <Button color="outline-success" size="sm" onClick={handleGenerarAnexo} disabled={generatingAnexo}>
+              {generatingAnexo ? <Spinner size="sm" /> : '⬇ Generar Anexo 4'}
+            </Button>
+            <Button color="primary" size="sm" onClick={openCreate}>+ Nuevo proyecto</Button>
+          </div>
         </CardHeader>
         <CardBody>
           {error && <Alert color="danger">{error}</Alert>}

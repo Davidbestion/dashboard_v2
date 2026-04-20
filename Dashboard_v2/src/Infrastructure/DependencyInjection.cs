@@ -1,4 +1,6 @@
 ﻿using Dashboard_v2.Application.Common.Interfaces;
+using Dashboard_v2.Application.Documents;
+using Dashboard_v2.Application.Documents.Reports;
 using Dashboard_v2.Domain.Constants;
 using Dashboard_v2.Infrastructure.Data;
 using RolesEnum = Dashboard_v2.Domain.Enums.Roles;
@@ -45,6 +47,10 @@ public static class DependencyInjection
         builder.Services.AddScoped<IPermissionService, PermissionService>();
         builder.Services.AddScoped<IAuthorCleanupService, AuthorCleanupService>();
         builder.Services.AddScoped<IAuthorResolutionService, AuthorResolutionService>();
+        builder.Services.AddSingleton<IDocumentRenderer, DocumentRenderer>();
+        // Para agregar un nuevo reporte, agrega otra línea aquí:
+        builder.Services.AddScoped<IDocumentReport, AnexoGruposReport>();
+        builder.Services.AddScoped<IDocumentReport, ProyectosReport>();
 
         builder.Services.AddAuthorization(options =>
             options.AddPolicy(Policies.CanPurge, policy => policy.RequireRole(nameof(RolesEnum.Superuser))));

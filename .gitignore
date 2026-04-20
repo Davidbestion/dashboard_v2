@@ -205,3 +205,20 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Ignore TemplateGen build outputs and temporary files
+/TemplateGen/bin/
+/TemplateGen/obj/
+/TemplateGen/Debug/
+/TemplateGen/Release/
+/TemplateGen/*.dll
+/TemplateGen/*.pdb
+/TemplateGen/*.exe
+/TemplateGen/*.deps.json
+/TemplateGen/*.runtimeconfig.json
+/TemplateGen/*.log
+/TemplateGen/*.tmp
+/TemplateGen/*.user
+/TemplateGen/*.suo
+/TemplateGen/.vs/
+/TemplateGen/.vscode/

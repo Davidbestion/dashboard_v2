@@ -1,8 +1,4 @@
 using Dashboard_v2.Application.Universidades;
-using Dashboard_v2.Application.Universidades.Commands.CreateUniversidad;
-using Dashboard_v2.Application.Universidades.Commands.DeleteUniversidad;
-using Dashboard_v2.Application.Universidades.Commands.UpdateUniversidad;
-using Dashboard_v2.Application.Universidades.Queries.GetUniversidades;
 using Dashboard_v2.Web.Infrastructure;
 using RolesEnum = Dashboard_v2.Domain.Enums.Roles;
 
@@ -40,15 +36,15 @@ public class Universidades : EndpointGroupBase
             .ProducesProblem(404);
     }
 
-    private async Task<IResult> GetUniversidades(ISender sender)
+    private async Task<IResult> GetUniversidades(IUniversidadService svc)
     {
-        var list = await sender.Send(new GetUniversidadesQuery());
+        var list = await svc.GetAllAsync();
         return Results.Ok(list);
     }
 
-    private async Task<IResult> CreateUniversidad(ISender sender, CreateUniversidadBody body)
+    private async Task<IResult> CreateUniversidad(IUniversidadService svc, CreateUniversidadBody body)
     {
-        var (result, id) = await sender.Send(new CreateUniversidadCommand { Nombre = body.Nombre });
+        var (result, id) = await svc.CreateAsync(body.Nombre);
 
         if (!result.Succeeded)
             return Results.BadRequest(new { errors = result.Errors });
@@ -56,9 +52,9 @@ public class Universidades : EndpointGroupBase
         return Results.Created($"/api/Universidades/{id}", new { id });
     }
 
-    private async Task<IResult> UpdateUniversidad(ISender sender, string id, UpdateUniversidadBody body)
+    private async Task<IResult> UpdateUniversidad(IUniversidadService svc, string id, UpdateUniversidadBody body)
     {
-        var result = await sender.Send(new UpdateUniversidadCommand { Id = id, Nombre = body.Nombre });
+        var result = await svc.UpdateAsync(id, body.Nombre);
 
         if (!result.Succeeded)
             return result.Errors.Contains("Universidad no encontrada.")
@@ -68,9 +64,9 @@ public class Universidades : EndpointGroupBase
         return Results.Ok(new { message = "Universidad actualizada." });
     }
 
-    private async Task<IResult> DeleteUniversidad(ISender sender, string id)
+    private async Task<IResult> DeleteUniversidad(IUniversidadService svc, string id)
     {
-        var result = await sender.Send(new DeleteUniversidadCommand(id));
+        var result = await svc.DeleteAsync(id);
 
         if (!result.Succeeded)
             return Results.NotFound(new { errors = result.Errors });

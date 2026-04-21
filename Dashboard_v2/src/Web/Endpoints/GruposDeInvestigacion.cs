@@ -1,10 +1,4 @@
 using Dashboard_v2.Application.GruposDeInvestigacion;
-using Dashboard_v2.Application.GruposDeInvestigacion.Commands.CreateGrupoDeInvestigacion;
-using Dashboard_v2.Application.GruposDeInvestigacion.Commands.DeleteGrupoDeInvestigacion;
-using Dashboard_v2.Application.GruposDeInvestigacion.Commands.SetGrupoMiembros;
-using Dashboard_v2.Application.GruposDeInvestigacion.Commands.UpdateGrupoDeInvestigacion;
-using Dashboard_v2.Application.GruposDeInvestigacion.Queries.GetGruposDeInvestigacion;
-using Dashboard_v2.Application.GruposDeInvestigacion.Queries.GetMisGruposDeInvestigacion;
 using Dashboard_v2.Web.Infrastructure;
 using RolesEnum = Dashboard_v2.Domain.Enums.Roles;
 
@@ -57,26 +51,21 @@ public class GruposDeInvestigacion : EndpointGroupBase
             .ProducesProblem(404);
     }
 
-    private async Task<IResult> GetGruposDeInvestigacion(ISender sender)
+    private async Task<IResult> GetGruposDeInvestigacion(IGrupoDeInvestigacionService svc)
     {
-        var list = await sender.Send(new GetGruposDeInvestigacionQuery());
+        var list = await svc.GetAllAsync();
         return Results.Ok(list);
     }
 
-    private async Task<IResult> GetMisGruposDeInvestigacion(ISender sender)
+    private async Task<IResult> GetMisGruposDeInvestigacion(IGrupoDeInvestigacionService svc)
     {
-        var list = await sender.Send(new GetMisGruposDeInvestigacionQuery());
+        var list = await svc.GetMineAsync();
         return Results.Ok(list);
     }
 
-    private async Task<IResult> CreateGrupoDeInvestigacion(ISender sender, CreateGrupoDeInvestigacionBody body)
+    private async Task<IResult> CreateGrupoDeInvestigacion(IGrupoDeInvestigacionService svc, CreateGrupoDeInvestigacionRequest body)
     {
-        var (result, id) = await sender.Send(new CreateGrupoDeInvestigacionCommand
-        {
-            Nombre = body.Nombre,
-            AreaId = body.AreaId,
-            LineasDeInvestigacionIds = body.LineasDeInvestigacionIds ?? [],
-        });
+        var (result, id) = await svc.CreateAsync(body);
 
         if (!result.Succeeded)
             return Results.BadRequest(new { errors = result.Errors });
@@ -84,15 +73,9 @@ public class GruposDeInvestigacion : EndpointGroupBase
         return Results.Created($"/api/GruposDeInvestigacion/{id}", new { id });
     }
 
-    private async Task<IResult> UpdateGrupoDeInvestigacion(ISender sender, string id, UpdateGrupoDeInvestigacionBody body)
+    private async Task<IResult> UpdateGrupoDeInvestigacion(IGrupoDeInvestigacionService svc, string id, UpdateGrupoDeInvestigacionRequest body)
     {
-        var result = await sender.Send(new UpdateGrupoDeInvestigacionCommand
-        {
-            Id = id,
-            Nombre = body.Nombre,
-            AreaId = body.AreaId,
-            LineasDeInvestigacionIds = body.LineasDeInvestigacionIds ?? []
-        });
+        var result = await svc.UpdateAsync(id, body);
 
         if (!result.Succeeded)
         {
@@ -104,9 +87,9 @@ public class GruposDeInvestigacion : EndpointGroupBase
         return Results.Ok(new { message = "Grupo de investigación actualizado." });
     }
 
-    private async Task<IResult> DeleteGrupoDeInvestigacion(ISender sender, string id)
+    private async Task<IResult> DeleteGrupoDeInvestigacion(IGrupoDeInvestigacionService svc, string id)
     {
-        var result = await sender.Send(new DeleteGrupoDeInvestigacionCommand(id));
+        var result = await svc.DeleteAsync(id);
 
         if (!result.Succeeded)
         {
@@ -118,13 +101,9 @@ public class GruposDeInvestigacion : EndpointGroupBase
         return Results.Ok(new { message = "Grupo de investigación eliminado." });
     }
 
-    private async Task<IResult> SetGrupoMiembros(ISender sender, string id, SetGrupoMiembrosBody body)
+    private async Task<IResult> SetGrupoMiembros(IGrupoDeInvestigacionService svc, string id, SetGrupoMiembrosRequest body)
     {
-        var result = await sender.Send(new SetGrupoMiembrosCommand
-        {
-            GrupoId = id,
-            UsuariosIds = body.UsuariosIds ?? []
-        });
+        var result = await svc.SetMiembrosAsync(id, body);
 
         if (!result.Succeeded)
         {
@@ -137,7 +116,5 @@ public class GruposDeInvestigacion : EndpointGroupBase
     }
 }
 
-public record CreateGrupoDeInvestigacionBody(string Nombre, string AreaId, IList<string>? LineasDeInvestigacionIds);
-public record UpdateGrupoDeInvestigacionBody(string Nombre, string AreaId, IList<string>? LineasDeInvestigacionIds);
-public record SetGrupoMiembrosBody(IList<string>? UsuariosIds);
+// Request DTOs for create/update/set miembros are defined in Application/GruposDeInvestigacion/GrupoRequests.cs
 

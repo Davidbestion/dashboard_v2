@@ -1,8 +1,4 @@
 using Dashboard_v2.Application.Awards;
-using Dashboard_v2.Application.Awards.Commands.CreateAward;
-using Dashboard_v2.Application.Awards.Commands.DeleteAward;
-using Dashboard_v2.Application.Awards.Commands.UpdateAward;
-using Dashboard_v2.Application.Awards.Queries.GetMyAwards;
 
 namespace Dashboard_v2.Web.Endpoints;
 
@@ -43,22 +39,15 @@ public class Awards : EndpointGroupBase
             .ProducesProblem(400)
             .ProducesProblem(404);
     }
-
-    private async Task<IResult> GetMyAwards(ISender sender)
+    private async Task<IResult> GetMyAwards(Dashboard_v2.Application.Awards.IAwardService service)
     {
-        var awards = await sender.Send(new GetMyAwardsQuery());
+        var awards = await service.GetMyAwardsAsync();
         return Results.Ok(awards);
     }
 
-    private async Task<IResult> CreateAward(ISender sender, CreateAwardBody body)
+    private async Task<IResult> CreateAward(Dashboard_v2.Application.Awards.IAwardService service, CreateAwardRequest body)
     {
-        var (result, id) = await sender.Send(new CreateAwardCommand
-        {
-            AwardName = body.AwardName,
-            AwardTypeId = body.AwardType,
-            Year = body.Year,
-            AwardedAt = body.AwardedAt,
-        });
+        var (result, id) = await service.CreateAsync(body);
 
         if (!result.Succeeded)
             return Results.BadRequest(new { errors = result.Errors });
@@ -66,16 +55,9 @@ public class Awards : EndpointGroupBase
         return Results.Created($"/api/Awards/{id}", new { id });
     }
 
-    private async Task<IResult> UpdateAward(ISender sender, int id, UpdateAwardBody body)
+    private async Task<IResult> UpdateAward(Dashboard_v2.Application.Awards.IAwardService service, int id, UpdateAwardRequest body)
     {
-        var result = await sender.Send(new UpdateAwardCommand
-        {
-            Id = id,
-            AwardName = body.AwardName,
-            AwardTypeId = body.AwardType,
-            Year = body.Year,
-            AwardedAt = body.AwardedAt,
-        });
+        var result = await service.UpdateAsync(id, body);
 
         if (!result.Succeeded)
             return Results.BadRequest(new { errors = result.Errors });
@@ -83,9 +65,9 @@ public class Awards : EndpointGroupBase
         return Results.Ok(new { message = "Premio actualizado." });
     }
 
-    private async Task<IResult> DeleteAward(ISender sender, int id)
+    private async Task<IResult> DeleteAward(Dashboard_v2.Application.Awards.IAwardService service, int id)
     {
-        var result = await sender.Send(new DeleteAwardCommand(id));
+        var result = await service.DeleteAsync(id);
 
         if (!result.Succeeded)
             return Results.BadRequest(new { errors = result.Errors });
@@ -94,5 +76,3 @@ public class Awards : EndpointGroupBase
     }
 }
 
-public record CreateAwardBody(string AwardName, int AwardType, int Year, DateTime AwardedAt);
-public record UpdateAwardBody(string AwardName, int AwardType, int Year, DateTime AwardedAt);

@@ -258,8 +258,8 @@ export default function EventsPage() {
     setEvEditing(ev);
     setEvForm({
       name: ev.name,
-      countryId: ev.countryId.toString(),
-      eventType: ev.eventType.toString(),
+      countryId: ev.countryId?.toString(),
+      eventType: String(ev.eventTypeId ?? ev.eventType ?? ''),
       institutions: [...ev.institutions],
     });
     setInstInput('');
@@ -459,7 +459,7 @@ export default function EventsPage() {
                       <tr key={ev.id}>
                         <td>{ev.name}</td>
                         <td>{ev.countryName}</td>
-                        <td><Badge color="info" pill>{EVENT_TYPE_LABELS[ev.eventType] ?? ev.eventType}</Badge></td>
+                        <td><Badge color="info" pill>{EVENT_TYPE_LABELS[ev.eventTypeId] ?? ev.eventTypeName ?? ev.eventType}</Badge></td>
                         <td>
                           {ev.institutions.map((inst, i) => (
                             <Badge key={i} color="secondary" pill className="me-1">{inst}</Badge>
@@ -636,7 +636,7 @@ export default function EventsPage() {
               <Input type="select" id="evType" value={evForm.eventType} required
                 onChange={e => setEvForm(f => ({ ...f, eventType: e.target.value }))}>
                 <option value="">-- seleccionar --</option>
-                {eventTypes.map(et => <option key={et.value} value={et.value}>{EVENT_TYPE_LABELS[et.value] ?? et.name}</option>)}
+                {eventTypes.map(et => <option key={et.id} value={et.id}>{EVENT_TYPE_LABELS[et.id] ?? et.name}</option>)}
               </Input>
             </FormGroup>
 

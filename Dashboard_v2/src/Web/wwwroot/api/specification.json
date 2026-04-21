@@ -38,7 +38,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateAreaBody"
+                "$ref": "#/components/schemas/CreateAreaRequest"
               }
             }
           },
@@ -84,7 +84,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateAreaBody"
+                "$ref": "#/components/schemas/UpdateAreaRequest"
               }
             }
           },
@@ -182,7 +182,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateAreaDelConocimientoBody"
+                "$ref": "#/components/schemas/CreateAreaDelConocimientoRequest"
               }
             }
           },
@@ -228,7 +228,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateAreaDelConocimientoBody"
+                "$ref": "#/components/schemas/UpdateAreaDelConocimientoRequest"
               }
             }
           },
@@ -561,7 +561,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateAwardBody"
+                "$ref": "#/components/schemas/CreateAwardRequest"
               }
             }
           },
@@ -608,7 +608,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateAwardBody"
+                "$ref": "#/components/schemas/UpdateAwardRequest"
               }
             }
           },
@@ -717,7 +717,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateClasificacionBody"
+                "$ref": "#/components/schemas/CreateClasificacionRequest"
               }
             }
           },
@@ -763,7 +763,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateClasificacionBody"
+                "$ref": "#/components/schemas/UpdateClasificacionRequest"
               }
             }
           },
@@ -925,7 +925,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateEventBody"
+                "$ref": "#/components/schemas/CreateEventRequest"
               }
             }
           },
@@ -1004,7 +1004,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateCountryBody"
+                "$ref": "#/components/schemas/CreateCountryRequest"
               }
             }
           },
@@ -1081,7 +1081,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateEventBody"
+                "$ref": "#/components/schemas/UpdateEventRequest"
               }
             }
           },
@@ -1170,7 +1170,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateGrupoDeInvestigacionBody"
+                "$ref": "#/components/schemas/CreateGrupoDeInvestigacionRequest"
               }
             }
           },
@@ -1239,7 +1239,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateGrupoDeInvestigacionBody"
+                "$ref": "#/components/schemas/UpdateGrupoDeInvestigacionRequest"
               }
             }
           },
@@ -1327,7 +1327,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/SetGrupoMiembrosBody"
+                "$ref": "#/components/schemas/SetGrupoMiembrosRequest"
               }
             }
           },
@@ -1393,7 +1393,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateLineaDeInvestigacionBody"
+                "$ref": "#/components/schemas/CreateLineaDeInvestigacionRequest"
               }
             }
           },
@@ -1439,7 +1439,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateLineaDeInvestigacionBody"
+                "$ref": "#/components/schemas/UpdateLineaDeInvestigacionRequest"
               }
             }
           },
@@ -1537,7 +1537,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreatePresentationBody"
+                "$ref": "#/components/schemas/CreatePresentationRequest"
               }
             }
           },
@@ -1584,7 +1584,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdatePresentationBody"
+                "$ref": "#/components/schemas/UpdatePresentationRequest"
               }
             }
           },
@@ -3388,7 +3388,7 @@
           }
         }
       },
-      "CreateAreaBody": {
+      "CreateAreaRequest": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
@@ -3405,14 +3405,13 @@
           },
           "areasDelConocimientoIds": {
             "type": "array",
-            "nullable": true,
             "items": {
               "type": "string"
             }
           }
         }
       },
-      "UpdateAreaBody": {
+      "UpdateAreaRequest": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
@@ -3429,7 +3428,6 @@
           },
           "areasDelConocimientoIds": {
             "type": "array",
-            "nullable": true,
             "items": {
               "type": "string"
             }
@@ -3458,7 +3456,7 @@
           }
         }
       },
-      "CreateAreaDelConocimientoBody": {
+      "CreateAreaDelConocimientoRequest": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
@@ -3471,14 +3469,13 @@
           },
           "lineasDeInvestigacionIds": {
             "type": "array",
-            "nullable": true,
             "items": {
               "type": "string"
             }
           }
         }
       },
-      "UpdateAreaDelConocimientoBody": {
+      "UpdateAreaDelConocimientoRequest": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
@@ -3491,7 +3488,6 @@
           },
           "lineasDeInvestigacionIds": {
             "type": "array",
-            "nullable": true,
             "items": {
               "type": "string"
             }
@@ -3708,14 +3704,14 @@
           }
         }
       },
-      "CreateAwardBody": {
+      "CreateAwardRequest": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
           "awardName": {
             "type": "string"
           },
-          "awardType": {
+          "awardTypeId": {
             "type": "integer",
             "format": "int32"
           },
@@ -3729,14 +3725,14 @@
           }
         }
       },
-      "UpdateAwardBody": {
+      "UpdateAwardRequest": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
           "awardName": {
             "type": "string"
           },
-          "awardType": {
+          "awardTypeId": {
             "type": "integer",
             "format": "int32"
           },
@@ -3762,7 +3758,16 @@
           }
         }
       },
-      "CreateClasificacionBody": {
+      "CreateClasificacionRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "nombre": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdateClasificacionRequest": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
@@ -3821,7 +3826,7 @@
           }
         }
       },
-      "CreateCountryBody": {
+      "CreateCountryRequest": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
@@ -3843,7 +3848,7 @@
           }
         }
       },
-      "CreateEventBody": {
+      "CreateEventRequest": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
@@ -3866,7 +3871,7 @@
           }
         }
       },
-      "UpdateEventBody": {
+      "UpdateEventRequest": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
@@ -3923,7 +3928,7 @@
           }
         }
       },
-      "CreateGrupoDeInvestigacionBody": {
+      "CreateGrupoDeInvestigacionRequest": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
@@ -3935,14 +3940,13 @@
           },
           "lineasDeInvestigacionIds": {
             "type": "array",
-            "nullable": true,
             "items": {
               "type": "string"
             }
           }
         }
       },
-      "UpdateGrupoDeInvestigacionBody": {
+      "UpdateGrupoDeInvestigacionRequest": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
@@ -3954,20 +3958,18 @@
           },
           "lineasDeInvestigacionIds": {
             "type": "array",
-            "nullable": true,
             "items": {
               "type": "string"
             }
           }
         }
       },
-      "SetGrupoMiembrosBody": {
+      "SetGrupoMiembrosRequest": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
           "usuariosIds": {
             "type": "array",
-            "nullable": true,
             "items": {
               "type": "string"
             }
@@ -4002,7 +4004,7 @@
           }
         }
       },
-      "CreateLineaDeInvestigacionBody": {
+      "CreateLineaDeInvestigacionRequest": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
@@ -4015,14 +4017,13 @@
           },
           "areasDelConocimientoIds": {
             "type": "array",
-            "nullable": true,
             "items": {
               "type": "string"
             }
           }
         }
       },
-      "UpdateLineaDeInvestigacionBody": {
+      "UpdateLineaDeInvestigacionRequest": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
@@ -4035,7 +4036,6 @@
           },
           "areasDelConocimientoIds": {
             "type": "array",
-            "nullable": true,
             "items": {
               "type": "string"
             }
@@ -4068,7 +4068,7 @@
           }
         }
       },
-      "CreatePresentationBody": {
+      "CreatePresentationRequest": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
@@ -4093,7 +4093,7 @@
           }
         }
       },
-      "UpdatePresentationBody": {
+      "UpdatePresentationRequest": {
         "type": "object",
         "additionalProperties": false,
         "properties": {

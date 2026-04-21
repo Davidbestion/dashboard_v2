@@ -1,8 +1,4 @@
 using Dashboard_v2.Application.LineasDeInvestigacion;
-using Dashboard_v2.Application.LineasDeInvestigacion.Commands.CreateLineaDeInvestigacion;
-using Dashboard_v2.Application.LineasDeInvestigacion.Commands.DeleteLineaDeInvestigacion;
-using Dashboard_v2.Application.LineasDeInvestigacion.Commands.UpdateLineaDeInvestigacion;
-using Dashboard_v2.Application.LineasDeInvestigacion.Queries.GetLineasDeInvestigacion;
 using Dashboard_v2.Web.Infrastructure;
 using RolesEnum = Dashboard_v2.Domain.Enums.Roles;
 
@@ -41,20 +37,15 @@ public class LineasDeInvestigacion : EndpointGroupBase
             .ProducesProblem(404);
     }
 
-    private async Task<IResult> GetLineasDeInvestigacion(ISender sender)
+    private async Task<IResult> GetLineasDeInvestigacion(ILineaDeInvestigacionService svc)
     {
-        var list = await sender.Send(new GetLineasDeInvestigacionQuery());
+        var list = await svc.GetAllAsync();
         return Results.Ok(list);
     }
 
-    private async Task<IResult> CreateLineaDeInvestigacion(ISender sender, CreateLineaDeInvestigacionBody body)
+    private async Task<IResult> CreateLineaDeInvestigacion(ILineaDeInvestigacionService svc, CreateLineaDeInvestigacionRequest body)
     {
-        var (result, id) = await sender.Send(new CreateLineaDeInvestigacionCommand
-        {
-            Nombre = body.Nombre,
-            Descripcion = body.Descripcion,
-            AreasDelConocimientoIds = body.AreasDelConocimientoIds ?? [],
-        });
+        var (result, id) = await svc.CreateAsync(body);
 
         if (!result.Succeeded)
             return Results.BadRequest(new { errors = result.Errors });
@@ -62,15 +53,9 @@ public class LineasDeInvestigacion : EndpointGroupBase
         return Results.Created($"/api/LineasDeInvestigacion/{id}", new { id });
     }
 
-    private async Task<IResult> UpdateLineaDeInvestigacion(ISender sender, string id, UpdateLineaDeInvestigacionBody body)
+    private async Task<IResult> UpdateLineaDeInvestigacion(ILineaDeInvestigacionService svc, string id, UpdateLineaDeInvestigacionRequest body)
     {
-        var result = await sender.Send(new UpdateLineaDeInvestigacionCommand
-        {
-            Id = id,
-            Nombre = body.Nombre,
-            Descripcion = body.Descripcion,
-            AreasDelConocimientoIds = body.AreasDelConocimientoIds ?? [],
-        });
+        var result = await svc.UpdateAsync(id, body);
 
         if (!result.Succeeded)
             return result.Errors.Contains("Línea de investigación no encontrada.")
@@ -80,9 +65,9 @@ public class LineasDeInvestigacion : EndpointGroupBase
         return Results.Ok(new { message = "Línea de investigación actualizada." });
     }
 
-    private async Task<IResult> DeleteLineaDeInvestigacion(ISender sender, string id)
+    private async Task<IResult> DeleteLineaDeInvestigacion(ILineaDeInvestigacionService svc, string id)
     {
-        var result = await sender.Send(new DeleteLineaDeInvestigacionCommand(id));
+        var result = await svc.DeleteAsync(id);
 
         if (!result.Succeeded)
             return Results.NotFound(new { errors = result.Errors });
@@ -91,5 +76,4 @@ public class LineasDeInvestigacion : EndpointGroupBase
     }
 }
 
-public record CreateLineaDeInvestigacionBody(string Nombre, string? Descripcion, IList<string>? AreasDelConocimientoIds);
-public record UpdateLineaDeInvestigacionBody(string Nombre, string? Descripcion, IList<string>? AreasDelConocimientoIds);
+// Request DTOs for create/update are defined in Application/LineasDeInvestigacion/LineaRequests.cs

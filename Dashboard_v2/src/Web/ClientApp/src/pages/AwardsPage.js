@@ -95,9 +95,9 @@ export default function AwardsPage() {
     setEditing(award);
     setForm({
       awardName: award.awardName,
-      awardType: award.awardType.toString(),
-      year: award.year.toString(),
-      awardedAt: award.awardedAt.slice(0, 10),
+      awardType: String(award.awardTypeId ?? award.awardType ?? '0'),
+      year: award.year?.toString() ?? '',
+      awardedAt: (award.awardedAt ?? '').slice(0, 10),
     });
     setFormError('');
     setModal(true);
@@ -206,7 +206,7 @@ export default function AwardsPage() {
                   <tr key={a.id}>
                     <td>{a.awardName}</td>
                     <td>
-                      <Badge color="info" pill>{awardTypeLabel(a.awardType)}</Badge>
+                      <Badge color="info" pill>{a.awardTypeId != null ? awardTypeLabel(a.awardTypeId) : (a.awardTypeName ?? 'Desconocido')}</Badge>
                     </td>
                     <td>{a.year}</td>
                     <td>{new Date(a.awardedAt).toLocaleDateString('es-CU')}</td>

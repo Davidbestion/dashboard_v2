@@ -1,8 +1,5 @@
 using Dashboard_v2.Application.Events;
-using Dashboard_v2.Application.Events.Commands.CreatePresentation;
-using Dashboard_v2.Application.Events.Commands.DeletePresentation;
-using Dashboard_v2.Application.Events.Commands.UpdatePresentation;
-using Dashboard_v2.Application.Events.Queries.GetMyPresentations;
+// using MediatR commands/queries replaced by IEventService
 
 namespace Dashboard_v2.Web.Endpoints;
 
@@ -33,19 +30,12 @@ public class Presentations : EndpointGroupBase
             .Produces(200)
             .ProducesProblem(400);
     }
+    private async Task<IResult> GetMyPresentations(IEventService service)
+        => Results.Ok(await service.GetMyPresentationsAsync());
 
-    private async Task<IResult> GetMyPresentations(ISender sender)
-        => Results.Ok(await sender.Send(new GetMyPresentationsQuery()));
-
-    private async Task<IResult> CreatePresentation(ISender sender, CreatePresentationBody body)
+    private async Task<IResult> CreatePresentation(IEventService service, CreatePresentationRequest body)
     {
-        var (result, id) = await sender.Send(new CreatePresentationCommand
-        {
-            Name = body.Name,
-            EventId = body.EventId,
-            CoauthorIds = body.CoauthorIds,
-            CoauthorNames = body.CoauthorNames,
-        });
+        var (result, id) = await service.CreatePresentationAsync(body);
 
         if (!result.Succeeded)
             return Results.BadRequest(new { errors = result.Errors });
@@ -53,16 +43,9 @@ public class Presentations : EndpointGroupBase
         return Results.Created($"/api/Presentations/{id}", new { id });
     }
 
-    private async Task<IResult> UpdatePresentation(ISender sender, int id, UpdatePresentationBody body)
+    private async Task<IResult> UpdatePresentation(IEventService service, int id, UpdatePresentationRequest body)
     {
-        var result = await sender.Send(new UpdatePresentationCommand
-        {
-            Id = id,
-            Name = body.Name,
-            EventId = body.EventId,
-            CoauthorIds = body.CoauthorIds,
-            CoauthorNames = body.CoauthorNames,
-        });
+        var result = await service.UpdatePresentationAsync(id, body);
 
         if (!result.Succeeded)
             return Results.BadRequest(new { errors = result.Errors });
@@ -70,9 +53,9 @@ public class Presentations : EndpointGroupBase
         return Results.Ok(new { message = "Presentación actualizada." });
     }
 
-    private async Task<IResult> DeletePresentation(ISender sender, int id)
+    private async Task<IResult> DeletePresentation(IEventService service, int id)
     {
-        var result = await sender.Send(new DeletePresentationCommand(id));
+        var result = await service.DeletePresentationAsync(id);
 
         if (!result.Succeeded)
             return Results.BadRequest(new { errors = result.Errors });
@@ -81,14 +64,3 @@ public class Presentations : EndpointGroupBase
     }
 }
 
-public record CreatePresentationBody(
-    string Name,
-    int EventId,
-    List<string> CoauthorIds,
-    List<string> CoauthorNames);
-
-public record UpdatePresentationBody(
-    string Name,
-    int EventId,
-    List<string> CoauthorIds,
-    List<string> CoauthorNames);

@@ -1,8 +1,4 @@
 using Dashboard_v2.Application.Clasificaciones;
-using Dashboard_v2.Application.Clasificaciones.Commands.CreateClasificacion;
-using Dashboard_v2.Application.Clasificaciones.Commands.DeleteClasificacion;
-using Dashboard_v2.Application.Clasificaciones.Commands.UpdateClasificacion;
-using Dashboard_v2.Application.Clasificaciones.Queries.GetClasificaciones;
 using Dashboard_v2.Web.Infrastructure;
 using RolesEnum = Dashboard_v2.Domain.Enums.Roles;
 
@@ -38,23 +34,23 @@ public class Clasificaciones : EndpointGroupBase
             .ProducesProblem(404);
     }
 
-    private async Task<IResult> GetClasificaciones(ISender sender)
+    private async Task<IResult> GetClasificaciones(IClasificacionService svc)
     {
-        var list = await sender.Send(new GetClasificacionesQuery());
+        var list = await svc.GetAllAsync();
         return Results.Ok(list);
     }
 
-    private async Task<IResult> CreateClasificacion(ISender sender, CreateClasificacionBody body)
+    private async Task<IResult> CreateClasificacion(IClasificacionService svc, CreateClasificacionRequest body)
     {
-        var (result, id) = await sender.Send(new CreateClasificacionCommand(body.Nombre));
+        var (result, id) = await svc.CreateAsync(body);
         if (!result.Succeeded)
             return Results.BadRequest(new { errors = result.Errors });
         return Results.Created($"/api/Clasificaciones/{id}", new { id });
     }
 
-    private async Task<IResult> UpdateClasificacion(ISender sender, string id, CreateClasificacionBody body)
+    private async Task<IResult> UpdateClasificacion(IClasificacionService svc, string id, UpdateClasificacionRequest body)
     {
-        var result = await sender.Send(new UpdateClasificacionCommand(id, body.Nombre));
+        var result = await svc.UpdateAsync(id, body);
         if (!result.Succeeded)
         {
             if (result.Errors.Contains("Clasificación no encontrada."))
@@ -64,9 +60,9 @@ public class Clasificaciones : EndpointGroupBase
         return Results.Ok(new { message = "Clasificación actualizada." });
     }
 
-    private async Task<IResult> DeleteClasificacion(ISender sender, string id)
+    private async Task<IResult> DeleteClasificacion(IClasificacionService svc, string id)
     {
-        var result = await sender.Send(new DeleteClasificacionCommand(id));
+        var result = await svc.DeleteAsync(id);
         if (!result.Succeeded)
         {
             if (result.Errors.Contains("Clasificación no encontrada."))
@@ -77,4 +73,4 @@ public class Clasificaciones : EndpointGroupBase
     }
 }
 
-internal record CreateClasificacionBody(string Nombre);
+// Request body types now use Application/Clasificaciones request records

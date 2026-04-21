@@ -61,7 +61,7 @@ export class AreasClient {
         return Promise.resolve<AreaDto[]>(null as any);
     }
 
-    createArea(body: CreateAreaBody): Promise<void> {
+    createArea(body: CreateAreaRequest): Promise<void> {
         let url_ = this.baseUrl + "/api/Areas";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -103,7 +103,7 @@ export class AreasClient {
         return Promise.resolve<void>(null as any);
     }
 
-    updateArea(id: string, body: UpdateAreaBody): Promise<void> {
+    updateArea(id: string, body: UpdateAreaRequest): Promise<void> {
         let url_ = this.baseUrl + "/api/Areas/{id}";
         if (id === undefined || id === null)
             throw new globalThis.Error("The parameter 'id' must be defined.");
@@ -249,7 +249,7 @@ export class AreasDelConocimientoClient {
         return Promise.resolve<AreaDelConocimientoDto[]>(null as any);
     }
 
-    createAreaDelConocimiento(body: CreateAreaDelConocimientoBody): Promise<void> {
+    createAreaDelConocimiento(body: CreateAreaDelConocimientoRequest): Promise<void> {
         let url_ = this.baseUrl + "/api/AreasDelConocimiento";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -291,7 +291,7 @@ export class AreasDelConocimientoClient {
         return Promise.resolve<void>(null as any);
     }
 
-    updateAreaDelConocimiento(id: string, body: UpdateAreaDelConocimientoBody): Promise<void> {
+    updateAreaDelConocimiento(id: string, body: UpdateAreaDelConocimientoRequest): Promise<void> {
         let url_ = this.baseUrl + "/api/AreasDelConocimiento/{id}";
         if (id === undefined || id === null)
             throw new globalThis.Error("The parameter 'id' must be defined.");
@@ -780,7 +780,7 @@ export class AwardsClient {
         return Promise.resolve<AwardDto[]>(null as any);
     }
 
-    createAward(body: CreateAwardBody): Promise<void> {
+    createAward(body: CreateAwardRequest): Promise<void> {
         let url_ = this.baseUrl + "/api/Awards";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -822,7 +822,7 @@ export class AwardsClient {
         return Promise.resolve<void>(null as any);
     }
 
-    updateAward(id: number, body: UpdateAwardBody): Promise<void> {
+    updateAward(id: number, body: UpdateAwardRequest): Promise<void> {
         let url_ = this.baseUrl + "/api/Awards/{id}";
         if (id === undefined || id === null)
             throw new globalThis.Error("The parameter 'id' must be defined.");
@@ -975,7 +975,7 @@ export class ClasificacionesClient {
         return Promise.resolve<ClasificacionDto[]>(null as any);
     }
 
-    createClasificacion(body: CreateClasificacionBody): Promise<void> {
+    createClasificacion(body: CreateClasificacionRequest): Promise<void> {
         let url_ = this.baseUrl + "/api/Clasificaciones";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -1017,7 +1017,7 @@ export class ClasificacionesClient {
         return Promise.resolve<void>(null as any);
     }
 
-    updateClasificacion(id: string, body: CreateClasificacionBody): Promise<void> {
+    updateClasificacion(id: string, body: UpdateClasificacionRequest): Promise<void> {
         let url_ = this.baseUrl + "/api/Clasificaciones/{id}";
         if (id === undefined || id === null)
             throw new globalThis.Error("The parameter 'id' must be defined.");
@@ -1236,7 +1236,7 @@ export class EventsClient {
         return Promise.resolve<EventDto[]>(null as any);
     }
 
-    createEvent(body: CreateEventBody): Promise<void> {
+    createEvent(body: CreateEventRequest): Promise<void> {
         let url_ = this.baseUrl + "/api/Events";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -1362,7 +1362,7 @@ export class EventsClient {
         return Promise.resolve<CountryDto[]>(null as any);
     }
 
-    createCountry(body: CreateCountryBody): Promise<CountryDto> {
+    createCountry(body: CreateCountryRequest): Promise<CountryDto> {
         let url_ = this.baseUrl + "/api/Events/countries";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -1450,7 +1450,7 @@ export class EventsClient {
         return Promise.resolve<EventTypeDto[]>(null as any);
     }
 
-    updateEvent(id: number, body: UpdateEventBody): Promise<void> {
+    updateEvent(id: number, body: UpdateEventRequest): Promise<void> {
         let url_ = this.baseUrl + "/api/Events/{id}";
         if (id === undefined || id === null)
             throw new globalThis.Error("The parameter 'id' must be defined.");
@@ -1589,7 +1589,7 @@ export class GruposDeInvestigacionClient {
         return Promise.resolve<GrupoDeInvestigacionDto[]>(null as any);
     }
 
-    createGrupoDeInvestigacion(body: CreateGrupoDeInvestigacionBody): Promise<void> {
+    createGrupoDeInvestigacion(body: CreateGrupoDeInvestigacionRequest): Promise<void> {
         let url_ = this.baseUrl + "/api/GruposDeInvestigacion";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -1673,7 +1673,7 @@ export class GruposDeInvestigacionClient {
         return Promise.resolve<GrupoDeInvestigacionDto[]>(null as any);
     }
 
-    updateGrupoDeInvestigacion(id: string, body: UpdateGrupoDeInvestigacionBody): Promise<void> {
+    updateGrupoDeInvestigacion(id: string, body: UpdateGrupoDeInvestigacionRequest): Promise<void> {
         let url_ = this.baseUrl + "/api/GruposDeInvestigacion/{id}";
         if (id === undefined || id === null)
             throw new globalThis.Error("The parameter 'id' must be defined.");
@@ -1766,7 +1766,7 @@ export class GruposDeInvestigacionClient {
         return Promise.resolve<void>(null as any);
     }
 
-    setGrupoMiembros(id: string, body: SetGrupoMiembrosBody): Promise<void> {
+    setGrupoMiembros(id: string, body: SetGrupoMiembrosRequest): Promise<void> {
         let url_ = this.baseUrl + "/api/GruposDeInvestigacion/{id}/miembros";
         if (id === undefined || id === null)
             throw new globalThis.Error("The parameter 'id' must be defined.");
@@ -1871,7 +1871,7 @@ export class LineasDeInvestigacionClient {
         return Promise.resolve<LineaDeInvestigacionDto[]>(null as any);
     }
 
-    createLineaDeInvestigacion(body: CreateLineaDeInvestigacionBody): Promise<void> {
+    createLineaDeInvestigacion(body: CreateLineaDeInvestigacionRequest): Promise<void> {
         let url_ = this.baseUrl + "/api/LineasDeInvestigacion";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -1913,7 +1913,7 @@ export class LineasDeInvestigacionClient {
         return Promise.resolve<void>(null as any);
     }
 
-    updateLineaDeInvestigacion(id: string, body: UpdateLineaDeInvestigacionBody): Promise<void> {
+    updateLineaDeInvestigacion(id: string, body: UpdateLineaDeInvestigacionRequest): Promise<void> {
         let url_ = this.baseUrl + "/api/LineasDeInvestigacion/{id}";
         if (id === undefined || id === null)
             throw new globalThis.Error("The parameter 'id' must be defined.");
@@ -2059,7 +2059,7 @@ export class PresentationsClient {
         return Promise.resolve<PresentationDto[]>(null as any);
     }
 
-    createPresentation(body: CreatePresentationBody): Promise<void> {
+    createPresentation(body: CreatePresentationRequest): Promise<void> {
         let url_ = this.baseUrl + "/api/Presentations";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -2101,7 +2101,7 @@ export class PresentationsClient {
         return Promise.resolve<void>(null as any);
     }
 
-    updatePresentation(id: number, body: UpdatePresentationBody): Promise<void> {
+    updatePresentation(id: number, body: UpdatePresentationRequest): Promise<void> {
         let url_ = this.baseUrl + "/api/Presentations/{id}";
         if (id === undefined || id === null)
             throw new globalThis.Error("The parameter 'id' must be defined.");
@@ -4376,13 +4376,13 @@ export interface IProblemDetails {
     [key: string]: any;
 }
 
-export class CreateAreaBody implements ICreateAreaBody {
+export class CreateAreaRequest implements ICreateAreaRequest {
     nombre?: string;
     descripcion?: string | undefined;
     universidadId?: string | undefined;
-    areasDelConocimientoIds?: string[] | undefined;
+    areasDelConocimientoIds?: string[];
 
-    constructor(data?: ICreateAreaBody) {
+    constructor(data?: ICreateAreaRequest) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -4404,9 +4404,9 @@ export class CreateAreaBody implements ICreateAreaBody {
         }
     }
 
-    static fromJS(data: any): CreateAreaBody {
+    static fromJS(data: any): CreateAreaRequest {
         data = typeof data === 'object' ? data : {};
-        let result = new CreateAreaBody();
+        let result = new CreateAreaRequest();
         result.init(data);
         return result;
     }
@@ -4425,20 +4425,20 @@ export class CreateAreaBody implements ICreateAreaBody {
     }
 }
 
-export interface ICreateAreaBody {
+export interface ICreateAreaRequest {
     nombre?: string;
     descripcion?: string | undefined;
     universidadId?: string | undefined;
-    areasDelConocimientoIds?: string[] | undefined;
+    areasDelConocimientoIds?: string[];
 }
 
-export class UpdateAreaBody implements IUpdateAreaBody {
+export class UpdateAreaRequest implements IUpdateAreaRequest {
     nombre?: string;
     descripcion?: string | undefined;
     universidadId?: string | undefined;
-    areasDelConocimientoIds?: string[] | undefined;
+    areasDelConocimientoIds?: string[];
 
-    constructor(data?: IUpdateAreaBody) {
+    constructor(data?: IUpdateAreaRequest) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -4460,9 +4460,9 @@ export class UpdateAreaBody implements IUpdateAreaBody {
         }
     }
 
-    static fromJS(data: any): UpdateAreaBody {
+    static fromJS(data: any): UpdateAreaRequest {
         data = typeof data === 'object' ? data : {};
-        let result = new UpdateAreaBody();
+        let result = new UpdateAreaRequest();
         result.init(data);
         return result;
     }
@@ -4481,11 +4481,11 @@ export class UpdateAreaBody implements IUpdateAreaBody {
     }
 }
 
-export interface IUpdateAreaBody {
+export interface IUpdateAreaRequest {
     nombre?: string;
     descripcion?: string | undefined;
     universidadId?: string | undefined;
-    areasDelConocimientoIds?: string[] | undefined;
+    areasDelConocimientoIds?: string[];
 }
 
 export class AreaDelConocimientoDto implements IAreaDelConocimientoDto {
@@ -4544,12 +4544,12 @@ export interface IAreaDelConocimientoDto {
     lineasDeInvestigacionIds?: string[];
 }
 
-export class CreateAreaDelConocimientoBody implements ICreateAreaDelConocimientoBody {
+export class CreateAreaDelConocimientoRequest implements ICreateAreaDelConocimientoRequest {
     nombre?: string;
     descripcion?: string | undefined;
-    lineasDeInvestigacionIds?: string[] | undefined;
+    lineasDeInvestigacionIds?: string[];
 
-    constructor(data?: ICreateAreaDelConocimientoBody) {
+    constructor(data?: ICreateAreaDelConocimientoRequest) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -4570,9 +4570,9 @@ export class CreateAreaDelConocimientoBody implements ICreateAreaDelConocimiento
         }
     }
 
-    static fromJS(data: any): CreateAreaDelConocimientoBody {
+    static fromJS(data: any): CreateAreaDelConocimientoRequest {
         data = typeof data === 'object' ? data : {};
-        let result = new CreateAreaDelConocimientoBody();
+        let result = new CreateAreaDelConocimientoRequest();
         result.init(data);
         return result;
     }
@@ -4590,18 +4590,18 @@ export class CreateAreaDelConocimientoBody implements ICreateAreaDelConocimiento
     }
 }
 
-export interface ICreateAreaDelConocimientoBody {
+export interface ICreateAreaDelConocimientoRequest {
     nombre?: string;
     descripcion?: string | undefined;
-    lineasDeInvestigacionIds?: string[] | undefined;
+    lineasDeInvestigacionIds?: string[];
 }
 
-export class UpdateAreaDelConocimientoBody implements IUpdateAreaDelConocimientoBody {
+export class UpdateAreaDelConocimientoRequest implements IUpdateAreaDelConocimientoRequest {
     nombre?: string;
     descripcion?: string | undefined;
-    lineasDeInvestigacionIds?: string[] | undefined;
+    lineasDeInvestigacionIds?: string[];
 
-    constructor(data?: IUpdateAreaDelConocimientoBody) {
+    constructor(data?: IUpdateAreaDelConocimientoRequest) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -4622,9 +4622,9 @@ export class UpdateAreaDelConocimientoBody implements IUpdateAreaDelConocimiento
         }
     }
 
-    static fromJS(data: any): UpdateAreaDelConocimientoBody {
+    static fromJS(data: any): UpdateAreaDelConocimientoRequest {
         data = typeof data === 'object' ? data : {};
-        let result = new UpdateAreaDelConocimientoBody();
+        let result = new UpdateAreaDelConocimientoRequest();
         result.init(data);
         return result;
     }
@@ -4642,10 +4642,10 @@ export class UpdateAreaDelConocimientoBody implements IUpdateAreaDelConocimiento
     }
 }
 
-export interface IUpdateAreaDelConocimientoBody {
+export interface IUpdateAreaDelConocimientoRequest {
     nombre?: string;
     descripcion?: string | undefined;
-    lineasDeInvestigacionIds?: string[] | undefined;
+    lineasDeInvestigacionIds?: string[];
 }
 
 export class RegisterCommand implements IRegisterCommand {
@@ -5071,13 +5071,13 @@ export interface IAwardDto {
     awardedAt?: Date;
 }
 
-export class CreateAwardBody implements ICreateAwardBody {
+export class CreateAwardRequest implements ICreateAwardRequest {
     awardName?: string;
-    awardType?: number;
+    awardTypeId?: number;
     year?: number;
     awardedAt?: Date;
 
-    constructor(data?: ICreateAwardBody) {
+    constructor(data?: ICreateAwardRequest) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -5089,15 +5089,15 @@ export class CreateAwardBody implements ICreateAwardBody {
     init(_data?: any) {
         if (_data) {
             this.awardName = _data["awardName"];
-            this.awardType = _data["awardType"];
+            this.awardTypeId = _data["awardTypeId"];
             this.year = _data["year"];
             this.awardedAt = _data["awardedAt"] ? new Date(_data["awardedAt"].toString()) : undefined as any;
         }
     }
 
-    static fromJS(data: any): CreateAwardBody {
+    static fromJS(data: any): CreateAwardRequest {
         data = typeof data === 'object' ? data : {};
-        let result = new CreateAwardBody();
+        let result = new CreateAwardRequest();
         result.init(data);
         return result;
     }
@@ -5105,27 +5105,27 @@ export class CreateAwardBody implements ICreateAwardBody {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["awardName"] = this.awardName;
-        data["awardType"] = this.awardType;
+        data["awardTypeId"] = this.awardTypeId;
         data["year"] = this.year;
         data["awardedAt"] = this.awardedAt ? this.awardedAt.toISOString() : undefined as any;
         return data;
     }
 }
 
-export interface ICreateAwardBody {
+export interface ICreateAwardRequest {
     awardName?: string;
-    awardType?: number;
+    awardTypeId?: number;
     year?: number;
     awardedAt?: Date;
 }
 
-export class UpdateAwardBody implements IUpdateAwardBody {
+export class UpdateAwardRequest implements IUpdateAwardRequest {
     awardName?: string;
-    awardType?: number;
+    awardTypeId?: number;
     year?: number;
     awardedAt?: Date;
 
-    constructor(data?: IUpdateAwardBody) {
+    constructor(data?: IUpdateAwardRequest) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -5137,15 +5137,15 @@ export class UpdateAwardBody implements IUpdateAwardBody {
     init(_data?: any) {
         if (_data) {
             this.awardName = _data["awardName"];
-            this.awardType = _data["awardType"];
+            this.awardTypeId = _data["awardTypeId"];
             this.year = _data["year"];
             this.awardedAt = _data["awardedAt"] ? new Date(_data["awardedAt"].toString()) : undefined as any;
         }
     }
 
-    static fromJS(data: any): UpdateAwardBody {
+    static fromJS(data: any): UpdateAwardRequest {
         data = typeof data === 'object' ? data : {};
-        let result = new UpdateAwardBody();
+        let result = new UpdateAwardRequest();
         result.init(data);
         return result;
     }
@@ -5153,16 +5153,16 @@ export class UpdateAwardBody implements IUpdateAwardBody {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["awardName"] = this.awardName;
-        data["awardType"] = this.awardType;
+        data["awardTypeId"] = this.awardTypeId;
         data["year"] = this.year;
         data["awardedAt"] = this.awardedAt ? this.awardedAt.toISOString() : undefined as any;
         return data;
     }
 }
 
-export interface IUpdateAwardBody {
+export interface IUpdateAwardRequest {
     awardName?: string;
-    awardType?: number;
+    awardTypeId?: number;
     year?: number;
     awardedAt?: Date;
 }
@@ -5207,10 +5207,10 @@ export interface IClasificacionDto {
     nombre?: string;
 }
 
-export class CreateClasificacionBody implements ICreateClasificacionBody {
+export class CreateClasificacionRequest implements ICreateClasificacionRequest {
     nombre?: string;
 
-    constructor(data?: ICreateClasificacionBody) {
+    constructor(data?: ICreateClasificacionRequest) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -5225,9 +5225,9 @@ export class CreateClasificacionBody implements ICreateClasificacionBody {
         }
     }
 
-    static fromJS(data: any): CreateClasificacionBody {
+    static fromJS(data: any): CreateClasificacionRequest {
         data = typeof data === 'object' ? data : {};
-        let result = new CreateClasificacionBody();
+        let result = new CreateClasificacionRequest();
         result.init(data);
         return result;
     }
@@ -5239,7 +5239,43 @@ export class CreateClasificacionBody implements ICreateClasificacionBody {
     }
 }
 
-export interface ICreateClasificacionBody {
+export interface ICreateClasificacionRequest {
+    nombre?: string;
+}
+
+export class UpdateClasificacionRequest implements IUpdateClasificacionRequest {
+    nombre?: string;
+
+    constructor(data?: IUpdateClasificacionRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.nombre = _data["nombre"];
+        }
+    }
+
+    static fromJS(data: any): UpdateClasificacionRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateClasificacionRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["nombre"] = this.nombre;
+        return data;
+    }
+}
+
+export interface IUpdateClasificacionRequest {
     nombre?: string;
 }
 
@@ -5355,10 +5391,10 @@ export interface ICountryDto {
     name?: string;
 }
 
-export class CreateCountryBody implements ICreateCountryBody {
+export class CreateCountryRequest implements ICreateCountryRequest {
     name?: string;
 
-    constructor(data?: ICreateCountryBody) {
+    constructor(data?: ICreateCountryRequest) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -5373,9 +5409,9 @@ export class CreateCountryBody implements ICreateCountryBody {
         }
     }
 
-    static fromJS(data: any): CreateCountryBody {
+    static fromJS(data: any): CreateCountryRequest {
         data = typeof data === 'object' ? data : {};
-        let result = new CreateCountryBody();
+        let result = new CreateCountryRequest();
         result.init(data);
         return result;
     }
@@ -5387,7 +5423,7 @@ export class CreateCountryBody implements ICreateCountryBody {
     }
 }
 
-export interface ICreateCountryBody {
+export interface ICreateCountryRequest {
     name?: string;
 }
 
@@ -5431,13 +5467,13 @@ export interface IEventTypeDto {
     name?: string;
 }
 
-export class CreateEventBody implements ICreateEventBody {
+export class CreateEventRequest implements ICreateEventRequest {
     name?: string;
     countryId?: number;
     eventType?: number;
     institutions?: string[];
 
-    constructor(data?: ICreateEventBody) {
+    constructor(data?: ICreateEventRequest) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -5459,9 +5495,9 @@ export class CreateEventBody implements ICreateEventBody {
         }
     }
 
-    static fromJS(data: any): CreateEventBody {
+    static fromJS(data: any): CreateEventRequest {
         data = typeof data === 'object' ? data : {};
-        let result = new CreateEventBody();
+        let result = new CreateEventRequest();
         result.init(data);
         return result;
     }
@@ -5480,20 +5516,20 @@ export class CreateEventBody implements ICreateEventBody {
     }
 }
 
-export interface ICreateEventBody {
+export interface ICreateEventRequest {
     name?: string;
     countryId?: number;
     eventType?: number;
     institutions?: string[];
 }
 
-export class UpdateEventBody implements IUpdateEventBody {
+export class UpdateEventRequest implements IUpdateEventRequest {
     name?: string;
     countryId?: number;
     eventType?: number;
     institutions?: string[];
 
-    constructor(data?: IUpdateEventBody) {
+    constructor(data?: IUpdateEventRequest) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -5515,9 +5551,9 @@ export class UpdateEventBody implements IUpdateEventBody {
         }
     }
 
-    static fromJS(data: any): UpdateEventBody {
+    static fromJS(data: any): UpdateEventRequest {
         data = typeof data === 'object' ? data : {};
-        let result = new UpdateEventBody();
+        let result = new UpdateEventRequest();
         result.init(data);
         return result;
     }
@@ -5536,7 +5572,7 @@ export class UpdateEventBody implements IUpdateEventBody {
     }
 }
 
-export interface IUpdateEventBody {
+export interface IUpdateEventRequest {
     name?: string;
     countryId?: number;
     eventType?: number;
@@ -5619,12 +5655,12 @@ export interface IGrupoDeInvestigacionDto {
     creadorId?: string | undefined;
 }
 
-export class CreateGrupoDeInvestigacionBody implements ICreateGrupoDeInvestigacionBody {
+export class CreateGrupoDeInvestigacionRequest implements ICreateGrupoDeInvestigacionRequest {
     nombre?: string;
     areaId?: string;
-    lineasDeInvestigacionIds?: string[] | undefined;
+    lineasDeInvestigacionIds?: string[];
 
-    constructor(data?: ICreateGrupoDeInvestigacionBody) {
+    constructor(data?: ICreateGrupoDeInvestigacionRequest) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -5645,9 +5681,9 @@ export class CreateGrupoDeInvestigacionBody implements ICreateGrupoDeInvestigaci
         }
     }
 
-    static fromJS(data: any): CreateGrupoDeInvestigacionBody {
+    static fromJS(data: any): CreateGrupoDeInvestigacionRequest {
         data = typeof data === 'object' ? data : {};
-        let result = new CreateGrupoDeInvestigacionBody();
+        let result = new CreateGrupoDeInvestigacionRequest();
         result.init(data);
         return result;
     }
@@ -5665,18 +5701,18 @@ export class CreateGrupoDeInvestigacionBody implements ICreateGrupoDeInvestigaci
     }
 }
 
-export interface ICreateGrupoDeInvestigacionBody {
+export interface ICreateGrupoDeInvestigacionRequest {
     nombre?: string;
     areaId?: string;
-    lineasDeInvestigacionIds?: string[] | undefined;
+    lineasDeInvestigacionIds?: string[];
 }
 
-export class UpdateGrupoDeInvestigacionBody implements IUpdateGrupoDeInvestigacionBody {
+export class UpdateGrupoDeInvestigacionRequest implements IUpdateGrupoDeInvestigacionRequest {
     nombre?: string;
     areaId?: string;
-    lineasDeInvestigacionIds?: string[] | undefined;
+    lineasDeInvestigacionIds?: string[];
 
-    constructor(data?: IUpdateGrupoDeInvestigacionBody) {
+    constructor(data?: IUpdateGrupoDeInvestigacionRequest) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -5697,9 +5733,9 @@ export class UpdateGrupoDeInvestigacionBody implements IUpdateGrupoDeInvestigaci
         }
     }
 
-    static fromJS(data: any): UpdateGrupoDeInvestigacionBody {
+    static fromJS(data: any): UpdateGrupoDeInvestigacionRequest {
         data = typeof data === 'object' ? data : {};
-        let result = new UpdateGrupoDeInvestigacionBody();
+        let result = new UpdateGrupoDeInvestigacionRequest();
         result.init(data);
         return result;
     }
@@ -5717,16 +5753,16 @@ export class UpdateGrupoDeInvestigacionBody implements IUpdateGrupoDeInvestigaci
     }
 }
 
-export interface IUpdateGrupoDeInvestigacionBody {
+export interface IUpdateGrupoDeInvestigacionRequest {
     nombre?: string;
     areaId?: string;
-    lineasDeInvestigacionIds?: string[] | undefined;
+    lineasDeInvestigacionIds?: string[];
 }
 
-export class SetGrupoMiembrosBody implements ISetGrupoMiembrosBody {
-    usuariosIds?: string[] | undefined;
+export class SetGrupoMiembrosRequest implements ISetGrupoMiembrosRequest {
+    usuariosIds?: string[];
 
-    constructor(data?: ISetGrupoMiembrosBody) {
+    constructor(data?: ISetGrupoMiembrosRequest) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -5745,9 +5781,9 @@ export class SetGrupoMiembrosBody implements ISetGrupoMiembrosBody {
         }
     }
 
-    static fromJS(data: any): SetGrupoMiembrosBody {
+    static fromJS(data: any): SetGrupoMiembrosRequest {
         data = typeof data === 'object' ? data : {};
-        let result = new SetGrupoMiembrosBody();
+        let result = new SetGrupoMiembrosRequest();
         result.init(data);
         return result;
     }
@@ -5763,8 +5799,8 @@ export class SetGrupoMiembrosBody implements ISetGrupoMiembrosBody {
     }
 }
 
-export interface ISetGrupoMiembrosBody {
-    usuariosIds?: string[] | undefined;
+export interface ISetGrupoMiembrosRequest {
+    usuariosIds?: string[];
 }
 
 export class LineaDeInvestigacionDto implements ILineaDeInvestigacionDto {
@@ -5835,12 +5871,12 @@ export interface ILineaDeInvestigacionDto {
     areasDelConocimientoNombres?: string[];
 }
 
-export class CreateLineaDeInvestigacionBody implements ICreateLineaDeInvestigacionBody {
+export class CreateLineaDeInvestigacionRequest implements ICreateLineaDeInvestigacionRequest {
     nombre?: string;
     descripcion?: string | undefined;
-    areasDelConocimientoIds?: string[] | undefined;
+    areasDelConocimientoIds?: string[];
 
-    constructor(data?: ICreateLineaDeInvestigacionBody) {
+    constructor(data?: ICreateLineaDeInvestigacionRequest) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -5861,9 +5897,9 @@ export class CreateLineaDeInvestigacionBody implements ICreateLineaDeInvestigaci
         }
     }
 
-    static fromJS(data: any): CreateLineaDeInvestigacionBody {
+    static fromJS(data: any): CreateLineaDeInvestigacionRequest {
         data = typeof data === 'object' ? data : {};
-        let result = new CreateLineaDeInvestigacionBody();
+        let result = new CreateLineaDeInvestigacionRequest();
         result.init(data);
         return result;
     }
@@ -5881,18 +5917,18 @@ export class CreateLineaDeInvestigacionBody implements ICreateLineaDeInvestigaci
     }
 }
 
-export interface ICreateLineaDeInvestigacionBody {
+export interface ICreateLineaDeInvestigacionRequest {
     nombre?: string;
     descripcion?: string | undefined;
-    areasDelConocimientoIds?: string[] | undefined;
+    areasDelConocimientoIds?: string[];
 }
 
-export class UpdateLineaDeInvestigacionBody implements IUpdateLineaDeInvestigacionBody {
+export class UpdateLineaDeInvestigacionRequest implements IUpdateLineaDeInvestigacionRequest {
     nombre?: string;
     descripcion?: string | undefined;
-    areasDelConocimientoIds?: string[] | undefined;
+    areasDelConocimientoIds?: string[];
 
-    constructor(data?: IUpdateLineaDeInvestigacionBody) {
+    constructor(data?: IUpdateLineaDeInvestigacionRequest) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -5913,9 +5949,9 @@ export class UpdateLineaDeInvestigacionBody implements IUpdateLineaDeInvestigaci
         }
     }
 
-    static fromJS(data: any): UpdateLineaDeInvestigacionBody {
+    static fromJS(data: any): UpdateLineaDeInvestigacionRequest {
         data = typeof data === 'object' ? data : {};
-        let result = new UpdateLineaDeInvestigacionBody();
+        let result = new UpdateLineaDeInvestigacionRequest();
         result.init(data);
         return result;
     }
@@ -5933,10 +5969,10 @@ export class UpdateLineaDeInvestigacionBody implements IUpdateLineaDeInvestigaci
     }
 }
 
-export interface IUpdateLineaDeInvestigacionBody {
+export interface IUpdateLineaDeInvestigacionRequest {
     nombre?: string;
     descripcion?: string | undefined;
-    areasDelConocimientoIds?: string[] | undefined;
+    areasDelConocimientoIds?: string[];
 }
 
 export class PresentationDto implements IPresentationDto {
@@ -5999,13 +6035,13 @@ export interface IPresentationDto {
     authors?: string[];
 }
 
-export class CreatePresentationBody implements ICreatePresentationBody {
+export class CreatePresentationRequest implements ICreatePresentationRequest {
     name?: string;
     eventId?: number;
     coauthorIds?: string[];
     coauthorNames?: string[];
 
-    constructor(data?: ICreatePresentationBody) {
+    constructor(data?: ICreatePresentationRequest) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -6031,9 +6067,9 @@ export class CreatePresentationBody implements ICreatePresentationBody {
         }
     }
 
-    static fromJS(data: any): CreatePresentationBody {
+    static fromJS(data: any): CreatePresentationRequest {
         data = typeof data === 'object' ? data : {};
-        let result = new CreatePresentationBody();
+        let result = new CreatePresentationRequest();
         result.init(data);
         return result;
     }
@@ -6056,20 +6092,20 @@ export class CreatePresentationBody implements ICreatePresentationBody {
     }
 }
 
-export interface ICreatePresentationBody {
+export interface ICreatePresentationRequest {
     name?: string;
     eventId?: number;
     coauthorIds?: string[];
     coauthorNames?: string[];
 }
 
-export class UpdatePresentationBody implements IUpdatePresentationBody {
+export class UpdatePresentationRequest implements IUpdatePresentationRequest {
     name?: string;
     eventId?: number;
     coauthorIds?: string[];
     coauthorNames?: string[];
 
-    constructor(data?: IUpdatePresentationBody) {
+    constructor(data?: IUpdatePresentationRequest) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -6095,9 +6131,9 @@ export class UpdatePresentationBody implements IUpdatePresentationBody {
         }
     }
 
-    static fromJS(data: any): UpdatePresentationBody {
+    static fromJS(data: any): UpdatePresentationRequest {
         data = typeof data === 'object' ? data : {};
-        let result = new UpdatePresentationBody();
+        let result = new UpdatePresentationRequest();
         result.init(data);
         return result;
     }
@@ -6120,7 +6156,7 @@ export class UpdatePresentationBody implements IUpdatePresentationBody {
     }
 }
 
-export interface IUpdatePresentationBody {
+export interface IUpdatePresentationRequest {
     name?: string;
     eventId?: number;
     coauthorIds?: string[];

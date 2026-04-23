@@ -23,6 +23,7 @@ public record CreatePresentationRequest
     public string Name { get; init; } = default!;
     public int EventId { get; init; }
     public List<string> CoauthorIds { get; init; } = [];
+    public List<string> CoauthorUserIds { get; init; } = [];
     public List<string> CoauthorNames { get; init; } = [];
 }
 
@@ -31,5 +32,6 @@ public record UpdatePresentationRequest
     public string Name { get; init; } = default!;
     public int EventId { get; init; }
     public List<string> CoauthorIds { get; init; } = [];
+    public List<string> CoauthorUserIds { get; init; } = [];
     public List<string> CoauthorNames { get; init; } = [];
 }

@@ -45,6 +45,7 @@ public static class DependencyInjection
         builder.Services.AddScoped<ApplicationDbContextInitialiser>();
 
         builder.Services.AddSingleton(TimeProvider.System);
+        builder.Services.AddScoped<UserAreaResolutionService>();
 
         var authProvider = builder.Configuration["Auth:Provider"] ?? "Ldap";
         if (authProvider.Equals("Ldap", StringComparison.OrdinalIgnoreCase))

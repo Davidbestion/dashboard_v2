@@ -24,16 +24,26 @@ public class LdapAuthService : IIdentityService
 {
     private readonly IApplicationDbContext _context;
     private readonly IJwtService _jwtService;
+    private readonly UserAreaResolutionService _userAreaResolutionService;
     private readonly string _host;
     private readonly int _port;
     private readonly string _usersDn;
     private readonly string _adminDn;
     private readonly string _adminPassword;
 
-    public LdapAuthService(IApplicationDbContext context, IJwtService jwtService, IConfiguration configuration)
+    /// <summary>
+    /// Inicializa el servicio LDAP con acceso a persistencia, generación de JWT,
+    /// configuración del directorio y resolución del área del usuario.
+    /// </summary>
+    public LdapAuthService(
+        IApplicationDbContext context,
+        IJwtService jwtService,
+        IConfiguration configuration,
+        UserAreaResolutionService userAreaResolutionService)
     {
         _context = context;
         _jwtService = jwtService;
+        _userAreaResolutionService = userAreaResolutionService;
         _host = configuration["Auth:Ldap:Host"] ?? "localhost";
         _port = int.TryParse(configuration["Auth:Ldap:Port"], out var p) ? p : 389;
         _usersDn = configuration["Auth:Ldap:UsersDn"] ?? "ou=people,dc=matcom,dc=uh,dc=cu";
@@ -91,7 +101,7 @@ public class LdapAuthService : IIdentityService
     /// Así el formulario siempre usa email + contraseña, independientemente del uid LDAP.
     /// </summary>
     public async Task<(Result Result, LoginResponse? Response)> LoginAsync(
-        string email, string password, string? selectedRole = null)
+        string email, string password, string? selectedRole = null, string? selectedAreaId = null)
     {
         if (!TrySearchThenBind(email, password, out var ldapAttributes))
             return (Result.Failure(["Credenciales inválidas."]), null);
@@ -128,6 +138,16 @@ public class LdapAuthService : IIdentityService
                 RequiresRoleSelection = true,
                 AvailableRoles = roles
             });
+        }
+
+        var areaResolution = await _userAreaResolutionService.EnsureAreaAssignedAsync(
+            user.Id,
+            selectedAreaId,
+            CancellationToken.None);
+
+        if (!areaResolution.Result.Succeeded || areaResolution.Response?.RequiresAreaSelection == true)
+        {
+            return areaResolution;
         }
 
         var token = _jwtService.GenerateToken(user.Id, user.UserName, user.Email, [roleToUse]);

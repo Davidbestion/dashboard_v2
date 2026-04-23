@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Card, CardBody, CardHeader,
   Nav, NavItem, NavLink as RNavLink,
@@ -8,6 +8,8 @@ import {
   Modal, ModalHeader, ModalBody, ModalFooter,
   Form, FormGroup, Label, Input, InputGroup,
 } from 'reactstrap';
+import CoauthorPicker from '../components/CoauthorPicker';
+import { useAuth } from '../contexts/AuthContext';
 
 async function apiFetch(url, options = {}) {
   const response = await fetch(url, {
@@ -33,6 +35,7 @@ const EMPTY_EVENT = { name: '', countryId: '', eventType: '', institutions: [] }
 const EVENT_TYPE_LABELS = { 0: 'Internacional', 1: 'Nacional', 2: 'De área', 3: 'Local' };
 
 export default function EventsPage() {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('presentations');
 
   // Lookups
@@ -56,11 +59,6 @@ export default function EventsPage() {
 
   // Coauthor tag-picker
   const [coauthorTags, setCoauthorTags] = useState([]);
-  const [coauthorInput, setCoauthorInput] = useState('');
-  const [coauthorSuggestions, setCoauthorSuggestions] = useState([]);
-  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
-  const coauthorDebounce = useRef(null);
-
   // EVENTS state
   const [events, setEvents] = useState([]);
   const [evLoading, setEvLoading] = useState(true);
@@ -125,44 +123,18 @@ export default function EventsPage() {
     loadEvents();
   }, [loadLookups, loadPresentations, loadEvents]);
 
-  // ── Coauthor tag-picker ────────────────────────────────────────────────────
-
-  function handleCoauthorInput(e) {
-    const val = e.target.value;
-    setCoauthorInput(val);
-    clearTimeout(coauthorDebounce.current);
-    if (val.trim().length < 2) { setCoauthorSuggestions([]); setSuggestionsOpen(false); return; }
-    coauthorDebounce.current = setTimeout(async () => {
-      try {
-        const data = await apiFetch(`/api/Authors/search-coauthors?q=${encodeURIComponent(val.trim())}`);
-        setCoauthorSuggestions(data);
-        setSuggestionsOpen(data.length > 0);
-      } catch { setSuggestionsOpen(false); }
-    }, 300);
-  }
-
-  function addCoauthorFromSuggestion(s) {
-    setCoauthorTags(prev => prev.some(t => t.id === s.id && t.type === s.type) ? prev : [...prev, s]);
-    setCoauthorInput('');
-    setSuggestionsOpen(false);
-  }
-
-  function addCoauthorFreeText() {
-    const val = coauthorInput.trim();
-    if (!val) return;
-    setCoauthorTags(prev => [...prev, { id: null, name: val, type: 'new' }]);
-    setCoauthorInput('');
-    setSuggestionsOpen(false);
-  }
-
-  function removeCoauthor(idx) {
-    setCoauthorTags(prev => prev.filter((_, i) => i !== idx));
-  }
-
-  function tagColor(type) {
-    if (type === 'author') return 'primary';
-    if (type === 'user') return 'success';
-    return 'secondary';
+  /**
+   * Normaliza un autor de presentación para reutilizar el picker basado en tarjetas.
+   * Los autores ligados a cuentas reales mantienen el snapshot del usuario para mostrar
+   * área, universidad y categorías institucionales.
+   */
+  function mapAuthorToPickerEntry(author) {
+    return {
+      id: author.id,
+      name: author.name,
+      type: 'author',
+      linkedUser: author.linkedUser ?? null,
+    };
   }
 
   // ── Presentations CRUD ─────────────────────────────────────────────────────
@@ -171,7 +143,6 @@ export default function EventsPage() {
     setPresEditing(null);
     setPresForm(EMPTY_PRES);
     setCoauthorTags([]);
-    setCoauthorInput('');
     setPresFormError('');
     setPresModal(true);
   }
@@ -180,9 +151,10 @@ export default function EventsPage() {
     setPresEditing(pres);
     setPresForm({ name: pres.name, eventId: pres.eventId.toString() });
     setCoauthorTags(
-      pres.authors.map(name => ({ id: null, name, type: 'new' }))
+      (pres.authors ?? [])
+        .filter(author => author.userId !== user?.id)
+        .map(mapAuthorToPickerEntry)
     );
-    setCoauthorInput('');
     setPresFormError('');
     setPresModal(true);
   }
@@ -193,14 +165,16 @@ export default function EventsPage() {
     setPresFormError('');
 
     const coauthorIds = coauthorTags.filter(t => t.type === 'author').map(t => t.id);
+    const coauthorUserIds = coauthorTags.filter(t => t.type === 'user').map(t => t.id);
     const coauthorNames = coauthorTags
-      .filter(t => t.type === 'new' || t.type === 'user')
+      .filter(t => t.type === 'new')
       .map(t => t.name);
 
     const body = {
       name: presForm.name.trim(),
       eventId: parseInt(presForm.eventId, 10),
       coauthorIds,
+      coauthorUserIds,
       coauthorNames,
     };
 
@@ -407,8 +381,10 @@ export default function EventsPage() {
                         <td>{p.name}</td>
                         <td>{p.eventName}</td>
                         <td>
-                          {p.authors.map((a, i) => (
-                            <Badge key={i} color="secondary" pill className="me-1">{a}</Badge>
+                          {p.authors.map((author) => (
+                            <Badge key={author.id} color={author.userId ? 'info' : 'secondary'} pill className="me-1">
+                              {author.name}
+                            </Badge>
                           ))}
                         </td>
                         <td className="text-end">
@@ -518,44 +494,12 @@ export default function EventsPage() {
 
             <FormGroup>
               <Label>Coautores</Label>
-              <div className="d-flex flex-wrap gap-1 mb-2">
-                {coauthorTags.map((t, i) => (
-                  <Badge key={i} color={tagColor(t.type)} className="d-flex align-items-center gap-1 py-1 px-2">
-                    {t.type === 'author' && <i className="bi bi-person-check" />}
-                    {t.type === 'user' && <i className="bi bi-person" />}
-                    {t.type === 'new' && <i className="bi bi-person-plus" />}
-                    {t.name}
-                    <i className="bi bi-x" style={{ cursor: 'pointer' }} onClick={() => removeCoauthor(i)} />
-                  </Badge>
-                ))}
-              </div>
-              <div className="position-relative">
-                <InputGroup>
-                  <Input
-                    placeholder="Buscar autor o escribir nombre nuevo..."
-                    value={coauthorInput}
-                    onChange={handleCoauthorInput}
-                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCoauthorFreeText(); } }}
-                  />
-                  <Button type="button" color="secondary" outline onClick={addCoauthorFreeText}>
-                    <i className="bi bi-plus" />
-                  </Button>
-                </InputGroup>
-                {suggestionsOpen && (
-                  <div className="position-absolute w-100 border rounded bg-white shadow-sm"
-                    style={{ zIndex: 1050, top: '100%' }}>
-                    {coauthorSuggestions.map(s => (
-                      <div key={`${s.type}-${s.id}`}
-                        className="px-3 py-2 hover-bg-light"
-                        style={{ cursor: 'pointer' }}
-                        onMouseDown={() => addCoauthorFromSuggestion(s)}>
-                        <i className={`bi ${s.type === 'author' ? 'bi-person-check text-primary' : 'bi-person text-success'} me-2`} />
-                        {s.name}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <CoauthorPicker
+                value={coauthorTags}
+                onChange={setCoauthorTags}
+                placeholder="Buscar coautor o escribir nombre libre..."
+                helpText="Selecciona una tarjeta del resultado o escribe un nombre nuevo y presiona Enter. Los usuarios del sistema se guardan conservando su vínculo con el perfil de autor."
+              />
             </FormGroup>
           </ModalBody>
           <ModalFooter>

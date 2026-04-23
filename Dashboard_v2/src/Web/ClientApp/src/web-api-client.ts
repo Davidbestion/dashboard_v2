@@ -4935,6 +4935,7 @@ export class LoginRequest implements ILoginRequest {
     email?: string;
     password?: string;
     selectedRole?: string | undefined;
+    selectedAreaId?: string | undefined;
 
     constructor(data?: ILoginRequest) {
         if (data) {
@@ -4950,6 +4951,7 @@ export class LoginRequest implements ILoginRequest {
             this.email = _data["email"];
             this.password = _data["password"];
             this.selectedRole = _data["selectedRole"];
+            this.selectedAreaId = _data["selectedAreaId"];
         }
     }
 
@@ -4965,6 +4967,7 @@ export class LoginRequest implements ILoginRequest {
         data["email"] = this.email;
         data["password"] = this.password;
         data["selectedRole"] = this.selectedRole;
+        data["selectedAreaId"] = this.selectedAreaId;
         return data;
     }
 }
@@ -4973,6 +4976,7 @@ export interface ILoginRequest {
     email?: string;
     password?: string;
     selectedRole?: string | undefined;
+    selectedAreaId?: string | undefined;
 }
 
 export class CurrentUserDto implements ICurrentUserDto {
@@ -4980,6 +4984,8 @@ export class CurrentUserDto implements ICurrentUserDto {
     userName?: string;
     email?: string;
     role?: string | undefined;
+    areaId?: string | undefined;
+    areaNombre?: string | undefined;
 
     constructor(data?: ICurrentUserDto) {
         if (data) {
@@ -4996,6 +5002,8 @@ export class CurrentUserDto implements ICurrentUserDto {
             this.userName = _data["userName"];
             this.email = _data["email"];
             this.role = _data["role"];
+            this.areaId = _data["areaId"];
+            this.areaNombre = _data["areaNombre"];
         }
     }
 
@@ -5012,6 +5020,8 @@ export class CurrentUserDto implements ICurrentUserDto {
         data["userName"] = this.userName;
         data["email"] = this.email;
         data["role"] = this.role;
+        data["areaId"] = this.areaId;
+        data["areaNombre"] = this.areaNombre;
         return data;
     }
 }
@@ -5021,6 +5031,8 @@ export interface ICurrentUserDto {
     userName?: string;
     email?: string;
     role?: string | undefined;
+    areaId?: string | undefined;
+    areaNombre?: string | undefined;
 }
 
 export class AuthorSearchDto implements IAuthorSearchDto {
@@ -5067,6 +5079,7 @@ export class CoauthorSearchDto implements ICoauthorSearchDto {
     id?: string;
     name?: string;
     type?: string;
+    linkedUser?: LinkedUserSummaryDto | undefined;
 
     constructor(data?: ICoauthorSearchDto) {
         if (data) {
@@ -5082,6 +5095,7 @@ export class CoauthorSearchDto implements ICoauthorSearchDto {
             this.id = _data["id"];
             this.name = _data["name"];
             this.type = _data["type"];
+            this.linkedUser = _data["linkedUser"] ? LinkedUserSummaryDto.fromJS(_data["linkedUser"]) : undefined as any;
         }
     }
 
@@ -5097,6 +5111,7 @@ export class CoauthorSearchDto implements ICoauthorSearchDto {
         data["id"] = this.id;
         data["name"] = this.name;
         data["type"] = this.type;
+        data["linkedUser"] = this.linkedUser ? this.linkedUser.toJSON() : undefined as any;
         return data;
     }
 }
@@ -5105,6 +5120,91 @@ export interface ICoauthorSearchDto {
     id?: string;
     name?: string;
     type?: string;
+    linkedUser?: LinkedUserSummaryDto | undefined;
+}
+
+export class LinkedUserSummaryDto implements ILinkedUserSummaryDto {
+    id?: string;
+    userName?: string;
+    userLastName1?: string;
+    userLastName2?: string | undefined;
+    email?: string;
+    isTrained?: boolean;
+    scientificCategory?: number;
+    teachingCategory?: number;
+    investigationCategory?: number;
+    areaId?: string | undefined;
+    areaNombre?: string | undefined;
+    universidadId?: string | undefined;
+    universidadNombre?: string | undefined;
+
+    constructor(data?: ILinkedUserSummaryDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.userName = _data["userName"];
+            this.userLastName1 = _data["userLastName1"];
+            this.userLastName2 = _data["userLastName2"];
+            this.email = _data["email"];
+            this.isTrained = _data["isTrained"];
+            this.scientificCategory = _data["scientificCategory"];
+            this.teachingCategory = _data["teachingCategory"];
+            this.investigationCategory = _data["investigationCategory"];
+            this.areaId = _data["areaId"];
+            this.areaNombre = _data["areaNombre"];
+            this.universidadId = _data["universidadId"];
+            this.universidadNombre = _data["universidadNombre"];
+        }
+    }
+
+    static fromJS(data: any): LinkedUserSummaryDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new LinkedUserSummaryDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["userName"] = this.userName;
+        data["userLastName1"] = this.userLastName1;
+        data["userLastName2"] = this.userLastName2;
+        data["email"] = this.email;
+        data["isTrained"] = this.isTrained;
+        data["scientificCategory"] = this.scientificCategory;
+        data["teachingCategory"] = this.teachingCategory;
+        data["investigationCategory"] = this.investigationCategory;
+        data["areaId"] = this.areaId;
+        data["areaNombre"] = this.areaNombre;
+        data["universidadId"] = this.universidadId;
+        data["universidadNombre"] = this.universidadNombre;
+        return data;
+    }
+}
+
+export interface ILinkedUserSummaryDto {
+    id?: string;
+    userName?: string;
+    userLastName1?: string;
+    userLastName2?: string | undefined;
+    email?: string;
+    isTrained?: boolean;
+    scientificCategory?: number;
+    teachingCategory?: number;
+    investigationCategory?: number;
+    areaId?: string | undefined;
+    areaNombre?: string | undefined;
+    universidadId?: string | undefined;
+    universidadNombre?: string | undefined;
 }
 
 export class PotentialAuthorMatchesDto implements IPotentialAuthorMatchesDto {
@@ -6332,7 +6432,7 @@ export class PresentationDto implements IPresentationDto {
     name?: string;
     eventId?: number;
     eventName?: string;
-    authors?: string[];
+    authors?: PresentationAuthorDto[];
 
     constructor(data?: IPresentationDto) {
         if (data) {
@@ -6352,7 +6452,7 @@ export class PresentationDto implements IPresentationDto {
             if (Array.isArray(_data["authors"])) {
                 this.authors = [] as any;
                 for (let item of _data["authors"])
-                    this.authors!.push(item);
+                    this.authors!.push(PresentationAuthorDto.fromJS(item));
             }
         }
     }
@@ -6373,7 +6473,7 @@ export class PresentationDto implements IPresentationDto {
         if (Array.isArray(this.authors)) {
             data["authors"] = [];
             for (let item of this.authors)
-                data["authors"].push(item);
+                data["authors"].push(item ? item.toJSON() : undefined as any);
         }
         return data;
     }
@@ -6384,13 +6484,62 @@ export interface IPresentationDto {
     name?: string;
     eventId?: number;
     eventName?: string;
-    authors?: string[];
+    authors?: PresentationAuthorDto[];
+}
+
+export class PresentationAuthorDto implements IPresentationAuthorDto {
+    id?: string;
+    name?: string;
+    userId?: string | undefined;
+    linkedUser?: LinkedUserSummaryDto | undefined;
+
+    constructor(data?: IPresentationAuthorDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.name = _data["name"];
+            this.userId = _data["userId"];
+            this.linkedUser = _data["linkedUser"] ? LinkedUserSummaryDto.fromJS(_data["linkedUser"]) : undefined as any;
+        }
+    }
+
+    static fromJS(data: any): PresentationAuthorDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new PresentationAuthorDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["name"] = this.name;
+        data["userId"] = this.userId;
+        data["linkedUser"] = this.linkedUser ? this.linkedUser.toJSON() : undefined as any;
+        return data;
+    }
+}
+
+export interface IPresentationAuthorDto {
+    id?: string;
+    name?: string;
+    userId?: string | undefined;
+    linkedUser?: LinkedUserSummaryDto | undefined;
 }
 
 export class CreatePresentationRequest implements ICreatePresentationRequest {
     name?: string;
     eventId?: number;
     coauthorIds?: string[];
+    coauthorUserIds?: string[];
     coauthorNames?: string[];
 
     constructor(data?: ICreatePresentationRequest) {
@@ -6410,6 +6559,11 @@ export class CreatePresentationRequest implements ICreatePresentationRequest {
                 this.coauthorIds = [] as any;
                 for (let item of _data["coauthorIds"])
                     this.coauthorIds!.push(item);
+            }
+            if (Array.isArray(_data["coauthorUserIds"])) {
+                this.coauthorUserIds = [] as any;
+                for (let item of _data["coauthorUserIds"])
+                    this.coauthorUserIds!.push(item);
             }
             if (Array.isArray(_data["coauthorNames"])) {
                 this.coauthorNames = [] as any;
@@ -6435,6 +6589,11 @@ export class CreatePresentationRequest implements ICreatePresentationRequest {
             for (let item of this.coauthorIds)
                 data["coauthorIds"].push(item);
         }
+        if (Array.isArray(this.coauthorUserIds)) {
+            data["coauthorUserIds"] = [];
+            for (let item of this.coauthorUserIds)
+                data["coauthorUserIds"].push(item);
+        }
         if (Array.isArray(this.coauthorNames)) {
             data["coauthorNames"] = [];
             for (let item of this.coauthorNames)
@@ -6448,6 +6607,7 @@ export interface ICreatePresentationRequest {
     name?: string;
     eventId?: number;
     coauthorIds?: string[];
+    coauthorUserIds?: string[];
     coauthorNames?: string[];
 }
 
@@ -6455,6 +6615,7 @@ export class UpdatePresentationRequest implements IUpdatePresentationRequest {
     name?: string;
     eventId?: number;
     coauthorIds?: string[];
+    coauthorUserIds?: string[];
     coauthorNames?: string[];
 
     constructor(data?: IUpdatePresentationRequest) {
@@ -6474,6 +6635,11 @@ export class UpdatePresentationRequest implements IUpdatePresentationRequest {
                 this.coauthorIds = [] as any;
                 for (let item of _data["coauthorIds"])
                     this.coauthorIds!.push(item);
+            }
+            if (Array.isArray(_data["coauthorUserIds"])) {
+                this.coauthorUserIds = [] as any;
+                for (let item of _data["coauthorUserIds"])
+                    this.coauthorUserIds!.push(item);
             }
             if (Array.isArray(_data["coauthorNames"])) {
                 this.coauthorNames = [] as any;
@@ -6499,6 +6665,11 @@ export class UpdatePresentationRequest implements IUpdatePresentationRequest {
             for (let item of this.coauthorIds)
                 data["coauthorIds"].push(item);
         }
+        if (Array.isArray(this.coauthorUserIds)) {
+            data["coauthorUserIds"] = [];
+            for (let item of this.coauthorUserIds)
+                data["coauthorUserIds"].push(item);
+        }
         if (Array.isArray(this.coauthorNames)) {
             data["coauthorNames"] = [];
             for (let item of this.coauthorNames)
@@ -6512,6 +6683,7 @@ export interface IUpdatePresentationRequest {
     name?: string;
     eventId?: number;
     coauthorIds?: string[];
+    coauthorUserIds?: string[];
     coauthorNames?: string[];
 }
 
@@ -7593,6 +7765,7 @@ export class AuthorDto implements IAuthorDto {
     id?: string;
     name?: string;
     userId?: string | undefined;
+    linkedUser?: LinkedUserSummaryDto | undefined;
 
     constructor(data?: IAuthorDto) {
         if (data) {
@@ -7608,6 +7781,7 @@ export class AuthorDto implements IAuthorDto {
             this.id = _data["id"];
             this.name = _data["name"];
             this.userId = _data["userId"];
+            this.linkedUser = _data["linkedUser"] ? LinkedUserSummaryDto.fromJS(_data["linkedUser"]) : undefined as any;
         }
     }
 
@@ -7623,6 +7797,7 @@ export class AuthorDto implements IAuthorDto {
         data["id"] = this.id;
         data["name"] = this.name;
         data["userId"] = this.userId;
+        data["linkedUser"] = this.linkedUser ? this.linkedUser.toJSON() : undefined as any;
         return data;
     }
 }
@@ -7631,6 +7806,7 @@ export interface IAuthorDto {
     id?: string;
     name?: string;
     userId?: string | undefined;
+    linkedUser?: LinkedUserSummaryDto | undefined;
 }
 
 export class IndexedPublicationDto implements IIndexedPublicationDto {
@@ -8088,6 +8264,10 @@ export class UserWithRolesDto implements IUserWithRolesDto {
     scientificCategory?: number;
     teachingCategory?: number;
     investigationCategory?: number;
+    areaId?: string | undefined;
+    areaNombre?: string | undefined;
+    universidadId?: string | undefined;
+    universidadNombre?: string | undefined;
     roles?: string[];
 
     constructor(data?: IUserWithRolesDto) {
@@ -8111,6 +8291,10 @@ export class UserWithRolesDto implements IUserWithRolesDto {
             this.scientificCategory = _data["scientificCategory"];
             this.teachingCategory = _data["teachingCategory"];
             this.investigationCategory = _data["investigationCategory"];
+            this.areaId = _data["areaId"];
+            this.areaNombre = _data["areaNombre"];
+            this.universidadId = _data["universidadId"];
+            this.universidadNombre = _data["universidadNombre"];
             if (Array.isArray(_data["roles"])) {
                 this.roles = [] as any;
                 for (let item of _data["roles"])
@@ -8138,6 +8322,10 @@ export class UserWithRolesDto implements IUserWithRolesDto {
         data["scientificCategory"] = this.scientificCategory;
         data["teachingCategory"] = this.teachingCategory;
         data["investigationCategory"] = this.investigationCategory;
+        data["areaId"] = this.areaId;
+        data["areaNombre"] = this.areaNombre;
+        data["universidadId"] = this.universidadId;
+        data["universidadNombre"] = this.universidadNombre;
         if (Array.isArray(this.roles)) {
             data["roles"] = [];
             for (let item of this.roles)
@@ -8158,6 +8346,10 @@ export interface IUserWithRolesDto {
     scientificCategory?: number;
     teachingCategory?: number;
     investigationCategory?: number;
+    areaId?: string | undefined;
+    areaNombre?: string | undefined;
+    universidadId?: string | undefined;
+    universidadNombre?: string | undefined;
     roles?: string[];
 }
 

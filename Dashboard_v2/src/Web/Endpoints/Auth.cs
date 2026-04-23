@@ -72,6 +72,12 @@ public class Auth : EndpointGroupBase
             return Results.Ok(new { requiresRoleSelection = true, availableRoles = response.AvailableRoles });
         }
 
+        // El usuario no pertenece a un Área y debe seleccionar una antes de obtener la cookie.
+        if (response!.RequiresAreaSelection)
+        {
+            return Results.Ok(new { requiresAreaSelection = true, availableAreas = response.AvailableAreas });
+        }
+
         // Login completo: guardar el token en una cookie HttpOnly.
         // Secure = true en HTTPS, SameSite=Strict evita ataques CSRF de otros orígenes.
         httpContext.Response.Cookies.Append("access_token", response.Token!, new CookieOptions

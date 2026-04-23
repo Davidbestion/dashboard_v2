@@ -27,4 +27,5 @@ public sealed record LoginRequest
     public string Email { get; init; } = default!;
     public string Password { get; init; } = default!;
     public string? SelectedRole { get; init; }
+    public string? SelectedAreaId { get; init; }
 }

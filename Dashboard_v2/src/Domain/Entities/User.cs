@@ -3,7 +3,7 @@ namespace Dashboard_v2.Domain.Entities;
 /// <summary>
 /// Entidad principal del sistema. Representa a un usuario registrado.
 /// Almacena su perfil completo (nombre, email, contraseña hasheada, fechas y categorías académicas)
-/// y sus referencias de navegación hacia los roles asignados y recursos que posee.
+/// y sus referencias de navegación hacia los roles asignados, recursos que posee y área institucional.
 /// </summary>
 public class User
 {
@@ -37,4 +37,17 @@ public class User
 
     /// <summary>Proyectos de los que este usuario es jefe. Solo aplicable a usuarios con rol Jefe_de_Proyecto.</summary>
     public ICollection<Proyecto> ProyectosComoJefe { get; set; } = new List<Proyecto>();
+
+    /// <summary>
+    /// Identificador del área institucional del usuario.
+    /// Puede permanecer nulo temporalmente mientras el usuario completa su primer inicio de sesión
+    /// y selecciona el área a la que pertenece.
+    /// </summary>
+    public string? AreaId { get; set; }
+
+    /// <summary>
+    /// Área a la que pertenece el usuario.
+    /// La navegación se materializa cuando <see cref="AreaId"/> ya fue definido.
+    /// </summary>
+    public Area? Area { get; set; }
 }

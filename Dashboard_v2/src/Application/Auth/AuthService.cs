@@ -11,15 +11,18 @@ public sealed class AuthService : IAuthService
     private readonly IIdentityService _identityService;
     private readonly IRequestValidationService _validationService;
     private readonly IUser _currentUser;
+    private readonly IApplicationDbContext _context;
 
     public AuthService(
         IIdentityService identityService,
         IRequestValidationService validationService,
-        IUser currentUser)
+        IUser currentUser,
+        IApplicationDbContext context)
     {
         _identityService = identityService;
         _validationService = validationService;
         _currentUser = currentUser;
+        _context = context;
     }
 
     public async Task<Result> RegisterAsync(RegisterRequest request, CancellationToken ct = default)
@@ -44,7 +47,7 @@ public sealed class AuthService : IAuthService
     public async Task<(Result Result, LoginResponse? Response)> LoginAsync(LoginRequest request, CancellationToken ct = default)
     {
         await _validationService.ValidateAndThrowAsync(request, ct);
-        return await _identityService.LoginAsync(request.Email, request.Password, request.SelectedRole);
+        return await _identityService.LoginAsync(request.Email, request.Password, request.SelectedRole, request.SelectedAreaId);
     }
 
     public Task<Result> LogoutAsync(CancellationToken ct = default)
@@ -59,18 +62,23 @@ public sealed class AuthService : IAuthService
             return null;
         }
 
-        var (userId, userName, email) = await _identityService.GetUserDetailsAsync(_currentUser.Id);
-        if (string.IsNullOrWhiteSpace(userId))
-        {
+        var userEntity = await _context.Users
+            .AsNoTracking()
+            .Where(u => u.Id == _currentUser.Id)
+            .Select(u => new { u.Id, u.UserName, u.Email, u.AreaId, AreaNombre = u.Area != null ? u.Area.Nombre : null })
+            .FirstOrDefaultAsync(ct);
+
+        if (userEntity == null || string.IsNullOrWhiteSpace(userEntity.Id))
             return null;
-        }
 
         return new CurrentUserDto
         {
-            Id = userId,
-            UserName = userName ?? string.Empty,
-            Email = email ?? string.Empty,
-            Role = _currentUser.Roles?.FirstOrDefault()
+            Id = userEntity.Id,
+            UserName = userEntity.UserName ?? string.Empty,
+            Email = userEntity.Email ?? string.Empty,
+            Role = _currentUser.Roles?.FirstOrDefault(),
+            AreaId = userEntity.AreaId,
+            AreaNombre = userEntity.AreaNombre
         };
     }
 }

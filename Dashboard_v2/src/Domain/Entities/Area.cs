@@ -13,6 +13,9 @@ public class Area
     // un Área posee 0 o muchos Grupos de Investigación
     public ICollection<GrupoDeInvestigacion> GruposDeInvestigacion { get; set; } = new List<GrupoDeInvestigacion>();
 
+    // un Área puede tener 0 o muchos Usuarios
+    public ICollection<User> Users { get; set; } = new List<User>();
+
     // Investiga sobre: un Área investiga 1 o muchas Áreas del Conocimiento
     public ICollection<AreaDelConocimiento> AreasDelConocimiento { get; set; } = new List<AreaDelConocimiento>();
 }

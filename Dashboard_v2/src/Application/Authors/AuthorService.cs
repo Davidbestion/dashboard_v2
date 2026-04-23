@@ -68,28 +68,65 @@ public sealed class AuthorService : IAuthorService
             .Where(a => a.Name.ToLower().Contains(term))
             .OrderBy(a => a.Name)
             .Take(10)
-            .Select(a => new CoauthorSearchDto(a.Id, a.Name, "author"))
-            .ToListAsync(ct);
-
-        var userIdsWithAuthor = await _context.Authors
-            .AsNoTracking()
-            .Where(a => a.UserId != null)
-            .Select(a => a.UserId!)
+            .Select(a => new CoauthorSearchDto
+            {
+                Id = a.Id,
+                Name = a.Name,
+                Type = "author",
+                LinkedUser = a.User == null ? null : new LinkedUserSummaryDto
+                {
+                    Id = a.User.Id,
+                    UserName = a.User.UserName,
+                    UserLastName1 = a.User.UserLastName1,
+                    UserLastName2 = a.User.UserLastName2,
+                    Email = a.User.Email,
+                    IsTrained = a.User.IsTrained,
+                    ScientificCategory = (int)a.User.ScientificCategory,
+                    TeachingCategory = (int)a.User.TeachingCategory,
+                    InvestigationCategory = (int)a.User.InvestigationCategory,
+                    AreaId = a.User.AreaId,
+                    AreaNombre = a.User.Area != null ? a.User.Area.Nombre : null,
+                    UniversidadId = a.User.Area != null ? a.User.Area.UniversidadId : null,
+                    UniversidadNombre = a.User.Area != null && a.User.Area.Universidad != null
+                        ? a.User.Area.Universidad.Nombre
+                        : null
+                }
+            })
             .ToListAsync(ct);
 
         var users = await _context.Users
             .AsNoTracking()
             .Where(u =>
-                !userIdsWithAuthor.Contains(u.Id) &&
+                !_context.Authors.Any(a => a.UserId == u.Id) &&
                 (u.UserName.ToLower().Contains(term) ||
                  u.UserLastName1.ToLower().Contains(term) ||
                  (u.UserLastName2 != null && u.UserLastName2.ToLower().Contains(term))))
             .OrderBy(u => u.UserName)
             .Take(10)
-            .Select(u => new CoauthorSearchDto(
-                u.Id,
-                (u.UserName + " " + u.UserLastName1 + (u.UserLastName2 != null ? " " + u.UserLastName2 : "")).Trim(),
-                "user"))
+            .Select(u => new CoauthorSearchDto
+            {
+                Id = u.Id,
+                Name = (u.UserName + " " + u.UserLastName1 + (u.UserLastName2 != null ? " " + u.UserLastName2 : "")).Trim(),
+                Type = "user",
+                LinkedUser = new LinkedUserSummaryDto
+                {
+                    Id = u.Id,
+                    UserName = u.UserName,
+                    UserLastName1 = u.UserLastName1,
+                    UserLastName2 = u.UserLastName2,
+                    Email = u.Email,
+                    IsTrained = u.IsTrained,
+                    ScientificCategory = (int)u.ScientificCategory,
+                    TeachingCategory = (int)u.TeachingCategory,
+                    InvestigationCategory = (int)u.InvestigationCategory,
+                    AreaId = u.AreaId,
+                    AreaNombre = u.Area != null ? u.Area.Nombre : null,
+                    UniversidadId = u.Area != null ? u.Area.UniversidadId : null,
+                    UniversidadNombre = u.Area != null && u.Area.Universidad != null
+                        ? u.Area.Universidad.Nombre
+                        : null
+                }
+            })
             .ToListAsync(ct);
 
         return authors.Concat(users).ToList();

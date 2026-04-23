@@ -9,4 +9,6 @@ public sealed record CurrentUserDto
     public string UserName { get; init; } = default!;
     public string Email { get; init; } = default!;
     public string? Role { get; init; }
+    public string? AreaId { get; init; }
+    public string? AreaNombre { get; init; }
 }

@@ -35,6 +35,10 @@ public sealed class UserService : IUserService
                 ScientificCategory = (int)u.ScientificCategory,
                 TeachingCategory = (int)u.TeachingCategory,
                 InvestigationCategory = (int)u.InvestigationCategory,
+                AreaId = u.AreaId,
+                AreaNombre = u.Area != null ? u.Area.Nombre : null,
+                UniversidadId = u.Area != null ? u.Area.UniversidadId : null,
+                UniversidadNombre = u.Area != null && u.Area.Universidad != null ? u.Area.Universidad.Nombre : null,
                 Roles = u.UserRoles.Select(ur => ur.Role.ToString()).ToList()
             })
             .OrderBy(u => u.UserName)

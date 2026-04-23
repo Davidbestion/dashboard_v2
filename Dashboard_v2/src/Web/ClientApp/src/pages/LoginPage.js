@@ -8,9 +8,11 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [step, setStep] = useState('credentials'); // 'credentials' | 'roleSelection' | 'authorLink'
+  const [step, setStep] = useState('credentials'); // 'credentials' | 'roleSelection' | 'areaSelection' | 'authorLink'
   const [availableRoles, setAvailableRoles] = useState([]);
   const [selectedRole, setSelectedRole] = useState('');
+  const [availableAreas, setAvailableAreas] = useState([]);
+  const [selectedArea, setSelectedArea] = useState('');
 
   // Estado del paso de vinculación de autor
   const [authorMatches, setAuthorMatches] = useState(null); // { exactMatches, fuzzyMatches }
@@ -20,7 +22,7 @@ export default function LoginPage() {
 
   const justNavigatedBack = useRef(false);
 
-  const { login } = useAuth();
+  const { login, refetch } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from?.pathname || '/';
@@ -36,6 +38,20 @@ export default function LoginPage() {
     }
   };
 
+  /**
+   * Configura el paso de selección de área usando las opciones entregadas por el backend.
+   * Centralizar esta transición evita repetir estado derivado en varios handlers del login.
+   */
+  const moveToAreaSelection = (areas) => {
+    setAvailableAreas(areas);
+    setSelectedArea(areas[0]?.id ?? '');
+    setStep('areaSelection');
+  };
+
+  /**
+   * Completa la post-autenticación. Primero ofrece la vinculación opcional con un autor existente
+   * y, si no hay coincidencias, confirma la sesión actual antes de navegar al destino solicitado.
+   */
   const finishLogin = async () => {
     const matches = await checkAuthorMatches();
     if (matches && (matches.exactMatches.length > 0 || matches.fuzzyMatches.length > 0)) {
@@ -48,6 +64,13 @@ export default function LoginPage() {
       }
       setStep('authorLink');
     } else {
+      const refreshedUser = await refetch();
+
+      if (!refreshedUser?.areaId) {
+        setError('No fue posible determinar el área del usuario autenticado.');
+        return;
+      }
+
       navigate(from, { replace: true });
     }
   };
@@ -66,6 +89,8 @@ export default function LoginPage() {
         setAvailableRoles(result.availableRoles);
         setSelectedRole(result.availableRoles[0] ?? '');
         setStep('roleSelection');
+      } else if (result?.requiresAreaSelection) {
+        moveToAreaSelection(result.availableAreas);
       } else {
         await finishLogin();
       }
@@ -81,7 +106,12 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
     try {
-      await login(email, password, selectedRole);
+      const result = await login(email, password, selectedRole);
+      if (result?.requiresAreaSelection) {
+        moveToAreaSelection(result.availableAreas);
+        setLoading(false);
+        return;
+      }
       await finishLogin();
     } catch (err) {
       setError(err.message || 'Error al iniciar sesión.');
@@ -245,6 +275,99 @@ export default function LoginPage() {
                 <>
                   <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                   Iniciando sesión...
+                </>
+              ) : (
+                <>
+                  <i className="bi bi-box-arrow-in-right me-2"></i>
+                  Continuar
+                </>
+              )}
+            </button>
+
+            <button
+              type="button"
+              className="btn btn-link w-100 mt-2"
+              onClick={() => {
+                justNavigatedBack.current = true;
+                setStep('credentials');
+                setError('');
+              }}
+            >
+              Volver
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  /**
+   * Persiste el área elegida reintentando el login con las mismas credenciales y el rol
+   * ya decidido para la sesión actual.
+   */
+  const handleAreaSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      const roleToSend = selectedRole || null;
+      await login(email, password, roleToSend, selectedArea);
+      await finishLogin();
+    } catch (err) {
+      setError(err.message || 'Error al seleccionar el área.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (step === 'areaSelection') {
+    return (
+      <div className="login-screen">
+        <div className="login-card">
+          <div className="login-card__header">
+            <div className="login-card__logo">
+              <i className="bi bi-building"></i>
+            </div>
+            <h1 className="login-card__title">Selecciona tu Área</h1>
+            <p className="login-card__subtitle">Elige el área a la que perteneces para continuar</p>
+          </div>
+
+          <form onSubmit={handleAreaSubmit} className="login-card__form">
+            {error && (
+              <div className="login-error">
+                <i className="bi bi-exclamation-circle-fill"></i>
+                {error}
+              </div>
+            )}
+
+            <div className="form-field">
+              <label className="form-field__label">Área</label>
+              <div className="role-list">
+                {availableAreas.map((a) => (
+                  <label
+                    key={a.id}
+                    className={`role-option${selectedArea === a.id ? ' role-option--selected' : ''}`}
+                  >
+                    <input
+                      type="radio"
+                      name="area"
+                      value={a.id}
+                      checked={selectedArea === a.id}
+                      onChange={() => setSelectedArea(a.id)}
+                    />
+                    <i className="bi bi-building me-2"></i>
+                    {a.nombre}
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <button type="submit" className="login-btn" disabled={loading || !selectedArea}>
+              {loading ? (
+                <>
+                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  Guardando...
                 </>
               ) : (
                 <>

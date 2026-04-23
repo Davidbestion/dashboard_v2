@@ -3741,6 +3741,10 @@
           "selectedRole": {
             "type": "string",
             "nullable": true
+          },
+          "selectedAreaId": {
+            "type": "string",
+            "nullable": true
           }
         }
       },
@@ -3758,6 +3762,14 @@
             "type": "string"
           },
           "role": {
+            "type": "string",
+            "nullable": true
+          },
+          "areaId": {
+            "type": "string",
+            "nullable": true
+          },
+          "areaNombre": {
             "type": "string",
             "nullable": true
           }
@@ -3787,6 +3799,67 @@
           },
           "type": {
             "type": "string"
+          },
+          "linkedUser": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/LinkedUserSummaryDto"
+              }
+            ]
+          }
+        }
+      },
+      "LinkedUserSummaryDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "userName": {
+            "type": "string"
+          },
+          "userLastName1": {
+            "type": "string"
+          },
+          "userLastName2": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string"
+          },
+          "isTrained": {
+            "type": "boolean"
+          },
+          "scientificCategory": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "teachingCategory": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "investigationCategory": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "areaId": {
+            "type": "string",
+            "nullable": true
+          },
+          "areaNombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "universidadId": {
+            "type": "string",
+            "nullable": true
+          },
+          "universidadNombre": {
+            "type": "string",
+            "nullable": true
           }
         }
       },
@@ -4267,8 +4340,32 @@
           "authors": {
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/PresentationAuthorDto"
             }
+          }
+        }
+      },
+      "PresentationAuthorDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string",
+            "nullable": true
+          },
+          "linkedUser": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/LinkedUserSummaryDto"
+              }
+            ]
           }
         }
       },
@@ -4284,6 +4381,12 @@
             "format": "int32"
           },
           "coauthorIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "coauthorUserIds": {
             "type": "array",
             "items": {
               "type": "string"
@@ -4309,6 +4412,12 @@
             "format": "int32"
           },
           "coauthorIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "coauthorUserIds": {
             "type": "array",
             "items": {
               "type": "string"
@@ -4927,6 +5036,14 @@
           "userId": {
             "type": "string",
             "nullable": true
+          },
+          "linkedUser": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/LinkedUserSummaryDto"
+              }
+            ]
           }
         }
       },
@@ -5170,6 +5287,22 @@
           "investigationCategory": {
             "type": "integer",
             "format": "int32"
+          },
+          "areaId": {
+            "type": "string",
+            "nullable": true
+          },
+          "areaNombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "universidadId": {
+            "type": "string",
+            "nullable": true
+          },
+          "universidadNombre": {
+            "type": "string",
+            "nullable": true
           },
           "roles": {
             "type": "array",

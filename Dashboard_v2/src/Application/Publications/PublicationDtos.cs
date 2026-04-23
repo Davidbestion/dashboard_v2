@@ -1,3 +1,5 @@
+using Dashboard_v2.Application.Common.Models;
+
 namespace Dashboard_v2.Application.Publications;
 
 /// <summary>Información básica de un autor dentro de una publicación.</summary>
@@ -7,6 +9,11 @@ public record AuthorDto
     public string Name { get; init; } = default!;
     /// <summary>null si el autor no tiene cuenta en el sistema.</summary>
     public string? UserId { get; init; }
+    /// <summary>
+    /// Resumen del usuario vinculado cuando el autor representa a una cuenta real del sistema.
+    /// Permite renderizar la misma tarjeta usada para seleccionar usuarios.
+    /// </summary>
+    public LinkedUserSummaryDto? LinkedUser { get; init; }
 }
 
 /// <summary>Datos de indexación para publicaciones de tipo Libro, Monografía, Capítulo o Artículo de Divulgación.</summary>

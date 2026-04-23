@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Card, CardBody, CardHeader,
   Nav, NavItem, NavLink,
@@ -9,6 +9,7 @@ import {
   Form, FormGroup, Label, Input,
 } from 'reactstrap';
 import { useAuth } from '../contexts/AuthContext';
+import CoauthorPicker from '../components/CoauthorPicker';
 
 async function apiFetch(url, options = {}) {
   const response = await fetch(url, {
@@ -77,10 +78,6 @@ export default function PublicationsPage() {
   const [activeGroup, setActiveGroup] = useState(1);
   // Tag-picker de coautores
   const [coauthorTags, setCoauthorTags] = useState([]); // [{id?, name}]
-  const [coauthorInput, setCoauthorInput] = useState('');
-  const [coauthorSuggestions, setCoauthorSuggestions] = useState([]);
-  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
-  const coauthorDebounce = useRef(null);
   const loadData = useCallback(async () => {
     setLoading(true);
     setError('');
@@ -119,9 +116,20 @@ export default function PublicationsPage() {
     });
     setFormError('');
     setCoauthorTags([]);
-    setCoauthorInput('');
-    setSuggestionsOpen(false);
     setModal(true);
+  }
+
+  /**
+   * Convierte un autor de la API al modelo consumido por el picker de tarjetas.
+   * Si el autor está vinculado a un usuario, conserva ese snapshot para renderizar la tarjeta rica.
+   */
+  function mapAuthorToPickerEntry(author) {
+    return {
+      id: author.id,
+      name: author.name,
+      type: 'author',
+      linkedUser: author.linkedUser ?? null,
+    };
   }
 
   function openEdit(pub) {
@@ -143,14 +151,8 @@ export default function PublicationsPage() {
     // Pre-cargar coautores (todos excepto el usuario actual)
     const initialTags = (pub.authors ?? [])
       .filter(a => a.userId !== user?.id)
-      .map(a => ({
-        id: a.id,
-        name: a.name,
-        type: a.userId ? 'author' : 'author',  // author existente (linked o free)
-      }));
+      .map(mapAuthorToPickerEntry);
     setCoauthorTags(initialTags);
-    setCoauthorInput('');
-    setSuggestionsOpen(false);
     setModal(true);
   }
 
@@ -177,7 +179,7 @@ export default function PublicationsPage() {
             urlDoi: form.urlDoi || null,
             proyectoId: form.proyectoId || null,
             additionalAuthorIds: coauthorTags.filter(t => t.type === 'author').map(t => t.id),
-            additionalAuthorNames: coauthorTags.filter(t => !t.type).map(t => t.name),
+            additionalAuthorNames: coauthorTags.filter(t => t.type === 'new').map(t => t.name),
             additionalUserIds: coauthorTags.filter(t => t.type === 'user').map(t => t.id),
             // Especialización
             index: parseInt(form.publicationType, 10) !== 0 ? form.index || null : null,
@@ -197,7 +199,7 @@ export default function PublicationsPage() {
             urlDoi: form.urlDoi || null,
             proyectoId: form.proyectoId || null,
             additionalAuthorIds: coauthorTags.filter(t => t.type === 'author').map(t => t.id),
-            additionalAuthorNames: coauthorTags.filter(t => !t.type).map(t => t.name),
+            additionalAuthorNames: coauthorTags.filter(t => t.type === 'new').map(t => t.name),
             additionalUserIds: coauthorTags.filter(t => t.type === 'user').map(t => t.id),
             // Especialización
             index: parseInt(form.publicationType, 10) !== 0 ? form.index || null : null,
@@ -214,57 +216,6 @@ export default function PublicationsPage() {
     } finally {
       setFormLoading(false);
     }
-  }
-
-  // ── tag-picker de coautores ─────────────────────────────────────────────────────
-
-  function addCoauthor(tag) {
-    if (!tag.name.trim()) return;
-    const isDup = coauthorTags.some(t =>
-      (tag.id && t.id === tag.id) || t.name.toLowerCase() === tag.name.trim().toLowerCase()
-    );
-    if (!isDup) setCoauthorTags(prev => [...prev, { id: tag.id, name: tag.name.trim(), type: tag.type }]);
-    setCoauthorInput('');
-    setCoauthorSuggestions([]);
-    setSuggestionsOpen(false);
-  }
-
-  function removeCoauthor(index) {
-    setCoauthorTags(prev => prev.filter((_, i) => i !== index));
-  }
-
-  function handleCoauthorInput(e) {
-    const val = e.target.value;
-    if (val.endsWith(',')) {
-      const name = val.slice(0, -1).trim();
-      if (name) addCoauthor({ name });
-      return;
-    }
-    setCoauthorInput(val);
-    clearTimeout(coauthorDebounce.current);
-    if (val.trim().length >= 2) {
-      coauthorDebounce.current = setTimeout(async () => {
-        try {
-          const res = await fetch(`/api/Authors/search-coauthors?q=${encodeURIComponent(val.trim())}`, { credentials: 'include' });
-          if (res.ok) {
-            const data = await res.json();
-            setCoauthorSuggestions(data);
-            setSuggestionsOpen(data.length > 0);
-          }
-        } catch { /* ignorar */ }
-      }, 250);
-    } else {
-      setCoauthorSuggestions([]);
-      setSuggestionsOpen(false);
-    }
-  }
-
-  function handleCoauthorKeyDown(e) {
-    if ((e.key === 'Enter' || e.key === ',') && coauthorInput.trim()) {
-      e.preventDefault();
-      addCoauthor({ name: coauthorInput.trim() });
-    }
-    if (e.key === 'Escape') setSuggestionsOpen(false);
   }
 
   // ── borrado ────────────────────────────────────────────────────────────────
@@ -620,66 +571,12 @@ export default function PublicationsPage() {
             {(
               <FormGroup>
                 <Label>Coautores adicionales</Label>
-                {/* Tags de coautores ya añadidos */}
-                {coauthorTags.length > 0 && (
-                  <div className="d-flex flex-wrap gap-1 mb-2">
-                    {coauthorTags.map((t, i) => (
-                      <span
-                        key={i}
-                        className={`badge d-inline-flex align-items-center gap-1 ${
-                          t.type === 'author' ? 'bg-primary'
-                          : t.type === 'user' ? 'bg-success'
-                          : 'bg-secondary'
-                        }`}
-                        style={{ fontSize: '0.85em' }}
-                      >
-                        {t.type === 'author' && <i className="bi bi-person-check" title="Autor existente"></i>}
-                        {t.type === 'user' && <i className="bi bi-person-plus" title="Usuario del sistema (se creará como autor)"></i>}
-                        {t.name}
-                        <button
-                          type="button"
-                          onClick={() => removeCoauthor(i)}
-                          style={{ background: 'none', border: 'none', padding: '0 0 0 4px', color: 'inherit', cursor: 'pointer', lineHeight: 1 }}
-                          aria-label="Quitar"
-                        >×</button>
-                      </span>
-                    ))}
-                  </div>
-                )}
-                {/* Input con dropdown */}
-                <div style={{ position: 'relative' }}>
-                  <Input
-                    value={coauthorInput}
-                    onChange={handleCoauthorInput}
-                    onKeyDown={handleCoauthorKeyDown}
-                    onBlur={() => setTimeout(() => setSuggestionsOpen(false), 150)}
-                    placeholder="Escribe un nombre… (Enter o coma para agregar nuevo)"
-                    autoComplete="off"
-                  />
-                  {suggestionsOpen && (
-                    <div style={{
-                      position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 1055,
-                      border: '1px solid #dee2e6', borderRadius: '0.25rem', background: '#fff',
-                      maxHeight: 180, overflowY: 'auto', boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
-                    }}>
-                      {coauthorSuggestions.map(s => (
-                        <div
-                          key={s.id}
-                          onMouseDown={() => addCoauthor({ id: s.id, name: s.name, type: s.type })}
-                          style={{ padding: '0.4rem 0.75rem', cursor: 'pointer' }}
-                          className="suggestion-item"
-                          onMouseEnter={e => e.currentTarget.style.background = '#f0f4ff'}
-                          onMouseLeave={e => e.currentTarget.style.background = ''}
-                        >
-                          <i className={`bi ${s.type === 'user' ? 'bi-person-plus text-success' : 'bi-person text-muted'} me-2`}></i>
-                          {s.name}
-                          {s.type === 'user' && <small className="ms-1 text-muted">(usuario)</small>}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <small className="text-muted">Selecciona de la lista o escribe un nombre nuevo y presiona Enter. <span className="text-success">Verde</span> = usuario del sistema (se registrará como autor automáticamente).</small>
+                <CoauthorPicker
+                  value={coauthorTags}
+                  onChange={setCoauthorTags}
+                  placeholder="Buscar coautor o escribir nombre libre..."
+                  helpText="Selecciona una tarjeta del resultado o escribe un nombre nuevo y presiona Enter. Si el autor ya está vinculado a un usuario del sistema, verás su tarjeta institucional completa."
+                />
               </FormGroup>
             )}
           </Form>

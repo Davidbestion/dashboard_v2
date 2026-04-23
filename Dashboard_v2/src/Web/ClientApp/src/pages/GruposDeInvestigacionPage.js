@@ -174,9 +174,13 @@ export default function GruposDeInvestigacionPage() {
     }
   }
 
+  /**
+   * Permite localizar fichas por datos personales y también por adscripción institucional.
+   * Esto hace más útil el modal ahora que las tarjetas muestran área y universidad.
+   */
   const filteredUsuarios = membrosFilter.trim()
     ? usuarios.filter(u =>
-        `${u.userName} ${u.userLastName1 ?? ''} ${u.userLastName2 ?? ''} ${u.email}`
+        `${u.userName} ${u.userLastName1 ?? ''} ${u.userLastName2 ?? ''} ${u.email} ${u.areaNombre ?? ''} ${u.universidadNombre ?? ''}`
           .toLowerCase()
           .includes(membrosFilter.toLowerCase())
       )

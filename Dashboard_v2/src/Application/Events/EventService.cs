@@ -14,11 +14,16 @@ public sealed class EventService : IEventService
 {
     private readonly IApplicationDbContext _context;
     private readonly IUser _currentUser;
+    private readonly IAuthorResolutionService _authorResolution;
 
-    public EventService(IApplicationDbContext context, IUser currentUser)
+    public EventService(
+        IApplicationDbContext context,
+        IUser currentUser,
+        IAuthorResolutionService authorResolution)
     {
         _context = context;
         _currentUser = currentUser;
+        _authorResolution = authorResolution;
     }
 
     public async Task<List<EventDto>> GetMyEventsAsync(CancellationToken ct = default)
@@ -183,7 +188,30 @@ public sealed class EventService : IEventService
                 Name = p.Name,
                 EventId = p.EventId,
                 EventName = p.Event.Name,
-                Authors = p.AuthorPresentations.Select(ap => ap.Author.Name).ToList(),
+                Authors = p.AuthorPresentations.Select(ap => new PresentationAuthorDto
+                {
+                    Id = ap.Author.Id,
+                    Name = ap.Author.Name,
+                    UserId = ap.Author.UserId,
+                    LinkedUser = ap.Author.User == null ? null : new LinkedUserSummaryDto
+                    {
+                        Id = ap.Author.User.Id,
+                        UserName = ap.Author.User.UserName,
+                        UserLastName1 = ap.Author.User.UserLastName1,
+                        UserLastName2 = ap.Author.User.UserLastName2,
+                        Email = ap.Author.User.Email,
+                        IsTrained = ap.Author.User.IsTrained,
+                        ScientificCategory = (int)ap.Author.User.ScientificCategory,
+                        TeachingCategory = (int)ap.Author.User.TeachingCategory,
+                        InvestigationCategory = (int)ap.Author.User.InvestigationCategory,
+                        AreaId = ap.Author.User.AreaId,
+                        AreaNombre = ap.Author.User.Area != null ? ap.Author.User.Area.Nombre : null,
+                        UniversidadId = ap.Author.User.Area != null ? ap.Author.User.Area.UniversidadId : null,
+                        UniversidadNombre = ap.Author.User.Area != null && ap.Author.User.Area.Universidad != null
+                            ? ap.Author.User.Area.Universidad.Nombre
+                            : null
+                    }
+                }).ToList(),
             })
             .OrderBy(p => p.EventName)
             .ThenBy(p => p.Name)
@@ -200,24 +228,9 @@ public sealed class EventService : IEventService
         if (!eventExists)
             return (Result.Failure(new[] { "El evento seleccionado no existe." }), null);
 
-        var author = await _context.Authors
-            .FirstOrDefaultAsync(a => a.UserId == _currentUser.Id, ct);
-
+        var author = await _authorResolution.GetOrCreateForUserAsync(_currentUser.Id!, ct);
         if (author is null)
-        {
-            var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.Id == _currentUser.Id, ct);
-
-            author = new Author
-            {
-                Name = user is not null
-                    ? $"{user.UserName} {user.UserLastName1}".Trim()
-                    : "Autor desconocido",
-                UserId = _currentUser.Id,
-            };
-            _context.Authors.Add(author);
-            await _context.SaveChangesAsync(ct);
-        }
+            return (Result.Failure(["Usuario no encontrado."]), null);
 
         var presentation = new Presentation
         {
@@ -230,6 +243,19 @@ public sealed class EventService : IEventService
         {
             if (coid != author.Id && await _context.Authors.AnyAsync(a => a.Id == coid, ct))
                 presentation.AuthorPresentations.Add(new AuthorPresentation { AuthorId = coid });
+        }
+
+        foreach (var userId in request.CoauthorUserIds.Where(id => !string.IsNullOrWhiteSpace(id)))
+        {
+            if (userId == _currentUser.Id)
+                continue;
+
+            var coAuthor = await _authorResolution.GetOrCreateForUserAsync(userId, ct);
+            if (coAuthor == null)
+                continue;
+
+            if (presentation.AuthorPresentations.All(ap => ap.AuthorId != coAuthor.Id))
+                presentation.AuthorPresentations.Add(new AuthorPresentation { AuthorId = coAuthor.Id });
         }
 
         foreach (var name in request.CoauthorNames.Where(n => !string.IsNullOrWhiteSpace(n)))
@@ -287,6 +313,19 @@ public sealed class EventService : IEventService
         {
             if (coid != authorId && await _context.Authors.AnyAsync(a => a.Id == coid, ct))
                 presentation.AuthorPresentations.Add(new AuthorPresentation { AuthorId = coid });
+        }
+
+        foreach (var userId in request.CoauthorUserIds.Where(id => !string.IsNullOrWhiteSpace(id)))
+        {
+            if (userId == _currentUser.Id)
+                continue;
+
+            var coAuthor = await _authorResolution.GetOrCreateForUserAsync(userId, ct);
+            if (coAuthor == null)
+                continue;
+
+            if (presentation.AuthorPresentations.All(ap => ap.AuthorId != coAuthor.Id))
+                presentation.AuthorPresentations.Add(new AuthorPresentation { AuthorId = coAuthor.Id });
         }
 
         foreach (var name in request.CoauthorNames.Where(n => !string.IsNullOrWhiteSpace(n)))

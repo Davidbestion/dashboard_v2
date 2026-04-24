@@ -5,6 +5,7 @@
 //   dotnet run -- all                  → genera TODAS las plantillas
 //   dotnet run -- grupos               → genera AnexoGrupos.xlsx
 //   dotnet run -- grupos-estudiantiles → genera AnexoGruposEstudiantiles.xlsx
+//   dotnet run -- publicaciones        → genera AnexoPublicaciones.xlsx
 //
 // Para añadir una nueva plantilla:
 //   1. Crea una clase que herede de ExcelTemplateBase
@@ -24,6 +25,7 @@ var templates = new Dictionary<string, (string Descripcion, Action Generate)>(St
 {
     ["grupos"] = ("Anexo 10 — Grupos de Investigación", () => new AnexoGruposTemplate().Generate()),
     ["grupos-estudiantiles"] = ("Anexo 9 — Grupos Científicos Estudiantiles", () => new AnexoGruposEstudiantilesTemplate().Generate()),
+    ["publicaciones"] = ("Anexo 2 — Publicaciones", () => new AnexoPublicacionesTemplate().Generate()),
     ["proyectos"] = ("Anexo 4 — Proyectos de Investigación", () => new AnexoProyectosTemplate().Generate()),
 };
 

@@ -78,6 +78,7 @@ public static class DependencyInjection
         // Para agregar un nuevo reporte, agrega otra línea aquí:
         builder.Services.AddScoped<IDocumentReport, AnexoGruposReport>();
         builder.Services.AddScoped<IDocumentReport, AnexoGruposEstudiantilesReport>();
+        builder.Services.AddScoped<IDocumentReport, AnexoPublicacionesReport>();
         builder.Services.AddScoped<IDocumentReport, ProyectosReport>();
 
         builder.Services.AddAuthorization(options =>

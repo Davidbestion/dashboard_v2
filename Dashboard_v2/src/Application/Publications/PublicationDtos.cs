@@ -46,6 +46,8 @@ public record PublicationDto
     public JournalPublicationDto? JournalPublication { get; init; }
     /// <summary>ID del proyecto del que deriva esta publicación. Null si no está vinculada.</summary>
     public string? ProyectoId { get; init; }
+    /// <summary>Título del proyecto vinculado cuando la publicación deriva de uno.</summary>
+    public string? ProyectoTitulo { get; init; }
 }
 
 /// <summary>Tipo (categoría) de publicación disponible en el sistema.</summary>

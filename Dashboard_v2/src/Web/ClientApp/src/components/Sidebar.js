@@ -73,6 +73,7 @@ const adminGroups = [
     heading: 'Gestión de Proyectos',
     items: [
       { to: '/proyectos', icon: 'bi-kanban', label: 'Proyectos' },
+      { to: '/publicaciones', icon: 'bi-journal-text', label: 'Publicaciones' },
       { to: '/clasificaciones', icon: 'bi-tags', label: 'Clasificaciones' },
     ],
   },

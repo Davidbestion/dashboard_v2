@@ -2966,7 +2966,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/PublicacionResumenDto"
+                    "$ref": "#/components/schemas/PublicationDto"
                   }
                 }
               }
@@ -4946,34 +4946,6 @@
           }
         }
       },
-      "PublicacionResumenDto": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "titulo": {
-            "type": "string"
-          },
-          "urlDoi": {
-            "type": "string",
-            "nullable": true
-          },
-          "tipo": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "proyectoId": {
-            "type": "string",
-            "nullable": true
-          },
-          "proyectoTitulo": {
-            "type": "string",
-            "nullable": true
-          }
-        }
-      },
       "PublicationDto": {
         "type": "object",
         "additionalProperties": false,
@@ -5018,6 +4990,10 @@
             ]
           },
           "proyectoId": {
+            "type": "string",
+            "nullable": true
+          },
+          "proyectoTitulo": {
             "type": "string",
             "nullable": true
           }

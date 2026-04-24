@@ -31,8 +31,14 @@ public class Documents : EndpointGroupBase
             .ProducesProblem(404);
     }
 
-    private static async Task<IResult> GetDocument(string reportName, IDocumentService documentService)
+    private static async Task<IResult> GetDocument(string reportName, IDocumentService documentService, HttpContext httpContext)
     {
+        if (reportName.Equals("anexo-publicaciones", StringComparison.OrdinalIgnoreCase) &&
+            !httpContext.User.IsInRole(nameof(RolesEnum.Superuser)))
+        {
+            return Results.Forbid();
+        }
+
         try
         {
             var bytes = await documentService.GenerateAsync(reportName);
@@ -45,4 +51,3 @@ public class Documents : EndpointGroupBase
         }
     }
 }
-

@@ -12,5 +12,6 @@ public interface IPublicationService
     Task<Result> DeleteAsync(string id, CancellationToken ct = default);
     Task<PublicationDto?> GetByIdAsync(string id, CancellationToken ct = default);
     Task<List<PublicationDto>> GetMyPublicationsAsync(CancellationToken ct = default);
+    Task<List<PublicationDto>> GetAllPublicationsAsync(CancellationToken ct = default);
     Task<List<PublicationTypeDto>> GetPublicationTypesAsync();
 }

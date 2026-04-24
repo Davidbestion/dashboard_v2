@@ -298,56 +298,10 @@ public sealed class PublicationService : IPublicationService
         if (authorId == null)
             return null;
 
-        return await _context.Publications
-            .AsNoTracking()
+        return await ProjectPublicationDtos(
+            _context.Publications.AsNoTracking()
             .Where(p => p.Id == id && p.AuthorPublications.Any(ap => ap.AuthorId == authorId))
-            .Select(p => new PublicationDto
-            {
-                Id = p.Id,
-                Title = p.Title,
-                PublicationData = p.PublicationData,
-                UrlDoi = p.UrlDoi,
-                PublicationType = (int)p.PublicationType,
-                Authors = p.AuthorPublications
-                    .Select(ap => new AuthorDto
-                    {
-                        Id = ap.Author.Id,
-                        Name = ap.Author.Name,
-                        UserId = ap.Author.UserId,
-                        LinkedUser = ap.Author.User == null ? null : new LinkedUserSummaryDto
-                        {
-                            Id = ap.Author.User.Id,
-                            UserName = ap.Author.User.UserName,
-                            UserLastName1 = ap.Author.User.UserLastName1,
-                            UserLastName2 = ap.Author.User.UserLastName2,
-                            Email = ap.Author.User.Email,
-                            IsTrained = ap.Author.User.IsTrained,
-                            ScientificCategory = (int)ap.Author.User.ScientificCategory,
-                            TeachingCategory = (int)ap.Author.User.TeachingCategory,
-                            InvestigationCategory = (int)ap.Author.User.InvestigationCategory,
-                            AreaId = ap.Author.User.AreaId,
-                            AreaNombre = ap.Author.User.Area != null ? ap.Author.User.Area.Nombre : null,
-                            UniversidadId = ap.Author.User.Area != null ? ap.Author.User.Area.UniversidadId : null,
-                            UniversidadNombre = ap.Author.User.Area != null && ap.Author.User.Area.Universidad != null
-                                ? ap.Author.User.Area.Universidad.Nombre
-                                : null
-                        }
-                    })
-                    .ToList(),
-                IndexedPublication = p.IndexedPublication == null ? null : new IndexedPublicationDto
-                {
-                    Index = p.IndexedPublication.Index
-                },
-                JournalPublication = p.JournalPublication == null ? null : new JournalPublicationDto
-                {
-                    DataBase = p.JournalPublication.DataBase,
-                    Group = p.JournalPublication.Group,
-                    Cuartil = p.JournalPublication.JournalGroup1Publication != null
-                        ? p.JournalPublication.JournalGroup1Publication.Cuartil
-                        : null
-                },
-                ProyectoId = p.ProyectoId
-            })
+            )
             .FirstOrDefaultAsync(ct);
     }
 
@@ -362,58 +316,78 @@ public sealed class PublicationService : IPublicationService
         if (authorId == null)
             return new List<PublicationDto>();
 
-        return await _context.Publications
-            .AsNoTracking()
+        return await ProjectPublicationDtos(
+            _context.Publications.AsNoTracking()
             .Where(p => p.AuthorPublications.Any(ap => ap.AuthorId == authorId))
-            .Select(p => new PublicationDto
-            {
-                Id = p.Id,
-                Title = p.Title,
-                PublicationData = p.PublicationData,
-                UrlDoi = p.UrlDoi,
-                PublicationType = (int)p.PublicationType,
-                Authors = p.AuthorPublications
-                    .Select(ap => new AuthorDto
-                    {
-                        Id = ap.Author.Id,
-                        Name = ap.Author.Name,
-                        UserId = ap.Author.UserId,
-                        LinkedUser = ap.Author.User == null ? null : new LinkedUserSummaryDto
-                        {
-                            Id = ap.Author.User.Id,
-                            UserName = ap.Author.User.UserName,
-                            UserLastName1 = ap.Author.User.UserLastName1,
-                            UserLastName2 = ap.Author.User.UserLastName2,
-                            Email = ap.Author.User.Email,
-                            IsTrained = ap.Author.User.IsTrained,
-                            ScientificCategory = (int)ap.Author.User.ScientificCategory,
-                            TeachingCategory = (int)ap.Author.User.TeachingCategory,
-                            InvestigationCategory = (int)ap.Author.User.InvestigationCategory,
-                            AreaId = ap.Author.User.AreaId,
-                            AreaNombre = ap.Author.User.Area != null ? ap.Author.User.Area.Nombre : null,
-                            UniversidadId = ap.Author.User.Area != null ? ap.Author.User.Area.UniversidadId : null,
-                            UniversidadNombre = ap.Author.User.Area != null && ap.Author.User.Area.Universidad != null
-                                ? ap.Author.User.Area.Universidad.Nombre
-                                : null
-                        }
-                    })
-                    .ToList(),
-                IndexedPublication = p.IndexedPublication == null ? null : new IndexedPublicationDto
-                {
-                    Index = p.IndexedPublication.Index
-                },
-                JournalPublication = p.JournalPublication == null ? null : new JournalPublicationDto
-                {
-                    DataBase = p.JournalPublication.DataBase,
-                    Group = p.JournalPublication.Group,
-                    Cuartil = p.JournalPublication.JournalGroup1Publication != null
-                        ? p.JournalPublication.JournalGroup1Publication.Cuartil
-                        : null
-                },
-                ProyectoId = p.ProyectoId
-            })
+            )
             .OrderBy(p => p.Title)
             .ToListAsync(ct);
+    }
+
+    public async Task<List<PublicationDto>> GetAllPublicationsAsync(CancellationToken ct = default)
+    {
+        return await ProjectPublicationDtos(_context.Publications.AsNoTracking())
+            .OrderBy(p => p.Title)
+            .ToListAsync(ct);
+    }
+
+    /// <summary>
+    /// Proyección reutilizable de publicaciones hacia el DTO usado por las vistas.
+    /// Centraliza la forma en que se exponen autores, metadatos de revista,
+    /// datos de indexación y proyecto vinculado.
+    /// </summary>
+    /// <param name="query">Consulta base sobre publicaciones.</param>
+    /// <returns>Consulta proyectada a <see cref="PublicationDto"/>.</returns>
+    private static IQueryable<PublicationDto> ProjectPublicationDtos(IQueryable<Publication> query)
+    {
+        return query.Select(p => new PublicationDto
+        {
+            Id = p.Id,
+            Title = p.Title,
+            PublicationData = p.PublicationData,
+            UrlDoi = p.UrlDoi,
+            PublicationType = (int)p.PublicationType,
+            Authors = p.AuthorPublications
+                .Select(ap => new AuthorDto
+                {
+                    Id = ap.Author.Id,
+                    Name = ap.Author.Name,
+                    UserId = ap.Author.UserId,
+                    LinkedUser = ap.Author.User == null ? null : new LinkedUserSummaryDto
+                    {
+                        Id = ap.Author.User.Id,
+                        UserName = ap.Author.User.UserName,
+                        UserLastName1 = ap.Author.User.UserLastName1,
+                        UserLastName2 = ap.Author.User.UserLastName2,
+                        Email = ap.Author.User.Email,
+                        IsTrained = ap.Author.User.IsTrained,
+                        ScientificCategory = (int)ap.Author.User.ScientificCategory,
+                        TeachingCategory = (int)ap.Author.User.TeachingCategory,
+                        InvestigationCategory = (int)ap.Author.User.InvestigationCategory,
+                        AreaId = ap.Author.User.AreaId,
+                        AreaNombre = ap.Author.User.Area != null ? ap.Author.User.Area.Nombre : null,
+                        UniversidadId = ap.Author.User.Area != null ? ap.Author.User.Area.UniversidadId : null,
+                        UniversidadNombre = ap.Author.User.Area != null && ap.Author.User.Area.Universidad != null
+                            ? ap.Author.User.Area.Universidad.Nombre
+                            : null
+                    }
+                })
+                .ToList(),
+            IndexedPublication = p.IndexedPublication == null ? null : new IndexedPublicationDto
+            {
+                Index = p.IndexedPublication.Index
+            },
+            JournalPublication = p.JournalPublication == null ? null : new JournalPublicationDto
+            {
+                DataBase = p.JournalPublication.DataBase,
+                Group = p.JournalPublication.Group,
+                Cuartil = p.JournalPublication.JournalGroup1Publication != null
+                    ? p.JournalPublication.JournalGroup1Publication.Cuartil
+                    : null
+            },
+            ProyectoId = p.ProyectoId,
+            ProyectoTitulo = p.Proyecto != null ? p.Proyecto.Titulo : null
+        });
     }
 
     public Task<List<PublicationTypeDto>> GetPublicationTypesAsync()

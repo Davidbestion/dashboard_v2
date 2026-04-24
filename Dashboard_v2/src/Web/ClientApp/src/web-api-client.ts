@@ -3739,7 +3739,7 @@ export class PublicationsClient {
         return Promise.resolve<PublicationTypeDto[]>(null as any);
     }
 
-    getTodasLasPublicaciones(): Promise<PublicacionResumenDto[]> {
+    getTodasLasPublicaciones(): Promise<PublicationDto[]> {
         let url_ = this.baseUrl + "/api/Publications/todas";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -3755,7 +3755,7 @@ export class PublicationsClient {
         });
     }
 
-    protected processGetTodasLasPublicaciones(response: Response): Promise<PublicacionResumenDto[]> {
+    protected processGetTodasLasPublicaciones(response: Response): Promise<PublicationDto[]> {
         followIfLoginRedirect(response);
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
@@ -3766,7 +3766,7 @@ export class PublicationsClient {
             if (Array.isArray(resultData200)) {
                 result200 = [] as any;
                 for (let item of resultData200)
-                    result200!.push(PublicacionResumenDto.fromJS(item));
+                    result200!.push(PublicationDto.fromJS(item));
             }
             else {
                 result200 = null as any;
@@ -3778,7 +3778,7 @@ export class PublicationsClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<PublicacionResumenDto[]>(null as any);
+        return Promise.resolve<PublicationDto[]>(null as any);
     }
 
     getMyPublications(): Promise<PublicationDto[]> {
@@ -7629,62 +7629,6 @@ export interface IPublicationTypeDto {
     name?: string;
 }
 
-export class PublicacionResumenDto implements IPublicacionResumenDto {
-    id?: string;
-    titulo?: string;
-    urlDoi?: string | undefined;
-    tipo?: number;
-    proyectoId?: string | undefined;
-    proyectoTitulo?: string | undefined;
-
-    constructor(data?: IPublicacionResumenDto) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.id = _data["id"];
-            this.titulo = _data["titulo"];
-            this.urlDoi = _data["urlDoi"];
-            this.tipo = _data["tipo"];
-            this.proyectoId = _data["proyectoId"];
-            this.proyectoTitulo = _data["proyectoTitulo"];
-        }
-    }
-
-    static fromJS(data: any): PublicacionResumenDto {
-        data = typeof data === 'object' ? data : {};
-        let result = new PublicacionResumenDto();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["id"] = this.id;
-        data["titulo"] = this.titulo;
-        data["urlDoi"] = this.urlDoi;
-        data["tipo"] = this.tipo;
-        data["proyectoId"] = this.proyectoId;
-        data["proyectoTitulo"] = this.proyectoTitulo;
-        return data;
-    }
-}
-
-export interface IPublicacionResumenDto {
-    id?: string;
-    titulo?: string;
-    urlDoi?: string | undefined;
-    tipo?: number;
-    proyectoId?: string | undefined;
-    proyectoTitulo?: string | undefined;
-}
-
 export class PublicationDto implements IPublicationDto {
     id?: string;
     title?: string;
@@ -7695,6 +7639,7 @@ export class PublicationDto implements IPublicationDto {
     indexedPublication?: IndexedPublicationDto | undefined;
     journalPublication?: JournalPublicationDto | undefined;
     proyectoId?: string | undefined;
+    proyectoTitulo?: string | undefined;
 
     constructor(data?: IPublicationDto) {
         if (data) {
@@ -7720,6 +7665,7 @@ export class PublicationDto implements IPublicationDto {
             this.indexedPublication = _data["indexedPublication"] ? IndexedPublicationDto.fromJS(_data["indexedPublication"]) : undefined as any;
             this.journalPublication = _data["journalPublication"] ? JournalPublicationDto.fromJS(_data["journalPublication"]) : undefined as any;
             this.proyectoId = _data["proyectoId"];
+            this.proyectoTitulo = _data["proyectoTitulo"];
         }
     }
 
@@ -7745,6 +7691,7 @@ export class PublicationDto implements IPublicationDto {
         data["indexedPublication"] = this.indexedPublication ? this.indexedPublication.toJSON() : undefined as any;
         data["journalPublication"] = this.journalPublication ? this.journalPublication.toJSON() : undefined as any;
         data["proyectoId"] = this.proyectoId;
+        data["proyectoTitulo"] = this.proyectoTitulo;
         return data;
     }
 }
@@ -7759,6 +7706,7 @@ export interface IPublicationDto {
     indexedPublication?: IndexedPublicationDto | undefined;
     journalPublication?: JournalPublicationDto | undefined;
     proyectoId?: string | undefined;
+    proyectoTitulo?: string | undefined;
 }
 
 export class AuthorDto implements IAuthorDto {

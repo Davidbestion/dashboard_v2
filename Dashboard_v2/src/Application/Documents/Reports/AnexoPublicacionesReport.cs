@@ -143,9 +143,9 @@ public sealed class AnexoPublicacionesReport : IDocumentReport
         return new PublicacionIndexadaRowDto
         {
             No = index + 1,
-            Indexacion = publication.IndexedPublication!.Index,
+            Indexacion = string.Empty,
             Titulo = publication.Title,
-            DatosEditorial = BuildPublicationDetails(publication),
+            DatosEditorial = publication.PublicationData,
             RelacionAutoria = BuildAuthorsSummary(publication),
         };
     }

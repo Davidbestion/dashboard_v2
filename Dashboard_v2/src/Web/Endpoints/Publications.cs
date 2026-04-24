@@ -20,11 +20,11 @@ public class Publications : EndpointGroupBase
             .WithName("GetPublicationTypes")
             .Produces<List<PublicationTypeDto>>(200);
 
-        // GET /api/Publications/todas — todas las publicaciones (lectura, Superuser + Jefe_de_Proyecto)
+        // GET /api/Publications/todas — todas las publicaciones con detalle completo
         groupBuilder.MapGet("todas", GetTodasLasPublicaciones)
             .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Proyecto)))
             .WithName("GetTodasLasPublicaciones")
-            .Produces<List<PublicacionResumenDto>>(200);
+            .Produces<List<PublicationDto>>(200);
 
         // GET /api/Publications — publicaciones del usuario autenticado
         groupBuilder.MapGet("", GetMyPublications)
@@ -69,19 +69,9 @@ public class Publications : EndpointGroupBase
         return Results.Ok(types);
     }
 
-    private static async Task<IResult> GetTodasLasPublicaciones(IApplicationDbContext context)
+    private async Task<IResult> GetTodasLasPublicaciones(IPublicationService service)
     {
-        var pubs = await context.Publications
-            .AsNoTracking()
-            .OrderBy(p => p.Title)
-            .Select(p => new PublicacionResumenDto(
-                p.Id,
-                p.Title,
-                p.UrlDoi,
-                (int)p.PublicationType,
-                p.ProyectoId,
-                p.Proyecto != null ? p.Proyecto.Titulo : null))
-            .ToListAsync();
+        var pubs = await service.GetAllPublicationsAsync();
         return Results.Ok(pubs);
     }
 
@@ -160,12 +150,3 @@ public record UpdatePublicationBody(
     int? Group,
     string? Cuartil,
     string? ProyectoId);
-
-/// <summary>DTO de lectura rápida de publicaciones para el rol Jefe_de_Proyecto.</summary>
-public record PublicacionResumenDto(
-    string Id,
-    string Titulo,
-    string? UrlDoi,
-    int Tipo,
-    string? ProyectoId,
-    string? ProyectoTitulo);

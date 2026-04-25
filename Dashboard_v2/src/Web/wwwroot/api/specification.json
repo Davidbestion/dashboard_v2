@@ -1705,6 +1705,29 @@
         }
       }
     },
+    "/api/Presentations/all": {
+      "get": {
+        "tags": [
+          "Presentations"
+        ],
+        "operationId": "GetAllPresentations",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PresentationDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Presentations/{id}": {
       "put": {
         "tags": [

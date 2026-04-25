@@ -1,5 +1,6 @@
 using Dashboard_v2.Application.Events;
 // using MediatR commands/queries replaced by IEventService
+using RolesEnum = Dashboard_v2.Domain.Enums.Roles;
 
 namespace Dashboard_v2.Web.Endpoints;
 
@@ -8,8 +9,13 @@ public class Presentations : EndpointGroupBase
     public override void Map(RouteGroupBuilder groupBuilder)
     {
         groupBuilder.MapGet("", GetMyPresentations)
-            .RequireAuthorization(p => p.RequireRole("Profesor"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Superuser)))
             .WithName("GetMyPresentations")
+            .Produces<List<PresentationDto>>(200);
+
+        groupBuilder.MapGet("all", GetAllPresentations)
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser)))
+            .WithName("GetAllPresentations")
             .Produces<List<PresentationDto>>(200);
 
         groupBuilder.MapPost("", CreatePresentation)
@@ -32,6 +38,9 @@ public class Presentations : EndpointGroupBase
     }
     private async Task<IResult> GetMyPresentations(IEventService service)
         => Results.Ok(await service.GetMyPresentationsAsync());
+
+    private async Task<IResult> GetAllPresentations(IEventService service)
+        => Results.Ok(await service.GetAllPresentationsAsync());
 
     private async Task<IResult> CreatePresentation(IEventService service, CreatePresentationRequest body)
     {
@@ -63,4 +72,3 @@ public class Presentations : EndpointGroupBase
         return Results.Ok(new { message = "Presentación eliminada." });
     }
 }
-

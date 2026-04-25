@@ -1,4 +1,5 @@
 using Dashboard_v2.Application.Events;
+using RolesEnum = Dashboard_v2.Domain.Enums.Roles;
 
 namespace Dashboard_v2.Web.Endpoints;
 
@@ -7,17 +8,17 @@ public class Events : EndpointGroupBase
     public override void Map(RouteGroupBuilder groupBuilder)
     {
         groupBuilder.MapGet("", GetMyEvents)
-            .RequireAuthorization(p => p.RequireRole("Profesor"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Superuser)))
             .WithName("GetMyEvents")
             .Produces<List<EventDto>>(200);
 
         groupBuilder.MapGet("all", GetAllEvents)
-            .RequireAuthorization(p => p.RequireRole("Profesor"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Superuser)))
             .WithName("GetAllEvents")
             .Produces<List<EventDto>>(200);
 
         groupBuilder.MapGet("countries", GetCountries)
-            .RequireAuthorization(p => p.RequireRole("Profesor"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Superuser)))
             .WithName("GetCountries")
             .Produces<List<CountryDto>>(200);
 
@@ -28,7 +29,7 @@ public class Events : EndpointGroupBase
             .ProducesProblem(400);
 
         groupBuilder.MapGet("types", GetEventTypes)
-            .RequireAuthorization(p => p.RequireRole("Profesor"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Superuser)))
             .WithName("GetEventTypes")
             .Produces<List<EventTypeDto>>(200);
 
@@ -103,5 +104,4 @@ public class Events : EndpointGroupBase
         return Results.Ok(new { message = "Evento eliminado." });
     }
 }
-
 

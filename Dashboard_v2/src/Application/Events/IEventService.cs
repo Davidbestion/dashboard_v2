@@ -17,6 +17,7 @@ public interface IEventService
     Task<Result> DeleteEventAsync(int id, CancellationToken ct = default);
 
     Task<List<PresentationDto>> GetMyPresentationsAsync(CancellationToken ct = default);
+    Task<List<PresentationDto>> GetAllPresentationsAsync(CancellationToken ct = default);
     Task<(Result Result, int? PresentationId)> CreatePresentationAsync(CreatePresentationRequest request, CancellationToken ct = default);
     Task<Result> UpdatePresentationAsync(int id, UpdatePresentationRequest request, CancellationToken ct = default);
     Task<Result> DeletePresentationAsync(int id, CancellationToken ct = default);

@@ -11,6 +11,13 @@ namespace TemplateGen.Templates;
 /// </summary>
 public sealed class AnexoEventosTemplate : ExcelTemplateBase
 {
+    // TODO(david): La plantilla del anexo de eventos sigue generándose con una sola hoja
+    // compuesta y eso hoy causa corrimientos/formato roto al expandir rangos dinámicos.
+    // Opciones para arreglarlo:
+    // 1. Reemplazar este enfoque por generación manual de la hoja final.
+    // 2. Mantener el .xlsx como referencia visual y escribir valores en posiciones fijas.
+    // 3. Separar secciones en varias hojas si el modelo oficial lo permite.
+    // 4. Rediseñar la plantilla para evitar merges y tablas dinámicas apiladas.
     /// <summary>
     /// Ruta donde se guarda la plantilla generada para ser embebida por Infrastructure.
     /// </summary>

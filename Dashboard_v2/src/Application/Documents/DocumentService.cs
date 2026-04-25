@@ -9,6 +9,12 @@ namespace Dashboard_v2.Application.Documents;
 
 public sealed class DocumentService : IDocumentService
 {
+    // TODO(david): El flujo 'anexo-eventos' pasa hoy por ClosedXML.Report y la plantilla
+    // compuesta de una sola hoja termina rompiendo formato. Opciones para arreglarlo:
+    // 1. Desviar 'anexo-eventos' a una ruta de render manual.
+    // 2. Mantener la plantilla pero con relleno en coordenadas fijas.
+    // 3. Rediseñar el documento en varias hojas.
+    // 4. Simplificar la plantilla para que no dependa de merges ni corrimiento de filas.
     private readonly IReadOnlyDictionary<string, IDocumentReport> _reports;
     private readonly IDocumentRenderer _renderer;
 

@@ -35,8 +35,18 @@ const EMPTY_EVENT = { name: '', countryId: '', eventType: '', institutions: [] }
 const EVENT_TYPE_LABELS = { 0: 'Internacional', 1: 'Nacional', 2: 'De área', 3: 'Local' };
 
 export default function EventsPage() {
+  // TODO(david): La descarga de 'anexo-eventos' sigue apuntando a un documento que puede
+  // salir con formato roto por el uso actual de ClosedXML.Report en una sola hoja compuesta.
+  // Opciones para arreglarlo:
+  // 1. Mantener esta acción y cambiar el backend a generación manual estable.
+  // 2. Rellenar el .xlsx en coordenadas fijas sin rangos dinámicos.
+  // 3. Rehacer el anexo en varias hojas si el formato institucional lo admite.
+  // 4. Simplificar la plantilla para eliminar merges y bloques que dependan del corrimiento.
   const { user } = useAuth();
+  const isSuperuser = user?.role === 'Superuser';
   const [activeTab, setActiveTab] = useState('presentations');
+  const [generatingAnexo, setGeneratingAnexo] = useState(false);
+  const [anexoError, setAnexoError] = useState('');
 
   // Lookups
   const [countries, setCountries] = useState([]);
@@ -97,31 +107,58 @@ export default function EventsPage() {
     setPresLoading(true);
     setPresError('');
     try {
-      setPresentations(await apiFetch('/api/Presentations'));
+      setPresentations(await apiFetch(isSuperuser ? '/api/Presentations/all' : '/api/Presentations'));
     } catch (e) {
       setPresError(e.message);
     } finally {
       setPresLoading(false);
     }
-  }, []);
+  }, [isSuperuser]);
 
   const loadEvents = useCallback(async () => {
     setEvLoading(true);
     setEvError('');
     try {
-      setEvents(await apiFetch('/api/Events'));
+      setEvents(await apiFetch(isSuperuser ? '/api/Events/all' : '/api/Events'));
     } catch (e) {
       setEvError(e.message);
     } finally {
       setEvLoading(false);
     }
-  }, []);
+  }, [isSuperuser]);
 
   useEffect(() => {
     loadLookups();
     loadPresentations();
     loadEvents();
   }, [loadLookups, loadPresentations, loadEvents]);
+
+  async function handleGenerateAnexo() {
+    setGeneratingAnexo(true);
+    setAnexoError('');
+    try {
+      const response = await fetch('/api/Documents/anexo-eventos', { credentials: 'include' });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        const message = data?.error ?? data?.title ?? 'No se pudo generar el anexo.';
+        throw new Error(message);
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'anexo-eventos.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (e) {
+      setAnexoError(e.message);
+    } finally {
+      setGeneratingAnexo(false);
+    }
+  }
 
   /**
    * Normaliza un autor de presentación para reutilizar el picker basado en tarjetas.
@@ -332,7 +369,7 @@ export default function EventsPage() {
                 style={{ cursor: 'pointer' }}
               >
                 <i className="bi bi-mic me-1" />
-                Mis presentaciones
+                {isSuperuser ? 'Presentaciones registradas' : 'Mis presentaciones'}
               </RNavLink>
             </NavItem>
             <NavItem>
@@ -342,28 +379,41 @@ export default function EventsPage() {
                 style={{ cursor: 'pointer' }}
               >
                 <i className="bi bi-calendar-event me-1" />
-                Mis eventos
+                {isSuperuser ? 'Eventos registrados' : 'Mis eventos'}
               </RNavLink>
             </NavItem>
           </Nav>
         </CardHeader>
 
         <CardBody>
+          {isSuperuser && (
+            <div className="d-flex justify-content-end mb-3">
+              <Button color="success" size="sm" onClick={handleGenerateAnexo} disabled={generatingAnexo}>
+                {generatingAnexo ? <Spinner size="sm" /> : '⬇ Generar Anexo 3'}
+              </Button>
+            </div>
+          )}
+          {anexoError && <Alert color="danger">{anexoError}</Alert>}
+
           <TabContent activeTab={activeTab}>
 
             {/* ── PRESENTATIONS TAB ── */}
             <TabPane tabId="presentations">
-              <div className="d-flex justify-content-end mb-3">
-                <Button color="primary" size="sm" onClick={openCreatePres}>
-                  <i className="bi bi-plus-lg me-1" />
-                  Nueva presentación
-                </Button>
-              </div>
+              {!isSuperuser && (
+                <div className="d-flex justify-content-end mb-3">
+                  <Button color="primary" size="sm" onClick={openCreatePres}>
+                    <i className="bi bi-plus-lg me-1" />
+                    Nueva presentación
+                  </Button>
+                </div>
+              )}
 
               {presLoading && <div className="text-center py-4"><Spinner color="primary" /></div>}
               {!presLoading && presError && <Alert color="danger">{presError}</Alert>}
               {!presLoading && !presError && presentations.length === 0 && (
-                <p className="text-muted text-center py-3">No tienes presentaciones registradas.</p>
+                <p className="text-muted text-center py-3">
+                  {isSuperuser ? 'No hay presentaciones registradas.' : 'No tienes presentaciones registradas.'}
+                </p>
               )}
               {!presLoading && !presError && presentations.length > 0 && (
                 <Table responsive hover>
@@ -372,7 +422,7 @@ export default function EventsPage() {
                       <th>Nombre</th>
                       <th>Evento</th>
                       <th>Autores</th>
-                      <th></th>
+                      {!isSuperuser && <th></th>}
                     </tr>
                   </thead>
                   <tbody>
@@ -387,16 +437,18 @@ export default function EventsPage() {
                             </Badge>
                           ))}
                         </td>
-                        <td className="text-end">
-                          <Button color="outline-secondary" size="sm" className="me-2"
-                            onClick={() => openEditPres(p)}>
-                            <i className="bi bi-pencil" />
-                          </Button>
-                          <Button color="outline-danger" size="sm"
-                            onClick={() => { setPresToDelete(p); setPresDeleteError(''); setPresDeleteModal(true); }}>
-                            <i className="bi bi-trash" />
-                          </Button>
-                        </td>
+                        {!isSuperuser && (
+                          <td className="text-end">
+                            <Button color="outline-secondary" size="sm" className="me-2"
+                              onClick={() => openEditPres(p)}>
+                              <i className="bi bi-pencil" />
+                            </Button>
+                            <Button color="outline-danger" size="sm"
+                              onClick={() => { setPresToDelete(p); setPresDeleteError(''); setPresDeleteModal(true); }}>
+                              <i className="bi bi-trash" />
+                            </Button>
+                          </td>
+                        )}
                       </tr>
                     ))}
                   </tbody>
@@ -406,17 +458,21 @@ export default function EventsPage() {
 
             {/* ── EVENTS TAB ── */}
             <TabPane tabId="events">
-              <div className="d-flex justify-content-end mb-3">
-                <Button color="primary" size="sm" onClick={openCreateEv}>
-                  <i className="bi bi-plus-lg me-1" />
-                  Nuevo evento
-                </Button>
-              </div>
+              {!isSuperuser && (
+                <div className="d-flex justify-content-end mb-3">
+                  <Button color="primary" size="sm" onClick={openCreateEv}>
+                    <i className="bi bi-plus-lg me-1" />
+                    Nuevo evento
+                  </Button>
+                </div>
+              )}
 
               {evLoading && <div className="text-center py-4"><Spinner color="primary" /></div>}
               {!evLoading && evError && <Alert color="danger">{evError}</Alert>}
               {!evLoading && !evError && events.length === 0 && (
-                <p className="text-muted text-center py-3">No participas en ningún evento aún.</p>
+                <p className="text-muted text-center py-3">
+                  {isSuperuser ? 'No hay eventos registrados.' : 'No participas en ningún evento aún.'}
+                </p>
               )}
               {!evLoading && !evError && events.length > 0 && (
                 <Table responsive hover>
@@ -427,7 +483,7 @@ export default function EventsPage() {
                       <th>Tipo</th>
                       <th>Instituciones</th>
                       <th>Presentaciones</th>
-                      <th></th>
+                      {!isSuperuser && <th></th>}
                     </tr>
                   </thead>
                   <tbody>
@@ -442,16 +498,18 @@ export default function EventsPage() {
                           ))}
                         </td>
                         <td className="text-center">{ev.presentationCount}</td>
-                        <td className="text-end">
-                          <Button color="outline-secondary" size="sm" className="me-2"
-                            onClick={() => openEditEv(ev)}>
-                            <i className="bi bi-pencil" />
-                          </Button>
-                          <Button color="outline-danger" size="sm"
-                            onClick={() => { setEvToDelete(ev); setEvDeleteError(''); setEvDeleteModal(true); }}>
-                            <i className="bi bi-trash" />
-                          </Button>
-                        </td>
+                        {!isSuperuser && (
+                          <td className="text-end">
+                            <Button color="outline-secondary" size="sm" className="me-2"
+                              onClick={() => openEditEv(ev)}>
+                              <i className="bi bi-pencil" />
+                            </Button>
+                            <Button color="outline-danger" size="sm"
+                              onClick={() => { setEvToDelete(ev); setEvDeleteError(''); setEvDeleteModal(true); }}>
+                              <i className="bi bi-trash" />
+                            </Button>
+                          </td>
+                        )}
                       </tr>
                     ))}
                   </tbody>

@@ -218,6 +218,46 @@ public sealed class EventService : IEventService
             .ToListAsync(ct);
     }
 
+    public Task<List<PresentationDto>> GetAllPresentationsAsync(CancellationToken ct = default)
+    {
+        return _context.Presentations
+            .AsNoTracking()
+            .Select(p => new PresentationDto
+            {
+                Id = p.Id,
+                Name = p.Name,
+                EventId = p.EventId,
+                EventName = p.Event.Name,
+                Authors = p.AuthorPresentations.Select(ap => new PresentationAuthorDto
+                {
+                    Id = ap.Author.Id,
+                    Name = ap.Author.Name,
+                    UserId = ap.Author.UserId,
+                    LinkedUser = ap.Author.User == null ? null : new LinkedUserSummaryDto
+                    {
+                        Id = ap.Author.User.Id,
+                        UserName = ap.Author.User.UserName,
+                        UserLastName1 = ap.Author.User.UserLastName1,
+                        UserLastName2 = ap.Author.User.UserLastName2,
+                        Email = ap.Author.User.Email,
+                        IsTrained = ap.Author.User.IsTrained,
+                        ScientificCategory = (int)ap.Author.User.ScientificCategory,
+                        TeachingCategory = (int)ap.Author.User.TeachingCategory,
+                        InvestigationCategory = (int)ap.Author.User.InvestigationCategory,
+                        AreaId = ap.Author.User.AreaId,
+                        AreaNombre = ap.Author.User.Area != null ? ap.Author.User.Area.Nombre : null,
+                        UniversidadId = ap.Author.User.Area != null ? ap.Author.User.Area.UniversidadId : null,
+                        UniversidadNombre = ap.Author.User.Area != null && ap.Author.User.Area.Universidad != null
+                            ? ap.Author.User.Area.Universidad.Nombre
+                            : null
+                    }
+                }).ToList(),
+            })
+            .OrderBy(p => p.EventName)
+            .ThenBy(p => p.Name)
+            .ToListAsync(ct);
+    }
+
     public async Task<(Result Result, int? PresentationId)> CreatePresentationAsync(CreatePresentationRequest request, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(request.Name))

@@ -28,6 +28,13 @@ namespace Dashboard_v2.Application.Documents.Reports;
 /// </summary>
 public sealed class AnexoEventosReport : IDocumentReport
 {
+    // TODO(david): Este reporte sigue alimentando una plantilla de ClosedXML.Report que
+    // pierde formato cuando expande varias tablas dinámicas en la misma hoja.
+    // Opciones para arreglarlo:
+    // 1. Dejar de devolver variables para una hoja dinámica y construir el Excel manualmente.
+    // 2. Conservar la plantilla solo como guía visual y rellenar celdas fijas.
+    // 3. Repartir las secciones en hojas separadas si eso es aceptable.
+    // 4. Rediseñar la hoja para eliminar merges y bloques sensibles al corrimiento de filas.
     private const int InternacionalEventTypeId = 0;
     private const int NacionalEventTypeId = 1;
 

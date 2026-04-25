@@ -5,6 +5,7 @@ import { Layout } from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
 import ProfesorRoute from './components/ProfesorRoute';
+import ProfesorOrAdminRoute from './components/ProfesorOrAdminRoute';
 import JefeOrAdminRoute from './components/JefeOrAdminRoute';
 import JefeDeProyectoOrAdminRoute from './components/JefeDeProyectoOrAdminRoute';
 import LoginPage from './pages/LoginPage';
@@ -22,8 +23,18 @@ export default function App() {
 
         {/* Protected routes — wrapped in dashboard layout */}
         {AppRoutes.map((route, index) => {
-          const { element, pageTitle, adminOnly, jefeOrAdminOnly, jefeDeProyectoOrAdminOnly, profesorOnly, ...rest } = route;
-          const Guard = adminOnly ? AdminRoute : jefeOrAdminOnly ? JefeOrAdminRoute : jefeDeProyectoOrAdminOnly ? JefeDeProyectoOrAdminRoute : profesorOnly ? ProfesorRoute : ProtectedRoute;
+          const { element, pageTitle, adminOnly, jefeOrAdminOnly, jefeDeProyectoOrAdminOnly, profesorOnly, profesorOrAdminOnly, ...rest } = route;
+          const Guard = adminOnly
+            ? AdminRoute
+            : jefeOrAdminOnly
+              ? JefeOrAdminRoute
+              : jefeDeProyectoOrAdminOnly
+                ? JefeDeProyectoOrAdminRoute
+                : profesorOrAdminOnly
+                  ? ProfesorOrAdminRoute
+                  : profesorOnly
+                    ? ProfesorRoute
+                    : ProtectedRoute;
           return (
             <Route
               key={index}

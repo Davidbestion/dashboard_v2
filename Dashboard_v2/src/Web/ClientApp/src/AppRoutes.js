@@ -45,8 +45,8 @@ const AppRoutes = [
   {
     path: '/events',
     element: <EventsPage />,
-    pageTitle: 'Mis eventos y presentaciones',
-    profesorOnly: true,
+    pageTitle: 'Eventos y presentaciones',
+    profesorOrAdminOnly: true,
   },
   {
     path: '/universidades',

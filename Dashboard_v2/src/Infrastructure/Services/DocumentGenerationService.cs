@@ -14,6 +14,13 @@ namespace Dashboard_v2.Infrastructure.Services;
 /// </summary>
 public sealed class DocumentRenderer : IDocumentRenderer
 {
+    // TODO(david): 'anexo-eventos' no es estable con este renderer genérico basado en
+    // ClosedXML.Report porque su hoja mezcla varias tablas dinámicas, merges y bloques fijos.
+    // Opciones para arreglarlo:
+    // 1. Sacar 'anexo-eventos' de este renderer y generar el workbook manualmente.
+    // 2. Mantener el .xlsx solo como referencia visual y rellenarlo celda por celda.
+    // 3. Reestructurar el anexo en varias hojas si el formato final lo permite.
+    // 4. Rediseñar la plantilla para evitar desplazamientos automáticos de filas.
     // Prefijo del recurso embebido: [AssemblyName].[ruta relativa con puntos]
     private const string ResourcePrefix = "Dashboard_v2.Infrastructure.Templates.";
 
@@ -44,4 +51,3 @@ public sealed class DocumentRenderer : IDocumentRenderer
                 "y esté marcada como EmbeddedResource en Infrastructure.csproj.");
     }
 }
-

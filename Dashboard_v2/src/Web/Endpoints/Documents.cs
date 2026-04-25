@@ -46,6 +46,12 @@ public class Documents : EndpointGroupBase
             return Results.Forbid();
         }
 
+        if (reportName.Equals("anexo-premios", StringComparison.OrdinalIgnoreCase) &&
+            !httpContext.User.IsInRole(nameof(RolesEnum.Superuser)))
+        {
+            return Results.Forbid();
+        }
+
         if (reportName.Equals("anexo-eventos", StringComparison.OrdinalIgnoreCase) &&
             !httpContext.User.IsInRole(nameof(RolesEnum.Superuser)))
         {

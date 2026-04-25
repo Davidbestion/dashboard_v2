@@ -79,6 +79,7 @@ public static class DependencyInjection
         builder.Services.AddScoped<IDocumentReport, AnexoGruposReport>();
         builder.Services.AddScoped<IDocumentReport, AnexoGruposEstudiantilesReport>();
         builder.Services.AddScoped<IDocumentReport, AnexoPublicacionesReport>();
+        builder.Services.AddScoped<IDocumentReport, AnexoPremiosReport>();
         builder.Services.AddScoped<IDocumentReport, AnexoEventosReport>();
         builder.Services.AddScoped<IDocumentReport, ProyectosReport>();
 

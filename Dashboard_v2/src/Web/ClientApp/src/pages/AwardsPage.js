@@ -6,6 +6,7 @@ import {
   Modal, ModalHeader, ModalBody, ModalFooter,
   Form, FormGroup, Label, Input,
 } from 'reactstrap';
+import { useAuth } from '../contexts/AuthContext';
 
 async function apiFetch(url, options = {}) {
   const response = await fetch(url, {
@@ -54,9 +55,13 @@ const EMPTY_FORM = {
 };
 
 export default function AwardsPage() {
+  const { user } = useAuth();
+  const isSuperuser = user?.role === 'Superuser';
   const [awards, setAwards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [generatingAnexo, setGeneratingAnexo] = useState(false);
+  const [anexoError, setAnexoError] = useState('');
 
   const [modal, setModal] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -70,6 +75,13 @@ export default function AwardsPage() {
   const [deleteError, setDeleteError] = useState('');
 
   const loadAwards = useCallback(async () => {
+    if (isSuperuser) {
+      setAwards([]);
+      setLoading(false);
+      setError('');
+      return;
+    }
+
     setLoading(true);
     setError('');
     try {
@@ -80,9 +92,36 @@ export default function AwardsPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isSuperuser]);
 
   useEffect(() => { loadAwards(); }, [loadAwards]);
+
+  async function handleGenerateAnexo() {
+    setGeneratingAnexo(true);
+    setAnexoError('');
+    try {
+      const response = await fetch('/api/Documents/anexo-premios', { credentials: 'include' });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        const message = data?.error ?? data?.title ?? 'No se pudo generar el anexo.';
+        throw new Error(message);
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'anexo-premios.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (e) {
+      setAnexoError(e.message);
+    } finally {
+      setGeneratingAnexo(false);
+    }
+  }
 
   function openCreate() {
     setEditing(null);
@@ -170,14 +209,28 @@ export default function AwardsPage() {
     <>
       <Card>
         <CardHeader className="d-flex justify-content-between align-items-center">
-          <span className="fw-semibold">Mis premios</span>
-          <Button color="primary" size="sm" onClick={openCreate}>
-            <i className="bi bi-plus-lg me-1" />
-            Nuevo premio
-          </Button>
+          <span className="fw-semibold">{isSuperuser ? 'Premios' : 'Mis premios'}</span>
+          {isSuperuser ? (
+            <Button color="success" size="sm" onClick={handleGenerateAnexo} disabled={generatingAnexo}>
+              {generatingAnexo ? <Spinner size="sm" /> : '⬇ Generar Anexo 5'}
+            </Button>
+          ) : (
+            <Button color="primary" size="sm" onClick={openCreate}>
+              <i className="bi bi-plus-lg me-1" />
+              Nuevo premio
+            </Button>
+          )}
         </CardHeader>
 
         <CardBody>
+          {anexoError && <Alert color="danger">{anexoError}</Alert>}
+
+          {isSuperuser && (
+            <Alert color="info">
+              El anexo de premios se genera desde esta vista. El listado editable de premios sigue disponible solo para usuarios con rol Profesor.
+            </Alert>
+          )}
+
           {loading && (
             <div className="text-center py-4">
               <Spinner color="primary" />
@@ -186,11 +239,11 @@ export default function AwardsPage() {
 
           {!loading && error && <Alert color="danger">{error}</Alert>}
 
-          {!loading && !error && awards.length === 0 && (
+          {!isSuperuser && !loading && !error && awards.length === 0 && (
             <p className="text-muted text-center py-3">No tienes premios registrados.</p>
           )}
 
-          {!loading && !error && awards.length > 0 && (
+          {!isSuperuser && !loading && !error && awards.length > 0 && (
             <Table responsive hover>
               <thead>
                 <tr>

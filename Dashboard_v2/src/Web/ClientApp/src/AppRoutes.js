@@ -39,8 +39,8 @@ const AppRoutes = [
   {
     path: '/awards',
     element: <AwardsPage />,
-    pageTitle: 'Mis premios',
-    profesorOnly: true,
+    pageTitle: 'Premios',
+    profesorOrAdminOnly: true,
   },
   {
     path: '/events',

@@ -5,7 +5,6 @@ public record CreateAwardRequest
     public int? AwardId { get; init; }
     public string? NewAwardName { get; init; }
     public int? AwardTypeId { get; init; }
-    public int Year { get; init; }
     public DateTime AwardedAt { get; init; }
 }
 
@@ -14,6 +13,5 @@ public record UpdateAwardRequest
     public int? AwardId { get; init; }
     public string? NewAwardName { get; init; }
     public int? AwardTypeId { get; init; }
-    public int Year { get; init; }
     public DateTime AwardedAt { get; init; }
 }

@@ -42,7 +42,6 @@ public sealed class AwardService : IAwardService
                     .Select(gg => new GrantingDto
                     {
                         AwardedAt = gg.First().AwardedAt,
-                        Year = gg.First().Year,
                         Recipients = gg
                             .Select(r => new RecipientDto
                             {
@@ -85,7 +84,6 @@ public sealed class AwardService : IAwardService
                     .Select(gg => new GrantingDto
                     {
                         AwardedAt = gg.First().AwardedAt,
-                        Year = gg.First().Year,
                         Recipients = gg
                             .Select(r => new RecipientDto
                             {
@@ -138,7 +136,6 @@ public sealed class AwardService : IAwardService
         {
             UserId = _currentUser.Id!,
             AwardId = award.Id,
-            Year = request.Year,
             AwardedAt = request.AwardedAt,
         };
         _context.UserAwardeds.Add(userAwarded);
@@ -163,7 +160,6 @@ public sealed class AwardService : IAwardService
             return result;
 
         userAwarded.AwardId = award.Id;
-        userAwarded.Year = request.Year;
         userAwarded.AwardedAt = request.AwardedAt;
 
         await _context.SaveChangesAsync(ct);

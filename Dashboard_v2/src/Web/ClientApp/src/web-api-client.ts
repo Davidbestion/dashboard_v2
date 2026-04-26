@@ -5491,7 +5491,6 @@ export interface IAwardWithGrantingsDto {
 
 export class GrantingDto implements IGrantingDto {
     awardedAt?: Date;
-    year?: number;
     recipients?: RecipientDto[];
 
     constructor(data?: IGrantingDto) {
@@ -5506,7 +5505,6 @@ export class GrantingDto implements IGrantingDto {
     init(_data?: any) {
         if (_data) {
             this.awardedAt = _data["awardedAt"] ? new Date(_data["awardedAt"].toString()) : undefined as any;
-            this.year = _data["year"];
             if (Array.isArray(_data["recipients"])) {
                 this.recipients = [] as any;
                 for (let item of _data["recipients"])
@@ -5525,7 +5523,6 @@ export class GrantingDto implements IGrantingDto {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["awardedAt"] = this.awardedAt ? this.awardedAt.toISOString() : undefined as any;
-        data["year"] = this.year;
         if (Array.isArray(this.recipients)) {
             data["recipients"] = [];
             for (let item of this.recipients)
@@ -5537,7 +5534,6 @@ export class GrantingDto implements IGrantingDto {
 
 export interface IGrantingDto {
     awardedAt?: Date;
-    year?: number;
     recipients?: RecipientDto[];
 }
 
@@ -5637,7 +5633,6 @@ export class CreateAwardRequest implements ICreateAwardRequest {
     awardId?: number | undefined;
     newAwardName?: string | undefined;
     awardTypeId?: number | undefined;
-    year?: number;
     awardedAt?: Date;
 
     constructor(data?: ICreateAwardRequest) {
@@ -5654,7 +5649,6 @@ export class CreateAwardRequest implements ICreateAwardRequest {
             this.awardId = _data["awardId"];
             this.newAwardName = _data["newAwardName"];
             this.awardTypeId = _data["awardTypeId"];
-            this.year = _data["year"];
             this.awardedAt = _data["awardedAt"] ? new Date(_data["awardedAt"].toString()) : undefined as any;
         }
     }
@@ -5671,7 +5665,6 @@ export class CreateAwardRequest implements ICreateAwardRequest {
         data["awardId"] = this.awardId;
         data["newAwardName"] = this.newAwardName;
         data["awardTypeId"] = this.awardTypeId;
-        data["year"] = this.year;
         data["awardedAt"] = this.awardedAt ? this.awardedAt.toISOString() : undefined as any;
         return data;
     }
@@ -5681,7 +5674,6 @@ export interface ICreateAwardRequest {
     awardId?: number | undefined;
     newAwardName?: string | undefined;
     awardTypeId?: number | undefined;
-    year?: number;
     awardedAt?: Date;
 }
 
@@ -5689,7 +5681,6 @@ export class UpdateAwardRequest implements IUpdateAwardRequest {
     awardId?: number | undefined;
     newAwardName?: string | undefined;
     awardTypeId?: number | undefined;
-    year?: number;
     awardedAt?: Date;
 
     constructor(data?: IUpdateAwardRequest) {
@@ -5706,7 +5697,6 @@ export class UpdateAwardRequest implements IUpdateAwardRequest {
             this.awardId = _data["awardId"];
             this.newAwardName = _data["newAwardName"];
             this.awardTypeId = _data["awardTypeId"];
-            this.year = _data["year"];
             this.awardedAt = _data["awardedAt"] ? new Date(_data["awardedAt"].toString()) : undefined as any;
         }
     }
@@ -5723,7 +5713,6 @@ export class UpdateAwardRequest implements IUpdateAwardRequest {
         data["awardId"] = this.awardId;
         data["newAwardName"] = this.newAwardName;
         data["awardTypeId"] = this.awardTypeId;
-        data["year"] = this.year;
         data["awardedAt"] = this.awardedAt ? this.awardedAt.toISOString() : undefined as any;
         return data;
     }
@@ -5733,7 +5722,6 @@ export interface IUpdateAwardRequest {
     awardId?: number | undefined;
     newAwardName?: string | undefined;
     awardTypeId?: number | undefined;
-    year?: number;
     awardedAt?: Date;
 }
 

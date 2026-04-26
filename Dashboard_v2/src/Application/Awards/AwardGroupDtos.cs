@@ -14,7 +14,6 @@ public record RecipientDto
 public record GrantingDto
 {
     public DateTime AwardedAt { get; init; }
-    public int Year { get; init; }
     public List<RecipientDto> Recipients { get; init; } = new();
 }
 

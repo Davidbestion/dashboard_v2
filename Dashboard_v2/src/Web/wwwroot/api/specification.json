@@ -3996,10 +3996,6 @@
             "type": "string",
             "format": "date-time"
           },
-          "year": {
-            "type": "integer",
-            "format": "int32"
-          },
           "recipients": {
             "type": "array",
             "items": {
@@ -4062,10 +4058,6 @@
             "format": "int32",
             "nullable": true
           },
-          "year": {
-            "type": "integer",
-            "format": "int32"
-          },
           "awardedAt": {
             "type": "string",
             "format": "date-time"
@@ -4089,10 +4081,6 @@
             "type": "integer",
             "format": "int32",
             "nullable": true
-          },
-          "year": {
-            "type": "integer",
-            "format": "int32"
           },
           "awardedAt": {
             "type": "string",

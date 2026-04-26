@@ -11,7 +11,6 @@ public record AwardDto
     public string AwardName { get; init; } = default!;
     public int AwardTypeId { get; init; }
     public string AwardTypeName { get; init; } = default!;
-    public int Year { get; init; }
     public DateTime AwardedAt { get; init; }
     // Usuario que recibió el premio
     public string UserId { get; init; } = default!;

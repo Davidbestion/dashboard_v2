@@ -64,7 +64,7 @@ public sealed class DocumentRenderer : IDocumentRenderer
         const int lastColumn = 3;
         const int existingPrototypeRows = 3;
 
-        var totalRowsNeeded = tiposPremio?.Sum(type => 2 + type.Premios.Count) ?? 0;
+        var totalRowsNeeded = tiposPremio?.Sum(type => 2 + Math.Max(1, type.Premios.Count)) ?? 0;
         var bodyRowCount = Math.Max(existingPrototypeRows, totalRowsNeeded);
 
         if (totalRowsNeeded > existingPrototypeRows)
@@ -87,12 +87,22 @@ public sealed class DocumentRenderer : IDocumentRenderer
             ws.Cell(currentRow, 3).Value = "Autores";
             currentRow++;
 
-            foreach (var premio in tipo.Premios)
+            if (tipo.Premios.Count > 0)
             {
+                foreach (var premio in tipo.Premios)
+                {
+                    CopyRowLayout(ws, awardPrototypeRow, currentRow, lastColumn);
+                    ws.Cell(currentRow, 1).Value = string.Empty;
+                    ws.Cell(currentRow, 2).Value = premio.Titulo;
+                    ws.Cell(currentRow, 3).Value = premio.Autores;
+                    currentRow++;
+                }
+            }
+            else
+            {
+                // If there are no awards under this type, insert a blank row
                 CopyRowLayout(ws, awardPrototypeRow, currentRow, lastColumn);
-                ws.Cell(currentRow, 1).Value = string.Empty;
-                ws.Cell(currentRow, 2).Value = premio.Titulo;
-                ws.Cell(currentRow, 3).Value = premio.Autores;
+                // leave cells empty
                 currentRow++;
             }
         }

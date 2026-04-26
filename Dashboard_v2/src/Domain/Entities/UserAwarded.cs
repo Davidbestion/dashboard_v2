@@ -10,9 +10,7 @@ public class UserAwarded
 
     public int AwardId { get; set; }
     public Award Award { get; set; } = null!;
-
-    public int Year { get; set; }
-
+    
     /// <summary>Fecha en que se otorgó el premio (para ordenar).</summary>
     public DateTime AwardedAt { get; set; }
 }

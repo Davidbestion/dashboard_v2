@@ -52,7 +52,6 @@ const EMPTY_FORM = {
   createNewAward: false,
   newAwardName: '',
   awardType: '0',
-  year: new Date().getFullYear().toString(),
   awardedAt: new Date().toISOString().slice(0, 10),
 };
 
@@ -113,7 +112,7 @@ export default function AwardsPage() {
           awardTypeId: a.awardTypeId,
           awardTypeName: a.awardTypeName,
           awardedAt: g.awardedAt,
-          year: g.year ?? (g.awardedAt ? new Date(g.awardedAt).getFullYear() : new Date().getFullYear()),
+          year: (g.awardedAt ? new Date(g.awardedAt).getFullYear() : new Date().getFullYear()),
           recipients: recipients,
           ownerRecipientId: owner ? owner.id : null,
           isMine: !!owner,
@@ -189,7 +188,6 @@ export default function AwardsPage() {
         createNewAward: false,
         newAwardName: '',
         awardType: String(matchingCatalogEntry.awardTypeId),
-        year: award.year?.toString() ?? '',
         awardedAt: (award.awardedAt ?? '').slice(0, 10),
       });
     } else {
@@ -198,7 +196,6 @@ export default function AwardsPage() {
         createNewAward: true,
         newAwardName: award.awardName,
         awardType: String(award.awardTypeId ?? award.awardType ?? '0'),
-        year: award.year?.toString() ?? '',
         awardedAt: (award.awardedAt ?? '').slice(0, 10),
       });
     }
@@ -248,7 +245,6 @@ export default function AwardsPage() {
       awardId: form.createNewAward ? null : parseInt(form.awardId, 10),
       newAwardName: form.createNewAward ? form.newAwardName.trim() : null,
       awardTypeId: form.createNewAward ? parseInt(form.awardType, 10) : null,
-      year: parseInt(form.year, 10),
       awardedAt: new Date(form.awardedAt).toISOString(),
     };
     try {
@@ -361,7 +357,7 @@ export default function AwardsPage() {
                             color="outline-secondary"
                             size="sm"
                             className="me-2"
-                            onClick={() => openEdit({ id: a.ownerRecipientId, awardName: a.awardName, awardTypeId: a.awardTypeId, year: a.year, awardedAt: a.awardedAt })}
+                            onClick={() => openEdit({ id: a.ownerRecipientId, awardName: a.awardName, awardTypeId: a.awardTypeId, awardedAt: a.awardedAt })}
                           >
                             <i className="bi bi-pencil" />
                           </Button>
@@ -461,19 +457,7 @@ export default function AwardsPage() {
               )}
             </FormGroup>
 
-            <FormGroup>
-              <Label for="year">Año *</Label>
-              <Input
-                type="number"
-                id="year"
-                name="year"
-                value={form.year}
-                onChange={handleChange}
-                min="1900"
-                max={new Date().getFullYear() + 1}
-                required
-              />
-            </FormGroup>
+            {/* Year is derived from `awardedAt` and is no longer a separate input */}
 
             <FormGroup>
               <Label for="awardedAt">Fecha de otorgamiento *</Label>

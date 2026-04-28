@@ -16,6 +16,8 @@ public record EventDto
     public string EventTypeName { get; init; } = default!;
     public List<string> Institutions { get; init; } = [];
     public int PresentationCount { get; init; }
+    public string? RedId { get; init; }
+    public string? RedName { get; init; }
 }
 
 public record PresentationDto

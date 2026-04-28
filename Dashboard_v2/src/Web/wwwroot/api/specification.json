@@ -3869,6 +3869,94 @@
         }
       }
     },
+    "/api/Redes/{id}/events": {
+      "get": {
+        "tags": [
+          "Redes"
+        ],
+        "operationId": "GetEventsForRed",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EventForRedDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Redes"
+        ],
+        "operationId": "SetEventsForRed",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "body",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetEventsBody"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Registros": {
       "get": {
         "tags": [
@@ -4951,6 +5039,14 @@
           "presentationCount": {
             "type": "integer",
             "format": "int32"
+          },
+          "redId": {
+            "type": "string",
+            "nullable": true
+          },
+          "redName": {
+            "type": "string",
+            "nullable": true
           }
         }
       },
@@ -5009,6 +5105,10 @@
             "items": {
               "type": "string"
             }
+          },
+          "redId": {
+            "type": "string",
+            "nullable": true
           }
         }
       },
@@ -5032,6 +5132,10 @@
             "items": {
               "type": "string"
             }
+          },
+          "redId": {
+            "type": "string",
+            "nullable": true
           }
         }
       },
@@ -6333,6 +6437,35 @@
           "cantidadProfesores": {
             "type": "integer",
             "format": "int32"
+          }
+        }
+      },
+      "EventForRedDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "assigned": {
+            "type": "boolean"
+          }
+        }
+      },
+      "SetEventsBody": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "eventIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
           }
         }
       },

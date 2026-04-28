@@ -4982,6 +4982,103 @@ export class RedesClient {
         }
         return Promise.resolve<void>(null as any);
     }
+
+    getEventsForRed(id: string): Promise<EventForRedDto[]> {
+        let url_ = this.baseUrl + "/api/Redes/{id}/events";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetEventsForRed(_response);
+        });
+    }
+
+    protected processGetEventsForRed(response: Response): Promise<EventForRedDto[]> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(EventForRedDto.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<EventForRedDto[]>(null as any);
+    }
+
+    setEventsForRed(id: string, body: SetEventsBody): Promise<void> {
+        let url_ = this.baseUrl + "/api/Redes/{id}/events";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processSetEventsForRed(_response);
+        });
+    }
+
+    protected processSetEventsForRed(response: Response): Promise<void> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
 }
 
 export class RegistrosClient {
@@ -6934,6 +7031,8 @@ export class EventDto implements IEventDto {
     eventTypeName?: string;
     institutions?: string[];
     presentationCount?: number;
+    redId?: string | undefined;
+    redName?: string | undefined;
 
     constructor(data?: IEventDto) {
         if (data) {
@@ -6958,6 +7057,8 @@ export class EventDto implements IEventDto {
                     this.institutions!.push(item);
             }
             this.presentationCount = _data["presentationCount"];
+            this.redId = _data["redId"];
+            this.redName = _data["redName"];
         }
     }
 
@@ -6982,6 +7083,8 @@ export class EventDto implements IEventDto {
                 data["institutions"].push(item);
         }
         data["presentationCount"] = this.presentationCount;
+        data["redId"] = this.redId;
+        data["redName"] = this.redName;
         return data;
     }
 }
@@ -6995,6 +7098,8 @@ export interface IEventDto {
     eventTypeName?: string;
     institutions?: string[];
     presentationCount?: number;
+    redId?: string | undefined;
+    redName?: string | undefined;
 }
 
 export class CountryDto implements ICountryDto {
@@ -7118,6 +7223,7 @@ export class CreateEventRequest implements ICreateEventRequest {
     countryId?: number;
     eventType?: number;
     institutions?: string[];
+    redId?: string | undefined;
 
     constructor(data?: ICreateEventRequest) {
         if (data) {
@@ -7138,6 +7244,7 @@ export class CreateEventRequest implements ICreateEventRequest {
                 for (let item of _data["institutions"])
                     this.institutions!.push(item);
             }
+            this.redId = _data["redId"];
         }
     }
 
@@ -7158,6 +7265,7 @@ export class CreateEventRequest implements ICreateEventRequest {
             for (let item of this.institutions)
                 data["institutions"].push(item);
         }
+        data["redId"] = this.redId;
         return data;
     }
 }
@@ -7167,6 +7275,7 @@ export interface ICreateEventRequest {
     countryId?: number;
     eventType?: number;
     institutions?: string[];
+    redId?: string | undefined;
 }
 
 export class UpdateEventRequest implements IUpdateEventRequest {
@@ -7174,6 +7283,7 @@ export class UpdateEventRequest implements IUpdateEventRequest {
     countryId?: number;
     eventType?: number;
     institutions?: string[];
+    redId?: string | undefined;
 
     constructor(data?: IUpdateEventRequest) {
         if (data) {
@@ -7194,6 +7304,7 @@ export class UpdateEventRequest implements IUpdateEventRequest {
                 for (let item of _data["institutions"])
                     this.institutions!.push(item);
             }
+            this.redId = _data["redId"];
         }
     }
 
@@ -7214,6 +7325,7 @@ export class UpdateEventRequest implements IUpdateEventRequest {
             for (let item of this.institutions)
                 data["institutions"].push(item);
         }
+        data["redId"] = this.redId;
         return data;
     }
 }
@@ -7223,6 +7335,7 @@ export interface IUpdateEventRequest {
     countryId?: number;
     eventType?: number;
     institutions?: string[];
+    redId?: string | undefined;
 }
 
 export class GrupoDeInvestigacionDto implements IGrupoDeInvestigacionDto {
@@ -10041,6 +10154,94 @@ export interface IUpdateRedBody {
     nombre?: string;
     esNacional?: boolean;
     cantidadProfesores?: number;
+}
+
+export class EventForRedDto implements IEventForRedDto {
+    id?: number;
+    name?: string;
+    assigned?: boolean;
+
+    constructor(data?: IEventForRedDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.name = _data["name"];
+            this.assigned = _data["assigned"];
+        }
+    }
+
+    static fromJS(data: any): EventForRedDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new EventForRedDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["name"] = this.name;
+        data["assigned"] = this.assigned;
+        return data;
+    }
+}
+
+export interface IEventForRedDto {
+    id?: number;
+    name?: string;
+    assigned?: boolean;
+}
+
+export class SetEventsBody implements ISetEventsBody {
+    eventIds?: number[];
+
+    constructor(data?: ISetEventsBody) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (Array.isArray(_data["eventIds"])) {
+                this.eventIds = [] as any;
+                for (let item of _data["eventIds"])
+                    this.eventIds!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): SetEventsBody {
+        data = typeof data === 'object' ? data : {};
+        let result = new SetEventsBody();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.eventIds)) {
+            data["eventIds"] = [];
+            for (let item of this.eventIds)
+                data["eventIds"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface ISetEventsBody {
+    eventIds?: number[];
 }
 
 export class RegistroDto implements IRegistroDto {

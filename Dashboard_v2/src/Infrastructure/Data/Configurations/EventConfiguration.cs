@@ -45,5 +45,11 @@ public class EventConfiguration : IEntityTypeConfiguration<Event>
             .WithMany(t => t.Events)
             .HasForeignKey(e => e.EventTypeId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // Relación opcional con Red (una Red coordina muchos Eventos; un Evento puede tener 0..1 Red)
+        builder.HasOne(e => e.Red)
+            .WithMany(r => r.Events)
+            .HasForeignKey(e => e.RedId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

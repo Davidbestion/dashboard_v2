@@ -30,7 +30,7 @@ async function apiFetch(url, options = {}) {
 // ─── Shared helpers ────────────────────────────────────────────────────────────
 
 const EMPTY_PRES = { name: '', eventId: '' };
-const EMPTY_EVENT = { name: '', countryId: '', eventType: '', institutions: [] };
+const EMPTY_EVENT = { name: '', countryId: '', eventType: '', institutions: [], redId: '' };
 
 const EVENT_TYPE_LABELS = { 0: 'Internacional', 1: 'Nacional', 2: 'De área', 3: 'Local' };
 
@@ -52,6 +52,7 @@ export default function EventsPage() {
   const [countries, setCountries] = useState([]);
   const [eventTypes, setEventTypes] = useState([]);
   const [allEvents, setAllEvents] = useState([]);  // para el select del form de presentaciones
+  const [reds, setReds] = useState([]);
 
   // PRESENTATIONS state
   const [presentations, setPresentations] = useState([]);
@@ -106,6 +107,8 @@ export default function EventsPage() {
     setCountries(c);
     setEventTypes(et);
     setAllEvents(ae);
+    // Reds for event selection (optional)
+    try { setReds(await apiFetch('/api/Redes')); } catch { setReds([]); }
   }, []);
 
   const loadPresentations = useCallback(async () => {
@@ -277,6 +280,7 @@ export default function EventsPage() {
       countryId: ev.countryId?.toString(),
       eventType: String(ev.eventTypeId ?? ev.eventType ?? ''),
       institutions: [...ev.institutions],
+      redId: ev.redId ?? ev.RedId ?? ''
     });
     setInstInput('');
     setEvFormError('');
@@ -343,6 +347,7 @@ export default function EventsPage() {
       countryId: parseInt(evForm.countryId, 10),
       eventType: parseInt(evForm.eventType, 10),
       institutions: evForm.institutions,
+      redId: evForm.redId && evForm.redId.length > 0 ? evForm.redId : null,
     };
 
     try {
@@ -501,11 +506,12 @@ export default function EventsPage() {
                 <Table responsive hover>
                   <thead>
                     <tr>
-                      <th>Nombre</th>
-                      <th>País</th>
-                      <th>Tipo</th>
-                      <th>Instituciones</th>
-                      <th>Presentaciones</th>
+                        <th>Nombre</th>
+                        <th>País</th>
+                        <th>Tipo</th>
+                        <th>Instituciones</th>
+                        <th>Red</th>
+                        <th>Presentaciones</th>
                       {!isSuperuser && <th></th>}
                     </tr>
                   </thead>
@@ -520,6 +526,7 @@ export default function EventsPage() {
                             <Badge key={i} color="secondary" pill className="me-1">{inst}</Badge>
                           ))}
                         </td>
+                          <td>{ev.redName ?? ev.redName ?? ev.RedName ?? ''}</td>
                         <td className="text-center">{ev.presentationCount}</td>
                         {!isSuperuser && (
                           <td className="text-end">
@@ -710,6 +717,18 @@ export default function EventsPage() {
                   </InputGroup>
                 </div>
               )}
+            </FormGroup>
+
+            <FormGroup>
+              <Label for="evRed">Red coordinadora (opcional)</Label>
+              <Input type="select" id="evRed" value={evForm.redId ?? ''}
+                onChange={e => setEvForm(f => ({ ...f, redId: e.target.value }))}>
+                <option value="">— Ninguna —</option>
+                {reds.map(r => (
+                  <option key={r.id ?? r.Id} value={r.id ?? r.Id}>{r.nombre ?? r.Nombre}</option>
+                ))}
+              </Input>
+              <small className="text-muted">Selecciona una red coordinadora si aplica.</small>
             </FormGroup>
           </ModalBody>
           <ModalFooter>

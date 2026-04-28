@@ -15,5 +15,12 @@ public class Event
     public int EventTypeId { get; set; }
     public EventType EventType { get; set; } = default!;
 
+    /// <summary>
+    /// Red coordinadora (opcional). Una red puede coordinar varios eventos;
+    /// un evento puede no tener una red coordinadora o tener una sola.
+    /// </summary>
+    public string? RedId { get; set; }
+    public Red? Red { get; set; }
+
     public ICollection<Presentation> Presentations { get; set; } = new List<Presentation>();
 }

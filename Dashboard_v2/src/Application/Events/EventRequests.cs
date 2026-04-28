@@ -8,6 +8,7 @@ public record CreateEventRequest
     public int CountryId { get; init; }
     public int EventType { get; init; }
     public List<string> Institutions { get; init; } = [];
+    public string? RedId { get; init; }
 }
 
 public record UpdateEventRequest
@@ -16,6 +17,7 @@ public record UpdateEventRequest
     public int CountryId { get; init; }
     public int EventType { get; init; }
     public List<string> Institutions { get; init; } = [];
+    public string? RedId { get; init; }
 }
 
 public record CreatePresentationRequest

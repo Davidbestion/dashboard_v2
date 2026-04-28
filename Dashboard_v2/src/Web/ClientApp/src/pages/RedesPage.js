@@ -32,6 +32,13 @@ export default function RedesPage() {
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
+  const [eventsModal, setEventsModal] = useState(false);
+  const [assigningRed, setAssigningRed] = useState(null);
+  const [availableEvents, setAvailableEvents] = useState([]);
+  const [eventsLoading, setEventsLoading] = useState(false);
+  const [selectedEventIds, setSelectedEventIds] = useState(new Set());
+  const [assignError, setAssignError] = useState('');
+  const [assignSaving, setAssignSaving] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true); setError('');
@@ -42,6 +49,48 @@ export default function RedesPage() {
 
   function openCreate() { setEditing(null); setForm(emptyForm); setFormError(''); setModal(true); }
   function openEdit(it) { setEditing(it); setForm({ nombre: it.nombre ?? it.Nombre, esNacional: it.esNacional ?? it.EsNacional, cantidadProfesores: it.cantidadProfesores ?? it.CantidadProfesores }); setFormError(''); setModal(true); }
+
+  function openAssign(it) {
+    setAssigningRed(it);
+    setAssignError('');
+    setEventsModal(true);
+    loadEventsForRed(it);
+  }
+
+  async function loadEventsForRed(red) {
+    setEventsLoading(true);
+    try {
+      const list = await apiFetch(`/api/Redes/${red.id ?? red.Id}/events`);
+      setAvailableEvents(list);
+      const selected = new Set(list.filter(x => x.assigned ?? x.Assigned).map(x => x.id ?? x.Id));
+      setSelectedEventIds(selected);
+    } catch (e) {
+      setAssignError(e.message);
+    } finally {
+      setEventsLoading(false);
+    }
+  }
+
+  function toggleSelectEvent(evId) {
+    setSelectedEventIds(s => {
+      const copy = new Set(Array.from(s));
+      if (copy.has(evId)) copy.delete(evId); else copy.add(evId);
+      return copy;
+    });
+  }
+
+  async function handleAssignSave(e) {
+    if (e) e.preventDefault();
+    setAssignSaving(true); setAssignError('');
+    try {
+      const ids = Array.from(selectedEventIds);
+      await apiFetch(`/api/Redes/${assigningRed.id ?? assigningRed.Id}/events`, { method: 'POST', body: JSON.stringify({ eventIds: ids }) });
+      setEventsModal(false);
+      await load();
+    } catch (err) {
+      setAssignError(err.message);
+    } finally { setAssignSaving(false); }
+  }
 
   async function handleSave(e) {
     if (e) e.preventDefault(); setSaving(true); setFormError('');
@@ -77,6 +126,7 @@ export default function RedesPage() {
                 <tr key={i.id}><td>{i.nombre ?? i.Nombre}</td><td>{(i.esNacional ?? i.EsNacional) ? 'Nacional' : 'Internacional'}</td><td>{i.cantidadProfesores ?? i.CantidadProfesores}</td>
                   <td className="text-end">
                     <Button size="sm" color="outline-secondary" className="me-2" onClick={() => openEdit(i)}>Editar</Button>
+                    <Button size="sm" color="outline-secondary" className="me-2" onClick={() => openAssign(i)}>Asignar eventos</Button>
                     <Button size="sm" color="outline-danger" onClick={() => handleDelete(i.id)}>Eliminar</Button>
                   </td></tr>
               ))}
@@ -106,8 +156,45 @@ export default function RedesPage() {
             </FormGroup>
           </ModalBody>
           <ModalFooter>
+            <Button color="secondary" outline onClick={() => openAssign(editing)} disabled={!editing || saving} className="me-auto">Asignar eventos</Button>
             <Button color="primary" type="submit" disabled={saving}>{saving ? <Spinner size="sm" /> : 'Guardar'}</Button>
             <Button color="secondary" onClick={() => setModal(false)}>Cancelar</Button>
+          </ModalFooter>
+        </Form>
+      </Modal>
+
+      <Modal isOpen={eventsModal} toggle={() => setEventsModal(false)} size="lg">
+        <Form onSubmit={handleAssignSave}>
+          <ModalHeader toggle={() => setEventsModal(false)}>{assigningRed ? `Asignar eventos — ${assigningRed.nombre ?? assigningRed.Nombre}` : 'Asignar eventos'}</ModalHeader>
+          <ModalBody>
+            {assignError && <Alert color="danger">{assignError}</Alert>}
+            {eventsLoading ? (
+              <div className="d-flex justify-content-center"><Spinner /></div>
+            ) : (
+              <Table responsive hover className="mb-0">
+                <thead className="table-light"><tr><th style={{width: '40px'}}></th><th>Nombre</th></tr></thead>
+                <tbody>
+                  {availableEvents.length === 0 && <tr><td colSpan={2} className="text-center text-muted py-4">No hay eventos.</td></tr>}
+                  {availableEvents.map(ev => {
+                    const id = ev.id ?? ev.Id;
+                    const name = ev.name ?? ev.Name;
+                    const assigned = ev.assigned ?? ev.Assigned;
+                    return (
+                      <tr key={id}>
+                        <td>
+                          <Input type="checkbox" checked={selectedEventIds.has(id)} onChange={() => toggleSelectEvent(id)} />
+                        </td>
+                        <td>{name}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </Table>
+            )}
+          </ModalBody>
+          <ModalFooter>
+            <Button color="primary" type="submit" disabled={assignSaving}>{assignSaving ? <Spinner size="sm" /> : 'Guardar asignaciones'}</Button>
+            <Button color="secondary" onClick={() => setEventsModal(false)}>Cancelar</Button>
           </ModalFooter>
         </Form>
       </Modal>

@@ -25,4 +25,9 @@ public class Red
     /// Cantidad aproximada de profesores miembros de la red.
     /// </summary>
     public int CantidadProfesores { get; set; }
+
+    /// <summary>
+    /// Eventos coordinados por esta red.
+    /// </summary>
+    public ICollection<Event> Events { get; set; } = new List<Event>();
 }

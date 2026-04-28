@@ -50,6 +50,8 @@ public sealed class EventService : IEventService
                 EventTypeName = e.EventType.Name,
                 Institutions = e.Institutions.Select(i => i.Nombre).ToList(),
                 PresentationCount = e.Presentations.Count(p => p.AuthorPresentations.Any(ap => ap.AuthorId == authorId)),
+                RedId = e.RedId,
+                RedName = e.Red != null ? e.Red.Nombre : null,
             })
             .OrderBy(e => e.Name)
             .ToListAsync(ct);
@@ -69,6 +71,8 @@ public sealed class EventService : IEventService
                 EventTypeName = e.EventType.Name,
                 Institutions = e.Institutions.Select(i => i.Nombre).ToList(),
                 PresentationCount = e.Presentations.Count,
+                RedId = e.RedId,
+                RedName = e.Red != null ? e.Red.Nombre : null,
             })
             .ToListAsync(ct);
 
@@ -115,6 +119,12 @@ public sealed class EventService : IEventService
         if (!await _context.EventTypes.AnyAsync(t => t.Id == request.EventType, ct))
             return (Result.Failure(new[] { "Tipo de evento no válido." }), null);
 
+        if (!string.IsNullOrWhiteSpace(request.RedId))
+        {
+            if (!await _context.Reds.AnyAsync(r => r.Id == request.RedId, ct))
+                return (Result.Failure(new[] { "Red no válida." }), null);
+        }
+
         var institutionNames = request.Institutions
             .Where(i => !string.IsNullOrWhiteSpace(i))
             .Select(i => i.Trim())
@@ -140,6 +150,7 @@ public sealed class EventService : IEventService
             CountryId = request.CountryId,
             EventTypeId = request.EventType,
             Institutions = institutions,
+            RedId = string.IsNullOrWhiteSpace(request.RedId) ? null : request.RedId,
         };
 
         _context.Events.Add(ev);
@@ -163,9 +174,16 @@ public sealed class EventService : IEventService
         if (!await _context.EventTypes.AnyAsync(t => t.Id == request.EventType, ct))
             return Result.Failure(new[] { "Tipo de evento no válido." });
 
+        if (!string.IsNullOrWhiteSpace(request.RedId))
+        {
+            if (!await _context.Reds.AnyAsync(r => r.Id == request.RedId, ct))
+                return Result.Failure(new[] { "Red no válida." });
+        }
+
         ev.Name = request.Name.Trim();
         ev.CountryId = request.CountryId;
         ev.EventTypeId = request.EventType;
+        ev.RedId = string.IsNullOrWhiteSpace(request.RedId) ? null : request.RedId;
         var updatedNames = request.Institutions
             .Where(i => !string.IsNullOrWhiteSpace(i))
             .Select(i => i.Trim())

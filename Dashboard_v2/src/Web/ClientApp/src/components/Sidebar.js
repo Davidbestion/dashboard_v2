@@ -40,6 +40,15 @@ const jefeGroups = [
   },
 ];
 
+const jefeRedesGroups = [
+  {
+    heading: 'Gestión de Redes',
+    items: [
+      { to: '/redes', icon: 'bi-globe', label: 'Redes' },
+    ],
+  },
+];
+
 const jefeDeProyectoGroups = [
   {
     heading: 'Gestión de Proyectos',
@@ -99,6 +108,7 @@ export default function Sidebar({ collapsed, onToggle }) {
     ...baseGroups,
     ...(user?.role === 'Profesor' ? [...profesorGroups, ...investigacionGroups] : []),
     ...(user?.role === 'Jefe_de_Grupo_de_investigacion' ? jefeGroups : []),
+    ...(user?.role === 'Jefe_de_Redes' ? jefeRedesGroups : []),
     ...(user?.role === 'Jefe_de_Proyecto' ? jefeDeProyectoGroups : []),
     ...(user?.role === 'Superuser' ? adminGroups : []),
   ];

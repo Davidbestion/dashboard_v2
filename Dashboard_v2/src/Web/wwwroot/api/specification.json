@@ -6399,8 +6399,14 @@
           "nombre": {
             "type": "string"
           },
-          "esNacional": {
-            "type": "boolean"
+          "countryId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "countryName": {
+            "type": "string",
+            "nullable": true
           },
           "cantidadProfesores": {
             "type": "integer",
@@ -6415,8 +6421,9 @@
           "nombre": {
             "type": "string"
           },
-          "esNacional": {
-            "type": "boolean"
+          "countryId": {
+            "type": "integer",
+            "format": "int32"
           },
           "cantidadProfesores": {
             "type": "integer",
@@ -6431,8 +6438,9 @@
           "nombre": {
             "type": "string"
           },
-          "esNacional": {
-            "type": "boolean"
+          "countryId": {
+            "type": "integer",
+            "format": "int32"
           },
           "cantidadProfesores": {
             "type": "integer",

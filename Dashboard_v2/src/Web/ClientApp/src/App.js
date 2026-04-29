@@ -7,6 +7,7 @@ import AdminRoute from './components/AdminRoute';
 import ProfesorRoute from './components/ProfesorRoute';
 import ProfesorOrAdminRoute from './components/ProfesorOrAdminRoute';
 import JefeOrAdminRoute from './components/JefeOrAdminRoute';
+import JefeRedesOrAdminRoute from './components/JefeRedesOrAdminRoute';
 import JefeDeProyectoOrAdminRoute from './components/JefeDeProyectoOrAdminRoute';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -23,18 +24,20 @@ export default function App() {
 
         {/* Protected routes — wrapped in dashboard layout */}
         {AppRoutes.map((route, index) => {
-          const { element, pageTitle, adminOnly, jefeOrAdminOnly, jefeDeProyectoOrAdminOnly, profesorOnly, profesorOrAdminOnly, ...rest } = route;
+          const { element, pageTitle, adminOnly, jefeRedesOrAdminOnly, jefeOrAdminOnly, jefeDeProyectoOrAdminOnly, profesorOnly, profesorOrAdminOnly, ...rest } = route;
           const Guard = adminOnly
             ? AdminRoute
-            : jefeOrAdminOnly
-              ? JefeOrAdminRoute
-              : jefeDeProyectoOrAdminOnly
-                ? JefeDeProyectoOrAdminRoute
-                : profesorOrAdminOnly
-                  ? ProfesorOrAdminRoute
-                  : profesorOnly
-                    ? ProfesorRoute
-                    : ProtectedRoute;
+            : jefeRedesOrAdminOnly
+              ? JefeRedesOrAdminRoute
+              : jefeOrAdminOnly
+                ? JefeOrAdminRoute
+                : jefeDeProyectoOrAdminOnly
+                  ? JefeDeProyectoOrAdminRoute
+                  : profesorOrAdminOnly
+                    ? ProfesorOrAdminRoute
+                    : profesorOnly
+                      ? ProfesorRoute
+                      : ProtectedRoute;
           return (
             <Route
               key={index}

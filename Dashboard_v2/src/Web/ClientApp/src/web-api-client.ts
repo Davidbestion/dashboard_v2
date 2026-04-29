@@ -10023,7 +10023,8 @@ export interface IUpdatePublicationBody {
 export class RedDto implements IRedDto {
     id?: string;
     nombre?: string;
-    esNacional?: boolean;
+    countryId?: number | undefined;
+    countryName?: string | undefined;
     cantidadProfesores?: number;
 
     constructor(data?: IRedDto) {
@@ -10039,7 +10040,8 @@ export class RedDto implements IRedDto {
         if (_data) {
             this.id = _data["id"];
             this.nombre = _data["nombre"];
-            this.esNacional = _data["esNacional"];
+            this.countryId = _data["countryId"];
+            this.countryName = _data["countryName"];
             this.cantidadProfesores = _data["cantidadProfesores"];
         }
     }
@@ -10055,7 +10057,8 @@ export class RedDto implements IRedDto {
         data = typeof data === 'object' ? data : {};
         data["id"] = this.id;
         data["nombre"] = this.nombre;
-        data["esNacional"] = this.esNacional;
+        data["countryId"] = this.countryId;
+        data["countryName"] = this.countryName;
         data["cantidadProfesores"] = this.cantidadProfesores;
         return data;
     }
@@ -10064,13 +10067,14 @@ export class RedDto implements IRedDto {
 export interface IRedDto {
     id?: string;
     nombre?: string;
-    esNacional?: boolean;
+    countryId?: number | undefined;
+    countryName?: string | undefined;
     cantidadProfesores?: number;
 }
 
 export class CreateRedBody implements ICreateRedBody {
     nombre?: string;
-    esNacional?: boolean;
+    countryId?: number;
     cantidadProfesores?: number;
 
     constructor(data?: ICreateRedBody) {
@@ -10085,7 +10089,7 @@ export class CreateRedBody implements ICreateRedBody {
     init(_data?: any) {
         if (_data) {
             this.nombre = _data["nombre"];
-            this.esNacional = _data["esNacional"];
+            this.countryId = _data["countryId"];
             this.cantidadProfesores = _data["cantidadProfesores"];
         }
     }
@@ -10100,7 +10104,7 @@ export class CreateRedBody implements ICreateRedBody {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["nombre"] = this.nombre;
-        data["esNacional"] = this.esNacional;
+        data["countryId"] = this.countryId;
         data["cantidadProfesores"] = this.cantidadProfesores;
         return data;
     }
@@ -10108,13 +10112,13 @@ export class CreateRedBody implements ICreateRedBody {
 
 export interface ICreateRedBody {
     nombre?: string;
-    esNacional?: boolean;
+    countryId?: number;
     cantidadProfesores?: number;
 }
 
 export class UpdateRedBody implements IUpdateRedBody {
     nombre?: string;
-    esNacional?: boolean;
+    countryId?: number;
     cantidadProfesores?: number;
 
     constructor(data?: IUpdateRedBody) {
@@ -10129,7 +10133,7 @@ export class UpdateRedBody implements IUpdateRedBody {
     init(_data?: any) {
         if (_data) {
             this.nombre = _data["nombre"];
-            this.esNacional = _data["esNacional"];
+            this.countryId = _data["countryId"];
             this.cantidadProfesores = _data["cantidadProfesores"];
         }
     }
@@ -10144,7 +10148,7 @@ export class UpdateRedBody implements IUpdateRedBody {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["nombre"] = this.nombre;
-        data["esNacional"] = this.esNacional;
+        data["countryId"] = this.countryId;
         data["cantidadProfesores"] = this.cantidadProfesores;
         return data;
     }
@@ -10152,7 +10156,7 @@ export class UpdateRedBody implements IUpdateRedBody {
 
 export interface IUpdateRedBody {
     nombre?: string;
-    esNacional?: boolean;
+    countryId?: number;
     cantidadProfesores?: number;
 }
 

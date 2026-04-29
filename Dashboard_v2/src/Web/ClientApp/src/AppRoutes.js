@@ -140,7 +140,7 @@ const AppRoutes = [
     path: '/redes',
     element: <RedesPage />,
     pageTitle: 'Redes',
-    adminOnly: true,
+    jefeRedesOrAdminOnly: true,
   },
 ];
 

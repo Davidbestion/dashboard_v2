@@ -2,7 +2,7 @@ namespace Dashboard_v2.Domain.Entities;
 
 /// <summary>
 /// Representa una red (colaborativa/profesional).
-/// El campo <see cref="EsNacional"/> indica si la red es nacional (true) o internacional (false).
+/// Una red pertenece a un país (relación obligatoria conceptualmente).
 /// </summary>
 public class Red
 {
@@ -17,9 +17,15 @@ public class Red
     public string Nombre { get; set; } = default!;
 
     /// <summary>
-    /// True si la red es nacional; false si es internacional.
+    /// Identificador del país al que pertenece la red.
+    /// Puede ser null temporalmente hasta que se asigne en migraciones.
     /// </summary>
-    public bool EsNacional { get; set; }
+    public int? CountryId { get; set; }
+
+    /// <summary>
+    /// Navegación al país de la red.
+    /// </summary>
+    public Country? Country { get; set; }
 
     /// <summary>
     /// Cantidad aproximada de profesores miembros de la red.

@@ -20,10 +20,11 @@ async function apiFetch(url, options = {}) {
   return data;
 }
 
-const emptyForm = { nombre: '', esNacional: false, cantidadProfesores: 0 };
+const emptyForm = { nombre: '', countryId: '', cantidadProfesores: 0 };
 
 export default function RedesPage() {
   const [items, setItems] = useState([]);
+  const [countries, setCountries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -42,13 +43,20 @@ export default function RedesPage() {
 
   const load = useCallback(async () => {
     setLoading(true); setError('');
-    try { setItems(await apiFetch('/api/Redes')); } catch (e) { setError(e.message); } finally { setLoading(false); }
+    try {
+      const [reds, cs] = await Promise.all([
+        apiFetch('/api/Redes').catch(() => []),
+        apiFetch('/api/Events/countries').catch(() => []),
+      ]);
+      setItems(reds);
+      setCountries(cs);
+    } catch (e) { setError(e.message); } finally { setLoading(false); }
   }, []);
 
   useEffect(() => { load(); }, [load]);
 
   function openCreate() { setEditing(null); setForm(emptyForm); setFormError(''); setModal(true); }
-  function openEdit(it) { setEditing(it); setForm({ nombre: it.nombre ?? it.Nombre, esNacional: it.esNacional ?? it.EsNacional, cantidadProfesores: it.cantidadProfesores ?? it.CantidadProfesores }); setFormError(''); setModal(true); }
+  function openEdit(it) { setEditing(it); setForm({ nombre: it.nombre ?? it.Nombre, countryId: (it.countryId ?? it.CountryId ?? '')?.toString?.() ?? '', cantidadProfesores: it.cantidadProfesores ?? it.CantidadProfesores }); setFormError(''); setModal(true); }
 
   function openAssign(it) {
     setAssigningRed(it);
@@ -94,7 +102,7 @@ export default function RedesPage() {
 
   async function handleSave(e) {
     if (e) e.preventDefault(); setSaving(true); setFormError('');
-    const body = { nombre: form.nombre, esNacional: form.esNacional, cantidadProfesores: parseInt(form.cantidadProfesores, 10) };
+    const body = { nombre: form.nombre, countryId: form.countryId ? parseInt(form.countryId, 10) : null, cantidadProfesores: parseInt(form.cantidadProfesores, 10) };
     try {
       if (editing) await apiFetch(`/api/Redes/${editing.id}`, { method: 'PUT', body: JSON.stringify(body) });
       else await apiFetch('/api/Redes', { method: 'POST', body: JSON.stringify(body) });
@@ -119,11 +127,11 @@ export default function RedesPage() {
         <CardHeader><strong>Redes</strong> <small className="text-muted ms-2">({items.length})</small></CardHeader>
         <CardBody className="p-0">
           <Table responsive hover className="mb-0">
-            <thead className="table-light"><tr><th>Nombre</th><th>Tipo</th><th>Cantidad profesores</th><th className="text-end">Acciones</th></tr></thead>
+            <thead className="table-light"><tr><th>Nombre</th><th>País</th><th>Cantidad profesores</th><th className="text-end">Acciones</th></tr></thead>
             <tbody>
               {items.length === 0 && <tr><td colSpan={4} className="text-center text-muted py-4">No hay redes.</td></tr>}
               {items.map(i => (
-                <tr key={i.id}><td>{i.nombre ?? i.Nombre}</td><td>{(i.esNacional ?? i.EsNacional) ? 'Nacional' : 'Internacional'}</td><td>{i.cantidadProfesores ?? i.CantidadProfesores}</td>
+                <tr key={i.id}><td>{i.nombre ?? i.Nombre}</td><td>{i.countryName ?? i.CountryName ?? ''}</td><td>{i.cantidadProfesores ?? i.CantidadProfesores}</td>
                   <td className="text-end">
                     <Button size="sm" color="outline-secondary" className="me-2" onClick={() => openEdit(i)}>Editar</Button>
                     <Button size="sm" color="outline-secondary" className="me-2" onClick={() => openAssign(i)}>Asignar eventos</Button>
@@ -144,11 +152,13 @@ export default function RedesPage() {
               <Label>Nombre *</Label>
               <Input value={form.nombre} onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))} />
             </FormGroup>
-            <FormGroup check>
-              <Label check>
-                <Input type="checkbox" checked={form.esNacional} onChange={e => setForm(f => ({ ...f, esNacional: e.target.checked }))} />{' '}
-                Es nacional
-              </Label>
+            <FormGroup>
+              <Label for="redCountry">País *</Label>
+              <Input type="select" id="redCountry" value={form.countryId ?? ''} required
+                onChange={e => setForm(f => ({ ...f, countryId: e.target.value }))}>
+                <option value="">— Selecciona un país —</option>
+                {countries.map(c => <option key={c.id ?? c.Id} value={c.id ?? c.Id}>{c.name ?? c.Name}</option>)}
+              </Input>
             </FormGroup>
             <FormGroup>
               <Label>Cantidad de profesores</Label>

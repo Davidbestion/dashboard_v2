@@ -8,37 +8,37 @@ public class Redes : EndpointGroupBase
     public override void Map(RouteGroupBuilder groupBuilder)
     {
         groupBuilder.MapGet("", GetRedes)
-            .RequireAuthorization()
+            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Redes"))
             .WithName("GetRedes")
             .Produces<List<RedDto>>(200);
 
         groupBuilder.MapPost("", CreateRed)
-            .RequireAuthorization(p => p.RequireRole("Superuser"))
+            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Redes"))
             .WithName("CreateRed")
             .Produces(201)
             .ProducesProblem(400);
 
         groupBuilder.MapPut("{id}", UpdateRed)
-            .RequireAuthorization(p => p.RequireRole("Superuser"))
+            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Redes"))
             .WithName("UpdateRed")
             .Produces(200)
             .ProducesProblem(400)
             .ProducesProblem(404);
 
         groupBuilder.MapDelete("{id}", DeleteRed)
-            .RequireAuthorization(p => p.RequireRole("Superuser"))
+            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Redes"))
             .WithName("DeleteRed")
             .Produces(200)
             .ProducesProblem(404);
 
         // List events and assign/unassign events for a red
         groupBuilder.MapGet("{id}/events", GetEventsForRed)
-            .RequireAuthorization(p => p.RequireRole("Superuser"))
+            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Redes"))
             .WithName("GetEventsForRed")
             .Produces<List<EventForRedDto>>(200);
 
         groupBuilder.MapPost("{id}/events", SetEventsForRed)
-            .RequireAuthorization(p => p.RequireRole("Superuser"))
+            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Redes"))
             .WithName("SetEventsForRed")
             .Produces(200)
             .ProducesProblem(400)
@@ -48,7 +48,7 @@ public class Redes : EndpointGroupBase
     private async Task<IResult> GetRedes(IApplicationDbContext db)
     {
         var list = await db.Reds
-            .Select(r => new RedDto(r.Id, r.Nombre, r.EsNacional, r.CantidadProfesores))
+            .Select(r => new RedDto(r.Id, r.Nombre, r.CountryId, r.Country != null ? r.Country.Name : null, r.CantidadProfesores))
             .ToListAsync();
 
         return Results.Ok(list);
@@ -59,7 +59,7 @@ public class Redes : EndpointGroupBase
         var entity = new Dashboard_v2.Domain.Entities.Red
         {
             Nombre = body.Nombre,
-            EsNacional = body.EsNacional,
+            CountryId = body.CountryId,
             CantidadProfesores = body.CantidadProfesores,
         };
 
@@ -76,7 +76,7 @@ public class Redes : EndpointGroupBase
             return Results.NotFound(new { errors = new[] { "Red no encontrada." } });
 
         e.Nombre = body.Nombre;
-        e.EsNacional = body.EsNacional;
+        e.CountryId = body.CountryId;
         e.CantidadProfesores = body.CantidadProfesores;
 
         await db.SaveChangesAsync(CancellationToken.None);
@@ -132,9 +132,9 @@ public class Redes : EndpointGroupBase
     }
 }
 
-public record RedDto(string Id, string Nombre, bool EsNacional, int CantidadProfesores);
-public record CreateRedBody(string Nombre, bool EsNacional, int CantidadProfesores);
-public record UpdateRedBody(string Nombre, bool EsNacional, int CantidadProfesores);
+public record RedDto(string Id, string Nombre, int? CountryId, string? CountryName, int CantidadProfesores);
+public record CreateRedBody(string Nombre, int CountryId, int CantidadProfesores);
+public record UpdateRedBody(string Nombre, int CountryId, int CantidadProfesores);
 
 public record EventForRedDto(int Id, string Name, bool Assigned);
 public record SetEventsBody(List<int> EventIds);

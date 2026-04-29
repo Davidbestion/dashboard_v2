@@ -4794,6 +4794,149 @@ export class PublicationsClient {
         }
         return Promise.resolve<void>(null as any);
     }
+
+    getPublicationPublicById(id: string): Promise<PublicationDto> {
+        let url_ = this.baseUrl + "/api/Publications/public/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetPublicationPublicById(_response);
+        });
+    }
+
+    protected processGetPublicationPublicById(response: Response): Promise<PublicationDto> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = PublicationDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<PublicationDto>(null as any);
+    }
+
+    findPublicationDuplicates(title: string | null | undefined, doi: string | null | undefined, url: string | null | undefined, excludeId: string | null | undefined): Promise<PublicationDuplicateDto[]> {
+        let url_ = this.baseUrl + "/api/Publications/duplicates?";
+        if (title !== undefined && title !== null)
+            url_ += "title=" + encodeURIComponent("" + title) + "&";
+        if (doi !== undefined && doi !== null)
+            url_ += "doi=" + encodeURIComponent("" + doi) + "&";
+        if (url !== undefined && url !== null)
+            url_ += "url=" + encodeURIComponent("" + url) + "&";
+        if (excludeId !== undefined && excludeId !== null)
+            url_ += "excludeId=" + encodeURIComponent("" + excludeId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processFindPublicationDuplicates(_response);
+        });
+    }
+
+    protected processFindPublicationDuplicates(response: Response): Promise<PublicationDuplicateDto[]> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(PublicationDuplicateDto.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<PublicationDuplicateDto[]>(null as any);
+    }
+
+    addCurrentUserAsCoauthor(id: string): Promise<void> {
+        let url_ = this.baseUrl + "/api/Publications/{id}/coauthors";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "POST",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processAddCurrentUserAsCoauthor(_response);
+        });
+    }
+
+    protected processAddCurrentUserAsCoauthor(response: Response): Promise<void> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
 }
 
 export class RedesClient {
@@ -9914,6 +10057,58 @@ export enum PublicationType {
     Monografía = 2,
     Capítulo = 3,
     Artículo_de_Divulgación = 4,
+}
+
+export class PublicationDuplicateDto implements IPublicationDuplicateDto {
+    id?: string;
+    title?: string;
+    urlDoi?: string | undefined;
+    matchType?: string;
+    score?: number;
+
+    constructor(data?: IPublicationDuplicateDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.title = _data["title"];
+            this.urlDoi = _data["urlDoi"];
+            this.matchType = _data["matchType"];
+            this.score = _data["score"];
+        }
+    }
+
+    static fromJS(data: any): PublicationDuplicateDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new PublicationDuplicateDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["title"] = this.title;
+        data["urlDoi"] = this.urlDoi;
+        data["matchType"] = this.matchType;
+        data["score"] = this.score;
+        return data;
+    }
+}
+
+export interface IPublicationDuplicateDto {
+    id?: string;
+    title?: string;
+    urlDoi?: string | undefined;
+    matchType?: string;
+    score?: number;
 }
 
 export class UpdatePublicationBody implements IUpdatePublicationBody {

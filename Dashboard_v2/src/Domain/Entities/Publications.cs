@@ -6,9 +6,13 @@ public class Publication
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
     public string Title { get; set; } = default!;
+    /// <summary>Versión normalizada del título (sin diacríticos, sin puntuación, lowercase) para búsqueda rápida.</summary>
+    public string? NormalizedTitle { get; set; }
     public string PublicationData { get; set; } = default!;
     /// <summary>URL o DOI que identifica/enlaza la publicación (opcional).</summary>
     public string? UrlDoi { get; set; }
+    /// <summary>Versión normalizada de `UrlDoi` para comparaciones (lowercase, sin esquema, doi cleaned).</summary>
+    public string? NormalizedUrlDoi { get; set; }
 
     public PublicationType PublicationType { get; set; }
 

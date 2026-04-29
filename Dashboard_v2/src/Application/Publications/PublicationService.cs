@@ -52,9 +52,11 @@ public sealed class PublicationService : IPublicationService
         var publication = new Publication
         {
             Title = request.Title.Trim(),
+            NormalizedTitle = NormalizeTitle(request.Title),
             PublicationData = request.PublicationData,
             PublicationType = request.PublicationType,
             UrlDoi = string.IsNullOrWhiteSpace(request.UrlDoi) ? null : request.UrlDoi.Trim(),
+            NormalizedUrlDoi = string.IsNullOrWhiteSpace(request.UrlDoi) ? null : NormalizeUrlDoi(request.UrlDoi),
             ProyectoId = string.IsNullOrWhiteSpace(request.ProyectoId) ? null : request.ProyectoId,
             AuthorPublications = new List<AuthorPublication> { new() { AuthorId = author.Id } }
         };
@@ -137,9 +139,11 @@ public sealed class PublicationService : IPublicationService
             return Result.Failure(new[] { "Tipo de publicación no válido." });
 
         publication.Title = request.Title.Trim();
+        publication.NormalizedTitle = NormalizeTitle(request.Title);
         publication.PublicationData = request.PublicationData;
         publication.PublicationType = request.PublicationType;
         publication.UrlDoi = string.IsNullOrWhiteSpace(request.UrlDoi) ? null : request.UrlDoi.Trim();
+        publication.NormalizedUrlDoi = string.IsNullOrWhiteSpace(request.UrlDoi) ? null : NormalizeUrlDoi(request.UrlDoi);
         publication.ProyectoId = string.IsNullOrWhiteSpace(request.ProyectoId) ? null : request.ProyectoId;
 
         var isNowJournal = request.PublicationType == Dashboard_v2.Domain.Enums.PublicationType.Diario;
@@ -262,6 +266,122 @@ public sealed class PublicationService : IPublicationService
         return Result.Success();
     }
 
+    private static string NormalizeTitle(string s)
+    {
+        if (string.IsNullOrWhiteSpace(s)) return string.Empty;
+        s = s.Normalize(System.Text.NormalizationForm.FormD);
+        var sb = new System.Text.StringBuilder();
+        foreach (var ch in s)
+        {
+            var cat = System.Globalization.CharUnicodeInfo.GetUnicodeCategory(ch);
+            if (cat != System.Globalization.UnicodeCategory.NonSpacingMark)
+                sb.Append(ch);
+        }
+        s = sb.ToString().Normalize(System.Text.NormalizationForm.FormC);
+        s = System.Text.RegularExpressions.Regex.Replace(s, @"\p{P}", "");
+        s = System.Text.RegularExpressions.Regex.Replace(s, @"\s+", " ").Trim().ToLowerInvariant();
+        return s;
+    }
+
+    private static string NormalizeUrlDoi(string s)
+    {
+        if (string.IsNullOrWhiteSpace(s)) return string.Empty;
+        s = s.Trim().ToLowerInvariant();
+        // remove scheme
+        s = System.Text.RegularExpressions.Regex.Replace(s, "^https?://", "");
+        // remove common doi host prefixes
+        s = s.Replace("doi.org/", "").Replace("dx.doi.org/", "").Replace("doi:", "");
+        // remove trailing slashes and params
+        var idx = s.IndexOf('?');
+        if (idx >= 0) s = s.Substring(0, idx);
+        s = s.Trim().TrimEnd('/');
+        return s;
+    }
+
+    public async Task<List<PublicationDuplicateDto>> FindDuplicatesAsync(string? title, string? doi, string? url, string? excludePublicationId = null, CancellationToken ct = default)
+    {
+        var normalizedTitle = string.IsNullOrWhiteSpace(title) ? null : NormalizeTitle(title);
+        var inputUrlDoi = string.IsNullOrWhiteSpace(doi) ? (string.IsNullOrWhiteSpace(url) ? null : NormalizeUrlDoi(url)) : NormalizeUrlDoi(doi);
+
+        var candidates = new List<PublicationDuplicateDto>();
+
+        if (!string.IsNullOrWhiteSpace(inputUrlDoi))
+        {
+            // Find by normalized doi or by UrlDoi containing the input DOI (covers legacy rows)
+            var matchesRaw = await _context.Publications
+                .AsNoTracking()
+                .Where(p => ((p.NormalizedUrlDoi != null && p.NormalizedUrlDoi == inputUrlDoi)
+                         || (p.UrlDoi != null && p.UrlDoi.ToLower().Contains(inputUrlDoi)))
+                         && (excludePublicationId == null || p.Id != excludePublicationId))
+                .Select(p => new { p.Id, p.Title, p.UrlDoi, p.NormalizedUrlDoi })
+                .ToListAsync(ct);
+
+            foreach (var p in matchesRaw)
+            {
+                candidates.Add(new PublicationDuplicateDto
+                {
+                    Id = p.Id,
+                    Title = p.Title,
+                    UrlDoi = p.UrlDoi,
+                    MatchType = "doi",
+                    Score = 1.0
+                });
+            }
+
+            // Backfill NormalizedUrlDoi for legacy rows where UrlDoi exists but NormalizedUrlDoi is null
+            var toBackfill = matchesRaw.Where(m => string.IsNullOrWhiteSpace(m.NormalizedUrlDoi) && !string.IsNullOrWhiteSpace(m.UrlDoi)).Select(m => m.Id).ToList();
+            if (toBackfill.Any())
+            {
+                var pubs = await _context.Publications.Where(p => toBackfill.Contains(p.Id)).ToListAsync(ct);
+                var changed = false;
+                foreach (var pub in pubs)
+                {
+                    if (string.IsNullOrWhiteSpace(pub.NormalizedUrlDoi) && !string.IsNullOrWhiteSpace(pub.UrlDoi))
+                    {
+                        pub.NormalizedUrlDoi = NormalizeUrlDoi(pub.UrlDoi);
+                        changed = true;
+                    }
+                }
+                if (changed) await _context.SaveChangesAsync(ct);
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(normalizedTitle))
+        {
+            var matches = await _context.Publications
+                .AsNoTracking()
+                .Where(p => p.NormalizedTitle != null && p.NormalizedTitle == normalizedTitle && (excludePublicationId == null || p.Id != excludePublicationId))
+                .Select(p => new PublicationDuplicateDto { Id = p.Id, Title = p.Title, UrlDoi = p.UrlDoi, MatchType = "title", Score = 0.95 })
+                .ToListAsync(ct);
+
+            // avoid duplicates
+            foreach (var m in matches)
+                if (!candidates.Any(c => c.Id == m.Id)) candidates.Add(m);
+        }
+
+        return candidates.OrderByDescending(c => c.Score).ToList();
+    }
+
+    public async Task<Result> AddCurrentUserAsCoauthorAsync(string publicationId, CancellationToken ct = default)
+    {
+        var author = await _authorResolution.GetOrCreateForUserAsync(_currentUser.Id!, ct);
+        if (author == null) return Result.Failure(new[] { "Usuario no encontrado." });
+
+        var exists = await _context.AuthorPublications
+            .AnyAsync(ap => ap.PublicationId == publicationId && ap.AuthorId == author.Id, ct);
+
+        if (exists) return Result.Success();
+
+        // ensure publication exists
+        var publication = await _context.Publications.FindAsync(new object[] { publicationId }, ct);
+        if (publication == null) return Result.Failure(new[] { "Publicación no encontrada." });
+
+        _context.AuthorPublications.Add(new Domain.Entities.AuthorPublication { PublicationId = publicationId, AuthorId = author.Id });
+        await _context.SaveChangesAsync(ct);
+
+        return Result.Success();
+    }
+
     public async Task<Result> DeleteAsync(string id, CancellationToken ct = default)
     {
         var isAuthor = await _context.AuthorPublications
@@ -303,6 +423,17 @@ public sealed class PublicationService : IPublicationService
             .Where(p => p.Id == id && p.AuthorPublications.Any(ap => ap.AuthorId == authorId))
             )
             .FirstOrDefaultAsync(ct);
+    }
+
+    /// <summary>
+    /// Obtener una publicación por Id sin restringir a que el usuario sea autor.
+    /// Usado para mostrar detalles cuando se detecta un duplicado.
+    /// </summary>
+    public async Task<PublicationDto?> GetPublicByIdAsync(string id, CancellationToken ct = default)
+    {
+        return await ProjectPublicationDtos(
+            _context.Publications.AsNoTracking().Where(p => p.Id == id)
+        ).FirstOrDefaultAsync(ct);
     }
 
     public async Task<List<PublicationDto>> GetMyPublicationsAsync(CancellationToken ct = default)

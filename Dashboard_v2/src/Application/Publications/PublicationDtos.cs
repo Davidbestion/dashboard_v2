@@ -52,3 +52,15 @@ public record PublicationDto
 
 /// <summary>Tipo (categoría) de publicación disponible en el sistema.</summary>
 public record PublicationTypeDto(int Value, string Name);
+
+/// <summary>DTO para candidatos a duplicados encontrados al agregar una publicación.</summary>
+public record PublicationDuplicateDto
+{
+    public string Id { get; init; } = default!;
+    public string Title { get; init; } = default!;
+    public string? UrlDoi { get; init; }
+    /// <summary>Tipo de coincidencia: "doi", "url", "title".</summary>
+    public string MatchType { get; init; } = default!;
+    /// <summary>Puntuación de similitud (0..1). Para coincidencias exactas será 1.0.</summary>
+    public double Score { get; init; }
+}

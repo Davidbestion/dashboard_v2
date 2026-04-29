@@ -39,12 +39,33 @@ public class Publications : EndpointGroupBase
             .Produces<PublicationDto>(200)
             .ProducesProblem(404);
 
+        // GET /api/Publications/public/{id} — obtener detalle público de una publicación (sin exigir ser autor)
+        groupBuilder.MapGet("public/{id}", GetPublicationPublicById)
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor)))
+            .WithName("GetPublicationPublicById")
+            .Produces<PublicationDto>(200)
+            .ProducesProblem(404);
+
         // POST /api/Publications
         groupBuilder.MapPost("", CreatePublication)
             .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Proyecto)))
             .WithName("CreatePublication")
             .Produces(201)
             .ProducesProblem(400);
+
+        // GET /api/Publications/duplicates?title=...&doi=...&url=...
+        groupBuilder.MapGet("duplicates", FindDuplicates)
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor)))
+            .WithName("FindPublicationDuplicates")
+            .Produces<List<PublicationDuplicateDto>>(200);
+
+        // POST /api/Publications/{id}/coauthors -> assign current user as coauthor (idempotent)
+        groupBuilder.MapPost("{id}/coauthors", AddCurrentUserAsCoauthor)
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor)))
+            .WithName("AddCurrentUserAsCoauthor")
+            .Produces(200)
+            .ProducesProblem(400)
+            .ProducesProblem(404);
 
         // PUT /api/Publications/{id}
         groupBuilder.MapPut("{id}", UpdatePublication)
@@ -87,6 +108,12 @@ public class Publications : EndpointGroupBase
         return publication is null ? Results.NotFound() : Results.Ok(publication);
     }
 
+    private async Task<IResult> GetPublicationPublicById(IPublicationService service, string id)
+    {
+        var publication = await service.GetPublicByIdAsync(id);
+        return publication is null ? Results.NotFound() : Results.Ok(publication);
+    }
+
     private async Task<IResult> CreatePublication(IPublicationService service, CreatePublicationRequest command)
     {
         var (result, id) = await service.CreateAsync(command);
@@ -95,6 +122,19 @@ public class Publications : EndpointGroupBase
             return Results.BadRequest(new { errors = result.Errors });
 
         return Results.Created($"/api/Publications/{id}", new { id });
+    }
+
+    private async Task<IResult> FindDuplicates(IPublicationService service, string? title, string? doi, string? url, string? excludeId)
+    {
+        var candidates = await service.FindDuplicatesAsync(title, doi, url, excludeId);
+        return Results.Ok(candidates);
+    }
+
+    private async Task<IResult> AddCurrentUserAsCoauthor(IPublicationService service, string id)
+    {
+        var result = await service.AddCurrentUserAsCoauthorAsync(id);
+        if (!result.Succeeded) return Results.BadRequest(new { errors = result.Errors });
+        return Results.Ok(new { message = "Se ha añadido al usuario como coautor (si no lo era)." });
     }
 
     private async Task<IResult> UpdatePublication(IPublicationService service, string id, UpdatePublicationBody body)

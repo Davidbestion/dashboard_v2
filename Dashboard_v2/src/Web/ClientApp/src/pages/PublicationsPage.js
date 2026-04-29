@@ -67,6 +67,17 @@ export default function PublicationsPage() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [formError, setFormError] = useState('');
   const [formLoading, setFormLoading] = useState(false);
+  // Duplicates modal state
+  const [duplicatesModal, setDuplicatesModal] = useState(false);
+  const [duplicatesCandidates, setDuplicatesCandidates] = useState([]);
+  const [duplicatesError, setDuplicatesError] = useState('');
+  const [duplicatesLoading, setDuplicatesLoading] = useState(false);
+
+  // Detalles modal para ver una publicación candidata
+  const [detailsModal, setDetailsModal] = useState(false);
+  const [detailsPublication, setDetailsPublication] = useState(null);
+  const [detailsLoading, setDetailsLoading] = useState(false);
+  const [detailsError, setDetailsError] = useState('');
 
   // Modal de confirmación de borrado
   const [deleteModal, setDeleteModal] = useState(false);
@@ -169,45 +180,39 @@ export default function PublicationsPage() {
     setFormError('');
     try {
       if (editing) {
-        // PUT — actualizar
-        await apiFetch(`/api/Publications/${editing.id}`, {
-          method: 'PUT',
-          body: JSON.stringify({
-            title: form.title,
-            publicationData: form.publicationData,
-            publicationType: parseInt(form.publicationType, 10),
-            urlDoi: form.urlDoi || null,
-            proyectoId: form.proyectoId || null,
-            additionalAuthorIds: coauthorTags.filter(t => t.type === 'author').map(t => t.id),
-            additionalAuthorNames: coauthorTags.filter(t => t.type === 'new').map(t => t.name),
-            additionalUserIds: coauthorTags.filter(t => t.type === 'user').map(t => t.id),
-            // Especialización
-            index: parseInt(form.publicationType, 10) !== 0 ? form.index || null : null,
-            dataBase: parseInt(form.publicationType, 10) === 0 ? form.dataBase || null : null,
-            group: parseInt(form.publicationType, 10) === 0 ? parseInt(form.group, 10) || null : null,
-            cuartil: parseInt(form.publicationType, 10) === 0 && parseInt(form.group, 10) === 1 ? form.cuartil || null : null,
-          }),
-        });
+        // PUT — actualizar: primero comprobar duplicados (excluir la propia publicación)
+        try {
+          setDuplicatesLoading(true);
+          setDuplicatesError('');
+          const candidates = await apiFetch(`/api/Publications/duplicates?title=${encodeURIComponent(form.title)}&doi=${encodeURIComponent(form.urlDoi || '')}&url=&excludeId=${encodeURIComponent(editing.id)}`);
+          if (candidates && candidates.length > 0) {
+            setDuplicatesCandidates(candidates);
+            setDuplicatesModal(true);
+            return; // wait for user's decision in modal
+          }
+
+          // no duplicates -> actualizar inmediatamente
+          await performUpdate();
+        } finally {
+          setDuplicatesLoading(false);
+        }
       } else {
-        // POST — crear
-        await apiFetch('/api/Publications', {
-          method: 'POST',
-          body: JSON.stringify({
-            title: form.title,
-            publicationData: form.publicationData,
-            publicationType: parseInt(form.publicationType, 10),
-            urlDoi: form.urlDoi || null,
-            proyectoId: form.proyectoId || null,
-            additionalAuthorIds: coauthorTags.filter(t => t.type === 'author').map(t => t.id),
-            additionalAuthorNames: coauthorTags.filter(t => t.type === 'new').map(t => t.name),
-            additionalUserIds: coauthorTags.filter(t => t.type === 'user').map(t => t.id),
-            // Especialización
-            index: parseInt(form.publicationType, 10) !== 0 ? form.index || null : null,
-            dataBase: parseInt(form.publicationType, 10) === 0 ? form.dataBase || null : null,
-            group: parseInt(form.publicationType, 10) === 0 ? parseInt(form.group, 10) || null : null,
-            cuartil: parseInt(form.publicationType, 10) === 0 && parseInt(form.group, 10) === 1 ? form.cuartil || null : null,
-          }),
-        });
+        // POST — crear: primero comprobar duplicados
+        try {
+          setDuplicatesLoading(true);
+          setDuplicatesError('');
+          const candidates = await apiFetch(`/api/Publications/duplicates?title=${encodeURIComponent(form.title)}&doi=${encodeURIComponent(form.urlDoi || '')}&url=`);
+          if (candidates && candidates.length > 0) {
+            setDuplicatesCandidates(candidates);
+            setDuplicatesModal(true);
+            return; // wait for user's decision in modal
+          }
+
+          // no duplicates -> crear inmediatamente
+          await performCreate();
+        } finally {
+          setDuplicatesLoading(false);
+        }
       }
       setModal(false);
       loadData();
@@ -216,6 +221,54 @@ export default function PublicationsPage() {
     } finally {
       setFormLoading(false);
     }
+  }
+
+  async function performCreate() {
+    await apiFetch('/api/Publications', {
+      method: 'POST',
+      body: JSON.stringify({
+        title: form.title,
+        publicationData: form.publicationData,
+        publicationType: parseInt(form.publicationType, 10),
+        urlDoi: form.urlDoi || null,
+        proyectoId: form.proyectoId || null,
+        additionalAuthorIds: coauthorTags.filter(t => t.type === 'author').map(t => t.id),
+        additionalAuthorNames: coauthorTags.filter(t => t.type === 'new').map(t => t.name),
+        additionalUserIds: coauthorTags.filter(t => t.type === 'user').map(t => t.id),
+        // Especialización
+        index: parseInt(form.publicationType, 10) !== 0 ? form.index || null : null,
+        dataBase: parseInt(form.publicationType, 10) === 0 ? form.dataBase || null : null,
+        group: parseInt(form.publicationType, 10) === 0 ? parseInt(form.group, 10) || null : null,
+        cuartil: parseInt(form.publicationType, 10) === 0 && parseInt(form.group, 10) === 1 ? form.cuartil || null : null,
+      }),
+    });
+    setModal(false);
+    loadData();
+  }
+
+  async function performUpdate() {
+    if (!editing) return;
+    await apiFetch(`/api/Publications/${editing.id}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        title: form.title,
+        publicationData: form.publicationData,
+        publicationType: parseInt(form.publicationType, 10),
+        urlDoi: form.urlDoi || null,
+        proyectoId: form.proyectoId || null,
+        additionalAuthorIds: coauthorTags.filter(t => t.type === 'author').map(t => t.id),
+        additionalAuthorNames: coauthorTags.filter(t => t.type === 'new').map(t => t.name),
+        additionalUserIds: coauthorTags.filter(t => t.type === 'user').map(t => t.id),
+        // Especialización
+        index: parseInt(form.publicationType, 10) !== 0 ? form.index || null : null,
+        dataBase: parseInt(form.publicationType, 10) === 0 ? form.dataBase || null : null,
+        group: parseInt(form.publicationType, 10) === 0 ? parseInt(form.group, 10) || null : null,
+        cuartil: parseInt(form.publicationType, 10) === 0 && parseInt(form.group, 10) === 1 ? form.cuartil || null : null,
+      }),
+    });
+    setModal(false);
+    setEditing(null);
+    loadData();
   }
 
   // ── borrado ────────────────────────────────────────────────────────────────
@@ -266,6 +319,38 @@ export default function PublicationsPage() {
       </Button>
     </>
   );
+
+  function renderMatchLabel(type, score) {
+    if (!type) return <span className="text-muted">—</span>;
+    const map = {
+      doi: 'DOI (coincidencia exacta)',
+      url: 'URL (coincidencia)',
+      title: 'Título (coincidencia exacta)'
+    };
+    const label = map[type] ?? type;
+    return (
+      <div>
+        <strong>{label}</strong>
+        {typeof score === 'number' && score < 1 && (
+          <div className="text-muted" style={{ fontSize: '0.85em' }}>similitud: {(score * 100).toFixed(0)}%</div>
+        )}
+      </div>
+    );
+  }
+
+  async function viewDetails(id) {
+    setDetailsError('');
+    setDetailsLoading(true);
+    try {
+      const pub = await apiFetch(`/api/Publications/public/${id}`);
+      setDetailsPublication(pub);
+      setDetailsModal(true);
+    } catch (e) {
+      setDetailsError(e.message);
+    } finally {
+      setDetailsLoading(false);
+    }
+  }
 
   const urlCell = (urlDoi) => urlDoi
     ? <a href={urlDoi} target="_blank" rel="noopener noreferrer"
@@ -614,6 +699,97 @@ export default function PublicationsPage() {
               : 'Eliminar'
             }
           </Button>
+        </ModalFooter>
+      </Modal>
+
+      {/* ── Modal candidatos duplicados ── */}
+      <Modal isOpen={duplicatesModal} toggle={() => setDuplicatesModal(false)} size="lg">
+        <ModalHeader toggle={() => setDuplicatesModal(false)}>Publicaciones similares encontradas</ModalHeader>
+        <ModalBody>
+          {duplicatesError && <Alert color="danger">{duplicatesError}</Alert>}
+          {duplicatesLoading && <div className="text-center py-3"><Spinner /></div>}
+          {!duplicatesLoading && duplicatesCandidates.length === 0 && (
+            <p className="text-muted">No se encontraron coincidencias.</p>
+          )}
+          {!duplicatesLoading && duplicatesCandidates.length > 0 && (
+            <Table hover responsive size="sm">
+              <thead>
+                <tr>
+                  <th>Título</th>
+                  <th>URL / DOI</th>
+                  <th>Coincidencia</th>
+                  <th style={{ width: 220 }}></th>
+                </tr>
+              </thead>
+              <tbody>
+                {duplicatesCandidates.map(c => (
+                  <tr key={c.id}>
+                    <td style={{ maxWidth: 420 }}>{c.title}</td>
+                    <td style={{ maxWidth: 220 }}>{c.urlDoi ?? '—'}</td>
+                    <td>{renderMatchLabel(c.matchType, c.score)}</td>
+                    <td className="text-end" style={{ whiteSpace: 'nowrap' }}>
+                      <Button color="primary" size="sm" className="me-2"
+                        onClick={async () => {
+                          try {
+                            await apiFetch(`/api/Publications/${c.id}/coauthors`, { method: 'POST' });
+                            setDuplicatesModal(false);
+                            setModal(false);
+                            loadData();
+                          } catch (e) {
+                            setDuplicatesError(e.message);
+                          }
+                        }}>
+                        Sí — añadirme como coautor
+                      </Button>
+                      <Button color="outline-secondary" size="sm" onClick={() => viewDetails(c.id)}>Ver</Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          )}
+        </ModalBody>
+        <ModalFooter>
+          <Button color="secondary" outline onClick={() => { setDuplicatesModal(false); }} disabled={duplicatesLoading}>
+            Volver
+          </Button>
+          <Button color="success" onClick={async () => { try { if (editing) await performUpdate(); else await performCreate(); setDuplicatesModal(false); } catch (e) { setDuplicatesError(e.message); } }} disabled={duplicatesLoading}>
+            {editing ? 'Actualizar publicación' : 'Crear nueva publicación'}
+          </Button>
+        </ModalFooter>
+      </Modal>
+
+      {/* ── Modal ver detalles de publicación ── */}
+      <Modal isOpen={detailsModal} toggle={() => setDetailsModal(false)} size="lg">
+        <ModalHeader toggle={() => setDetailsModal(false)}>Detalles de la publicación</ModalHeader>
+        <ModalBody>
+          {detailsError && <Alert color="danger">{detailsError}</Alert>}
+          {detailsLoading && <div className="text-center py-3"><Spinner /></div>}
+          {detailsPublication && (
+            <div>
+              <h5>{detailsPublication.title}</h5>
+              {detailsPublication.publicationData && <p>{detailsPublication.publicationData}</p>}
+              <p><strong>URL / DOI:</strong> {detailsPublication.urlDoi ? <a href={detailsPublication.urlDoi} target="_blank" rel="noopener noreferrer">{detailsPublication.urlDoi}</a> : <span className="text-muted">—</span>}</p>
+              <p><strong>Autores:</strong></p>
+              <ul>
+                {(detailsPublication.authors || []).map(a => (
+                  <li key={a.id}>{a.name}{a.linkedUser ? ' (usuario del sistema)' : ''}</li>
+                ))}
+              </ul>
+              {detailsPublication.journalPublication && (
+                <p><strong>Base de datos:</strong> {detailsPublication.journalPublication.dataBase} (Grupo {detailsPublication.journalPublication.group}) {detailsPublication.journalPublication.cuartil && <>- {detailsPublication.journalPublication.cuartil}</>}</p>
+              )}
+              {detailsPublication.indexedPublication && (
+                <p><strong>Indexación:</strong> {detailsPublication.indexedPublication.index}</p>
+              )}
+              {detailsPublication.proyectoTitulo && (
+                <p><strong>Proyecto vinculado:</strong> {detailsPublication.proyectoTitulo}</p>
+              )}
+            </div>
+          )}
+        </ModalBody>
+        <ModalFooter>
+          <Button color="secondary" onClick={() => setDetailsModal(false)}>Cerrar</Button>
         </ModalFooter>
       </Modal>
     </>

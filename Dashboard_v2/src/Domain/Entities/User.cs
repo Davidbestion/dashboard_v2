@@ -38,6 +38,9 @@ public class User
     // Redes a las que pertenece este usuario
     public ICollection<Red> Redes { get; set; } = new List<Red>();
 
+    // Redes que este usuario coordina (a través de RedCoordinada)
+    public ICollection<RedCoordinada> RedesCoordinadas { get; set; } = new List<RedCoordinada>();
+
     /// <summary>Proyectos de los que este usuario es jefe. Solo aplicable a usuarios con rol Jefe_de_Proyecto.</summary>
     public ICollection<Proyecto> ProyectosComoJefe { get; set; } = new List<Proyecto>();
 

@@ -42,4 +42,9 @@ public class Red
     /// Relación N:N con User.
     /// </summary>
     public ICollection<User> Usuarios { get; set; } = new List<User>();
+
+    /// <summary>
+    /// Áreas que coordinan esta red (relación agregada RedCoordinada)
+    /// </summary>
+    public ICollection<RedCoordinada> RedesCoordinadas { get; set; } = new List<RedCoordinada>();
 }

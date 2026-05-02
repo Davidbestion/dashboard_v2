@@ -39,6 +39,9 @@ public sealed class PublicationService : IPublicationService
         if (!System.Enum.IsDefined(typeof(Dashboard_v2.Domain.Enums.PublicationType), request.PublicationType))
             return (Result.Failure(new[] { "Tipo de publicación no válido." }), null);
 
+        if (string.IsNullOrWhiteSpace(request.PublishedDate) || !IsValidPartialDate(request.PublishedDate))
+            return (Result.Failure(new[] { "La fecha de publicación es obligatoria. Use el formato AAAA, AAAA-MM o AAAA-MM-DD." }), null);
+
         var dataBase = string.IsNullOrWhiteSpace(request.DataBase) ? null : request.DataBase.Trim();
         var group = request.Group;
         var cuartil = string.IsNullOrWhiteSpace(request.Cuartil) ? null : request.Cuartil?.Trim();
@@ -65,6 +68,7 @@ public sealed class PublicationService : IPublicationService
             NormalizedTitle = NormalizeTitle(request.Title),
             PublicationData = request.PublicationData,
             PublicationType = request.PublicationType,
+            PublishedDate = request.PublishedDate.Trim(),
             UrlDoi = string.IsNullOrWhiteSpace(request.UrlDoi) ? null : request.UrlDoi.Trim(),
             NormalizedUrlDoi = string.IsNullOrWhiteSpace(request.UrlDoi) ? null : NormalizeUrlDoi(request.UrlDoi),
             ProyectoId = string.IsNullOrWhiteSpace(request.ProyectoId) ? null : request.ProyectoId,
@@ -147,10 +151,14 @@ public sealed class PublicationService : IPublicationService
         if (!System.Enum.IsDefined(typeof(Dashboard_v2.Domain.Enums.PublicationType), request.PublicationType))
             return Result.Failure(new[] { "Tipo de publicación no válido." });
 
+        if (string.IsNullOrWhiteSpace(request.PublishedDate) || !IsValidPartialDate(request.PublishedDate))
+            return Result.Failure(new[] { "La fecha de publicación es obligatoria. Use el formato AAAA, AAAA-MM o AAAA-MM-DD." });
+
         publication.Title = request.Title.Trim();
         publication.NormalizedTitle = NormalizeTitle(request.Title);
         publication.PublicationData = request.PublicationData;
         publication.PublicationType = request.PublicationType;
+        publication.PublishedDate = request.PublishedDate.Trim();
         publication.UrlDoi = string.IsNullOrWhiteSpace(request.UrlDoi) ? null : request.UrlDoi.Trim();
         publication.NormalizedUrlDoi = string.IsNullOrWhiteSpace(request.UrlDoi) ? null : NormalizeUrlDoi(request.UrlDoi);
         publication.ProyectoId = string.IsNullOrWhiteSpace(request.ProyectoId) ? null : request.ProyectoId;
@@ -279,6 +287,24 @@ public sealed class PublicationService : IPublicationService
         await _authorCleanup.CleanupIfOrphanedAsync(removedAuthorIds, ct);
 
         return Result.Success();
+    }
+
+    /// <summary>
+    /// Validates a partial ISO date string: "YYYY", "YYYY-MM", or "YYYY-MM-DD".
+    /// </summary>
+    private static bool IsValidPartialDate(string value)
+    {
+        var v = value.Trim();
+        // YYYY
+        if (System.Text.RegularExpressions.Regex.IsMatch(v, @"^\d{4}$"))
+            return true;
+        // YYYY-MM
+        if (System.Text.RegularExpressions.Regex.IsMatch(v, @"^\d{4}-(0[1-9]|1[0-2])$"))
+            return true;
+        // YYYY-MM-DD
+        return System.DateOnly.TryParseExact(v, "yyyy-MM-dd",
+            System.Globalization.CultureInfo.InvariantCulture,
+            System.Globalization.DateTimeStyles.None, out _);
     }
 
     private static string NormalizeTitle(string s)
@@ -528,6 +554,7 @@ public sealed class PublicationService : IPublicationService
             Title = p.Title,
             PublicationData = p.PublicationData,
             UrlDoi = p.UrlDoi,
+            PublishedDate = p.PublishedDate,
             PublicationType = (int)p.PublicationType,
             Authors = p.AuthorPublications
                 .Select(ap => new AuthorDto

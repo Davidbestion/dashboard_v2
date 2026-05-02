@@ -10074,6 +10074,7 @@ export class PublicationDto implements IPublicationDto {
     title?: string;
     publicationData?: string;
     urlDoi?: string | undefined;
+    publishedDate?: string;
     publicationType?: number;
     authors?: AuthorDto[];
     indexedPublication?: IndexedPublicationDto | undefined;
@@ -10096,6 +10097,7 @@ export class PublicationDto implements IPublicationDto {
             this.title = _data["title"];
             this.publicationData = _data["publicationData"];
             this.urlDoi = _data["urlDoi"];
+            this.publishedDate = _data["publishedDate"];
             this.publicationType = _data["publicationType"];
             if (Array.isArray(_data["authors"])) {
                 this.authors = [] as any;
@@ -10122,6 +10124,7 @@ export class PublicationDto implements IPublicationDto {
         data["title"] = this.title;
         data["publicationData"] = this.publicationData;
         data["urlDoi"] = this.urlDoi;
+        data["publishedDate"] = this.publishedDate;
         data["publicationType"] = this.publicationType;
         if (Array.isArray(this.authors)) {
             data["authors"] = [];
@@ -10141,6 +10144,7 @@ export interface IPublicationDto {
     title?: string;
     publicationData?: string;
     urlDoi?: string | undefined;
+    publishedDate?: string;
     publicationType?: number;
     authors?: AuthorDto[];
     indexedPublication?: IndexedPublicationDto | undefined;
@@ -10290,6 +10294,7 @@ export class CreatePublicationRequest implements ICreatePublicationRequest {
     publicationData?: string;
     publicationType?: PublicationType;
     urlDoi?: string | undefined;
+    publishedDate?: string;
     additionalAuthorIds?: string[];
     additionalAuthorNames?: string[];
     additionalUserIds?: string[];
@@ -10314,6 +10319,7 @@ export class CreatePublicationRequest implements ICreatePublicationRequest {
             this.publicationData = _data["publicationData"];
             this.publicationType = _data["publicationType"];
             this.urlDoi = _data["urlDoi"];
+            this.publishedDate = _data["publishedDate"];
             if (Array.isArray(_data["additionalAuthorIds"])) {
                 this.additionalAuthorIds = [] as any;
                 for (let item of _data["additionalAuthorIds"])
@@ -10350,6 +10356,7 @@ export class CreatePublicationRequest implements ICreatePublicationRequest {
         data["publicationData"] = this.publicationData;
         data["publicationType"] = this.publicationType;
         data["urlDoi"] = this.urlDoi;
+        data["publishedDate"] = this.publishedDate;
         if (Array.isArray(this.additionalAuthorIds)) {
             data["additionalAuthorIds"] = [];
             for (let item of this.additionalAuthorIds)
@@ -10379,6 +10386,7 @@ export interface ICreatePublicationRequest {
     publicationData?: string;
     publicationType?: PublicationType;
     urlDoi?: string | undefined;
+    publishedDate?: string;
     additionalAuthorIds?: string[];
     additionalAuthorNames?: string[];
     additionalUserIds?: string[];
@@ -10642,6 +10650,7 @@ export class UpdatePublicationBody implements IUpdatePublicationBody {
     publicationData?: string;
     publicationType?: number;
     urlDoi?: string | undefined;
+    publishedDate?: string;
     additionalAuthorIds?: string[] | undefined;
     additionalAuthorNames?: string[] | undefined;
     additionalUserIds?: string[] | undefined;
@@ -10666,6 +10675,7 @@ export class UpdatePublicationBody implements IUpdatePublicationBody {
             this.publicationData = _data["publicationData"];
             this.publicationType = _data["publicationType"];
             this.urlDoi = _data["urlDoi"];
+            this.publishedDate = _data["publishedDate"];
             if (Array.isArray(_data["additionalAuthorIds"])) {
                 this.additionalAuthorIds = [] as any;
                 for (let item of _data["additionalAuthorIds"])
@@ -10702,6 +10712,7 @@ export class UpdatePublicationBody implements IUpdatePublicationBody {
         data["publicationData"] = this.publicationData;
         data["publicationType"] = this.publicationType;
         data["urlDoi"] = this.urlDoi;
+        data["publishedDate"] = this.publishedDate;
         if (Array.isArray(this.additionalAuthorIds)) {
             data["additionalAuthorIds"] = [];
             for (let item of this.additionalAuthorIds)
@@ -10731,6 +10742,7 @@ export interface IUpdatePublicationBody {
     publicationData?: string;
     publicationType?: number;
     urlDoi?: string | undefined;
+    publishedDate?: string;
     additionalAuthorIds?: string[] | undefined;
     additionalAuthorNames?: string[] | undefined;
     additionalUserIds?: string[] | undefined;

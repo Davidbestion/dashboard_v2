@@ -6554,6 +6554,9 @@
             "type": "string",
             "nullable": true
           },
+          "publishedDate": {
+            "type": "string"
+          },
           "publicationType": {
             "type": "integer",
             "format": "int32"
@@ -6666,6 +6669,9 @@
           "urlDoi": {
             "type": "string",
             "nullable": true
+          },
+          "publishedDate": {
+            "type": "string"
           },
           "additionalAuthorIds": {
             "type": "array",
@@ -6880,6 +6886,9 @@
           "urlDoi": {
             "type": "string",
             "nullable": true
+          },
+          "publishedDate": {
+            "type": "string"
           },
           "additionalAuthorIds": {
             "type": "array",

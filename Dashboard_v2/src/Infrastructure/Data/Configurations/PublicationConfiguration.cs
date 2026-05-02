@@ -14,6 +14,7 @@ public class PublicationConfiguration : IEntityTypeConfiguration<Publication>
         builder.Property(p => p.Id).HasMaxLength(450);
         builder.Property(p => p.Title).IsRequired().HasMaxLength(500);
         builder.Property(p => p.PublicationData).IsRequired();
+        builder.Property(p => p.PublishedDate).IsRequired().HasMaxLength(10);
 
         builder.Property(p => p.PublicationType).IsRequired();
 

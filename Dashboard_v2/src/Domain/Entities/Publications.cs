@@ -14,6 +14,12 @@ public class Publication
     /// <summary>Versión normalizada de `UrlDoi` para comparaciones (lowercase, sin esquema, doi cleaned).</summary>
     public string? NormalizedUrlDoi { get; set; }
 
+    /// <summary>
+    /// Fecha de publicación en formato ISO parcial: "YYYY", "YYYY-MM" o "YYYY-MM-DD".
+    /// Obligatoria: una publicación debe tener al menos el año de publicación.
+    /// </summary>
+    public string PublishedDate { get; set; } = default!;
+
     public PublicationType PublicationType { get; set; }
 
     // Navegación: autores de esta publicación

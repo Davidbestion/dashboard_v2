@@ -42,6 +42,8 @@ public record PublicationDto
     public string Title { get; init; } = default!;
     public string PublicationData { get; init; } = default!;
     public string? UrlDoi { get; init; }
+    /// <summary>Fecha de publicación: "YYYY", "YYYY-MM" o "YYYY-MM-DD".</summary>
+    public string PublishedDate { get; init; } = default!;
     public int PublicationType { get; init; }
     public List<AuthorDto> Authors { get; init; } = [];
     /// <summary>Presente cuando PublicationType != Diario.</summary>

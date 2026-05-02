@@ -44,6 +44,7 @@ const EMPTY_FORM = {
   title: '',
   publicationData: '',
   urlDoi: '',
+  publishedDate: '',
   publicationType: 0,
   proyectoId: '',
   // Indexadas (tipos 1-4)
@@ -174,6 +175,7 @@ export default function PublicationsPage() {
       title: pub.title,
       publicationData: pub.publicationData,
       urlDoi: pub.urlDoi ?? '',
+      publishedDate: pub.publishedDate ?? '',
       publicationType: pub.publicationType,
       proyectoId: pub.proyectoId ?? '',
       // Indexadas
@@ -239,6 +241,10 @@ export default function PublicationsPage() {
       setFormError('El título y el tipo de publicación son obligatorios.');
       return;
     }
+    if (!form.publishedDate.trim() || !/^\d{4}(-\d{2}(-\d{2})?)?$/.test(form.publishedDate.trim())) {
+      setFormError('La fecha de publicación es obligatoria. Use el formato AAAA, AAAA-MM o AAAA-MM-DD.');
+      return;
+    }
     setFormLoading(true);
     setFormError('');
     try {
@@ -294,6 +300,7 @@ export default function PublicationsPage() {
         publicationData: form.publicationData,
         publicationType: parseInt(form.publicationType, 10),
         urlDoi: form.urlDoi || null,
+        publishedDate: form.publishedDate || null,
         proyectoId: form.proyectoId || null,
         additionalAuthorIds: coauthorTags.filter(t => t.type === 'author').map(t => t.id),
         additionalAuthorNames: coauthorTags.filter(t => t.type === 'new').map(t => t.name),
@@ -318,6 +325,7 @@ export default function PublicationsPage() {
         publicationData: form.publicationData,
         publicationType: parseInt(form.publicationType, 10),
         urlDoi: form.urlDoi || null,
+        publishedDate: form.publishedDate || null,
         proyectoId: form.proyectoId || null,
         additionalAuthorIds: coauthorTags.filter(t => t.type === 'author').map(t => t.id),
         additionalAuthorNames: coauthorTags.filter(t => t.type === 'new').map(t => t.name),
@@ -508,6 +516,7 @@ export default function PublicationsPage() {
       ...f,
       title: candidate.title || f.title,
       urlDoi: candidate.doi ? `https://doi.org/${candidate.doi}` : (candidate.url || f.urlDoi),
+      publishedDate: candidate.published || f.publishedDate,
       publicationData: candidate.publicationData || f.publicationData,
       publicationType: candidate.suggestedPublicationType ?? f.publicationType,
     }));
@@ -844,6 +853,18 @@ export default function PublicationsPage() {
                   <option key={t.value} value={t.value}>{t.name}</option>
                 ))}
               </Input>
+            </FormGroup>
+            <FormGroup>
+              <Label for="publishedDate">Fecha de publicación <span className="text-danger">*</span></Label>
+              <Input
+                id="publishedDate"
+                name="publishedDate"
+                value={form.publishedDate}
+                onChange={handleFormChange}
+                placeholder="AAAA, AAAA-MM o AAAA-MM-DD (ej: 2024, 2024-03, 2024-03-15)"
+                required
+              />
+              <small className="text-muted">Puede indicar solo el año, año y mes, o la fecha completa.</small>
             </FormGroup>
             <FormGroup>
               <Label for="urlDoi">URL / DOI</Label>

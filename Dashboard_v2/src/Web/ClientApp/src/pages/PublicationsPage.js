@@ -94,6 +94,9 @@ export default function PublicationsPage() {
   const [authorResolutionModal, setAuthorResolutionModal] = useState(false);
   const [authorResolutionItems, setAuthorResolutionItems] = useState([]);
   const [authorResolutionLoading, setAuthorResolutionLoading] = useState(false);
+  // True when the current user has a linked Author but was NOT found among the CrossRef authors
+  const [authorNotInCrossRef, setAuthorNotInCrossRef] = useState(false);
+  const [authorWarningConfirmOpen, setAuthorWarningConfirmOpen] = useState(false);
 
   // Detalles modal para ver una publicación candidata
   const [detailsModal, setDetailsModal] = useState(false);
@@ -153,6 +156,7 @@ export default function PublicationsPage() {
     setResolveSuccess('');
     setResolvedIssns([]);
     setCoauthorTags([]);
+    setAuthorNotInCrossRef(false);
     setModal(true);
   }
 
@@ -189,6 +193,7 @@ export default function PublicationsPage() {
     setResolveError('');
     setResolveSuccess('');
     setResolvedIssns([]);
+    setAuthorNotInCrossRef(false);
     // Pre-cargar coautores (todos excepto el usuario actual)
     const initialTags = (pub.authors ?? [])
       .filter(a => a.userId !== user?.id)
@@ -243,6 +248,11 @@ export default function PublicationsPage() {
     }
     if (!form.publishedDate.trim() || !/^\d{4}(-\d{2}(-\d{2})?)?$/.test(form.publishedDate.trim())) {
       setFormError('La fecha de publicación es obligatoria. Use el formato AAAA, AAAA-MM o AAAA-MM-DD.');
+      return;
+    }
+    // If the user was not found among CrossRef authors, ask for confirmation first
+    if (authorNotInCrossRef) {
+      setAuthorWarningConfirmOpen(true);
       return;
     }
     setFormLoading(true);
@@ -1207,8 +1217,17 @@ export default function PublicationsPage() {
         <AuthorResolutionModal
           isOpen={authorResolutionModal}
           items={authorResolutionItems}
+          currentUserId={user?.id}
+          currentUserHasLinkedAuthor={user?.hasLinkedAuthor ?? false}
           onConfirm={(resolvedTags) => {
             setAuthorResolutionModal(false);
+            // Detect if the current user appeared among the resolved authors.
+            // If the user has a linked Author but was not identified, flag it so
+            // handleSubmit can request explicit confirmation before saving.
+            const userIdentified = resolvedTags.some(
+              t => t.type === 'author' && t.linkedUser?.id === user?.id
+            );
+            setAuthorNotInCrossRef(!userIdentified && (user?.hasLinkedAuthor ?? false));
             setCoauthorTags(prev => {
               const existing = new Set(
                 prev.map(t => t.id ? `id:${t.id}` : `name:${t.name.trim().toLowerCase()}`)
@@ -1223,6 +1242,40 @@ export default function PublicationsPage() {
           onCancel={() => setAuthorResolutionModal(false)}
         />
       )}
+
+      {/* ── Confirmación: usuario no aparece como autor en CrossRef ── */}
+      <Modal isOpen={authorWarningConfirmOpen} toggle={() => setAuthorWarningConfirmOpen(false)} size="sm" centered>
+        <ModalHeader toggle={() => setAuthorWarningConfirmOpen(false)}>
+          Confirmar registro de autoría
+        </ModalHeader>
+        <ModalBody style={{ fontSize: '0.92rem' }}>
+          <p>
+            Su nombre <strong>no figura oficialmente como autor</strong> de esta publicación
+            según los metadatos recuperados. Si continúa, usted quedará registrado como autor
+            en el sistema de todas formas. Esto puede generar inconsistencias en cuanto a la autoría de esta publicación
+            y ocasionar problemas para con otros usuarios y servicios dentro del sistema. Por favor, 
+            verifique cuidadosamente antes de continuar. Si aun así desea seguir, tenga en cuenta 
+            que esta autoría quedará registrada únicamente en este sistema y no se reflejará en los metadatos 
+            oficiales de la publicación ni en servicios externos como ORCID.
+          </p>
+          <p className="mb-0">¿Deseas continuar?</p>
+        </ModalBody>
+        <ModalFooter>
+          <Button color="secondary" outline onClick={() => setAuthorWarningConfirmOpen(false)}>
+            Cancelar
+          </Button>
+          <Button
+            color="primary"
+            onClick={() => {
+              setAuthorWarningConfirmOpen(false);
+              setAuthorNotInCrossRef(false); // bypass the gate on re-entry
+              handleSubmit();
+            }}
+          >
+            Continuar de todas formas
+          </Button>
+        </ModalFooter>
+      </Modal>
     </>
   );
 }

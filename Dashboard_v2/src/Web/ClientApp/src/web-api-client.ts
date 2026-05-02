@@ -6626,6 +6626,7 @@ export class CurrentUserDto implements ICurrentUserDto {
     role?: string | undefined;
     areaId?: string | undefined;
     areaNombre?: string | undefined;
+    hasLinkedAuthor?: boolean;
 
     constructor(data?: ICurrentUserDto) {
         if (data) {
@@ -6644,6 +6645,7 @@ export class CurrentUserDto implements ICurrentUserDto {
             this.role = _data["role"];
             this.areaId = _data["areaId"];
             this.areaNombre = _data["areaNombre"];
+            this.hasLinkedAuthor = _data["hasLinkedAuthor"];
         }
     }
 
@@ -6662,6 +6664,7 @@ export class CurrentUserDto implements ICurrentUserDto {
         data["role"] = this.role;
         data["areaId"] = this.areaId;
         data["areaNombre"] = this.areaNombre;
+        data["hasLinkedAuthor"] = this.hasLinkedAuthor;
         return data;
     }
 }
@@ -6673,6 +6676,7 @@ export interface ICurrentUserDto {
     role?: string | undefined;
     areaId?: string | undefined;
     areaNombre?: string | undefined;
+    hasLinkedAuthor?: boolean;
 }
 
 export class AuthorSearchDto implements IAuthorSearchDto {

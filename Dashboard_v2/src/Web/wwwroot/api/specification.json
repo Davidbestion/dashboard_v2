@@ -5054,6 +5054,9 @@
           "areaNombre": {
             "type": "string",
             "nullable": true
+          },
+          "hasLinkedAuthor": {
+            "type": "boolean"
           }
         }
       },

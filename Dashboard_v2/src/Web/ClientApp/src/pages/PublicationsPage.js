@@ -83,6 +83,7 @@ export default function PublicationsPage() {
   const [resolveLoading, setResolveLoading] = useState(false);
   const [resolveError, setResolveError] = useState('');
   const [resolveSuccess, setResolveSuccess] = useState('');
+  const [resolvedIssns, setResolvedIssns] = useState([]);
   // Metadata search dropdown
   const [metaDropdownOpen, setMetaDropdownOpen] = useState(false);
   const [metaSearchLoading, setMetaSearchLoading] = useState(false);
@@ -143,6 +144,7 @@ export default function PublicationsPage() {
     setFormError('');
     setResolveError('');
     setResolveSuccess('');
+    setResolvedIssns([]);
     setCoauthorTags([]);
     setModal(true);
   }
@@ -178,6 +180,7 @@ export default function PublicationsPage() {
     setFormError('');
     setResolveError('');
     setResolveSuccess('');
+    setResolvedIssns([]);
     // Pre-cargar coautores (todos excepto el usuario actual)
     const initialTags = (pub.authors ?? [])
       .filter(a => a.userId !== user?.id)
@@ -445,13 +448,22 @@ export default function PublicationsPage() {
   async function resolveDatabaseNow() {
     setResolveError('');
     setResolveSuccess('');
-    if (!canSearchCrossRef()) {
-      setResolveError('Escribe al menos un título o un DOI antes de resolver.');
-      return;
-    }
     setResolveLoading(true);
     try {
-      const res = await apiFetch(`/api/Publications/resolve-database?doi=${encodeURIComponent(form.urlDoi || '')}&title=${encodeURIComponent(form.title || '')}`);
+      // If we already have ISSNs from a previous metadata search, send them
+      // directly to avoid a redundant CrossRef call.
+      let url;
+      if (resolvedIssns.length > 0) {
+        url = `/api/Publications/resolve-database?issns=${encodeURIComponent(resolvedIssns.join(','))}`;
+      } else {
+        if (!canSearchCrossRef()) {
+          setResolveError('Escribe al menos un título o un DOI antes de resolver.');
+          setResolveLoading(false);
+          return;
+        }
+        url = `/api/Publications/resolve-database?doi=${encodeURIComponent(form.urlDoi || '')}&title=${encodeURIComponent(form.title || '')}`;
+      }
+      const res = await apiFetch(url);
       if (res) {
         const resolved = !!res.databaseName;
         setForm(f => ({
@@ -466,9 +478,9 @@ export default function PublicationsPage() {
           const issnText = res.issns?.length > 0
             ? `ISSNs encontrados en CrossRef: ${res.issns.join(', ')}. `
             : '';
-          setResolveError(
-            `${issnText}No se pudo determinar la base de datos automáticamente (la revista no está indexada en DOAJ ni en los archivos CSV configurados). Por favor complete los campos manualmente.`
-          );
+          const reason = res.message
+            ?? `${issnText}No se pudo determinar la base de datos automáticamente (la revista no está indexada en DOAJ ni en los archivos CSV configurados). Por favor complete los campos manualmente.`;
+          setResolveError(reason);
         }
       }
     } catch (e) {
@@ -487,6 +499,8 @@ export default function PublicationsPage() {
       publicationData: candidate.publicationData || f.publicationData,
       publicationType: candidate.suggestedPublicationType ?? f.publicationType,
     }));
+    // Cache ISSNs so resolve-database can skip the CrossRef round-trip.
+    setResolvedIssns(candidate.issns ?? []);
     setCrossrefModal(false);
   }
 
@@ -854,7 +868,7 @@ export default function PublicationsPage() {
                 </div>
                 {crossrefError && <div className="text-danger small mt-1">{crossrefError}</div>}
                 {resolveSuccess && <div className="text-success small mt-1">✓ {resolveSuccess}</div>}
-                {resolveError && <div className="text-warning small mt-1">{resolveError}</div>}
+                {resolveError && <Alert color="warning" className="small mt-1 mb-0 py-2">{resolveError}</Alert>}
               </div>
             </FormGroup>
             {proyectosError ? (

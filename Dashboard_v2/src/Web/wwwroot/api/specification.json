@@ -3937,6 +3937,15 @@
               "nullable": true
             },
             "x-position": 2
+          },
+          {
+            "name": "issns",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 3
           }
         ],
         "responses": {
@@ -6521,7 +6530,8 @@
         "additionalProperties": false,
         "properties": {
           "dataBase": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "group": {
             "type": "integer",
@@ -6735,6 +6745,13 @@
           "confidence": {
             "type": "number",
             "format": "double"
+          },
+          "ambiguousGroup": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
           }
         }
       },

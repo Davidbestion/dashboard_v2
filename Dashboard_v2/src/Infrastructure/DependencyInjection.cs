@@ -76,21 +76,39 @@ public static class DependencyInjection
         // Publication database resolver (ISSN -> database/group).
         // Providers are registered in resolution priority order:
         //   1. LocalCsv  — Scopus/Scimago CSV files (Group 1, includes quartile). Singleton, loaded at startup.
-        //   2. MEDLINE   — NLM E-utilities API (Group 2). Free, no key. ~3 req/s limit.
-        //   3. SciELO    — SciELO Article Meta API (Group 2). Free, no key.
-        //   4. DOAJ      — DOAJ REST API (Group 3). Free, no key.
+        //   2. WosExcel  — Clarivate WoS change Excel files (Group 1 or 2, no quartile). Singleton, loaded at startup.
+        //   3. MEDLINE   — NLM E-utilities API (Group 2). Free, no key. ~3 req/s limit.
+        //   4. SciELO    — SciELO Article Meta API (Group 2). Free, no key.
+        //   5. DOAJ      — DOAJ REST API (Group 3). Free, no key.
         // The resolver tries each provider in order and returns on the first match.
         builder.Services.Configure<Dashboard_v2.Infrastructure.Configuration.PublicationDatabaseOptions>(builder.Configuration.GetSection("PublicationDatabase"));
 
-        // 1. LocalCsv (Singleton — loads CSV files once at startup)
+        // 1. LocalCsv/Scimago (Singleton — loads CSV files once at startup)
         builder.Services.AddSingleton<Dashboard_v2.Application.Common.Interfaces.IPublicationDatabaseProvider>(sp =>
         {
             var opts = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<Dashboard_v2.Infrastructure.Configuration.PublicationDatabaseOptions>>().Value;
             var logger = sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<Dashboard_v2.Infrastructure.Services.Providers.LocalCsvPublicationDatabaseProvider>>();
-            return new Dashboard_v2.Infrastructure.Services.Providers.LocalCsvPublicationDatabaseProvider(opts.LocalMappingFiles ?? [], logger);
+            // ScimagoFiles takes priority; fall back to the old LocalMappingFiles key for compatibility
+            var files = (opts.ScimagoFiles?.Count > 0 ? opts.ScimagoFiles : opts.LocalMappingFiles) ?? [];
+            return new Dashboard_v2.Infrastructure.Services.Providers.LocalCsvPublicationDatabaseProvider(files, logger);
         });
 
-        // 2. MEDLINE via NLM E-utilities
+        // 2. WosExcel (Singleton — loads .xlsx change files once at startup)
+        builder.Services.AddSingleton<Dashboard_v2.Application.Common.Interfaces.IPublicationDatabaseProvider>(sp =>
+        {
+            var opts = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<Dashboard_v2.Infrastructure.Configuration.PublicationDatabaseOptions>>().Value;
+            var logger = sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<Dashboard_v2.Infrastructure.Services.Providers.WosExcelPublicationDatabaseProvider>>();
+            // Resolve directory relative to content root when path is not absolute
+            var dir = opts.WosDirectory;
+            if (!string.IsNullOrWhiteSpace(dir) && !System.IO.Path.IsPathRooted(dir))
+            {
+                var env = sp.GetService<Microsoft.AspNetCore.Hosting.IWebHostEnvironment>();
+                if (env != null) dir = System.IO.Path.Combine(env.ContentRootPath, dir);
+            }
+            return new Dashboard_v2.Infrastructure.Services.Providers.WosExcelPublicationDatabaseProvider(dir, logger);
+        });
+
+        // 3. MEDLINE via NLM E-utilities
         builder.Services.AddHttpClient<Dashboard_v2.Infrastructure.Services.Providers.MedlinePublicationDatabaseProvider>(client =>
         {
             client.BaseAddress = new Uri("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/");
@@ -100,7 +118,7 @@ public static class DependencyInjection
         builder.Services.AddScoped<Dashboard_v2.Application.Common.Interfaces.IPublicationDatabaseProvider>(
             sp => sp.GetRequiredService<Dashboard_v2.Infrastructure.Services.Providers.MedlinePublicationDatabaseProvider>());
 
-        // 3. SciELO via Article Meta API
+        // 4. SciELO via Article Meta API
         builder.Services.AddHttpClient<Dashboard_v2.Infrastructure.Services.Providers.SciELOPublicationDatabaseProvider>(client =>
         {
             client.BaseAddress = new Uri("https://articlemeta.scielo.org/");
@@ -110,7 +128,7 @@ public static class DependencyInjection
         builder.Services.AddScoped<Dashboard_v2.Application.Common.Interfaces.IPublicationDatabaseProvider>(
             sp => sp.GetRequiredService<Dashboard_v2.Infrastructure.Services.Providers.SciELOPublicationDatabaseProvider>());
 
-        // 4. DOAJ
+        // 5. DOAJ
         builder.Services.AddHttpClient<Dashboard_v2.Infrastructure.Services.Providers.DoajPublicationDatabaseProvider>(client =>
         {
             client.BaseAddress = new Uri("https://doaj.org/api/v3/");

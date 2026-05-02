@@ -164,30 +164,50 @@ public class Publications : EndpointGroupBase
         return Results.Ok(items);
     }
 
-    private async Task<IResult> ResolveDatabaseFromCrossRef(ICrossRefClient crossRefClient, Application.Common.Interfaces.IPublicationDatabaseResolver resolver, string? doi, string? title)
+    private async Task<IResult> ResolveDatabaseFromCrossRef(ICrossRefClient crossRefClient, Application.Common.Interfaces.IPublicationDatabaseResolver resolver, string? doi, string? title, string? issns)
     {
-        // Prefer DOI if provided
-        Dashboard_v2.Application.Publications.PublicationCrossRefDto? cr = null;
-        if (!string.IsNullOrWhiteSpace(doi))
-            cr = await crossRefClient.GetWorkByDoiAsync(doi);
+        List<string> issnList;
 
-        if (cr == null && !string.IsNullOrWhiteSpace(title))
+        // Fast path: client already has ISSNs from a previous metadata search.
+        if (!string.IsNullOrWhiteSpace(issns))
         {
-            var list = await crossRefClient.SearchWorksByTitleAsync(title, rows: 1);
-            if (list?.Count > 0) cr = list[0];
+            issnList = issns
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .ToList();
+        }
+        else
+        {
+            // Slow path: ask CrossRef for the ISSNs.
+            Dashboard_v2.Application.Publications.PublicationCrossRefDto? cr = null;
+            if (!string.IsNullOrWhiteSpace(doi))
+                cr = await crossRefClient.GetWorkByDoiAsync(doi);
+
+            if (cr == null && !string.IsNullOrWhiteSpace(title))
+            {
+                var list = await crossRefClient.SearchWorksByTitleAsync(title, rows: 1);
+                if (list?.Count > 0) cr = list[0];
+            }
+
+            if (cr == null)
+                return Results.Ok(new Dashboard_v2.Application.Publications.PublicationDatabaseMatchDto
+                {
+                    Message = "CrossRef no encontró ninguna publicación con los parámetros dados. Por favor complete los campos manualmente."
+                });
+
+            if (cr.Issns == null || cr.Issns.Count == 0)
+                return Results.Ok(new Dashboard_v2.Application.Publications.PublicationDatabaseMatchDto
+                {
+                    Message = "CrossRef encontró la publicación pero no devolvió ISSN (es un artículo de conferencias u otro tipo sin revista). Por favor complete los campos manualmente si corresponde."
+                });
+
+            issnList = cr.Issns.ToList();
         }
 
-        // If CrossRef has no ISSNs for this work there is nothing to resolve.
-        if (cr == null || cr.Issns == null || cr.Issns.Count == 0)
-            return Results.NotFound(new { message = "CrossRef no devolvió información de revista (ISSN) para los parámetros dados." });
-
         // Try to resolve the database name from the ISSNs.
-        // Returns null when no configured provider recognises the journal.
-        var match = await resolver.ResolveByIssnsAsync(cr.Issns) ?? new Dashboard_v2.Application.Publications.PublicationDatabaseMatchDto();
+        var match = await resolver.ResolveByIssnsAsync(issnList) ?? new Dashboard_v2.Application.Publications.PublicationDatabaseMatchDto();
 
-        // Always include the ISSNs so the client can display them even when
-        // the database name couldn't be determined automatically.
-        match.Issns = cr.Issns.ToList();
+        // Always include the ISSNs so the client can display them.
+        match.Issns = issnList;
 
         return Results.Ok(match);
     }

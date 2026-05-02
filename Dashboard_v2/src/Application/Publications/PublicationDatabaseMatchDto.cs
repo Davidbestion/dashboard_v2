@@ -40,4 +40,17 @@ public class PublicationDatabaseMatchDto
     /// Confidence score (0..1) for heuristic ranking of multiple matches.
     /// </summary>
     public double Confidence { get; set; } = 0.0;
+
+    /// <summary>
+    /// True when the journal is indexed in both ESCI (Group 2) and a main WoS index
+    /// (SCIE/SSCI/AHCI, Group 1) and the correct group depends on the publication date
+    /// relative to the journal's promotion. The client should let the user choose.
+    /// </summary>
+    public bool AmbiguousGroup { get; set; } = false;
+
+    /// <summary>
+    /// Optional human-readable message explaining why the resolution was partial or
+    /// unsuccessful (e.g. no ISSNs found for a proceedings article).
+    /// </summary>
+    public string? Message { get; set; }
 }

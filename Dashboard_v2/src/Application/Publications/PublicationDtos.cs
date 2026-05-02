@@ -25,7 +25,7 @@ public record IndexedPublicationDto
 /// <summary>Datos de revista para publicaciones de tipo Diario (journal).</summary>
 public record JournalPublicationDto
 {
-    public string DataBase { get; init; } = default!;
+    public string? DataBase { get; init; }
     public int Group { get; init; }
     /// <summary>Cuartil Scimago (Q1–Q4). Solo presente cuando Group == 1.</summary>
     public string? Cuartil { get; init; }

@@ -45,10 +45,9 @@ public sealed class PublicationService : IPublicationService
 
         if (request.PublicationType == Dashboard_v2.Domain.Enums.PublicationType.Diario)
         {
-            if (string.IsNullOrWhiteSpace(dataBase) || group is null or < 1 or > 4)
-                return (Result.Failure(new[] { "Datos de la revista son obligatorios: base de datos y grupo (1–4)." }), null);
-            if (group == 1 && string.IsNullOrWhiteSpace(cuartil))
-                return (Result.Failure(new[] { "Cuartil es obligatorio para revistas de grupo 1." }), null);
+            if (group is null or < 1 or > 4)
+                return (Result.Failure(new[] { "El grupo de la revista es obligatorio (1–4)." }), null);
+
         }
         else if (string.IsNullOrWhiteSpace(request.Index))
         {
@@ -101,10 +100,10 @@ public sealed class PublicationService : IPublicationService
             publication.JournalPublication = new JournalPublication
             {
                 PublicationId = publication.Id,
-                DataBase = dataBase!.Trim(),
+                DataBase = dataBase,
                 Group = group!.Value,
                 JournalGroup1Publication = group == 1
-                    ? new JournalGroup1Publication { PublicationId = publication.Id, Cuartil = cuartil! }
+                    ? new JournalGroup1Publication { PublicationId = publication.Id, Cuartil = cuartil }
                     : null
             };
         }
@@ -167,8 +166,7 @@ public sealed class PublicationService : IPublicationService
 
             if (string.IsNullOrWhiteSpace(dataBase) || group is null or < 1 or > 4)
                 return Result.Failure(new[] { "Datos de la revista son obligatorios: base de datos y grupo (1–4)." });
-            if (group == 1 && string.IsNullOrWhiteSpace(cuartil))
-                return Result.Failure(new[] { "Cuartil es obligatorio para revistas de grupo 1." });
+
 
             // Apply validated values back for persistence below
             request = request with { DataBase = dataBase, Group = group, Cuartil = cuartil };
@@ -198,13 +196,13 @@ public sealed class PublicationService : IPublicationService
                 publication.JournalPublication = new JournalPublication
                 {
                     PublicationId = publication.Id,
-                    DataBase = request.DataBase!.Trim(),
+                    DataBase = request.DataBase?.Trim(),
                     Group = request.Group!.Value
                 };
             }
             else
             {
-                publication.JournalPublication.DataBase = request.DataBase!.Trim();
+                publication.JournalPublication.DataBase = request.DataBase?.Trim();
                 publication.JournalPublication.Group = request.Group!.Value;
             }
 
@@ -212,13 +210,13 @@ public sealed class PublicationService : IPublicationService
             {
                 if (publication.JournalPublication.JournalGroup1Publication == null)
                 {
-                    var g1 = new JournalGroup1Publication { PublicationId = publication.Id, Cuartil = request.Cuartil! };
+                    var g1 = new JournalGroup1Publication { PublicationId = publication.Id, Cuartil = request.Cuartil };
                     publication.JournalPublication.JournalGroup1Publication = g1;
                     _context.JournalGroup1Publications.Add(g1);
                 }
                 else
                 {
-                    publication.JournalPublication.JournalGroup1Publication.Cuartil = request.Cuartil!;
+                    publication.JournalPublication.JournalGroup1Publication.Cuartil = request.Cuartil;
                 }
             }
             else if (publication.JournalPublication.JournalGroup1Publication != null)

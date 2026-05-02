@@ -486,4 +486,5 @@ $RECYCLE.BIN/
 
 # Publication database mapping files (third-party data, downloaded separately by admins)
 # Place Scimago/WoS CSV files here at runtime; see src/Web/data/.gitkeep for instructions.
-src/Web/data/*.csv
+src/Web/data/scimago/*.csv
+src/Web/data/wos/*.xlsx

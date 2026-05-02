@@ -9,10 +9,21 @@ namespace Dashboard_v2.Infrastructure.Configuration;
 public class PublicationDatabaseOptions
 {
     /// <summary>
-    /// Paths to CSV files containing ISSN → database mappings. CSV format:
-    ///   issn,database[,source[,cuartil]]
-    /// Example: "1234-5678,Scopus,scopus_master.csv,Q2"
-    /// ISSNs are normalised (hyphens stripped) so both "1234-5678" and "12345678" work.
+    /// Paths to Scimago/Scopus CSV files (semicolon-delimited SJR export).
+    /// Replaces the legacy <see cref="LocalMappingFiles"/> property.
+    /// </summary>
+    public List<string> ScimagoFiles { get; set; } = new();
+
+    /// <summary>
+    /// Legacy alias for <see cref="ScimagoFiles"/>. Used when ScimagoFiles is empty.
     /// </summary>
     public List<string> LocalMappingFiles { get; set; } = new();
+
+    /// <summary>
+    /// Directory containing Clarivate Web of Science Master Journal List change
+    /// Excel files (.xlsx). All .xlsx files in this directory are loaded and
+    /// processed in chronological order (by filename).
+    /// Typically: "data/wos"
+    /// </summary>
+    public string? WosDirectory { get; set; }
 }

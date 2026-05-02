@@ -4982,12 +4982,14 @@ export class PublicationsClient {
         return Promise.resolve<PublicationCrossRefDto[]>(null as any);
     }
 
-    resolvePublicationDatabaseFromCrossRef(doi: string | null | undefined, title: string | null | undefined): Promise<PublicationDatabaseMatchDto> {
+    resolvePublicationDatabaseFromCrossRef(doi: string | null | undefined, title: string | null | undefined, issns: string | null | undefined): Promise<PublicationDatabaseMatchDto> {
         let url_ = this.baseUrl + "/api/Publications/resolve-database?";
         if (doi !== undefined && doi !== null)
             url_ += "doi=" + encodeURIComponent("" + doi) + "&";
         if (title !== undefined && title !== null)
             url_ += "title=" + encodeURIComponent("" + title) + "&";
+        if (issns !== undefined && issns !== null)
+            url_ += "issns=" + encodeURIComponent("" + issns) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -10042,7 +10044,7 @@ export interface IIndexedPublicationDto {
 }
 
 export class JournalPublicationDto implements IJournalPublicationDto {
-    dataBase?: string;
+    dataBase?: string | undefined;
     group?: number;
     cuartil?: string | undefined;
 
@@ -10080,7 +10082,7 @@ export class JournalPublicationDto implements IJournalPublicationDto {
 }
 
 export interface IJournalPublicationDto {
-    dataBase?: string;
+    dataBase?: string | undefined;
     group?: number;
     cuartil?: string | undefined;
 }
@@ -10372,6 +10374,8 @@ export class PublicationDatabaseMatchDto implements IPublicationDatabaseMatchDto
     cuartil?: string | undefined;
     source?: string | undefined;
     confidence?: number;
+    ambiguousGroup?: boolean;
+    message?: string | undefined;
 
     constructor(data?: IPublicationDatabaseMatchDto) {
         if (data) {
@@ -10394,6 +10398,8 @@ export class PublicationDatabaseMatchDto implements IPublicationDatabaseMatchDto
             this.cuartil = _data["cuartil"];
             this.source = _data["source"];
             this.confidence = _data["confidence"];
+            this.ambiguousGroup = _data["ambiguousGroup"];
+            this.message = _data["message"];
         }
     }
 
@@ -10416,6 +10422,8 @@ export class PublicationDatabaseMatchDto implements IPublicationDatabaseMatchDto
         data["cuartil"] = this.cuartil;
         data["source"] = this.source;
         data["confidence"] = this.confidence;
+        data["ambiguousGroup"] = this.ambiguousGroup;
+        data["message"] = this.message;
         return data;
     }
 }
@@ -10427,6 +10435,8 @@ export interface IPublicationDatabaseMatchDto {
     cuartil?: string | undefined;
     source?: string | undefined;
     confidence?: number;
+    ambiguousGroup?: boolean;
+    message?: string | undefined;
 }
 
 export class UpdatePublicationBody implements IUpdatePublicationBody {

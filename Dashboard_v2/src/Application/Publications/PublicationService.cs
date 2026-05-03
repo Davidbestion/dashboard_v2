@@ -604,7 +604,7 @@ public sealed class PublicationService : IPublicationService
     public Task<List<PublicationTypeDto>> GetPublicationTypesAsync()
     {
         var types = System.Enum.GetValues<Dashboard_v2.Domain.Enums.PublicationType>()
-            .Select(t => new PublicationTypeDto((int)t, t.ToString()))
+            .Select(t => new PublicationTypeDto((int)t, t.ToString().Replace('_', ' ')))
             .ToList();
 
         return Task.FromResult(types);

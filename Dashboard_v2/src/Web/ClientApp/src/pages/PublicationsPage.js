@@ -838,6 +838,7 @@ export default function PublicationsPage() {
         <ModalBody>
           {formError && <Alert color="danger">{formError}</Alert>}
           <Form>
+            {/* ══ Sección 1: datos principales ══════════════════════════ */}
             <FormGroup>
               <Label for="title">Título <span className="text-danger">*</span></Label>
               <Input
@@ -848,34 +849,36 @@ export default function PublicationsPage() {
                 placeholder="Título de la publicación"
               />
             </FormGroup>
-            <FormGroup>
-              <Label for="publicationType">
-                Tipo <span className="text-danger">*</span>
-              </Label>
-              <Input
-                type="select"
-                id="publicationType"
-                name="publicationType"
-                value={form.publicationType}
-                onChange={handleFormChange}
-              >
-                {types.map(t => (
-                  <option key={t.value} value={t.value}>{t.name}</option>
-                ))}
-              </Input>
-            </FormGroup>
-            <FormGroup>
-              <Label for="publishedDate">Fecha de publicación <span className="text-danger">*</span></Label>
-              <Input
-                id="publishedDate"
-                name="publishedDate"
-                value={form.publishedDate}
-                onChange={handleFormChange}
-                placeholder="AAAA, AAAA-MM o AAAA-MM-DD (ej: 2024, 2024-03, 2024-03-15)"
-                required
-              />
-              <small className="text-muted">Puede indicar solo el año, año y mes, o la fecha completa.</small>
-            </FormGroup>
+            <div className="row g-3 mb-3">
+              <div className="col-md-6">
+                <Label for="publicationType">
+                  Tipo <span className="text-danger">*</span>
+                </Label>
+                <Input
+                  type="select"
+                  id="publicationType"
+                  name="publicationType"
+                  value={form.publicationType}
+                  onChange={handleFormChange}
+                >
+                  {types.map(t => (
+                    <option key={t.value} value={t.value}>{t.name}</option>
+                  ))}
+                </Input>
+              </div>
+              <div className="col-md-6">
+                <Label for="publishedDate">Fecha de publicación <span className="text-danger">*</span></Label>
+                <Input
+                  id="publishedDate"
+                  name="publishedDate"
+                  value={form.publishedDate}
+                  onChange={handleFormChange}
+                  placeholder="AAAA, AAAA-MM o AAAA-MM-DD"
+                  required
+                />
+                <small className="text-muted">Año, año-mes o fecha completa.</small>
+              </div>
+            </div>
             <FormGroup>
               <Label for="urlDoi">URL / DOI</Label>
               <Input
@@ -885,48 +888,91 @@ export default function PublicationsPage() {
                 onChange={handleFormChange}
                 placeholder="https://doi.org/10.xxxx/... o URL de la publicación"
               />
-              <div className="mt-2">
-                <ButtonGroup size="sm">
-                  {/* Primary action: CrossRef (most common) */}
-                  <Button
-                    type="button"
-                    color="outline-secondary"
-                    onClick={searchCrossRef}
-                    disabled={metaSearchLoading}
-                  >
-                    {metaSearchLoading ? <Spinner size="sm" className="me-1" /> : null}
-                    Buscar metadatos
-                  </Button>
-                  {/* Dropdown for choosing the source */}
-                  <ButtonDropdown
-                    isOpen={metaDropdownOpen}
-                    toggle={() => setMetaDropdownOpen(o => !o)}
-                  >
-                    <DropdownToggle
-                      caret
-                      color="outline-secondary"
-                      size="sm"
-                      disabled={metaSearchLoading}
-                    />
-                    <DropdownMenu>
-                      <DropdownItem header>Fuente de metadatos</DropdownItem>
-                      <DropdownItem onClick={searchCrossRef} disabled={metaSearchLoading}>
-                        CrossRef
-                        <small className="d-block text-muted">Título, autores, fecha, ISSN/ISBN</small>
-                      </DropdownItem>
-                      <DropdownItem onClick={searchOpenAire} disabled={metaSearchLoading}>
-                        OpenAIRE
-                        <small className="d-block text-muted">Incluye SciELO, repositorios LA</small>
-                      </DropdownItem>
-                    </DropdownMenu>
-                  </ButtonDropdown>
-                </ButtonGroup>
-                <div className="text-muted small mt-1">
-                  <strong>Buscar metadatos</strong>: rellena título, autores, tipo y fecha desde CrossRef u OpenAIRE.
-                </div>
-                {crossrefError && <div className="text-danger small mt-1">{crossrefError}</div>}
-              </div>
             </FormGroup>
+
+            {/* ── Acciones de búsqueda (siempre juntas) ── */}
+            <div className="d-flex gap-2 flex-wrap align-items-start mb-1">
+              <ButtonGroup size="sm">
+                <Button
+                  type="button"
+                  color="outline-secondary"
+                  onClick={searchCrossRef}
+                  disabled={metaSearchLoading}
+                >
+                  {metaSearchLoading ? <Spinner size="sm" className="me-1" /> : null}
+                  Buscar metadatos
+                </Button>
+                <ButtonDropdown
+                  isOpen={metaDropdownOpen}
+                  toggle={() => setMetaDropdownOpen(o => !o)}
+                >
+                  <DropdownToggle
+                    caret
+                    color="outline-secondary"
+                    size="sm"
+                    disabled={metaSearchLoading}
+                  />
+                  <DropdownMenu>
+                    <DropdownItem header>Fuente de metadatos</DropdownItem>
+                    <DropdownItem onClick={searchCrossRef} disabled={metaSearchLoading}>
+                      CrossRef
+                      <small className="d-block text-muted">Título, autores, fecha, ISSN/ISBN</small>
+                    </DropdownItem>
+                    <DropdownItem onClick={searchOpenAire} disabled={metaSearchLoading}>
+                      OpenAIRE
+                      <small className="d-block text-muted">Incluye SciELO, repositorios LA</small>
+                    </DropdownItem>
+                  </DropdownMenu>
+                </ButtonDropdown>
+              </ButtonGroup>
+
+              {parseInt(form.publicationType, 10) === 0 && (
+                <Button
+                  type="button"
+                  color="outline-primary"
+                  size="sm"
+                  onClick={resolveDatabaseNow}
+                  disabled={resolveLoading}
+                >
+                  {resolveLoading ? <Spinner size="sm" className="me-1" /> : null}
+                  Resolver base de datos
+                </Button>
+              )}
+            </div>
+            <div className="text-muted small mb-1">
+              <strong>Buscar metadatos</strong>: rellena título, autores, tipo y fecha desde CrossRef u OpenAIRE.
+              {parseInt(form.publicationType, 10) === 0 && (
+                <>{' '}<strong>Resolver base de datos</strong>: determina base de datos (Scopus, SciELO, DOAJ…), grupo y cuartil automáticamente.</>
+              )}
+            </div>
+            {crossrefError && <div className="text-danger small mb-2">{crossrefError}</div>}
+            {resolveSuccess && <div className="text-success small mb-2">✓ {resolveSuccess}</div>}
+            {resolveError && <Alert color="warning" className="small mb-2 py-2">{resolveError}</Alert>}
+
+            <FormGroup>
+              <Label for="publicationData">Datos de la publicación</Label>
+              <Input
+                type="textarea"
+                id="publicationData"
+                name="publicationData"
+                rows={4}
+                value={form.publicationData}
+                onChange={handleFormChange}
+                placeholder="Editorial, revista, datos o cualquier información adicional relevante sobre la publicación"
+              />
+            </FormGroup>
+            <FormGroup>
+              <Label>Coautores adicionales</Label>
+              <CoauthorPicker
+                value={coauthorTags}
+                onChange={setCoauthorTags}
+                placeholder="Buscar coautor o escribir nombre libre..."
+                helpText="Selecciona una tarjeta del resultado o escribe un nombre nuevo y presiona Enter. Si el autor ya está vinculado a un usuario del sistema, verás su tarjeta institucional completa."
+              />
+            </FormGroup>
+
+            {/* ══ Sección 2: clasificación ═══════════════════════════════ */}
+            <hr className="my-3" />
             {proyectosError ? (
               <FormGroup>
                 <Label>Proyecto derivado <small className="text-muted">(opcional)</small></Label>
@@ -954,7 +1000,6 @@ export default function PublicationsPage() {
               </FormGroup>
             )}
 
-            {/* ── Campos dinámicos por tipo ── */}
             {parseInt(form.publicationType, 10) === 0 ? (
               <>
                 <FormGroup>
@@ -967,55 +1012,39 @@ export default function PublicationsPage() {
                     placeholder="Ej. Scopus, Web of Science..."
                   />
                 </FormGroup>
-                <FormGroup>
-                  <Label for="group">Grupo (1–4) <span className="text-danger">*</span></Label>
-                  <Input
-                    type="select"
-                    id="group"
-                    name="group"
-                    value={form.group}
-                    onChange={handleFormChange}
-                  >
-                    <option value="">Selecciona grupo...</option>
-                    {[1, 2, 3, 4].map(g => (
-                      <option key={g} value={g}>Grupo {g}</option>
-                    ))}
-                  </Input>
-                </FormGroup>
-                {parseInt(form.group, 10) === 1 && (
-                  <FormGroup>
-                    <Label for="cuartil">Cuartil Scimago <span className="text-danger">*</span></Label>
+                <div className="row g-3 mb-3">
+                  <div className="col-md-6">
+                    <Label for="group">Grupo (1–4) <span className="text-danger">*</span></Label>
                     <Input
                       type="select"
-                      id="cuartil"
-                      name="cuartil"
-                      value={form.cuartil}
+                      id="group"
+                      name="group"
+                      value={form.group}
                       onChange={handleFormChange}
                     >
-                      <option value="">Selecciona cuartil...</option>
-                      {[1, 2, 3, 4].map(q => (
-                        <option key={q} value={`Q${q}`}>Q{q}</option>
+                      <option value="">Selecciona grupo...</option>
+                      {[1, 2, 3, 4].map(g => (
+                        <option key={g} value={g}>Grupo {g}</option>
                       ))}
                     </Input>
-                  </FormGroup>
-                )}
-                {/* Resolver base de datos: solo aplica para revistas (tipo 0) */}
-                <div className="mb-3">
-                  <Button
-                    type="button"
-                    color="outline-primary"
-                    size="sm"
-                    onClick={resolveDatabaseNow}
-                    disabled={resolveLoading}
-                  >
-                    {resolveLoading ? <Spinner size="sm" className="me-1" /> : null}
-                    Resolver base de datos
-                  </Button>
-                  <div className="text-muted small mt-1">
-                    Determina en qué índice (Scopus, SciELO, DOAJ…) está la revista y asigna base de datos y grupo automáticamente.
                   </div>
-                  {resolveSuccess && <div className="text-success small mt-1">✓ {resolveSuccess}</div>}
-                  {resolveError && <Alert color="warning" className="small mt-1 mb-0 py-2">{resolveError}</Alert>}
+                  {parseInt(form.group, 10) === 1 && (
+                    <div className="col-md-6">
+                      <Label for="cuartil">Cuartil Scimago <span className="text-danger">*</span></Label>
+                      <Input
+                        type="select"
+                        id="cuartil"
+                        name="cuartil"
+                        value={form.cuartil}
+                        onChange={handleFormChange}
+                      >
+                        <option value="">Selecciona cuartil...</option>
+                        {[1, 2, 3, 4].map(q => (
+                          <option key={q} value={`Q${q}`}>Q{q}</option>
+                        ))}
+                      </Input>
+                    </div>
+                  )}
                 </div>
               </>
             ) : [1, 2, 3].includes(parseInt(form.publicationType, 10)) ? (
@@ -1035,31 +1064,6 @@ export default function PublicationsPage() {
                 </Input>
               </FormGroup>
             ) : null}
-
-            <FormGroup>
-              <Label for="publicationData">Datos / Resumen</Label>
-              <Input
-                type="textarea"
-                id="publicationData"
-                name="publicationData"
-                rows={4}
-                value={form.publicationData}
-                onChange={handleFormChange}
-                placeholder="Resumen o cualquier información adicional relevante"
-              />
-            </FormGroup>
-            {/* Coautores */}
-            {(
-              <FormGroup>
-                <Label>Coautores adicionales</Label>
-                <CoauthorPicker
-                  value={coauthorTags}
-                  onChange={setCoauthorTags}
-                  placeholder="Buscar coautor o escribir nombre libre..."
-                  helpText="Selecciona una tarjeta del resultado o escribe un nombre nuevo y presiona Enter. Si el autor ya está vinculado a un usuario del sistema, verás su tarjeta institucional completa."
-                />
-              </FormGroup>
-            )}
           </Form>
         </ModalBody>
         <ModalFooter>

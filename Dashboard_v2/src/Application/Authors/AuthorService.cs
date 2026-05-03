@@ -215,6 +215,42 @@ public sealed class AuthorService : IAuthorService
                         ct);
             }
 
+            // 3. Fallback for rows whose SearchKey was backfilled with SQL lower() (no accent
+            //    stripping).  Compare on the raw Name column case-insensitively — both sides
+            //    retain the original accents so the comparison succeeds — then confirm with
+            //    in-memory normalization to avoid false positives.
+            if (match == null)
+            {
+                var rawLower = raw.Trim().ToLowerInvariant();
+                var candidates = await _context.Authors
+                    .AsNoTracking()
+                    .Include(a => a.User)
+                        .ThenInclude(u => u!.Area)
+                            .ThenInclude(ar => ar!.Universidad)
+                    .Where(a => a.Name.ToLower() == rawLower)
+                    .ToListAsync(ct);
+                match = candidates.FirstOrDefault(
+                    a => Dashboard_v2.Domain.Common.TextNormalizer.Normalize(a.Name) == searchKey);
+            }
+
+            if (match == null && !string.IsNullOrWhiteSpace(firstName))
+            {
+                var lastNameLower  = lastName.ToLowerInvariant();
+                var firstNameLower = firstName.ToLowerInvariant();
+                var firstKey       = Dashboard_v2.Domain.Common.TextNormalizer.Normalize(firstName);
+                var candidates = await _context.Authors
+                    .AsNoTracking()
+                    .Include(a => a.User)
+                        .ThenInclude(u => u!.Area)
+                            .ThenInclude(ar => ar!.Universidad)
+                    .Where(a => a.LastName.ToLower() == lastNameLower &&
+                                a.FirstName != null && a.FirstName.ToLower() == firstNameLower)
+                    .ToListAsync(ct);
+                match = candidates.FirstOrDefault(
+                    a => Dashboard_v2.Domain.Common.TextNormalizer.Normalize(a.LastName)  == lastKey &&
+                         Dashboard_v2.Domain.Common.TextNormalizer.Normalize(a.FirstName) == firstKey);
+            }
+
             ExternalAuthorMatchDto? matchDto = null;
             if (match != null)
             {

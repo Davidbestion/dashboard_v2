@@ -56,19 +56,60 @@ public sealed class AuthorResolutionService : IAuthorResolutionService
             return existing;
 
         // 2. Structured match: normalized LastName + normalized FirstName (both non-empty).
-        if (!string.IsNullOrWhiteSpace(firstName))
+        if (existing == null && !string.IsNullOrWhiteSpace(firstName))
         {
             var firstKey = TextNormalizer.Normalize(firstName);
             existing = await _context.Authors
                 .FirstOrDefaultAsync(
                     a => a.LastNameKey == lastKey && a.FirstNameKey == firstKey,
                     cancellationToken);
-
-            if (existing != null)
-                return existing;
         }
 
-        // 3. No match — create and persist a new author.
+        // 3. Fallback for rows whose SearchKey was backfilled with SQL lower() (no accent
+        //    stripping).  Compare on the raw Name column case-insensitively — both sides
+        //    retain the original accents so the comparison succeeds — then confirm with
+        //    in-memory normalization.  Self-heals the stored key on match.
+        if (existing == null)
+        {
+            var rawLower = nameString.Trim().ToLowerInvariant();
+            var candidates = await _context.Authors
+                .Where(a => a.Name.ToLower() == rawLower)
+                .ToListAsync(cancellationToken);
+            existing = candidates.FirstOrDefault(
+                a => TextNormalizer.Normalize(a.Name) == searchKey);
+        }
+
+        if (existing == null && !string.IsNullOrWhiteSpace(firstName))
+        {
+            var lastNameLower  = lastName.ToLowerInvariant();
+            var firstNameLower = firstName.ToLowerInvariant();
+            var firstKey       = TextNormalizer.Normalize(firstName);
+            var candidates = await _context.Authors
+                .Where(a => a.LastName.ToLower() == lastNameLower &&
+                            a.FirstName != null && a.FirstName.ToLower() == firstNameLower)
+                .ToListAsync(cancellationToken);
+            existing = candidates.FirstOrDefault(
+                a => TextNormalizer.Normalize(a.LastName)  == lastKey &&
+                     TextNormalizer.Normalize(a.FirstName) == firstKey);
+        }
+
+        if (existing != null)
+        {
+            // Self-heal: if the stored keys are stale (from SQL backfill), recompute them.
+            var correctSearchKey = TextNormalizer.Normalize(existing.Name);
+            if (existing.SearchKey != correctSearchKey)
+            {
+                existing.SearchKey   = correctSearchKey;
+                existing.LastNameKey = TextNormalizer.Normalize(existing.LastName);
+                existing.FirstNameKey = string.IsNullOrWhiteSpace(existing.FirstName)
+                    ? null
+                    : TextNormalizer.Normalize(existing.FirstName);
+                await _context.SaveChangesAsync(cancellationToken);
+            }
+            return existing;
+        }
+
+        // 4. No match — create and persist a new author.
         var author = Author.Create(lastName, firstName);
         _context.Authors.Add(author);
         await _context.SaveChangesAsync(cancellationToken);

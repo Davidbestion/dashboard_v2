@@ -726,6 +726,52 @@ export class AuthorsClient {
         }
         return Promise.resolve<void>(null as any);
     }
+
+    resolveExternalAuthors(body: ResolveExternalAuthorsRequest): Promise<ExternalAuthorResolutionDto[]> {
+        let url_ = this.baseUrl + "/api/Authors/resolve-external";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processResolveExternalAuthors(_response);
+        });
+    }
+
+    protected processResolveExternalAuthors(response: Response): Promise<ExternalAuthorResolutionDto[]> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(ExternalAuthorResolutionDto.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<ExternalAuthorResolutionDto[]>(null as any);
+    }
 }
 
 export class AwardsClient {
@@ -4794,6 +4840,289 @@ export class PublicationsClient {
         }
         return Promise.resolve<void>(null as any);
     }
+
+    getPublicationPublicById(id: string): Promise<PublicationDto> {
+        let url_ = this.baseUrl + "/api/Publications/public/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetPublicationPublicById(_response);
+        });
+    }
+
+    protected processGetPublicationPublicById(response: Response): Promise<PublicationDto> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = PublicationDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<PublicationDto>(null as any);
+    }
+
+    findPublicationDuplicates(title: string | null | undefined, doi: string | null | undefined, url: string | null | undefined, excludeId: string | null | undefined): Promise<PublicationDuplicateDto[]> {
+        let url_ = this.baseUrl + "/api/Publications/duplicates?";
+        if (title !== undefined && title !== null)
+            url_ += "title=" + encodeURIComponent("" + title) + "&";
+        if (doi !== undefined && doi !== null)
+            url_ += "doi=" + encodeURIComponent("" + doi) + "&";
+        if (url !== undefined && url !== null)
+            url_ += "url=" + encodeURIComponent("" + url) + "&";
+        if (excludeId !== undefined && excludeId !== null)
+            url_ += "excludeId=" + encodeURIComponent("" + excludeId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processFindPublicationDuplicates(_response);
+        });
+    }
+
+    protected processFindPublicationDuplicates(response: Response): Promise<PublicationDuplicateDto[]> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(PublicationDuplicateDto.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<PublicationDuplicateDto[]>(null as any);
+    }
+
+    getCrossRefCandidates(doi: string | null | undefined, title: string | null | undefined): Promise<PublicationCrossRefDto[]> {
+        let url_ = this.baseUrl + "/api/Publications/crossref?";
+        if (doi !== undefined && doi !== null)
+            url_ += "doi=" + encodeURIComponent("" + doi) + "&";
+        if (title !== undefined && title !== null)
+            url_ += "title=" + encodeURIComponent("" + title) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetCrossRefCandidates(_response);
+        });
+    }
+
+    protected processGetCrossRefCandidates(response: Response): Promise<PublicationCrossRefDto[]> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(PublicationCrossRefDto.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<PublicationCrossRefDto[]>(null as any);
+    }
+
+    getOpenAireCandidates(doi: string | null | undefined, title: string | null | undefined): Promise<PublicationCrossRefDto[]> {
+        let url_ = this.baseUrl + "/api/Publications/openaire?";
+        if (doi !== undefined && doi !== null)
+            url_ += "doi=" + encodeURIComponent("" + doi) + "&";
+        if (title !== undefined && title !== null)
+            url_ += "title=" + encodeURIComponent("" + title) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetOpenAireCandidates(_response);
+        });
+    }
+
+    protected processGetOpenAireCandidates(response: Response): Promise<PublicationCrossRefDto[]> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(PublicationCrossRefDto.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<PublicationCrossRefDto[]>(null as any);
+    }
+
+    resolvePublicationDatabaseFromCrossRef(doi: string | null | undefined, title: string | null | undefined, issns: string | null | undefined): Promise<PublicationDatabaseMatchDto> {
+        let url_ = this.baseUrl + "/api/Publications/resolve-database?";
+        if (doi !== undefined && doi !== null)
+            url_ += "doi=" + encodeURIComponent("" + doi) + "&";
+        if (title !== undefined && title !== null)
+            url_ += "title=" + encodeURIComponent("" + title) + "&";
+        if (issns !== undefined && issns !== null)
+            url_ += "issns=" + encodeURIComponent("" + issns) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processResolvePublicationDatabaseFromCrossRef(_response);
+        });
+    }
+
+    protected processResolvePublicationDatabaseFromCrossRef(response: Response): Promise<PublicationDatabaseMatchDto> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = PublicationDatabaseMatchDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<PublicationDatabaseMatchDto>(null as any);
+    }
+
+    addCurrentUserAsCoauthor(id: string): Promise<void> {
+        let url_ = this.baseUrl + "/api/Publications/{id}/coauthors";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "POST",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processAddCurrentUserAsCoauthor(_response);
+        });
+    }
+
+    protected processAddCurrentUserAsCoauthor(response: Response): Promise<void> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
 }
 
 export class RedesClient {
@@ -6297,6 +6626,7 @@ export class CurrentUserDto implements ICurrentUserDto {
     role?: string | undefined;
     areaId?: string | undefined;
     areaNombre?: string | undefined;
+    hasLinkedAuthor?: boolean;
 
     constructor(data?: ICurrentUserDto) {
         if (data) {
@@ -6315,6 +6645,7 @@ export class CurrentUserDto implements ICurrentUserDto {
             this.role = _data["role"];
             this.areaId = _data["areaId"];
             this.areaNombre = _data["areaNombre"];
+            this.hasLinkedAuthor = _data["hasLinkedAuthor"];
         }
     }
 
@@ -6333,6 +6664,7 @@ export class CurrentUserDto implements ICurrentUserDto {
         data["role"] = this.role;
         data["areaId"] = this.areaId;
         data["areaNombre"] = this.areaNombre;
+        data["hasLinkedAuthor"] = this.hasLinkedAuthor;
         return data;
     }
 }
@@ -6344,11 +6676,14 @@ export interface ICurrentUserDto {
     role?: string | undefined;
     areaId?: string | undefined;
     areaNombre?: string | undefined;
+    hasLinkedAuthor?: boolean;
 }
 
 export class AuthorSearchDto implements IAuthorSearchDto {
     id?: string;
     name?: string;
+    lastName?: string;
+    firstName?: string | undefined;
 
     constructor(data?: IAuthorSearchDto) {
         if (data) {
@@ -6363,6 +6698,8 @@ export class AuthorSearchDto implements IAuthorSearchDto {
         if (_data) {
             this.id = _data["id"];
             this.name = _data["name"];
+            this.lastName = _data["lastName"];
+            this.firstName = _data["firstName"];
         }
     }
 
@@ -6377,6 +6714,8 @@ export class AuthorSearchDto implements IAuthorSearchDto {
         data = typeof data === 'object' ? data : {};
         data["id"] = this.id;
         data["name"] = this.name;
+        data["lastName"] = this.lastName;
+        data["firstName"] = this.firstName;
         return data;
     }
 }
@@ -6384,6 +6723,8 @@ export class AuthorSearchDto implements IAuthorSearchDto {
 export interface IAuthorSearchDto {
     id?: string;
     name?: string;
+    lastName?: string;
+    firstName?: string | undefined;
 }
 
 export class CoauthorSearchDto implements ICoauthorSearchDto {
@@ -6612,6 +6953,142 @@ export class PotentialAuthorMatchDto implements IPotentialAuthorMatchDto {
 export interface IPotentialAuthorMatchDto {
     id?: string;
     name?: string;
+}
+
+export class ExternalAuthorResolutionDto implements IExternalAuthorResolutionDto {
+    externalName?: string;
+    match?: ExternalAuthorMatchDto | undefined;
+
+    constructor(data?: IExternalAuthorResolutionDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.externalName = _data["externalName"];
+            this.match = _data["match"] ? ExternalAuthorMatchDto.fromJS(_data["match"]) : undefined as any;
+        }
+    }
+
+    static fromJS(data: any): ExternalAuthorResolutionDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new ExternalAuthorResolutionDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["externalName"] = this.externalName;
+        data["match"] = this.match ? this.match.toJSON() : undefined as any;
+        return data;
+    }
+}
+
+export interface IExternalAuthorResolutionDto {
+    externalName?: string;
+    match?: ExternalAuthorMatchDto | undefined;
+}
+
+export class ExternalAuthorMatchDto implements IExternalAuthorMatchDto {
+    id?: string;
+    name?: string;
+    lastName?: string;
+    firstName?: string | undefined;
+    linkedUser?: LinkedUserSummaryDto | undefined;
+
+    constructor(data?: IExternalAuthorMatchDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.name = _data["name"];
+            this.lastName = _data["lastName"];
+            this.firstName = _data["firstName"];
+            this.linkedUser = _data["linkedUser"] ? LinkedUserSummaryDto.fromJS(_data["linkedUser"]) : undefined as any;
+        }
+    }
+
+    static fromJS(data: any): ExternalAuthorMatchDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new ExternalAuthorMatchDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["name"] = this.name;
+        data["lastName"] = this.lastName;
+        data["firstName"] = this.firstName;
+        data["linkedUser"] = this.linkedUser ? this.linkedUser.toJSON() : undefined as any;
+        return data;
+    }
+}
+
+export interface IExternalAuthorMatchDto {
+    id?: string;
+    name?: string;
+    lastName?: string;
+    firstName?: string | undefined;
+    linkedUser?: LinkedUserSummaryDto | undefined;
+}
+
+export class ResolveExternalAuthorsRequest implements IResolveExternalAuthorsRequest {
+    names?: string[];
+
+    constructor(data?: IResolveExternalAuthorsRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (Array.isArray(_data["names"])) {
+                this.names = [] as any;
+                for (let item of _data["names"])
+                    this.names!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): ResolveExternalAuthorsRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new ResolveExternalAuthorsRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.names)) {
+            data["names"] = [];
+            for (let item of this.names)
+                data["names"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface IResolveExternalAuthorsRequest {
+    names?: string[];
 }
 
 export class AwardWithGrantingsDto implements IAwardWithGrantingsDto {
@@ -9601,6 +10078,7 @@ export class PublicationDto implements IPublicationDto {
     title?: string;
     publicationData?: string;
     urlDoi?: string | undefined;
+    publishedDate?: string;
     publicationType?: number;
     authors?: AuthorDto[];
     indexedPublication?: IndexedPublicationDto | undefined;
@@ -9623,6 +10101,7 @@ export class PublicationDto implements IPublicationDto {
             this.title = _data["title"];
             this.publicationData = _data["publicationData"];
             this.urlDoi = _data["urlDoi"];
+            this.publishedDate = _data["publishedDate"];
             this.publicationType = _data["publicationType"];
             if (Array.isArray(_data["authors"])) {
                 this.authors = [] as any;
@@ -9649,6 +10128,7 @@ export class PublicationDto implements IPublicationDto {
         data["title"] = this.title;
         data["publicationData"] = this.publicationData;
         data["urlDoi"] = this.urlDoi;
+        data["publishedDate"] = this.publishedDate;
         data["publicationType"] = this.publicationType;
         if (Array.isArray(this.authors)) {
             data["authors"] = [];
@@ -9668,6 +10148,7 @@ export interface IPublicationDto {
     title?: string;
     publicationData?: string;
     urlDoi?: string | undefined;
+    publishedDate?: string;
     publicationType?: number;
     authors?: AuthorDto[];
     indexedPublication?: IndexedPublicationDto | undefined;
@@ -9679,6 +10160,8 @@ export interface IPublicationDto {
 export class AuthorDto implements IAuthorDto {
     id?: string;
     name?: string;
+    lastName?: string;
+    firstName?: string | undefined;
     userId?: string | undefined;
     linkedUser?: LinkedUserSummaryDto | undefined;
 
@@ -9695,6 +10178,8 @@ export class AuthorDto implements IAuthorDto {
         if (_data) {
             this.id = _data["id"];
             this.name = _data["name"];
+            this.lastName = _data["lastName"];
+            this.firstName = _data["firstName"];
             this.userId = _data["userId"];
             this.linkedUser = _data["linkedUser"] ? LinkedUserSummaryDto.fromJS(_data["linkedUser"]) : undefined as any;
         }
@@ -9711,6 +10196,8 @@ export class AuthorDto implements IAuthorDto {
         data = typeof data === 'object' ? data : {};
         data["id"] = this.id;
         data["name"] = this.name;
+        data["lastName"] = this.lastName;
+        data["firstName"] = this.firstName;
         data["userId"] = this.userId;
         data["linkedUser"] = this.linkedUser ? this.linkedUser.toJSON() : undefined as any;
         return data;
@@ -9720,12 +10207,14 @@ export class AuthorDto implements IAuthorDto {
 export interface IAuthorDto {
     id?: string;
     name?: string;
+    lastName?: string;
+    firstName?: string | undefined;
     userId?: string | undefined;
     linkedUser?: LinkedUserSummaryDto | undefined;
 }
 
 export class IndexedPublicationDto implements IIndexedPublicationDto {
-    index?: string;
+    index?: number | undefined;
 
     constructor(data?: IIndexedPublicationDto) {
         if (data) {
@@ -9757,11 +10246,11 @@ export class IndexedPublicationDto implements IIndexedPublicationDto {
 }
 
 export interface IIndexedPublicationDto {
-    index?: string;
+    index?: number | undefined;
 }
 
 export class JournalPublicationDto implements IJournalPublicationDto {
-    dataBase?: string;
+    dataBase?: string | undefined;
     group?: number;
     cuartil?: string | undefined;
 
@@ -9799,7 +10288,7 @@ export class JournalPublicationDto implements IJournalPublicationDto {
 }
 
 export interface IJournalPublicationDto {
-    dataBase?: string;
+    dataBase?: string | undefined;
     group?: number;
     cuartil?: string | undefined;
 }
@@ -9809,10 +10298,11 @@ export class CreatePublicationRequest implements ICreatePublicationRequest {
     publicationData?: string;
     publicationType?: PublicationType;
     urlDoi?: string | undefined;
+    publishedDate?: string;
     additionalAuthorIds?: string[];
     additionalAuthorNames?: string[];
     additionalUserIds?: string[];
-    index?: string | undefined;
+    index?: number | undefined;
     dataBase?: string | undefined;
     group?: number | undefined;
     cuartil?: string | undefined;
@@ -9833,6 +10323,7 @@ export class CreatePublicationRequest implements ICreatePublicationRequest {
             this.publicationData = _data["publicationData"];
             this.publicationType = _data["publicationType"];
             this.urlDoi = _data["urlDoi"];
+            this.publishedDate = _data["publishedDate"];
             if (Array.isArray(_data["additionalAuthorIds"])) {
                 this.additionalAuthorIds = [] as any;
                 for (let item of _data["additionalAuthorIds"])
@@ -9869,6 +10360,7 @@ export class CreatePublicationRequest implements ICreatePublicationRequest {
         data["publicationData"] = this.publicationData;
         data["publicationType"] = this.publicationType;
         data["urlDoi"] = this.urlDoi;
+        data["publishedDate"] = this.publishedDate;
         if (Array.isArray(this.additionalAuthorIds)) {
             data["additionalAuthorIds"] = [];
             for (let item of this.additionalAuthorIds)
@@ -9898,10 +10390,11 @@ export interface ICreatePublicationRequest {
     publicationData?: string;
     publicationType?: PublicationType;
     urlDoi?: string | undefined;
+    publishedDate?: string;
     additionalAuthorIds?: string[];
     additionalAuthorNames?: string[];
     additionalUserIds?: string[];
-    index?: string | undefined;
+    index?: number | undefined;
     dataBase?: string | undefined;
     group?: number | undefined;
     cuartil?: string | undefined;
@@ -9916,15 +10409,256 @@ export enum PublicationType {
     Artículo_de_Divulgación = 4,
 }
 
+export class PublicationDuplicateDto implements IPublicationDuplicateDto {
+    id?: string;
+    title?: string;
+    urlDoi?: string | undefined;
+    matchType?: string;
+    score?: number;
+
+    constructor(data?: IPublicationDuplicateDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.title = _data["title"];
+            this.urlDoi = _data["urlDoi"];
+            this.matchType = _data["matchType"];
+            this.score = _data["score"];
+        }
+    }
+
+    static fromJS(data: any): PublicationDuplicateDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new PublicationDuplicateDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["title"] = this.title;
+        data["urlDoi"] = this.urlDoi;
+        data["matchType"] = this.matchType;
+        data["score"] = this.score;
+        return data;
+    }
+}
+
+export interface IPublicationDuplicateDto {
+    id?: string;
+    title?: string;
+    urlDoi?: string | undefined;
+    matchType?: string;
+    score?: number;
+}
+
+export class PublicationCrossRefDto implements IPublicationCrossRefDto {
+    doi?: string | undefined;
+    url?: string | undefined;
+    title?: string | undefined;
+    publicationData?: string | undefined;
+    suggestedPublicationType?: number | undefined;
+    authors?: string[];
+    containerTitle?: string | undefined;
+    issns?: string[];
+    isbns?: string[];
+    volume?: string | undefined;
+    issue?: string | undefined;
+    page?: string | undefined;
+    published?: string | undefined;
+    publisher?: string | undefined;
+    type?: string | undefined;
+
+    constructor(data?: IPublicationCrossRefDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.doi = _data["doi"];
+            this.url = _data["url"];
+            this.title = _data["title"];
+            this.publicationData = _data["publicationData"];
+            this.suggestedPublicationType = _data["suggestedPublicationType"];
+            if (Array.isArray(_data["authors"])) {
+                this.authors = [] as any;
+                for (let item of _data["authors"])
+                    this.authors!.push(item);
+            }
+            this.containerTitle = _data["containerTitle"];
+            if (Array.isArray(_data["issns"])) {
+                this.issns = [] as any;
+                for (let item of _data["issns"])
+                    this.issns!.push(item);
+            }
+            if (Array.isArray(_data["isbns"])) {
+                this.isbns = [] as any;
+                for (let item of _data["isbns"])
+                    this.isbns!.push(item);
+            }
+            this.volume = _data["volume"];
+            this.issue = _data["issue"];
+            this.page = _data["page"];
+            this.published = _data["published"];
+            this.publisher = _data["publisher"];
+            this.type = _data["type"];
+        }
+    }
+
+    static fromJS(data: any): PublicationCrossRefDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new PublicationCrossRefDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["doi"] = this.doi;
+        data["url"] = this.url;
+        data["title"] = this.title;
+        data["publicationData"] = this.publicationData;
+        data["suggestedPublicationType"] = this.suggestedPublicationType;
+        if (Array.isArray(this.authors)) {
+            data["authors"] = [];
+            for (let item of this.authors)
+                data["authors"].push(item);
+        }
+        data["containerTitle"] = this.containerTitle;
+        if (Array.isArray(this.issns)) {
+            data["issns"] = [];
+            for (let item of this.issns)
+                data["issns"].push(item);
+        }
+        if (Array.isArray(this.isbns)) {
+            data["isbns"] = [];
+            for (let item of this.isbns)
+                data["isbns"].push(item);
+        }
+        data["volume"] = this.volume;
+        data["issue"] = this.issue;
+        data["page"] = this.page;
+        data["published"] = this.published;
+        data["publisher"] = this.publisher;
+        data["type"] = this.type;
+        return data;
+    }
+}
+
+export interface IPublicationCrossRefDto {
+    doi?: string | undefined;
+    url?: string | undefined;
+    title?: string | undefined;
+    publicationData?: string | undefined;
+    suggestedPublicationType?: number | undefined;
+    authors?: string[];
+    containerTitle?: string | undefined;
+    issns?: string[];
+    isbns?: string[];
+    volume?: string | undefined;
+    issue?: string | undefined;
+    page?: string | undefined;
+    published?: string | undefined;
+    publisher?: string | undefined;
+    type?: string | undefined;
+}
+
+export class PublicationDatabaseMatchDto implements IPublicationDatabaseMatchDto {
+    issns?: string[];
+    databaseName?: string | undefined;
+    group?: number | undefined;
+    cuartil?: string | undefined;
+    source?: string | undefined;
+    confidence?: number;
+    ambiguousGroup?: boolean;
+    message?: string | undefined;
+
+    constructor(data?: IPublicationDatabaseMatchDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (Array.isArray(_data["issns"])) {
+                this.issns = [] as any;
+                for (let item of _data["issns"])
+                    this.issns!.push(item);
+            }
+            this.databaseName = _data["databaseName"];
+            this.group = _data["group"];
+            this.cuartil = _data["cuartil"];
+            this.source = _data["source"];
+            this.confidence = _data["confidence"];
+            this.ambiguousGroup = _data["ambiguousGroup"];
+            this.message = _data["message"];
+        }
+    }
+
+    static fromJS(data: any): PublicationDatabaseMatchDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new PublicationDatabaseMatchDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.issns)) {
+            data["issns"] = [];
+            for (let item of this.issns)
+                data["issns"].push(item);
+        }
+        data["databaseName"] = this.databaseName;
+        data["group"] = this.group;
+        data["cuartil"] = this.cuartil;
+        data["source"] = this.source;
+        data["confidence"] = this.confidence;
+        data["ambiguousGroup"] = this.ambiguousGroup;
+        data["message"] = this.message;
+        return data;
+    }
+}
+
+export interface IPublicationDatabaseMatchDto {
+    issns?: string[];
+    databaseName?: string | undefined;
+    group?: number | undefined;
+    cuartil?: string | undefined;
+    source?: string | undefined;
+    confidence?: number;
+    ambiguousGroup?: boolean;
+    message?: string | undefined;
+}
+
 export class UpdatePublicationBody implements IUpdatePublicationBody {
     title?: string;
     publicationData?: string;
     publicationType?: number;
     urlDoi?: string | undefined;
+    publishedDate?: string;
     additionalAuthorIds?: string[] | undefined;
     additionalAuthorNames?: string[] | undefined;
     additionalUserIds?: string[] | undefined;
-    index?: string | undefined;
+    index?: number | undefined;
     dataBase?: string | undefined;
     group?: number | undefined;
     cuartil?: string | undefined;
@@ -9945,6 +10679,7 @@ export class UpdatePublicationBody implements IUpdatePublicationBody {
             this.publicationData = _data["publicationData"];
             this.publicationType = _data["publicationType"];
             this.urlDoi = _data["urlDoi"];
+            this.publishedDate = _data["publishedDate"];
             if (Array.isArray(_data["additionalAuthorIds"])) {
                 this.additionalAuthorIds = [] as any;
                 for (let item of _data["additionalAuthorIds"])
@@ -9981,6 +10716,7 @@ export class UpdatePublicationBody implements IUpdatePublicationBody {
         data["publicationData"] = this.publicationData;
         data["publicationType"] = this.publicationType;
         data["urlDoi"] = this.urlDoi;
+        data["publishedDate"] = this.publishedDate;
         if (Array.isArray(this.additionalAuthorIds)) {
             data["additionalAuthorIds"] = [];
             for (let item of this.additionalAuthorIds)
@@ -10010,10 +10746,11 @@ export interface IUpdatePublicationBody {
     publicationData?: string;
     publicationType?: number;
     urlDoi?: string | undefined;
+    publishedDate?: string;
     additionalAuthorIds?: string[] | undefined;
     additionalAuthorNames?: string[] | undefined;
     additionalUserIds?: string[] | undefined;
-    index?: string | undefined;
+    index?: number | undefined;
     dataBase?: string | undefined;
     group?: number | undefined;
     cuartil?: string | undefined;

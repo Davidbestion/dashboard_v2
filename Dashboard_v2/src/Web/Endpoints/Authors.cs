@@ -37,6 +37,14 @@ public class Authors : EndpointGroupBase
             .WithName("LinkAuthorToMe")
             .Produces(200)
             .ProducesProblem(400);
+
+        // POST /api/Authors/resolve-external
+        // Para cada nombre externo (CrossRef / OpenAIRE) devuelve la coincidencia
+        // encontrada en el sistema (si existe) sin crear ningún autor.
+        groupBuilder.MapPost("resolve-external", ResolveExternal)
+            .RequireAuthorization()
+            .WithName("ResolveExternalAuthors")
+            .Produces<List<ExternalAuthorResolutionDto>>(200);
     }
 
     private async Task<IResult> SearchAuthors(IAuthorService service, string? q)
@@ -64,4 +72,16 @@ public class Authors : EndpointGroupBase
             return Results.BadRequest(new { errors = result.Errors });
         return Results.Ok(new { message = "Autor vinculado correctamente." });
     }
+
+    private async Task<IResult> ResolveExternal(IAuthorService service, ResolveExternalAuthorsRequest body)
+    {
+        if (body?.Names == null || body.Names.Count == 0)
+            return Results.Ok(new List<ExternalAuthorResolutionDto>());
+
+        var result = await service.ResolveExternalAuthorsAsync(body.Names);
+        return Results.Ok(result);
+    }
 }
+
+/// <param name="Names">Lista de nombres externos en formato "Apellidos, Nombres".</param>
+public record ResolveExternalAuthorsRequest(List<string> Names);

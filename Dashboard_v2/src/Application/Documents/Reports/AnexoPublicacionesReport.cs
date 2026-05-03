@@ -73,7 +73,7 @@ public sealed class AnexoPublicacionesReport : IDocumentReport
                     Titulo = p.Title,
                     DatosPublicacion = BuildPublicationDetails(p),
                     RelacionAutoria = BuildAuthorsSummary(p),
-                    BaseDeDatos = p.JournalPublication!.DataBase,
+                    BaseDeDatos = p.JournalPublication!.DataBase ?? string.Empty,
                     Cuartil = p.JournalPublication.JournalGroup1Publication?.Cuartil ?? string.Empty,
                 })
                 .ToList(),
@@ -128,7 +128,7 @@ public sealed class AnexoPublicacionesReport : IDocumentReport
             Titulo = publication.Title,
             DatosPublicacion = BuildPublicationDetails(publication),
             RelacionAutoria = BuildAuthorsSummary(publication),
-            BaseDeDatos = publication.JournalPublication!.DataBase,
+            BaseDeDatos = publication.JournalPublication!.DataBase ?? string.Empty,
         };
     }
 
@@ -143,7 +143,7 @@ public sealed class AnexoPublicacionesReport : IDocumentReport
         return new PublicacionIndexadaRowDto
         {
             No = index + 1,
-            Indexacion = string.Empty,
+            Indexacion = publication.IndexedPublication?.Index?.ToString() ?? string.Empty,
             Titulo = publication.Title,
             DatosEditorial = publication.PublicationData,
             RelacionAutoria = BuildAuthorsSummary(publication),

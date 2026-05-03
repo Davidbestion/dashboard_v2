@@ -529,6 +529,41 @@
         }
       }
     },
+    "/api/Authors/resolve-external": {
+      "post": {
+        "tags": [
+          "Authors"
+        ],
+        "operationId": "ResolveExternalAuthors",
+        "requestBody": {
+          "x-name": "body",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolveExternalAuthorsRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ExternalAuthorResolutionDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Awards": {
       "get": {
         "tags": [
@@ -3725,6 +3760,297 @@
         }
       }
     },
+    "/api/Publications/public/{id}": {
+      "get": {
+        "tags": [
+          "Publications"
+        ],
+        "operationId": "GetPublicationPublicById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicationDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Publications/duplicates": {
+      "get": {
+        "tags": [
+          "Publications"
+        ],
+        "operationId": "FindPublicationDuplicates",
+        "parameters": [
+          {
+            "name": "title",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          },
+          {
+            "name": "doi",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 2
+          },
+          {
+            "name": "url",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 3
+          },
+          {
+            "name": "excludeId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 4
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PublicationDuplicateDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Publications/crossref": {
+      "get": {
+        "tags": [
+          "Publications"
+        ],
+        "operationId": "GetCrossRefCandidates",
+        "parameters": [
+          {
+            "name": "doi",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          },
+          {
+            "name": "title",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 2
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PublicationCrossRefDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Publications/openaire": {
+      "get": {
+        "tags": [
+          "Publications"
+        ],
+        "operationId": "GetOpenAireCandidates",
+        "parameters": [
+          {
+            "name": "doi",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          },
+          {
+            "name": "title",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 2
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PublicationCrossRefDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Publications/resolve-database": {
+      "get": {
+        "tags": [
+          "Publications"
+        ],
+        "operationId": "ResolvePublicationDatabaseFromCrossRef",
+        "parameters": [
+          {
+            "name": "doi",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          },
+          {
+            "name": "title",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 2
+          },
+          {
+            "name": "issns",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 3
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicationDatabaseMatchDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Publications/{id}/coauthors": {
+      "post": {
+        "tags": [
+          "Publications"
+        ],
+        "operationId": "AddCurrentUserAsCoauthor",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Redes": {
       "get": {
         "tags": [
@@ -4728,6 +5054,9 @@
           "areaNombre": {
             "type": "string",
             "nullable": true
+          },
+          "hasLinkedAuthor": {
+            "type": "boolean"
           }
         }
       },
@@ -4740,6 +5069,13 @@
           },
           "name": {
             "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": "string",
+            "nullable": true
           }
         }
       },
@@ -4846,6 +5182,62 @@
           },
           "name": {
             "type": "string"
+          }
+        }
+      },
+      "ExternalAuthorResolutionDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "externalName": {
+            "type": "string"
+          },
+          "match": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ExternalAuthorMatchDto"
+              }
+            ]
+          }
+        }
+      },
+      "ExternalAuthorMatchDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": "string",
+            "nullable": true
+          },
+          "linkedUser": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/LinkedUserSummaryDto"
+              }
+            ]
+          }
+        }
+      },
+      "ResolveExternalAuthorsRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "names": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -6165,6 +6557,9 @@
             "type": "string",
             "nullable": true
           },
+          "publishedDate": {
+            "type": "string"
+          },
           "publicationType": {
             "type": "integer",
             "format": "int32"
@@ -6211,6 +6606,13 @@
           "name": {
             "type": "string"
           },
+          "lastName": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": "string",
+            "nullable": true
+          },
           "userId": {
             "type": "string",
             "nullable": true
@@ -6230,7 +6632,9 @@
         "additionalProperties": false,
         "properties": {
           "index": {
-            "type": "string"
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
           }
         }
       },
@@ -6239,7 +6643,8 @@
         "additionalProperties": false,
         "properties": {
           "dataBase": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "group": {
             "type": "integer",
@@ -6268,6 +6673,9 @@
             "type": "string",
             "nullable": true
           },
+          "publishedDate": {
+            "type": "string"
+          },
           "additionalAuthorIds": {
             "type": "array",
             "items": {
@@ -6287,7 +6695,8 @@
             }
           },
           "index": {
-            "type": "string",
+            "type": "integer",
+            "format": "int32",
             "nullable": true
           },
           "dataBase": {
@@ -6327,6 +6736,142 @@
           4
         ]
       },
+      "PublicationDuplicateDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "urlDoi": {
+            "type": "string",
+            "nullable": true
+          },
+          "matchType": {
+            "type": "string"
+          },
+          "score": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "PublicationCrossRefDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "doi": {
+            "type": "string",
+            "nullable": true
+          },
+          "url": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "publicationData": {
+            "type": "string",
+            "nullable": true
+          },
+          "suggestedPublicationType": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "authors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "containerTitle": {
+            "type": "string",
+            "nullable": true
+          },
+          "issns": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "isbns": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "volume": {
+            "type": "string",
+            "nullable": true
+          },
+          "issue": {
+            "type": "string",
+            "nullable": true
+          },
+          "page": {
+            "type": "string",
+            "nullable": true
+          },
+          "published": {
+            "type": "string",
+            "nullable": true
+          },
+          "publisher": {
+            "type": "string",
+            "nullable": true
+          },
+          "type": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "PublicationDatabaseMatchDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "issns": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "databaseName": {
+            "type": "string",
+            "nullable": true
+          },
+          "group": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "cuartil": {
+            "type": "string",
+            "nullable": true
+          },
+          "source": {
+            "type": "string",
+            "nullable": true
+          },
+          "confidence": {
+            "type": "number",
+            "format": "double"
+          },
+          "ambiguousGroup": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
       "UpdatePublicationBody": {
         "type": "object",
         "additionalProperties": false,
@@ -6344,6 +6889,9 @@
           "urlDoi": {
             "type": "string",
             "nullable": true
+          },
+          "publishedDate": {
+            "type": "string"
           },
           "additionalAuthorIds": {
             "type": "array",
@@ -6367,7 +6915,8 @@
             }
           },
           "index": {
-            "type": "string",
+            "type": "integer",
+            "format": "int32",
             "nullable": true
           },
           "dataBase": {

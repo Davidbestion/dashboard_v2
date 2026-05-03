@@ -11,4 +11,6 @@ public sealed record CurrentUserDto
     public string? Role { get; init; }
     public string? AreaId { get; init; }
     public string? AreaNombre { get; init; }
+    /// <summary>True si el usuario ya tiene una entidad Author vinculada en el sistema.</summary>
+    public bool HasLinkedAuthor { get; init; }
 }

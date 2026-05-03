@@ -350,10 +350,9 @@ public sealed class EventService : IEventService
 
         foreach (var name in request.CoauthorNames.Where(n => !string.IsNullOrWhiteSpace(n)))
         {
-            var coauthor = new Author { Name = name.Trim() };
-            _context.Authors.Add(coauthor);
-            await _context.SaveChangesAsync(ct);
-            presentation.AuthorPresentations.Add(new AuthorPresentation { AuthorId = coauthor.Id });
+            var resolved = await _authorResolution.ResolveByNameAsync(name, ct);
+            if (presentation.AuthorPresentations.All(ap => ap.AuthorId != resolved.Id))
+                presentation.AuthorPresentations.Add(new AuthorPresentation { AuthorId = resolved.Id });
         }
 
         _context.Presentations.Add(presentation);
@@ -420,10 +419,9 @@ public sealed class EventService : IEventService
 
         foreach (var name in request.CoauthorNames.Where(n => !string.IsNullOrWhiteSpace(n)))
         {
-            var coauthor = new Author { Name = name.Trim() };
-            _context.Authors.Add(coauthor);
-            await _context.SaveChangesAsync(ct);
-            presentation.AuthorPresentations.Add(new AuthorPresentation { AuthorId = coauthor.Id });
+            var resolved = await _authorResolution.ResolveByNameAsync(name, ct);
+            if (presentation.AuthorPresentations.All(ap => ap.AuthorId != resolved.Id))
+                presentation.AuthorPresentations.Add(new AuthorPresentation { AuthorId = resolved.Id });
         }
 
         await _context.SaveChangesAsync(ct);

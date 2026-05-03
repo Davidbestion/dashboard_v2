@@ -159,12 +159,12 @@ export default function UsersPage() {
                           className="me-1"
                           style={{ cursor: 'default' }}
                         >
-                          {role}
+                          {role.replace(/_/g, ' ')}
                           <button
                             type="button"
                             className="btn-close btn-close-white ms-1"
                             style={{ fontSize: '0.55rem', verticalAlign: 'middle' }}
-                            aria-label={`Quitar rol ${role}`}
+                            aria-label={`Quitar rol ${role.replace(/_/g, ' ')}`}
                             onClick={() => handleRemoveRole(user.id, role)}
                           />
                         </Badge>
@@ -204,7 +204,7 @@ export default function UsersPage() {
               onChange={e => setSelectedRole(e.target.value)}
             >
               {selectedUser && availableRoles(selectedUser).map(r => (
-                <option key={r.name} value={r.name}>{r.name}</option>
+                <option key={r.name} value={r.name}>{r.name.replace(/_/g, ' ')}</option>
               ))}
             </Input>
           </FormGroup>

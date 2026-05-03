@@ -14,10 +14,15 @@ public class PublicationConfiguration : IEntityTypeConfiguration<Publication>
         builder.Property(p => p.Id).HasMaxLength(450);
         builder.Property(p => p.Title).IsRequired().HasMaxLength(500);
         builder.Property(p => p.PublicationData).IsRequired();
+        builder.Property(p => p.PublishedDate).IsRequired().HasMaxLength(10);
 
         builder.Property(p => p.PublicationType).IsRequired();
 
         builder.Property(p => p.ProyectoId).HasMaxLength(450);
+
+        // Indexes used for duplicate detection queries.
+        builder.HasIndex(p => p.NormalizedTitle);
+        builder.HasIndex(p => p.NormalizedUrlDoi);
 
         // Una publicación puede pertenecer a un proyecto (opcional).
         // Si el proyecto se borra, la publicación queda desvinculada (SetNull).

@@ -102,7 +102,30 @@ namespace Dashboard_v2.Infrastructure.Migrations
                         .HasMaxLength(450)
                         .HasColumnType("character varying(450)");
 
+                    b.Property<string>("FirstName")
+                        .HasMaxLength(250)
+                        .HasColumnType("character varying(250)");
+
+                    b.Property<string>("FirstNameKey")
+                        .HasMaxLength(250)
+                        .HasColumnType("character varying(250)");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("character varying(250)");
+
+                    b.Property<string>("LastNameKey")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("character varying(250)");
+
                     b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("SearchKey")
                         .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
@@ -341,9 +364,8 @@ namespace Dashboard_v2.Infrastructure.Migrations
                         .HasMaxLength(450)
                         .HasColumnType("character varying(450)");
 
-                    b.Property<string>("Index")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<int>("Index")
+                        .HasColumnType("integer");
 
                     b.HasKey("PublicationId");
 
@@ -575,6 +597,12 @@ namespace Dashboard_v2.Infrastructure.Migrations
                         .HasMaxLength(450)
                         .HasColumnType("character varying(450)");
 
+                    b.Property<string>("NormalizedTitle")
+                        .HasColumnType("text");
+
+                    b.Property<string>("NormalizedUrlDoi")
+                        .HasColumnType("text");
+
                     b.Property<string>("ProyectoId")
                         .HasMaxLength(450)
                         .HasColumnType("character varying(450)");
@@ -586,6 +614,11 @@ namespace Dashboard_v2.Infrastructure.Migrations
                     b.Property<int>("PublicationType")
                         .HasColumnType("integer");
 
+                    b.Property<string>("PublishedDate")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(500)
@@ -595,6 +628,10 @@ namespace Dashboard_v2.Infrastructure.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("NormalizedTitle");
+
+                    b.HasIndex("NormalizedUrlDoi");
 
                     b.HasIndex("ProyectoId");
 

@@ -1,0 +1,10 @@
+# Esta carpeta contiene archivos CSV de mapeo ISSN → base de datos.
+# Los archivos CSV NO están en el repositorio (ver .gitignore) porque son datos de terceros y pesan ~11 MB cada uno.
+#
+# Para habilitar la resolución automática de Scopus/Scimago:
+#   1. Descarga el CSV desde https://www.scimagojr.com/journalrank.php (botón "Download data")
+#   2. Copia el archivo aquí con el nombre: scimagojr <AÑO>.csv
+#      Ejemplo: scimagojr 2025.csv
+#
+# La ruta se configura en appsettings.json bajo "PublicationDatabase:LocalMappingFiles".
+# El proveedor detecta automáticamente el formato Scimago (separador ";") o el formato simple (separador ",").

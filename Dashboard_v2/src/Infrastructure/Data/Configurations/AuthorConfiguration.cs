@@ -12,7 +12,12 @@ public class AuthorConfiguration : IEntityTypeConfiguration<Author>
 
         builder.HasKey(a => a.Id);
         builder.Property(a => a.Id).HasMaxLength(450);
+        builder.Property(a => a.LastName).IsRequired().HasMaxLength(250);
+        builder.Property(a => a.FirstName).HasMaxLength(250);
         builder.Property(a => a.Name).IsRequired().HasMaxLength(500);
+        builder.Property(a => a.SearchKey).IsRequired().HasMaxLength(500);
+        builder.Property(a => a.LastNameKey).IsRequired().HasMaxLength(250);
+        builder.Property(a => a.FirstNameKey).HasMaxLength(250);
         builder.Property(a => a.UserId).HasMaxLength(450);
 
         // Un usuario registrado puede tener como máximo un perfil de autor.

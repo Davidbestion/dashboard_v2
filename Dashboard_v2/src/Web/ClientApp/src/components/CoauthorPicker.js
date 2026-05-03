@@ -9,7 +9,7 @@ import SelectionProfileCard from './SelectionProfileCard';
 export default function CoauthorPicker({
   value,
   onChange,
-  placeholder = 'Buscar autor o escribir nombre nuevo...',
+  placeholder = 'Buscar autor o escribir: Apellidos, Nombres',
   helpText,
 }) {
   const [query, setQuery] = useState('');
@@ -170,6 +170,11 @@ export default function CoauthorPicker({
           </div>
         )}
       </div>
+
+      <small className="text-muted d-block mt-1">
+        Para autores nuevos escriba primero los <strong>apellidos</strong>, luego una coma y luego los <strong>nombres</strong>.{' '}
+        <em>Ejemplo: García López, Juan Manuel</em>
+      </small>
 
       {helpText && (
         <small className="text-muted d-block mt-2">

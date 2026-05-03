@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Dashboard_v2.Application.Common;
 using Dashboard_v2.Application.Common.Interfaces;
 using Dashboard_v2.Application.Common.Models;
 using Microsoft.EntityFrameworkCore;
@@ -52,7 +53,7 @@ public sealed class AuthorService : IAuthorService
             .Where(a => a.Name.ToLower().Contains(term))
             .OrderBy(a => a.Name)
             .Take(10)
-            .Select(a => new AuthorSearchDto(a.Id, a.Name))
+            .Select(a => new AuthorSearchDto(a.Id, a.Name, a.LastName, a.FirstName))
             .ToListAsync(ct);
     }
 
@@ -106,7 +107,7 @@ public sealed class AuthorService : IAuthorService
             .Select(u => new CoauthorSearchDto
             {
                 Id = u.Id,
-                Name = (u.UserName + " " + u.UserLastName1 + (u.UserLastName2 != null ? " " + u.UserLastName2 : "")).Trim(),
+                Name = (u.UserLastName1 + (u.UserLastName2 != null ? " " + u.UserLastName2 : "") + ", " + u.UserName).Trim(),
                 Type = "user",
                 LinkedUser = new LinkedUserSummaryDto
                 {
@@ -148,22 +149,26 @@ public sealed class AuthorService : IAuthorService
             return new PotentialAuthorMatchesDto(new List<PotentialAuthorMatchDto>(), new List<PotentialAuthorMatchDto>());
 
         var canonicalName = string.IsNullOrEmpty(user.UserLastName2)
-            ? $"{user.UserName} {user.UserLastName1}"
-            : $"{user.UserName} {user.UserLastName1} {user.UserLastName2}";
+            ? $"{user.UserLastName1}, {user.UserName}"
+            : $"{user.UserLastName1} {user.UserLastName2}, {user.UserName}";
 
-        var firstNameLower = user.UserName.ToLower();
-        var lastName1Lower = user.UserLastName1.ToLower();
+        // Pre-compute normalized keys from user fields so EF can translate
+        // the WHERE clause to SQL without calling TextNormalizer inside LINQ.
+        var canonicalKey   = Dashboard_v2.Domain.Common.TextNormalizer.Normalize(canonicalName);
+        var firstNameKey   = Dashboard_v2.Domain.Common.TextNormalizer.Normalize(user.UserName);
+        var lastName1Key   = Dashboard_v2.Domain.Common.TextNormalizer.Normalize(user.UserLastName1);
 
         var candidates = await _context.Authors
             .AsNoTracking()
             .Where(a => a.UserId == null
-                && a.Name.ToLower().Contains(lastName1Lower)
-                && a.Name.ToLower().Contains(firstNameLower))
-            .Select(a => new { a.Id, a.Name })
+                && a.LastNameKey.Contains(lastName1Key)
+                && (a.FirstNameKey != null && a.FirstNameKey.Contains(firstNameKey)
+                    || a.SearchKey.Contains(firstNameKey)))
+            .Select(a => new { a.Id, a.Name, a.SearchKey })
             .ToListAsync(ct);
 
         var exact = candidates
-            .Where(a => string.Equals(a.Name.Trim(), canonicalName.Trim(), System.StringComparison.OrdinalIgnoreCase))
+            .Where(a => a.SearchKey == canonicalKey)
             .Select(a => new PotentialAuthorMatchDto(a.Id, a.Name))
             .ToList();
 
@@ -175,5 +180,113 @@ public sealed class AuthorService : IAuthorService
             .ToList();
 
         return new PotentialAuthorMatchesDto(exact, fuzzy);
+    }
+
+    public async Task<List<ExternalAuthorResolutionDto>> ResolveExternalAuthorsAsync(
+        List<string> names, CancellationToken ct = default)
+    {
+        var result = new List<ExternalAuthorResolutionDto>();
+
+        foreach (var raw in names.Where(n => !string.IsNullOrWhiteSpace(n)))
+        {
+            var (lastName, firstName) = AuthorNameParser.Parse(raw);
+            var searchKey  = Dashboard_v2.Domain.Common.TextNormalizer.Normalize(raw.Trim());
+            var lastKey    = Dashboard_v2.Domain.Common.TextNormalizer.Normalize(lastName);
+
+            // 1. Match on the normalized search key (tolerates diacritics & case).
+            var match = await _context.Authors
+                .AsNoTracking()
+                .Include(a => a.User)
+                    .ThenInclude(u => u!.Area)
+                        .ThenInclude(ar => ar!.Universidad)
+                .FirstOrDefaultAsync(a => a.SearchKey == searchKey, ct);
+
+            // 2. Structured match: normalized LastName + normalized FirstName.
+            if (match == null && !string.IsNullOrWhiteSpace(firstName))
+            {
+                var firstKey = Dashboard_v2.Domain.Common.TextNormalizer.Normalize(firstName);
+                match = await _context.Authors
+                    .AsNoTracking()
+                    .Include(a => a.User)
+                        .ThenInclude(u => u!.Area)
+                            .ThenInclude(ar => ar!.Universidad)
+                    .FirstOrDefaultAsync(
+                        a => a.LastNameKey == lastKey && a.FirstNameKey == firstKey,
+                        ct);
+            }
+
+            // 3. Fallback for rows whose SearchKey was backfilled with SQL lower() (no accent
+            //    stripping).  Compare on the raw Name column case-insensitively — both sides
+            //    retain the original accents so the comparison succeeds — then confirm with
+            //    in-memory normalization to avoid false positives.
+            if (match == null)
+            {
+                var rawLower = raw.Trim().ToLowerInvariant();
+                var candidates = await _context.Authors
+                    .AsNoTracking()
+                    .Include(a => a.User)
+                        .ThenInclude(u => u!.Area)
+                            .ThenInclude(ar => ar!.Universidad)
+                    .Where(a => a.Name.ToLower() == rawLower)
+                    .ToListAsync(ct);
+                match = candidates.FirstOrDefault(
+                    a => Dashboard_v2.Domain.Common.TextNormalizer.Normalize(a.Name) == searchKey);
+            }
+
+            if (match == null && !string.IsNullOrWhiteSpace(firstName))
+            {
+                var lastNameLower  = lastName.ToLowerInvariant();
+                var firstNameLower = firstName.ToLowerInvariant();
+                var firstKey       = Dashboard_v2.Domain.Common.TextNormalizer.Normalize(firstName);
+                var candidates = await _context.Authors
+                    .AsNoTracking()
+                    .Include(a => a.User)
+                        .ThenInclude(u => u!.Area)
+                            .ThenInclude(ar => ar!.Universidad)
+                    .Where(a => a.LastName.ToLower() == lastNameLower &&
+                                a.FirstName != null && a.FirstName.ToLower() == firstNameLower)
+                    .ToListAsync(ct);
+                match = candidates.FirstOrDefault(
+                    a => Dashboard_v2.Domain.Common.TextNormalizer.Normalize(a.LastName)  == lastKey &&
+                         Dashboard_v2.Domain.Common.TextNormalizer.Normalize(a.FirstName) == firstKey);
+            }
+
+            ExternalAuthorMatchDto? matchDto = null;
+            if (match != null)
+            {
+                var u = match.User;
+                matchDto = new ExternalAuthorMatchDto
+                {
+                    Id        = match.Id,
+                    Name      = match.Name,
+                    LastName  = match.LastName,
+                    FirstName = match.FirstName,
+                    LinkedUser = u == null ? null : new LinkedUserSummaryDto
+                    {
+                        Id                   = u.Id,
+                        UserName             = u.UserName,
+                        UserLastName1        = u.UserLastName1,
+                        UserLastName2        = u.UserLastName2,
+                        Email                = u.Email,
+                        IsTrained            = u.IsTrained,
+                        ScientificCategory   = (int)u.ScientificCategory,
+                        TeachingCategory     = (int)u.TeachingCategory,
+                        InvestigationCategory= (int)u.InvestigationCategory,
+                        AreaId               = u.AreaId,
+                        AreaNombre           = u.Area?.Nombre,
+                        UniversidadId        = u.Area?.UniversidadId,
+                        UniversidadNombre    = u.Area?.Universidad?.Nombre,
+                    }
+                };
+            }
+
+            result.Add(new ExternalAuthorResolutionDto
+            {
+                ExternalName = raw.Trim(),
+                Match        = matchDto,
+            });
+        }
+
+        return result;
     }
 }

@@ -11,4 +11,11 @@ public interface IAuthorService
     Task<List<AuthorSearchDto>> SearchAsync(string q, CancellationToken ct = default);
     Task<List<CoauthorSearchDto>> SearchCoauthorsAsync(string q, CancellationToken ct = default);
     Task<PotentialAuthorMatchesDto> GetPotentialAuthorMatchesAsync(CancellationToken ct = default);
+
+    /// <summary>
+    /// Para cada nombre externo (proveniente de CrossRef / OpenAIRE) busca si ya existe
+    /// un autor coincidente en el sistema. No crea autores nuevos.
+    /// </summary>
+    Task<List<ExternalAuthorResolutionDto>> ResolveExternalAuthorsAsync(
+        List<string> names, CancellationToken ct = default);
 }

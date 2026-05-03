@@ -7,7 +7,7 @@ namespace Dashboard_v2.Domain.Entities;
 public class JournalGroup1Publication
 {
     public string PublicationId { get; set; } = default!;
-    public string Cuartil { get; set; } = default!;
+    public string? Cuartil { get; set; }
 
     public JournalPublication JournalPublication { get; set; } = default!;
 }

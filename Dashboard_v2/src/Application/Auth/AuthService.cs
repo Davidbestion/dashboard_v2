@@ -71,6 +71,10 @@ public sealed class AuthService : IAuthService
         if (userEntity == null || string.IsNullOrWhiteSpace(userEntity.Id))
             return null;
 
+        var hasLinkedAuthor = await _context.Authors
+            .AsNoTracking()
+            .AnyAsync(a => a.UserId == _currentUser.Id, ct);
+
         return new CurrentUserDto
         {
             Id = userEntity.Id,
@@ -78,7 +82,8 @@ public sealed class AuthService : IAuthService
             Email = userEntity.Email ?? string.Empty,
             Role = _currentUser.Roles?.FirstOrDefault(),
             AreaId = userEntity.AreaId,
-            AreaNombre = userEntity.AreaNombre
+            AreaNombre = userEntity.AreaNombre,
+            HasLinkedAuthor = hasLinkedAuthor
         };
     }
 }

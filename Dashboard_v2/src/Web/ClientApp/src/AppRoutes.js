@@ -103,7 +103,7 @@ const AppRoutes = [
   {
     path: '/publicaciones',
     element: <PublicacionesConsultaPage />,
-    pageTitle: 'Publicaciones',
+    pageTitle: 'Todas las publicaciones',
     jefeDeProyectoOrAdminOnly: true,
   },
   {

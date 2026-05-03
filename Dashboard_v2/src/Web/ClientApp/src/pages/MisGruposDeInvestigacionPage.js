@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Card, CardBody, CardHeader,
-  Table, Button, Spinner, Alert, Badge,
+  Badge, Button,
+  Spinner, Alert,
 } from 'reactstrap';
+import DataTable from '../components/DataTable';
 
 async function apiFetch(url, options = {}) {
   const response = await fetch(url, {
@@ -93,40 +95,24 @@ export default function MisGruposDeInvestigacionPage() {
           <small className="text-muted ms-2">({items.length})</small>
         </CardHeader>
         <CardBody className="p-0">
-          <Table responsive hover className="mb-0">
-            <thead className="table-light">
-              <tr>
-                <th>Nombre</th>
-                <th>Área</th>
-                <th>Líneas de investigación</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.length === 0 && (
-                <tr>
-                  <td colSpan={3} className="text-center text-muted py-4">
-                    No perteneces a ningún grupo de investigación.
-                  </td>
-                </tr>
-              )}
-              {items.map(item => (
-                <tr key={item.id}>
-                  <td className="align-middle fw-semibold">{item.nombre}</td>
-                  <td className="align-middle">
-                    <Badge color="secondary" pill>{item.areaNombre}</Badge>
-                  </td>
-                  <td className="align-middle">
-                    {item.lineasDeInvestigacionIds && item.lineasDeInvestigacionIds.length > 0
-                      ? lineasDeInvestigacion
-                          .filter(l => item.lineasDeInvestigacionIds.includes(l.id))
-                          .map(l => <Badge color="info" pill className="me-1" key={l.id}>{l.nombre}</Badge>)
-                      : <span className="text-muted small">Sin líneas asignadas</span>
-                    }
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
+          <DataTable
+            columns={[
+              { key: 'nombre',   label: 'Nombre', sortable: true, className: 'fw-semibold' },
+              { key: 'areaNombre', label: 'Área', render: v => <Badge color="secondary" pill>{v}</Badge> },
+              {
+                key: 'lineasDeInvestigacionIds',
+                label: 'Líneas de investigación',
+                render: (ids, item) => ids && ids.length > 0
+                  ? lineasDeInvestigacion
+                      .filter(l => ids.includes(l.id))
+                      .map(l => <Badge key={l.id} color="info" pill className="me-1">{l.nombre}</Badge>)
+                  : <span className="text-muted small">Sin líneas asignadas</span>,
+              },
+            ]}
+            data={items}
+            keyExtractor={item => item.id}
+            emptyMessage="No perteneces a ningún grupo de investigación."
+          />
         </CardBody>
       </Card>
     </>

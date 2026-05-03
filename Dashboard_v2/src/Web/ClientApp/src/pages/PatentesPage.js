@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Card, CardBody, CardHeader,
-  Table, Button, Spinner, Alert,
+  Button, Spinner, Alert,
   Modal, ModalHeader, ModalBody, ModalFooter,
   Form, FormGroup, Label, Input,
 } from 'reactstrap';
 import { useAuth } from '../contexts/AuthContext';
+import DataTable from '../components/DataTable';
 
 async function apiFetch(url, options = {}) {
   const response = await fetch(url, {
@@ -109,19 +110,20 @@ export default function PatentesPage() {
       <Card>
         <CardHeader><strong>Patentes</strong> <small className="text-muted ms-2">({items.length})</small></CardHeader>
         <CardBody className="p-0">
-          <Table responsive hover className="mb-0">
-            <thead className="table-light"><tr><th>Título</th><th>Número solicitud</th><th>Nacional</th><th className="text-end">Acciones</th></tr></thead>
-            <tbody>
-              {items.length === 0 && <tr><td colSpan={4} className="text-center text-muted py-4">No hay patentes.</td></tr>}
-              {items.map(i => (
-                <tr key={i.id}><td>{i.titulo}</td><td>{i.numeroSolicitudConcesion}</td><td>{i.esNacional ? 'Sí' : 'No'}</td>
-                  <td className="text-end">
-                    <Button size="sm" color="outline-secondary" className="me-2" onClick={() => openEdit(i)}>Editar</Button>
-                    <Button size="sm" color="outline-danger" onClick={() => handleDelete(i.id)}>Eliminar</Button>
-                  </td></tr>
-              ))}
-            </tbody>
-          </Table>
+          <DataTable
+            columns={[
+              { key: 'titulo',                    label: 'Título',           sortable: true },
+              { key: 'numeroSolicitudConcesion',  label: 'Número solicitud' },
+              { key: 'esNacional',                label: 'Nacional', render: v => v ? 'Sí' : 'No' },
+            ]}
+            data={items}
+            keyExtractor={i => i.id}
+            actions={[
+              { key: 'edit',   label: 'Editar',   icon: 'bi-pencil', color: 'outline-secondary', onClick: i => openEdit(i) },
+              { key: 'delete', label: 'Eliminar', icon: 'bi-trash',  color: 'outline-danger',    onClick: i => handleDelete(i.id) },
+            ]}
+            emptyMessage="No hay patentes."
+          />
         </CardBody>
       </Card>
 

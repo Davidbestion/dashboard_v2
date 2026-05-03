@@ -12,6 +12,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import CoauthorPicker from '../components/CoauthorPicker';
 import AuthorResolutionModal from '../components/AuthorResolutionModal';
+import DataTable from '../components/DataTable';
 
 async function apiFetch(url, options = {}) {
   const response = await fetch(url, {
@@ -400,6 +401,11 @@ export default function PublicationsPage() {
     </>
   );
 
+  const pubActions = [
+    { key: 'edit',   label: 'Editar',   icon: 'bi-pencil', color: 'outline-primary', onClick: (pub) => openEdit(pub) },
+    { key: 'delete', label: 'Eliminar', icon: 'bi-trash',  color: 'outline-danger',  onClick: (pub) => openDelete(pub) },
+  ];
+
   function renderMatchLabel(type, score) {
     if (!type) return <span className="text-muted">—</span>;
     const map = {
@@ -737,43 +743,26 @@ export default function PublicationsPage() {
                       const pubs = journalByGroup(g);
                       return (
                         <TabPane tabId={String(g)} key={g}>
-                          {pubs.length === 0
-                            ? <p className="text-muted text-center py-3">No hay publicaciones en el Grupo {g}.</p>
-                            : (
-                              <Table hover responsive size="sm" className="mt-2 mb-0">
-                                <thead>
-                                  <tr>
-                                    <th>Título</th>
-                                    <th>Datos de pub.</th>
-                                    <th>Base de datos</th>
-                                    {g === 1 && <th>Cuartil</th>}
-                                    <th>URL / DOI</th>
-                                    <th>Autores</th>
-                                    <th style={{ width: 90 }}></th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {pubs.map(pub => (
-                                    <tr key={pub.id}>
-                                      <td>{pub.title}</td>
-                                      <td>{pub.publicationData}</td>
-                                      <td>{pub.journalPublication?.dataBase}</td>
-                                      {g === 1 && (
-                                        <td>
-                                          {pub.journalPublication?.cuartil != null
-                                            ? <Badge color="info" pill className="text-dark">{pub.journalPublication.cuartil}</Badge>
-                                            : <span className="text-muted">—</span>}
-                                        </td>
-                                      )}
-                                      <td style={{ maxWidth: 180 }}>{urlCell(pub.urlDoi)}</td>
-                                      <td>{authorsList(pub.authors)}</td>
-                                      <td className="text-end">{actionBtns(pub)}</td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </Table>
-                            )
-                          }
+                          <DataTable
+                            columns={[
+                              { key: 'title',                       label: 'Título',       sortable: true },
+                              { key: 'publicationData',             label: 'Datos de pub.' },
+                              { key: 'journalPublication.dataBase', label: 'Base de datos' },
+                              ...(g === 1 ? [{
+                                key: 'journalPublication.cuartil',
+                                label: 'Cuartil',
+                                render: v => v != null
+                                  ? <Badge color="info" pill className="text-dark">{v}</Badge>
+                                  : <span className="text-muted">—</span>,
+                              }] : []),
+                              { key: 'urlDoi',   label: 'URL / DOI', render: v => urlCell(v) },
+                              { key: 'authors',  label: 'Autores',   render: v => authorsList(v ?? []) },
+                            ]}
+                            data={pubs}
+                            keyExtractor={pub => pub.id}
+                            actions={pubActions}
+                            emptyMessage={`No hay publicaciones en el Grupo ${g}.`}
+                          />
                         </TabPane>
                       );
                     })}
@@ -791,35 +780,19 @@ export default function PublicationsPage() {
                           <i className="bi bi-plus-lg me-1"></i> Nueva publicación
                         </Button>
                       </div>
-                      {pubs.length === 0
-                        ? <p className="text-muted text-center py-3">No hay publicaciones de este tipo.</p>
-                        : (
-                          <Table hover responsive size="sm" className="mb-0">
-                            <thead>
-                              <tr>
-                                <th>Título</th>
-                                <th>Datos de pub.</th>
-                                <th>Indexación</th>
-                                <th>URL / DOI</th>
-                                <th>Autores</th>
-                                <th style={{ width: 90 }}></th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {pubs.map(pub => (
-                                <tr key={pub.id}>
-                                  <td>{pub.title}</td>
-                                  <td>{pub.publicationData}</td>
-                                  <td>{pub.indexedPublication?.index ? `Grupo ${pub.indexedPublication.index}` : <span className="text-muted">—</span>}</td>
-                                  <td style={{ maxWidth: 180 }}>{urlCell(pub.urlDoi)}</td>
-                                  <td>{authorsList(pub.authors)}</td>
-                                  <td className="text-end">{actionBtns(pub)}</td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </Table>
-                        )
-                      }
+                      <DataTable
+                        columns={[
+                          { key: 'title',                    label: 'Título',      sortable: true },
+                          { key: 'publicationData',          label: 'Datos de pub.' },
+                          { key: 'indexedPublication.index', label: 'Indexación',  render: v => v ? `Grupo ${v}` : <span className="text-muted">—</span> },
+                          { key: 'urlDoi',  label: 'URL / DOI', render: v => urlCell(v) },
+                          { key: 'authors', label: 'Autores',   render: v => authorsList(v ?? []) },
+                        ]}
+                        data={pubs}
+                        keyExtractor={pub => pub.id}
+                        actions={pubActions}
+                        emptyMessage="No hay publicaciones de este tipo."
+                      />
                     </TabPane>
                   );
                 })}

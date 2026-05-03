@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Card, CardBody, CardHeader,
-  Table, Button, Badge,
+  Button, Badge,
   Spinner, Alert,
   Modal, ModalHeader, ModalBody, ModalFooter,
   Form, FormGroup, Label, Input,
 } from 'reactstrap';
 import { useAuth } from '../contexts/AuthContext';
+import DataTable from '../components/DataTable';
 
 async function apiFetch(url, options = {}) {
   const response = await fetch(url, {
@@ -318,63 +319,55 @@ export default function AwardsPage() {
 
           {!loading && error && <Alert color="danger">{error}</Alert>}
 
-          {!loading && !error && awards.length === 0 && (
-            <p className="text-muted text-center py-3">{isSuperuser ? 'No hay premios registrados.' : 'No tienes premios registrados.'}</p>
-          )}
-
-          {!loading && !error && awards.length > 0 && (
-            <Table responsive hover>
-              <thead>
-                <tr>
-                  <th>Nombre</th>
-                  <th>Tipo</th>
-                  <th>Año</th>
-                  <th>Fecha de otorgamiento</th>
-                  <th>Usuarios</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {awards.map(a => (
-                  <tr key={a.id}>
-                    <td>{a.awardName}</td>
-                    <td>
-                      <Badge color="info" pill>{a.awardTypeId != null ? awardTypeLabel(a.awardTypeId) : (a.awardTypeName ?? 'Desconocido')}</Badge>
-                    </td>
-                    <td>{a.year}</td>
-                    <td>{new Date(a.awardedAt).toLocaleDateString('es-CU')}</td>
-                    <td>
-                      {(a.recipients || []).map(r => (
-                        <span key={r.id} className="d-inline-block me-3 align-middle">
-                          <small>{r.userDisplayName}</small>
-                        </span>
-                      ))}
-                    </td>
-                    <td className="text-end">
-                      {!isSuperuser && a.isMine && (
-                        <>
-                          <Button
-                            color="outline-secondary"
-                            size="sm"
-                            className="me-2"
-                            onClick={() => openEdit({ id: a.ownerRecipientId, awardName: a.awardName, awardTypeId: a.awardTypeId, awardedAt: a.awardedAt })}
-                          >
-                            <i className="bi bi-pencil" />
-                          </Button>
-                          <Button
-                            color="outline-danger"
-                            size="sm"
-                            onClick={() => openDelete({ id: a.ownerRecipientId, awardName: a.awardName })}
-                          >
-                            <i className="bi bi-trash" />
-                          </Button>
-                        </>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
+          {!loading && !error && (
+            <DataTable
+              loading={loading}
+              columns={[
+                { key: 'awardName', label: 'Nombre', sortable: true },
+                {
+                  key: 'awardTypeId',
+                  label: 'Tipo',
+                  render: (v, a) => <Badge color="info" pill>{v != null ? awardTypeLabel(v) : (a.awardTypeName ?? 'Desconocido')}</Badge>,
+                },
+                { key: 'year', label: 'Año', sortable: true },
+                {
+                  key: 'awardedAt',
+                  label: 'Fecha de otorgamiento',
+                  sortable: true,
+                  render: v => new Date(v).toLocaleDateString('es-CU'),
+                },
+                {
+                  key: 'recipients',
+                  label: 'Usuarios',
+                  render: recipients => (recipients || []).map(r => (
+                    <span key={r.id} className="d-inline-block me-3 align-middle">
+                      <small>{r.userDisplayName}</small>
+                    </span>
+                  )),
+                },
+              ]}
+              data={awards}
+              keyExtractor={a => a.id ?? `${a.awardId}-${a.awardedAt}`}
+              actions={[
+                {
+                  key: 'edit',
+                  label: 'Editar',
+                  icon: 'bi-pencil',
+                  color: 'outline-secondary',
+                  show: a => !isSuperuser && a.isMine,
+                  onClick: a => openEdit({ id: a.ownerRecipientId, awardName: a.awardName, awardTypeId: a.awardTypeId, awardedAt: a.awardedAt }),
+                },
+                {
+                  key: 'delete',
+                  label: 'Eliminar',
+                  icon: 'bi-trash',
+                  color: 'outline-danger',
+                  show: a => !isSuperuser && a.isMine,
+                  onClick: a => openDelete({ id: a.ownerRecipientId, awardName: a.awardName }),
+                },
+              ]}
+              emptyMessage={isSuperuser ? 'No hay premios registrados.' : 'No tienes premios registrados.'}
+            />
           )}
         </CardBody>
       </Card>

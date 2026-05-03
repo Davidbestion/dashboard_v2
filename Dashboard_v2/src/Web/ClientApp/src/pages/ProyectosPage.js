@@ -6,6 +6,7 @@ import {
   Form, FormGroup, Label, Input,
 } from 'reactstrap';
 import { useAuth } from '../contexts/AuthContext';
+import DataTable from '../components/DataTable';
 
 async function apiFetch(url, options = {}) {
   const response = await fetch(url, {
@@ -362,60 +363,48 @@ export default function ProyectosPage() {
           {loading ? (
             <div className="text-center py-4"><Spinner /></div>
           ) : (
-            <Table bordered hover responsive size="sm">
-              <thead>
-                <tr>
-                  <th>Tipo</th>
-                  <th>Título</th>
-                  <th>Jefe</th>
-                  <th>Clasificación</th>
-                  <th>Publicaciones derivadas</th>
-                  <th style={{ width: 100 }}>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {items.length === 0 && (
-                  <tr><td colSpan={6} className="text-center text-muted">No hay proyectos registrados.</td></tr>
-                )}
-                {items.map(item => (
-                  <tr key={item.id}>
-                    <td><Badge color={tipoColor(item.tipo)}>{tipoLabel(item.tipo)}</Badge></td>
-                    <td>{item.titulo}</td>
-                    <td>{item.jefe}</td>
-                    <td>{item.clasificacionNombre}</td>
-                    <td>
-                      <div className="d-flex flex-column gap-1">
-                        {(item.publicacionesDerivadas ?? []).length === 0
-                          ? <span className="text-muted">—</span>
-                          : (item.publicacionesDerivadas ?? []).map((urlDoi, i) => (
-                            <div key={i}>
-                              <a href={urlDoi.startsWith('http') ? urlDoi : `https://doi.org/${urlDoi}`}
-                                 target="_blank" rel="noopener noreferrer"
-                                 title={urlDoi}
-                                 style={{ fontSize: '0.8rem' }}
-                              >
-                                {urlDoi.length > 40 ? urlDoi.substring(0, 40) + '…' : urlDoi}
-                              </a>
-                            </div>
-                          ))
-                        }
-                        <div>
-                          <Button color="outline-primary" size="sm"
-                                  style={{ fontSize: '0.75rem', padding: '0.1rem 0.4rem' }}
-                                  onClick={() => openPubsManager(item)}>
-                            📎 Gestionar
-                          </Button>
-                        </div>
+            <DataTable
+              columns={[
+                { key: 'tipo',              label: 'Tipo',        sortable: true, render: v => <Badge color={tipoColor(v)}>{tipoLabel(v)}</Badge> },
+                { key: 'titulo',            label: 'Título',      sortable: true },
+                { key: 'jefe',              label: 'Jefe' },
+                { key: 'clasificacionNombre', label: 'Clasificación' },
+                {
+                  key: 'publicacionesDerivadas',
+                  label: 'Publicaciones derivadas',
+                  render: (pubs, item) => (
+                    <div className="d-flex flex-column gap-1">
+                      {(pubs ?? []).length === 0
+                        ? <span className="text-muted">—</span>
+                        : (pubs ?? []).map((urlDoi, i) => (
+                          <div key={i}>
+                            <a href={urlDoi.startsWith('http') ? urlDoi : `https://doi.org/${urlDoi}`}
+                               target="_blank" rel="noopener noreferrer"
+                               title={urlDoi} style={{ fontSize: '0.8rem' }}>
+                              {urlDoi.length > 40 ? urlDoi.substring(0, 40) + '…' : urlDoi}
+                            </a>
+                          </div>
+                        ))
+                      }
+                      <div>
+                        <Button color="outline-primary" size="sm"
+                                style={{ fontSize: '0.75rem', padding: '0.1rem 0.4rem' }}
+                                onClick={() => openPubsManager(item)}>
+                          📎 Gestionar
+                        </Button>
                       </div>
-                    </td>
-                    <td>
-                      <Button color="outline-secondary" size="sm" className="me-1" onClick={() => openEdit(item)} disabled={loadingEdit}>✏️</Button>
-                      <Button color="outline-danger" size="sm" onClick={() => setDeleteTarget(item)}>🗑️</Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
+                    </div>
+                  ),
+                },
+              ]}
+              data={items}
+              keyExtractor={item => item.id}
+              actions={[
+                { key: 'edit',   label: 'Editar',   icon: 'bi-pencil', color: 'outline-secondary', onClick: item => openEdit(item),        disabled: () => loadingEdit },
+                { key: 'delete', label: 'Eliminar', icon: 'bi-trash',  color: 'outline-danger',    onClick: item => setDeleteTarget(item) },
+              ]}
+              emptyMessage="No hay proyectos registrados."
+            />
           )}
         </CardBody>
       </Card>

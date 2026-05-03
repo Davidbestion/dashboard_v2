@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Card, CardBody, CardHeader,
-  Table, Button, Spinner, Alert, Badge,
+  Button, Spinner, Alert, Badge,
   Modal, ModalHeader, ModalBody, ModalFooter,
   Form, FormGroup, Label, Input, InputGroup,
 } from 'reactstrap';
 import { useAuth } from '../contexts/AuthContext';
+import DataTable from '../components/DataTable';
 
 async function apiFetch(url, options = {}) {
   const response = await fetch(url, {
@@ -195,34 +196,21 @@ export default function RegistrosPage() {
           <small className="text-muted ms-2">({items.length})</small>
         </CardHeader>
         <CardBody className="p-0">
-          <Table responsive hover className="mb-0">
-            <thead className="table-light">
-              <tr>
-                <th>Título</th>
-                <th>Número</th>
-                <th>País</th>
-                <th>Institución</th>
-                <th className="text-end">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.length === 0 && (
-                <tr><td colSpan={5} className="text-center text-muted py-4">No hay registros.</td></tr>
-              )}
-              {items.map(it => (
-                <tr key={it.id}>
-                  <td className="align-middle">{it.titulo}</td>
-                  <td className="align-middle">{it.numeroCertificado}</td>
-                  <td className="align-middle"><Badge color="secondary" pill>{it.countryName}</Badge></td>
-                  <td className="align-middle">{it.institutionNombre}</td>
-                  <td className="align-middle text-end">
-                    <Button size="sm" color="outline-secondary" className="me-2" onClick={() => openEdit(it)}>Editar</Button>
-                    <Button size="sm" color="outline-danger" onClick={() => handleDelete(it.id)}>Eliminar</Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
+          <DataTable
+            columns={[
+              { key: 'titulo',             label: 'Título', sortable: true },
+              { key: 'numeroCertificado',  label: 'Número' },
+              { key: 'countryName',        label: 'País',   render: v => <Badge color="secondary" pill>{v}</Badge> },
+              { key: 'institutionNombre',  label: 'Institución' },
+            ]}
+            data={items}
+            keyExtractor={it => it.id}
+            actions={[
+              { key: 'edit',   label: 'Editar',   icon: 'bi-pencil', color: 'outline-secondary', onClick: it => openEdit(it) },
+              { key: 'delete', label: 'Eliminar', icon: 'bi-trash',  color: 'outline-danger',    onClick: it => handleDelete(it.id) },
+            ]}
+            emptyMessage="No hay registros."
+          />
         </CardBody>
       </Card>
 

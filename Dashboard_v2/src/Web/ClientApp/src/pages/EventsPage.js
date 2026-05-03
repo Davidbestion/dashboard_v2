@@ -3,13 +3,14 @@ import {
   Card, CardBody, CardHeader,
   Nav, NavItem, NavLink as RNavLink,
   TabContent, TabPane,
-  Table, Button, Badge,
+  Button, Badge,
   Spinner, Alert,
   Modal, ModalHeader, ModalBody, ModalFooter,
   Form, FormGroup, Label, Input, InputGroup,
 } from 'reactstrap';
 import CoauthorPicker from '../components/CoauthorPicker';
 import { useAuth } from '../contexts/AuthContext';
+import DataTable from '../components/DataTable';
 
 async function apiFetch(url, options = {}) {
   const response = await fetch(url, {
@@ -438,49 +439,28 @@ export default function EventsPage() {
 
               {presLoading && <div className="text-center py-4"><Spinner color="primary" /></div>}
               {!presLoading && presError && <Alert color="danger">{presError}</Alert>}
-              {!presLoading && !presError && presentations.length === 0 && (
-                <p className="text-muted text-center py-3">
-                  {isSuperuser ? 'No hay presentaciones registradas.' : 'No tienes presentaciones registradas.'}
-                </p>
-              )}
-              {!presLoading && !presError && presentations.length > 0 && (
-                <Table responsive hover>
-                  <thead>
-                    <tr>
-                      <th>Nombre</th>
-                      <th>Evento</th>
-                      <th>Autores</th>
-                      {!isSuperuser && <th></th>}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {presentations.map(p => (
-                      <tr key={p.id}>
-                        <td>{p.name}</td>
-                        <td>{p.eventName}</td>
-                        <td>
-                          {p.authors.map((author) => (
-                            <Badge key={author.id} color={author.userId ? 'info' : 'secondary'} pill className="me-1">
-                              {author.name}
-                            </Badge>
-                          ))}
-                        </td>
-                        {!isSuperuser && (
-                          <td className="text-end">
-                            <Button color="outline-secondary" size="sm" className="me-2"
-                              onClick={() => openEditPres(p)}>
-                              <i className="bi bi-pencil" />
-                            </Button>
-                            <Button color="outline-danger" size="sm"
-                              onClick={() => { setPresToDelete(p); setPresDeleteError(''); setPresDeleteModal(true); }}>
-                              <i className="bi bi-trash" />
-                            </Button>
-                          </td>
-                        )}
-                      </tr>
-                    ))}
-                  </tbody>
-                </Table>
+              {!presLoading && !presError && (
+                <DataTable
+                  loading={presLoading}
+                  columns={[
+                    { key: 'name',      label: 'Nombre', sortable: true },
+                    { key: 'eventName', label: 'Evento', sortable: true },
+                    {
+                      key: 'authors',
+                      label: 'Autores',
+                      render: authors => (authors || []).map(a => (
+                        <Badge key={a.id} color={a.userId ? 'info' : 'secondary'} pill className="me-1">{a.name}</Badge>
+                      )),
+                    },
+                  ]}
+                  data={presentations}
+                  keyExtractor={p => p.id}
+                  actions={[
+                    { key: 'edit',   label: 'Editar',   icon: 'bi-pencil', color: 'outline-secondary', show: () => !isSuperuser, onClick: p => openEditPres(p) },
+                    { key: 'delete', label: 'Eliminar', icon: 'bi-trash',  color: 'outline-danger',    show: () => !isSuperuser, onClick: p => { setPresToDelete(p); setPresDeleteError(''); setPresDeleteModal(true); } },
+                  ]}
+                  emptyMessage={isSuperuser ? 'No hay presentaciones registradas.' : 'No tienes presentaciones registradas.'}
+                />
               )}
             </TabPane>
 
@@ -497,53 +477,35 @@ export default function EventsPage() {
 
               {evLoading && <div className="text-center py-4"><Spinner color="primary" /></div>}
               {!evLoading && evError && <Alert color="danger">{evError}</Alert>}
-              {!evLoading && !evError && events.length === 0 && (
-                <p className="text-muted text-center py-3">
-                  {isSuperuser ? 'No hay eventos registrados.' : 'No participas en ningún evento aún.'}
-                </p>
-              )}
-              {!evLoading && !evError && events.length > 0 && (
-                <Table responsive hover>
-                  <thead>
-                    <tr>
-                        <th>Nombre</th>
-                        <th>País</th>
-                        <th>Tipo</th>
-                        <th>Instituciones</th>
-                        <th>Red</th>
-                        <th>Presentaciones</th>
-                      {!isSuperuser && <th></th>}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {events.map(ev => (
-                      <tr key={ev.id}>
-                        <td>{ev.name}</td>
-                        <td>{ev.countryName}</td>
-                        <td><Badge color="info" pill>{EVENT_TYPE_LABELS[ev.eventTypeId] ?? ev.eventTypeName ?? ev.eventType}</Badge></td>
-                        <td>
-                          {ev.institutions.map((inst, i) => (
-                            <Badge key={i} color="secondary" pill className="me-1">{inst}</Badge>
-                          ))}
-                        </td>
-                          <td>{ev.redName ?? ev.redName ?? ev.RedName ?? ''}</td>
-                        <td className="text-center">{ev.presentationCount}</td>
-                        {!isSuperuser && (
-                          <td className="text-end">
-                            <Button color="outline-secondary" size="sm" className="me-2"
-                              onClick={() => openEditEv(ev)}>
-                              <i className="bi bi-pencil" />
-                            </Button>
-                            <Button color="outline-danger" size="sm"
-                              onClick={() => { setEvToDelete(ev); setEvDeleteError(''); setEvDeleteModal(true); }}>
-                              <i className="bi bi-trash" />
-                            </Button>
-                          </td>
-                        )}
-                      </tr>
-                    ))}
-                  </tbody>
-                </Table>
+              {!evLoading && !evError && (
+                <DataTable
+                  loading={evLoading}
+                  columns={[
+                    { key: 'name',        label: 'Nombre', sortable: true },
+                    { key: 'countryName', label: 'País',  sortable: true },
+                    {
+                      key: 'eventTypeId',
+                      label: 'Tipo',
+                      render: (v, ev) => <Badge color="info" pill>{EVENT_TYPE_LABELS[v] ?? ev.eventTypeName ?? ev.eventType}</Badge>,
+                    },
+                    {
+                      key: 'institutions',
+                      label: 'Instituciones',
+                      render: insts => (insts || []).map((inst, i) => (
+                        <Badge key={i} color="secondary" pill className="me-1">{inst}</Badge>
+                      )),
+                    },
+                    { key: 'redName',          label: 'Red' },
+                    { key: 'presentationCount', label: 'Presentaciones' },
+                  ]}
+                  data={events}
+                  keyExtractor={ev => ev.id}
+                  actions={[
+                    { key: 'edit',   label: 'Editar',   icon: 'bi-pencil', color: 'outline-secondary', show: () => !isSuperuser, onClick: ev => openEditEv(ev) },
+                    { key: 'delete', label: 'Eliminar', icon: 'bi-trash',  color: 'outline-danger',    show: () => !isSuperuser, onClick: ev => { setEvToDelete(ev); setEvDeleteError(''); setEvDeleteModal(true); } },
+                  ]}
+                  emptyMessage={isSuperuser ? 'No hay eventos registrados.' : 'No participas en ningún evento aún.'}
+                />
               )}
             </TabPane>
           </TabContent>

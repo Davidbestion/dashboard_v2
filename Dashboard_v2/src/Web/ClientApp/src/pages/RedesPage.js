@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Card, CardBody, CardHeader,
-  Table, Button, Spinner, Alert,
+  Button, Spinner, Alert,
   Modal, ModalHeader, ModalBody, ModalFooter,
   Form, FormGroup, Label, Input,
+  Table,
 } from 'reactstrap';
+import DataTable from '../components/DataTable';
+import FilterableDataTable from '../components/FilterableDataTable';
 
 async function apiFetch(url, options = {}) {
   const response = await fetch(url, {
@@ -126,20 +129,28 @@ export default function RedesPage() {
       <Card>
         <CardHeader><strong>Redes</strong> <small className="text-muted ms-2">({items.length})</small></CardHeader>
         <CardBody className="p-0">
-          <Table responsive hover className="mb-0">
-            <thead className="table-light"><tr><th>Nombre</th><th>País</th><th>Cantidad profesores</th><th className="text-end">Acciones</th></tr></thead>
-            <tbody>
-              {items.length === 0 && <tr><td colSpan={4} className="text-center text-muted py-4">No hay redes.</td></tr>}
-              {items.map(i => (
-                <tr key={i.id}><td>{i.nombre ?? i.Nombre}</td><td>{i.countryName ?? i.CountryName ?? ''}</td><td>{i.cantidadProfesores ?? i.CantidadProfesores}</td>
-                  <td className="text-end">
-                    <Button size="sm" color="outline-secondary" className="me-2" onClick={() => openEdit(i)}>Editar</Button>
-                    <Button size="sm" color="outline-secondary" className="me-2" onClick={() => openAssign(i)}>Asignar eventos</Button>
-                    <Button size="sm" color="outline-danger" onClick={() => handleDelete(i.id)}>Eliminar</Button>
-                  </td></tr>
-              ))}
-            </tbody>
-          </Table>
+          <FilterableDataTable
+            filterConfig={{
+              search: { fields: ['nombre'], placeholder: 'Buscar red...' },
+              filters: [
+                { key: 'countryName', label: 'País',
+                  options: countries.map(c => ({ value: c.name ?? c.Name, label: c.name ?? c.Name })) },
+              ],
+            }}
+            columns={[
+              { key: 'nombre',              label: 'Nombre', sortable: true, render: v => v },
+              { key: 'countryName',         label: 'País' },
+              { key: 'cantidadProfesores',  label: 'Cantidad profesores' },
+            ]}
+            data={items}
+            keyExtractor={i => i.id}
+            actions={[
+              { key: 'edit',   label: 'Editar',          color: 'outline-secondary', onClick: i => openEdit(i) },
+              { key: 'assign', label: 'Asignar eventos', color: 'outline-secondary', onClick: i => openAssign(i) },
+              { key: 'delete', label: 'Eliminar',        color: 'outline-danger',    onClick: i => handleDelete(i.id) },
+            ]}
+            emptyMessage="No hay redes."
+          />
         </CardBody>
       </Card>
 

@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Card, CardBody, CardHeader,
-  Table, Button, Spinner, Alert,
+  Button, Spinner, Alert,
   Modal, ModalHeader, ModalBody, ModalFooter,
   Form, FormGroup, Label, Input,
 } from 'reactstrap';
+import DataTable from '../components/DataTable';
+import FilterableDataTable from '../components/FilterableDataTable';
 
 async function apiFetch(url, options = {}) {
   const response = await fetch(url, {
@@ -106,28 +108,19 @@ export default function ClasificacionesPage() {
           {loading ? (
             <div className="text-center py-4"><Spinner /></div>
           ) : (
-            <Table bordered hover responsive size="sm">
-              <thead>
-                <tr>
-                  <th>Nombre</th>
-                  <th style={{ width: 100 }}>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {items.length === 0 && (
-                  <tr><td colSpan={2} className="text-center text-muted">No hay clasificaciones registradas.</td></tr>
-                )}
-                {items.map(item => (
-                  <tr key={item.id}>
-                    <td>{item.nombre}</td>
-                    <td>
-                      <Button color="outline-secondary" size="sm" className="me-1" onClick={() => openEdit(item)}>✏️</Button>
-                      <Button color="outline-danger" size="sm" onClick={() => setDeleteTarget(item)}>🗑️</Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
+            <FilterableDataTable
+              filterConfig={{ search: { fields: ['nombre'], placeholder: 'Buscar clasificación...' } }}
+              columns={[
+                { key: 'nombre', label: 'Nombre', sortable: true },
+              ]}
+              data={items}
+              keyExtractor={item => item.id}
+              actions={[
+                { key: 'edit',   label: 'Editar',   icon: 'bi-pencil', color: 'outline-secondary', onClick: item => openEdit(item) },
+                { key: 'delete', label: 'Eliminar', icon: 'bi-trash',  color: 'outline-danger',    onClick: item => setDeleteTarget(item) },
+              ]}
+              emptyMessage="No hay clasificaciones registradas."
+            />
           )}
         </CardBody>
       </Card>

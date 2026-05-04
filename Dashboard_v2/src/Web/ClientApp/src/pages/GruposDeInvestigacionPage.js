@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Card, CardBody, CardHeader,
-  Table, Button, Spinner, Alert, Badge,
+  Button, Spinner, Alert, Badge,
   Modal, ModalHeader, ModalBody, ModalFooter,
   Form, FormGroup, Label, Input,
 } from 'reactstrap';
 import Select from 'react-select';
 import UserCard from '../components/UserCard';
+import DataTable from '../components/DataTable';
+import FilterableDataTable from '../components/FilterableDataTable';
 
 async function apiFetch(url, options = {}) {
   const response = await fetch(url, {
@@ -222,50 +224,36 @@ export default function GruposDeInvestigacionPage() {
           <small className="text-muted ms-2">({items.length})</small>
         </CardHeader>
         <CardBody className="p-0">
-          <Table responsive hover className="mb-0">
-            <thead className="table-light">
-              <tr>
-                <th>Nombre</th>
-                <th>Área</th>
-                <th>Miembros</th>
-                <th className="text-end">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.length === 0 && (
-                <tr>
-                  <td colSpan={4} className="text-center text-muted py-4">
-                    No hay grupos de investigación registrados.
-                  </td>
-                </tr>
-              )}
-              {items.map(item => (
-                <tr key={item.id}>
-                  <td className="align-middle fw-semibold">{item.nombre}</td>
-                  <td className="align-middle">
-                    <Badge color="secondary" pill>{item.areaNombre}</Badge>
-                  </td>
-                  <td className="align-middle">
-                    {item.usuariosIds && item.usuariosIds.length > 0
-                      ? <Badge color="primary" pill>{item.usuariosIds.length} miembro{item.usuariosIds.length !== 1 ? 's' : ''}</Badge>
-                      : <span className="text-muted small">Sin miembros</span>
-                    }
-                  </td>
-                  <td className="align-middle text-end">
-                    <Button size="sm" color="outline-info" className="me-2" onClick={() => openMembros(item)}>
-                      Miembros
-                    </Button>
-                    <Button size="sm" color="outline-secondary" className="me-2" onClick={() => openEdit(item)}>
-                      Editar
-                    </Button>
-                    <Button size="sm" color="outline-danger" onClick={() => handleDelete(item.id)}>
-                      Eliminar
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
+          <FilterableDataTable
+            filterConfig={{
+              search: { fields: ['nombre'], placeholder: 'Buscar grupo...' },
+              filters: [
+                { key: 'areaNombre', label: 'Área',
+                  options: [...new Set(items.map(i => i.areaNombre).filter(Boolean))].sort().map(v => ({ value: v, label: v })) },
+              ],
+            }}
+            columns={[
+              { key: 'nombre',   label: 'Nombre', sortable: true, className: 'fw-semibold' },
+              { key: 'areaNombre', label: 'Área', render: v => <Badge color="secondary" pill>{v}</Badge> },
+              {
+                key: 'usuariosIds',
+                label: 'Miembros',
+                sortable: true,
+                sortValue: ids => (ids ?? []).length,
+                render: ids => ids && ids.length > 0
+                  ? <Badge color="primary" pill>{ids.length} miembro{ids.length !== 1 ? 's' : ''}</Badge>
+                  : <span className="text-muted small">Sin miembros</span>,
+              },
+            ]}
+            data={items}
+            keyExtractor={item => item.id}
+            actions={[
+              { key: 'members', label: 'Miembros', color: 'outline-info',      onClick: item => openMembros(item) },
+              { key: 'edit',    label: 'Editar',   icon: 'bi-pencil', color: 'outline-secondary', onClick: item => openEdit(item) },
+              { key: 'delete',  label: 'Eliminar', icon: 'bi-trash',  color: 'outline-danger',    onClick: item => handleDelete(item.id) },
+            ]}
+            emptyMessage="No hay grupos de investigación registrados."
+          />
         </CardBody>
       </Card>
 

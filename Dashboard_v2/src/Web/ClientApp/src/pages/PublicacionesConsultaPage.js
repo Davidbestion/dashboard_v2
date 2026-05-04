@@ -3,10 +3,12 @@ import {
   Card, CardBody, CardHeader,
   Nav, NavItem, NavLink,
   TabContent, TabPane,
-  Table, Badge, Button,
+  Badge, Button,
   Spinner, Alert,
 } from 'reactstrap';
 import { useAuth } from '../contexts/AuthContext';
+import DataTable from '../components/DataTable';
+import FilterableDataTable from '../components/FilterableDataTable';
 
 // Etiquetas correspondientes al enum PublicationType del backend (índice = valor entero)
 const PUB_TIPOS = ['Diario', 'Libro', 'Monografía', 'Capítulo', 'Artículo de Divulgación'];
@@ -196,42 +198,27 @@ export default function PublicacionesConsultaPage() {
                     const pubs = journalByGroup(group);
                     return (
                       <TabPane tabId={String(group)} key={group}>
-                        {pubs.length === 0
-                          ? <p className="text-muted text-center py-3">No hay publicaciones en el Grupo {group}.</p>
-                          : (
-                            <Table hover responsive size="sm" className="mt-2 mb-0">
-                              <thead>
-                                <tr>
-                                  <th>Título</th>
-                                  <th>Datos de pub.</th>
-                                  <th>Base de datos</th>
-                                  {group === 1 && <th>Cuartil</th>}
-                                  <th>URL / DOI</th>
-                                  <th>Autores</th>
-                                  <th>Proyecto vinculado</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {pubs.map(pub => (
-                                  <tr key={pub.id}>
-                                    <td>{pub.title}</td>
-                                    <td>{pub.publicationData || <span className="text-muted">—</span>}</td>
-                                    <td>{pub.journalPublication?.dataBase ?? <span className="text-muted">—</span>}</td>
-                                    {group === 1 && (
-                                      <td>
-                                        {pub.journalPublication?.cuartil != null
-                                          ? <Badge color="info" pill className="text-dark">{pub.journalPublication.cuartil}</Badge>
-                                          : <span className="text-muted">—</span>}
-                                      </td>
-                                    )}
-                                    <td style={{ maxWidth: 180 }}>{urlCell(pub.urlDoi)}</td>
-                                    <td>{authorsList(pub.authors)}</td>
-                                    <td>{pub.proyectoTitulo ?? <span className="text-muted">—</span>}</td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </Table>
-                          )}
+                        <FilterableDataTable
+                          filterConfig={{ search: { fields: ['title', 'publicationData'], placeholder: 'Buscar publicación...' } }}
+                          columns={[
+                            { key: 'title',                       label: 'Título',       sortable: true },
+                            { key: 'publicationData',             label: 'Datos de pub.' },
+                            { key: 'journalPublication.dataBase', label: 'Base de datos' },
+                            ...(group === 1 ? [{
+                              key: 'journalPublication.cuartil',
+                              label: 'Cuartil',
+                              render: v => v != null
+                                ? <Badge color="info" pill className="text-dark">{v}</Badge>
+                                : <span className="text-muted">—</span>,
+                            }] : []),
+                            { key: 'urlDoi',        label: 'URL / DOI',          render: v => urlCell(v) },
+                            { key: 'authors',       label: 'Autores',            render: v => authorsList(v ?? []) },
+                            { key: 'proyectoTitulo', label: 'Proyecto vinculado', render: v => v ?? <span className="text-muted">—</span> },
+                          ]}
+                          data={pubs}
+                          keyExtractor={pub => pub.id}
+                          emptyMessage={`No hay publicaciones en el Grupo ${group}.`}
+                        />
                       </TabPane>
                     );
                   })}
@@ -242,34 +229,24 @@ export default function PublicacionesConsultaPage() {
                 const pubs = pubsByType(typeVal);
                 return (
                   <TabPane tabId={String(typeVal)} key={typeVal} className="p-3">
-                    {pubs.length === 0
-                      ? <p className="text-muted text-center py-3">No hay publicaciones de este tipo.</p>
-                      : (
-                        <Table hover responsive size="sm" className="mb-0">
-                          <thead>
-                            <tr>
-                              <th>Título</th>
-                              <th>Datos de pub.</th>
-                              <th>Indexación</th>
-                              <th>URL / DOI</th>
-                              <th>Autores</th>
-                              <th>Proyecto vinculado</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {pubs.map(pub => (
-                              <tr key={pub.id}>
-                                <td>{pub.title}</td>
-                                <td>{pub.publicationData || <span className="text-muted">—</span>}</td>
-                                <td><span className="text-muted">—</span></td>
-                                <td style={{ maxWidth: 180 }}>{urlCell(pub.urlDoi)}</td>
-                                <td>{authorsList(pub.authors)}</td>
-                                <td>{pub.proyectoTitulo ?? <span className="text-muted">—</span>}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </Table>
-                      )}
+                    <FilterableDataTable
+                      filterConfig={{ search: { fields: ['title', 'publicationData'], placeholder: 'Buscar publicación...' } }}
+                      columns={[
+                        { key: 'title',          label: 'Título',       sortable: true },
+                        { key: 'publicationData', label: 'Datos de pub.' },
+                        {
+                          key: 'indexedPublication.index',
+                          label: 'Indexación',
+                          render: v => v ? `Grupo ${v}` : <span className="text-muted">—</span>,
+                        },
+                        { key: 'urlDoi',         label: 'URL / DOI',          render: v => urlCell(v) },
+                        { key: 'authors',        label: 'Autores',            render: v => authorsList(v ?? []) },
+                        { key: 'proyectoTitulo', label: 'Proyecto vinculado', render: v => v ?? <span className="text-muted">—</span> },
+                      ]}
+                      data={pubs}
+                      keyExtractor={pub => pub.id}
+                      emptyMessage="No hay publicaciones de este tipo."
+                    />
                   </TabPane>
                 );
               })}

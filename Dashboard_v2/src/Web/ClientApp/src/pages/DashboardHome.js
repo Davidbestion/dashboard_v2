@@ -39,19 +39,6 @@ function StatCard({ icon, label, value, color = 'stat-blue', link, sublabel }) {
   return inner;
 }
 
-function QuickCard({ icon, label, desc, to }) {
-  return (
-    <a href={to} className="quick-card">
-      <div className="quick-card__icon"><i className={`bi ${icon}`} /></div>
-      <div className="quick-card__body">
-        <span className="quick-card__label">{label}</span>
-        <span className="quick-card__desc">{desc}</span>
-      </div>
-      <i className="bi bi-chevron-right quick-card__arrow" />
-    </a>
-  );
-}
-
 function LoadingHome() {
   return (
     <div className="d-flex justify-content-center align-items-center py-5">
@@ -120,17 +107,14 @@ function ProfesorHome() {
           color="stat-purple"
           link="/awards"
         />
-      </div>
-
-      <div className="section-header mt-2">
-        <h3 className="section-header__title">Acceso rápido</h3>
-      </div>
-      <div className="quick-grid">
-        <QuickCard icon="bi-file-earmark-text" label="Mis publicaciones"          desc="Ver y gestionar tus publicaciones científicas"        to="/publications" />
-        <QuickCard icon="bi-mic"               label="Eventos y ponencias"         desc="Registra tus presentaciones en conferencias"         to="/events" />
-        <QuickCard icon="bi-trophy"            label="Premios"                     desc="Historial de reconocimientos recibidos"               to="/awards" />
-        <QuickCard icon="bi-people"            label="Mis grupos de investigación" desc="Grupos de investigación en los que participas"       to="/mis-grupos" />
-        <QuickCard icon="bi-file-person"       label="Mi Currículum"               desc="Genera y exporta tu currículum científico"           to="/curriculum" />
+        <StatCard
+          icon="bi-file-person-fill"
+          label="Mi Currículum"
+          value="PDF"
+          color="stat-teal"
+          link="/curriculum"
+          sublabel="Exportar currículum científico"
+        />
       </div>
     </>
   );
@@ -187,13 +171,6 @@ function JefeProyectoHome() {
           sublabel="Total en todos mis proyectos"
         />
       </div>
-
-      <div className="section-header mt-2">
-        <h3 className="section-header__title">Acceso rápido</h3>
-      </div>
-      <div className="quick-grid">
-        <QuickCard icon="bi-folder" label="Mis proyectos" desc="Gestionar y ver tus proyectos de investigación" to="/proyectos" />
-      </div>
     </>
   );
 }
@@ -234,14 +211,6 @@ function JefeGrupoHome() {
           sublabel="En todos tus grupos"
         />
       </div>
-
-      <div className="section-header mt-2">
-        <h3 className="section-header__title">Acceso rápido</h3>
-      </div>
-      <div className="quick-grid">
-        <QuickCard icon="bi-diagram-3" label="Mis grupos"     desc="Grupos de investigación que lideras"   to="/mis-grupos" />
-        <QuickCard icon="bi-people"    label="Todos los grupos" desc="Vista completa de todos los grupos" to="/grupos-investigacion" />
-      </div>
     </>
   );
 }
@@ -281,13 +250,6 @@ function JefeRedesHome() {
           link="/redes"
           sublabel="En todas las redes"
         />
-      </div>
-
-      <div className="section-header mt-2">
-        <h3 className="section-header__title">Acceso rápido</h3>
-      </div>
-      <div className="quick-grid">
-        <QuickCard icon="bi-share" label="Redes" desc="Gestionar redes de investigación" to="/redes" />
       </div>
     </>
   );
@@ -351,20 +313,6 @@ function AdminHome() {
           color="stat-purple"
           link="/publicaciones"
         />
-      </div>
-
-      <div className="section-header mt-2">
-        <h3 className="section-header__title">Administración</h3>
-      </div>
-      <div className="quick-grid">
-        <QuickCard icon="bi-people"            label="Gestionar usuarios"       desc="Crear, editar y administrar cuentas"                 to="/users" />
-        <QuickCard icon="bi-diagram-3"         label="Grupos de investigación"  desc="Gestionar grupos y miembros"                        to="/grupos-investigacion" />
-        <QuickCard icon="bi-folder"            label="Proyectos"                desc="Supervisar proyectos de investigación"               to="/proyectos" />
-        <QuickCard icon="bi-file-earmark-text" label="Todas las publicaciones"  desc="Vista global de publicaciones científicas"           to="/publicaciones" />
-        <QuickCard icon="bi-trophy"            label="Premios"                  desc="Registro de reconocimientos y premios"               to="/awards" />
-        <QuickCard icon="bi-building"          label="Universidades"            desc="Gestionar instituciones asociadas"                   to="/universidades" />
-        <QuickCard icon="bi-tag"               label="Áreas del conocimiento"   desc="Clasificación científica de áreas"                   to="/areas-conocimiento" />
-        <QuickCard icon="bi-diagram-2"         label="Líneas de investigación"  desc="Gestionar líneas temáticas"                         to="/lineas-investigacion" />
       </div>
     </>
   );

@@ -110,10 +110,29 @@ public sealed class AnexoPublicacionesReport : IDocumentReport
             .OrderBy(p => p.Title)
             .ToList();
 
+        // Materializar sublistas para calcular conteos y reutilizarlas en el diccionario.
+        var g1           = journalPublications.Where(p => p.JournalPublication!.Group == 1).ToList();
+        var g2           = journalPublications.Where(p => p.JournalPublication!.Group == 2).ToList();
+        var g3           = journalPublications.Where(p => p.JournalPublication!.Group == 3).ToList();
+        var g4           = journalPublications.Where(p => p.JournalPublication!.Group == 4).ToList();
+        var libros       = indexedPublications.Where(p => p.PublicationType == PublicationType.Libro).ToList();
+        var monografias  = indexedPublications.Where(p => p.PublicationType == PublicationType.Monografía).ToList();
+        var capitulos    = indexedPublications.Where(p => p.PublicationType == PublicationType.Capítulo).ToList();
+        var artDiv       = indexedPublications.Where(p => p.PublicationType == PublicationType.Artículo_de_Divulgación).ToList();
+
         return new Dictionary<string, object>
         {
-            ["G1"] = journalPublications
-                .Where(p => p.JournalPublication!.Group == 1)
+            // ── Conteos para la primera hoja (columna "Publicados") ────────────
+            ["G1Count"]                   = g1.Count,
+            ["G2Count"]                   = g2.Count,
+            ["G3Count"]                   = g3.Count,
+            ["G4Count"]                   = g4.Count,
+            ["CapitulosCount"]            = capitulos.Count,
+            ["LibrosMonografiasCount"]    = libros.Count + monografias.Count,
+            ["ArticulosDivulgacionCount"] = artDiv.Count,
+
+            // ── Datos de cada hoja ─────────────────────────────────────────────
+            ["G1"] = g1
                 .Select((p, index) => new PublicacionG1RowDto
                 {
                     No = index + 1,
@@ -124,32 +143,13 @@ public sealed class AnexoPublicacionesReport : IDocumentReport
                     Cuartil = p.JournalPublication.JournalGroup1Publication?.Cuartil ?? string.Empty,
                 })
                 .ToList(),
-            ["G2"] = journalPublications
-                .Where(p => p.JournalPublication!.Group == 2)
-                .Select((p, index) => BuildJournalRow(p, index))
-                .ToList(),
-            ["G3"] = journalPublications
-                .Where(p => p.JournalPublication!.Group == 3)
-                .Select((p, index) => BuildJournalRow(p, index))
-                .ToList(),
-            ["G4"] = journalPublications
-                .Where(p => p.JournalPublication!.Group == 4)
-                .Select((p, index) => BuildJournalRow(p, index))
-                .ToList(),
-            ["Libros"] = indexedPublications
-                .Where(p => p.PublicationType == PublicationType.Libro)
-                .Select((p, index) => BuildIndexedRow(p, index))
-                .ToList(),
-            ["Monografias"] = indexedPublications
-                .Where(p => p.PublicationType == PublicationType.Monografía)
-                .Select((p, index) => BuildIndexedRow(p, index))
-                .ToList(),
-            ["Capitulos"] = indexedPublications
-                .Where(p => p.PublicationType == PublicationType.Capítulo)
-                .Select((p, index) => BuildIndexedRow(p, index))
-                .ToList(),
-            ["ArticulosDivulgacion"] = indexedPublications
-                .Where(p => p.PublicationType == PublicationType.Artículo_de_Divulgación)
+            ["G2"] = g2.Select((p, index) => BuildJournalRow(p, index)).ToList(),
+            ["G3"] = g3.Select((p, index) => BuildJournalRow(p, index)).ToList(),
+            ["G4"] = g4.Select((p, index) => BuildJournalRow(p, index)).ToList(),
+            ["Libros"]      = libros.Select((p, index) => BuildIndexedRow(p, index)).ToList(),
+            ["Monografias"] = monografias.Select((p, index) => BuildIndexedRow(p, index)).ToList(),
+            ["Capitulos"]   = capitulos.Select((p, index) => BuildIndexedRow(p, index)).ToList(),
+            ["ArticulosDivulgacion"] = artDiv
                 .Select((p, index) => new PublicacionDivulgacionRowDto
                 {
                     No = index + 1,

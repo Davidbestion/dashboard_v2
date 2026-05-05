@@ -7,6 +7,7 @@ import {
   Spinner, Alert,
   Input, Label,
   UncontrolledPopover, PopoverHeader, PopoverBody,
+  Dropdown, DropdownToggle, DropdownMenu,
 } from 'reactstrap';
 import { useAuth } from '../contexts/AuthContext';
 import DataTable from '../components/DataTable';
@@ -34,6 +35,7 @@ export default function PublicacionesConsultaPage({ apiUrl = '/api/Publications/
   const [dateTo, setDateTo] = useState('');
   const [activeType, setActiveType] = useState(0);
   const [activeGroup, setActiveGroup] = useState(1);
+  const [anexoDropOpen, setAnexoDropOpen] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -160,36 +162,44 @@ export default function PublicacionesConsultaPage({ apiUrl = '/api/Publications/
           </Button>
         )}
         {user?.role === 'Vicedecano_de_investigacion' && (
-          <div className="d-flex align-items-center gap-2 flex-wrap">
-            <div className="d-flex align-items-center gap-1">
-              <Label className="mb-0 text-muted" style={{ fontSize: '0.85em', whiteSpace: 'nowrap' }}>Desde</Label>
-              <Input
-                type="month"
-                bsSize="sm"
-                value={dateFrom}
-                onChange={e => setDateFrom(e.target.value)}
-                style={{ width: 150 }}
-              />
-            </div>
-            <div className="d-flex align-items-center gap-1">
-              <Label className="mb-0 text-muted" style={{ fontSize: '0.85em', whiteSpace: 'nowrap' }}>Hasta</Label>
-              <Input
-                type="month"
-                bsSize="sm"
-                value={dateTo}
-                onChange={e => setDateTo(e.target.value)}
-                style={{ width: 150 }}
-              />
-            </div>
-            <Button
-              color="outline-success"
-              size="sm"
-              onClick={() => handleGenerarAnexo({ from: dateFrom, to: dateTo })}
-              disabled={generatingAnexo}
-            >
+          <Dropdown isOpen={anexoDropOpen} toggle={() => setAnexoDropOpen(o => !o)}>
+            <DropdownToggle color="outline-success" size="sm" caret disabled={generatingAnexo}>
               {generatingAnexo ? <Spinner size="sm" /> : '⬇ Generar Anexo 2'}
-            </Button>
-          </div>
+            </DropdownToggle>
+            <DropdownMenu end style={{ minWidth: 280, padding: '0.75rem' }}>
+              <p className="text-muted mb-2" style={{ fontSize: '0.82em' }}>
+                <i className="bi bi-info-circle me-1" />
+                Filtra las publicaciones incluidas en el anexo por rango de meses. Deja en blanco para incluir todas.
+              </p>
+              <div className="mb-2">
+                <Label className="mb-1 fw-semibold" style={{ fontSize: '0.85em' }}>Desde (mes)</Label>
+                <Input
+                  type="month"
+                  bsSize="sm"
+                  value={dateFrom}
+                  onChange={e => setDateFrom(e.target.value)}
+                />
+              </div>
+              <div className="mb-3">
+                <Label className="mb-1 fw-semibold" style={{ fontSize: '0.85em' }}>Hasta (mes)</Label>
+                <Input
+                  type="month"
+                  bsSize="sm"
+                  value={dateTo}
+                  onChange={e => setDateTo(e.target.value)}
+                />
+              </div>
+              <Button
+                color="success"
+                size="sm"
+                className="w-100"
+                onClick={() => { setAnexoDropOpen(false); handleGenerarAnexo({ from: dateFrom, to: dateTo }); }}
+                disabled={generatingAnexo}
+              >
+                ⬇ Descargar Anexo 2
+              </Button>
+            </DropdownMenu>
+          </Dropdown>
         )}
       </CardHeader>
       <CardBody>

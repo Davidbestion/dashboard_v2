@@ -73,5 +73,26 @@ public sealed class ListadoPublicacionesSheet : ISheetTemplate
 
         ws.Row(11).Height = 32.25;
         ws.Row(13).Height = 32.25;
+
+        // Columna "Publicados" (col 3): expresiones template que ClosedXML.Report
+        // sustituirá con los conteos calculados por AnexoPublicacionesReport.
+        var countExpressions = new Dictionary<int, string>
+        {
+            [2]  = "{{G1Count}}",
+            [3]  = "{{G2Count}}",
+            [4]  = "{{G3Count}}",
+            [5]  = "{{G4Count}}",
+            [6]  = "{{CapitulosCount}}",
+            [7]  = "{{LibrosMonografiasCount}}",
+            [10] = "{{ArticulosDivulgacionCount}}",
+        };
+
+        foreach (var (row, expr) in countExpressions)
+        {
+            var cell = ws.Cell(row, 3);
+            cell.Value = expr;
+            cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            cell.Style.Alignment.Vertical   = XLAlignmentVerticalValues.Center;
+        }
     }
 }

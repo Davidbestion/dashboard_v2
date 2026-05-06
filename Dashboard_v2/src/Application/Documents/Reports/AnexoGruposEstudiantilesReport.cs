@@ -7,6 +7,8 @@ namespace Dashboard_v2.Application.Documents.Reports;
 /// URL generada: GET /api/Documents/anexo-grupos-estudiantiles
 /// Plantilla:    Infrastructure/Templates/AnexoGruposEstudiantiles.xlsx
 ///
+/// Solo incluye los grupos cuya área coincide con el área del usuario que solicita el reporte.
+///
 /// Columnas rellenadas automáticamente:
 /// Nombre del grupo, Área temática UH, Línea de investigación.
 ///
@@ -18,14 +20,17 @@ namespace Dashboard_v2.Application.Documents.Reports;
 public sealed class AnexoGruposEstudiantilesReport : IDocumentReport
 {
     private readonly IApplicationDbContext _context;
+    private readonly IUser _currentUser;
 
     /// <summary>
-    /// Inicializa el reporte con acceso al contexto de aplicación.
+    /// Inicializa el reporte con acceso al contexto de aplicación y al usuario actual.
     /// </summary>
     /// <param name="context">Contexto usado para consultar los grupos estudiantiles.</param>
-    public AnexoGruposEstudiantilesReport(IApplicationDbContext context)
+    /// <param name="currentUser">Identidad del usuario que solicita el reporte.</param>
+    public AnexoGruposEstudiantilesReport(IApplicationDbContext context, IUser currentUser)
     {
         _context = context;
+        _currentUser = currentUser;
     }
 
     /// <summary>
@@ -47,7 +52,14 @@ public sealed class AnexoGruposEstudiantilesReport : IDocumentReport
     /// <returns>Variables que se inyectarán en la plantilla Excel.</returns>
     public async Task<IReadOnlyDictionary<string, object>> GatherVariablesAsync(IReadOnlyDictionary<string, string>? parameters, CancellationToken ct)
     {
+        var requestingAreaId = await _context.Users
+            .AsNoTracking()
+            .Where(u => u.Id == _currentUser.Id)
+            .Select(u => u.AreaId)
+            .FirstOrDefaultAsync(ct);
+
         var rows = await _context.GruposEstudiantiles
+            .Where(g => requestingAreaId != null && g.AreaId == requestingAreaId)
             .OrderBy(g => g.Nombre)
             .Select(g => new AnexoGruposEstudiantilesRowDto
             {

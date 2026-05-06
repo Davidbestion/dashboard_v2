@@ -52,6 +52,7 @@ public sealed class EventService : IEventService
                 PresentationCount = e.Presentations.Count(p => p.AuthorPresentations.Any(ap => ap.AuthorId == authorId)),
                 RedId = e.RedId,
                 RedName = e.Red != null ? e.Red.Nombre : null,
+                AreaIdsPatrocinadoras = e.AreasPatrocinadoras.Select(a => a.Id).ToList(),
             })
             .OrderBy(e => e.Name)
             .ToListAsync(ct);
@@ -73,6 +74,7 @@ public sealed class EventService : IEventService
                 PresentationCount = e.Presentations.Count,
                 RedId = e.RedId,
                 RedName = e.Red != null ? e.Red.Nombre : null,
+                AreaIdsPatrocinadoras = e.AreasPatrocinadoras.Select(a => a.Id).ToList(),
             })
             .ToListAsync(ct);
 
@@ -156,6 +158,15 @@ public sealed class EventService : IEventService
         _context.Events.Add(ev);
         await _context.SaveChangesAsync(ct);
 
+        // Insertar patrocinios usando la entidad de unión explícita
+        foreach (var areaId in request.AreaIdsPatrocinadoras.Distinct()
+            .Where(a => !string.IsNullOrWhiteSpace(a)))
+        {
+            if (await _context.Areas.AnyAsync(a => a.Id == areaId, ct))
+                _context.EventAreasPatrocinio.Add(new EventAreaPatrocinio { EventId = ev.Id, AreaId = areaId });
+        }
+        await _context.SaveChangesAsync(ct);
+
         return (Result.Success(), ev.Id);
     }
 
@@ -184,6 +195,7 @@ public sealed class EventService : IEventService
         ev.CountryId = request.CountryId;
         ev.EventTypeId = request.EventType;
         ev.RedId = string.IsNullOrWhiteSpace(request.RedId) ? null : request.RedId;
+
         var updatedNames = request.Institutions
             .Where(i => !string.IsNullOrWhiteSpace(i))
             .Select(i => i.Trim())
@@ -203,7 +215,36 @@ public sealed class EventService : IEventService
             updatedInstitutions.Add(inst);
         }
 
-        ev.Institutions = updatedInstitutions;
+        // Guardar cambios escalares e instituciones nuevas (si las hay)
+        await _context.SaveChangesAsync(ct);
+
+        // Actualizar instituciones directamente sobre la entidad de unión — sin tocar navegaciones
+        var existingInstitutions = await _context.EventInstitutions
+            .Where(ei => ei.EventId == id)
+            .ToListAsync(ct);
+        _context.EventInstitutions.RemoveRange(existingInstitutions);
+
+        foreach (var inst in updatedInstitutions)
+            _context.EventInstitutions.Add(new EventInstitution { EventId = id, InstitutionId = inst.Id });
+
+        await _context.SaveChangesAsync(ct);
+
+        // Actualizar patrocinios directamente sobre la entidad de unión — sin tocar navegaciones
+        var existingPatrocinios = await _context.EventAreasPatrocinio
+            .Where(ep => ep.EventId == id)
+            .ToListAsync(ct);
+        _context.EventAreasPatrocinio.RemoveRange(existingPatrocinios);
+
+        var newAreaIds = request.AreaIdsPatrocinadoras
+            .Distinct()
+            .Where(a => !string.IsNullOrWhiteSpace(a))
+            .ToList();
+
+        foreach (var areaId in newAreaIds)
+        {
+            if (await _context.Areas.AnyAsync(a => a.Id == areaId, ct))
+                _context.EventAreasPatrocinio.Add(new EventAreaPatrocinio { EventId = id, AreaId = areaId });
+        }
 
         await _context.SaveChangesAsync(ct);
         return Result.Success();

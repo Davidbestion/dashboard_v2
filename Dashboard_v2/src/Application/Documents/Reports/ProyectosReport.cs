@@ -30,7 +30,7 @@ public sealed class ProyectosReport : IDocumentReport
     public string ReportName   => "anexo-proyectos";
     public string TemplateName => "AnexoProyectos";
 
-    public async Task<IReadOnlyDictionary<string, object>> GatherVariablesAsync(CancellationToken ct)
+    public async Task<IReadOnlyDictionary<string, object>> GatherVariablesAsync(IReadOnlyDictionary<string, string>? parameters, CancellationToken ct)
     {
         // Cargamos todos los proyectos en ejecución con sus relaciones necesarias.
         // OfType<T>() genera un JOIN interno con la tabla de especialización correspondiente.

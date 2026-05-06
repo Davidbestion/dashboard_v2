@@ -58,7 +58,7 @@ const AppRoutes = [
     path: '/events',
     element: <EventsPage />,
     pageTitle: 'Eventos y presentaciones',
-    profesorOrAdminOnly: true,
+    vicedecanoOrProfesorOrAdminOnly: true,
   },
   {
     path: '/universidades',
@@ -112,6 +112,12 @@ const AppRoutes = [
     element: <PublicacionesConsultaPage />,
     pageTitle: 'Todas las publicaciones',
     jefeDeProyectoOrAdminOnly: true,
+  },
+  {
+    path: '/publicaciones-area',
+    element: <PublicacionesConsultaPage apiUrl="/api/Publications/area" />,
+    pageTitle: 'Publicaciones del Área',
+    vicedecanoOnly: true,
   },
   {
     path: '/clasificaciones',

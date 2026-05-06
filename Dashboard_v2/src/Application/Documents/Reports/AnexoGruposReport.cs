@@ -8,6 +8,8 @@ namespace Dashboard_v2.Application.Documents.Reports;
 /// URL generada: GET /api/Documents/anexo-grupos
 /// Plantilla:    Infrastructure/Templates/AnexoGrupos.xlsx
 ///
+/// Solo incluye los grupos cuya área coincide con el área del usuario que solicita el reporte.
+///
 /// Columnas rellenadas automáticamente: Nombre, Total integrantes, Dr, MSc, Lic,
 /// PT, PAUX, PASIST, INST, IT, IAUX, IAGRG, ASP., Adiestrados, Área temática,
 /// Líneas de investigación.
@@ -19,15 +21,27 @@ namespace Dashboard_v2.Application.Documents.Reports;
 public sealed class AnexoGruposReport : IDocumentReport
 {
     private readonly IApplicationDbContext _context;
+    private readonly IUser _currentUser;
 
-    public AnexoGruposReport(IApplicationDbContext context) => _context = context;
+    public AnexoGruposReport(IApplicationDbContext context, IUser currentUser)
+    {
+        _context = context;
+        _currentUser = currentUser;
+    }
 
     public string ReportName   => "anexo-grupos";
     public string TemplateName => "AnexoGrupos";
 
-    public async Task<IReadOnlyDictionary<string, object>> GatherVariablesAsync(CancellationToken ct)
+    public async Task<IReadOnlyDictionary<string, object>> GatherVariablesAsync(IReadOnlyDictionary<string, string>? parameters, CancellationToken ct)
     {
+        var requestingAreaId = await _context.Users
+            .AsNoTracking()
+            .Where(u => u.Id == _currentUser.Id)
+            .Select(u => u.AreaId)
+            .FirstOrDefaultAsync(ct);
+
         var rows = await _context.GruposDeInvestigacion
+            .Where(g => requestingAreaId != null && g.AreaId == requestingAreaId)
             .OrderBy(g => g.Nombre)
             .Select(g => new AnexoGruposRowDto
             {

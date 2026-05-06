@@ -26,6 +26,12 @@ public class Publications : EndpointGroupBase
             .WithName("GetTodasLasPublicaciones")
             .Produces<List<PublicationDto>>(200);
 
+        // GET /api/Publications/area — publicaciones del área del usuario (Vicedecano de investigación)
+        groupBuilder.MapGet("area", GetAreaPublications)
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Vicedecano_de_investigacion)))
+            .WithName("GetAreaPublications")
+            .Produces<List<PublicationDto>>(200);
+
         // GET /api/Publications — publicaciones del usuario autenticado
         groupBuilder.MapGet("", GetMyPublications)
             .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor)))
@@ -115,6 +121,12 @@ public class Publications : EndpointGroupBase
     private async Task<IResult> GetTodasLasPublicaciones(IPublicationService service)
     {
         var pubs = await service.GetAllPublicationsAsync();
+        return Results.Ok(pubs);
+    }
+
+    private async Task<IResult> GetAreaPublications(IPublicationService service)
+    {
+        var pubs = await service.GetAreaPublicationsAsync();
         return Results.Ok(pubs);
     }
 

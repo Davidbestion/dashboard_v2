@@ -8,7 +8,7 @@ public class Redes : EndpointGroupBase
     public override void Map(RouteGroupBuilder groupBuilder)
     {
         groupBuilder.MapGet("", GetRedes)
-            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Redes"))
+            .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Redes", "Profesor", "Vicedecano_de_investigacion"))
             .WithName("GetRedes")
             .Produces<List<RedDto>>(200);
 

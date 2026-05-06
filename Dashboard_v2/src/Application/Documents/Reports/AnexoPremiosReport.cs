@@ -25,7 +25,7 @@ public sealed class AnexoPremiosReport : IDocumentReport
 
     public string TemplateName => "AnexoPremios";
 
-    public async Task<IReadOnlyDictionary<string, object>> GatherVariablesAsync(CancellationToken ct)
+    public async Task<IReadOnlyDictionary<string, object>> GatherVariablesAsync(IReadOnlyDictionary<string, string>? parameters, CancellationToken ct)
     {
         var awardTypes = await _context.AwardTypes
             .AsNoTracking()

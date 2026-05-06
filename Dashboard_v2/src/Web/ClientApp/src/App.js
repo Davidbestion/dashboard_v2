@@ -9,6 +9,8 @@ import ProfesorOrAdminRoute from './components/ProfesorOrAdminRoute';
 import JefeOrAdminRoute from './components/JefeOrAdminRoute';
 import JefeRedesOrAdminRoute from './components/JefeRedesOrAdminRoute';
 import JefeDeProyectoOrAdminRoute from './components/JefeDeProyectoOrAdminRoute';
+import VicedecanoRoute from './components/VicedecanoRoute';
+import VicedecanoOrProfesorOrAdminRoute from './components/VicedecanoOrProfesorOrAdminRoute';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import { AuthProvider } from './contexts/AuthContext';
@@ -24,7 +26,7 @@ export default function App() {
 
         {/* Protected routes — wrapped in dashboard layout */}
         {AppRoutes.map((route, index) => {
-          const { element, pageTitle, adminOnly, jefeRedesOrAdminOnly, jefeOrAdminOnly, jefeDeProyectoOrAdminOnly, profesorOnly, profesorOrAdminOnly, ...rest } = route;
+          const { element, pageTitle, adminOnly, jefeRedesOrAdminOnly, jefeOrAdminOnly, jefeDeProyectoOrAdminOnly, profesorOnly, profesorOrAdminOnly, vicedecanoOnly, vicedecanoOrProfesorOrAdminOnly, ...rest } = route;
           const Guard = adminOnly
             ? AdminRoute
             : jefeRedesOrAdminOnly
@@ -33,11 +35,15 @@ export default function App() {
                 ? JefeOrAdminRoute
                 : jefeDeProyectoOrAdminOnly
                   ? JefeDeProyectoOrAdminRoute
-                  : profesorOrAdminOnly
-                    ? ProfesorOrAdminRoute
-                    : profesorOnly
-                      ? ProfesorRoute
-                      : ProtectedRoute;
+                  : vicedecanoOnly
+                    ? VicedecanoRoute
+                    : vicedecanoOrProfesorOrAdminOnly
+                      ? VicedecanoOrProfesorOrAdminRoute
+                      : profesorOrAdminOnly
+                        ? ProfesorOrAdminRoute
+                        : profesorOnly
+                          ? ProfesorRoute
+                          : ProtectedRoute;
           return (
             <Route
               key={index}

@@ -935,6 +935,24 @@
               "type": "string"
             },
             "x-position": 1
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 2
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 3
           }
         ],
         "responses": {
@@ -3567,6 +3585,29 @@
         }
       }
     },
+    "/api/Publications/area": {
+      "get": {
+        "tags": [
+          "Publications"
+        ],
+        "operationId": "GetAreaPublications",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PublicationDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Publications": {
       "get": {
         "tags": [
@@ -5439,6 +5480,12 @@
           "redName": {
             "type": "string",
             "nullable": true
+          },
+          "areaIdsPatrocinadoras": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -5501,6 +5548,12 @@
           "redId": {
             "type": "string",
             "nullable": true
+          },
+          "areaIdsPatrocinadoras": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -5528,6 +5581,12 @@
           "redId": {
             "type": "string",
             "nullable": true
+          },
+          "areaIdsPatrocinadoras": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },

@@ -5,5 +5,8 @@ namespace Dashboard_v2.Application.Documents;
 
 public interface IDocumentService
 {
-    Task<byte[]> GenerateAsync(string reportName, CancellationToken ct = default);
+    Task<byte[]> GenerateAsync(
+        string reportName,
+        IReadOnlyDictionary<string, string>? parameters = null,
+        CancellationToken ct = default);
 }

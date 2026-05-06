@@ -23,4 +23,7 @@ public class Event
     public Red? Red { get; set; }
 
     public ICollection<Presentation> Presentations { get; set; } = new List<Presentation>();
+
+    // Áreas que patrocinan/auspician este Evento (0,*)
+    public ICollection<Area> AreasPatrocinadoras { get; set; } = new List<Area>();
 }

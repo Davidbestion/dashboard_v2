@@ -16,14 +16,17 @@ namespace Dashboard_v2.Application.Documents.Reports;
 public sealed class AnexoPublicacionesReport : IDocumentReport
 {
     private readonly IApplicationDbContext _context;
+    private readonly IUser _currentUser;
 
     /// <summary>
-    /// Inicializa el reporte con acceso al contexto de aplicación.
+    /// Inicializa el reporte con acceso al contexto de aplicación y al usuario actual.
     /// </summary>
     /// <param name="context">Contexto de base de datos usado para consultar publicaciones.</param>
-    public AnexoPublicacionesReport(IApplicationDbContext context)
+    /// <param name="currentUser">Identidad del usuario que solicita el reporte.</param>
+    public AnexoPublicacionesReport(IApplicationDbContext context, IUser currentUser)
     {
         _context = context;
+        _currentUser = currentUser;
     }
 
     /// <summary>
@@ -39,10 +42,33 @@ public sealed class AnexoPublicacionesReport : IDocumentReport
     /// <summary>
     /// Reúne y clasifica todas las publicaciones necesarias para el anexo.
     /// </summary>
+    /// <param name="parameters">
+    /// Parámetros opcionales de filtrado:
+    /// <list type="bullet">
+    ///   <item><c>from</c> – fecha inicio en formato <c>YYYY-MM-DD</c> (inclusive).</item>
+    ///   <item><c>to</c>   – fecha fin en formato <c>YYYY-MM-DD</c> (inclusive).</item>
+    /// </list>
+    /// Si se omite alguno de los dos extremos, ese límite no se aplica.
+    /// </param>
     /// <param name="ct">Token de cancelación.</param>
     /// <returns>Variables cuyo nombre coincide con los rangos definidos en la plantilla.</returns>
-    public async Task<IReadOnlyDictionary<string, object>> GatherVariablesAsync(CancellationToken ct)
+    public async Task<IReadOnlyDictionary<string, object>> GatherVariablesAsync(
+        IReadOnlyDictionary<string, string>? parameters,
+        CancellationToken ct)
     {
+        var fromRaw = parameters is not null && parameters.TryGetValue("from", out var f) ? f : null;
+        var toRaw   = parameters is not null && parameters.TryGetValue("to",   out var t) ? t : null;
+
+        // Los límites se reciben en formato YYYY-MM. Se truncan a 7 chars por seguridad.
+        var from = string.IsNullOrWhiteSpace(fromRaw) ? null : fromRaw[..Math.Min(fromRaw.Length, 7)];
+        var to   = string.IsNullOrWhiteSpace(toRaw)   ? null : toRaw[..Math.Min(toRaw.Length, 7)];
+
+        var requestingAreaId = await _context.Users
+            .AsNoTracking()
+            .Where(u => u.Id == _currentUser.Id)
+            .Select(u => u.AreaId)
+            .FirstOrDefaultAsync(ct);
+
         var publications = await _context.Publications
             .AsNoTracking()
             .Include(p => p.AuthorPublications)
@@ -50,23 +76,63 @@ public sealed class AnexoPublicacionesReport : IDocumentReport
             .Include(p => p.JournalPublication)
                 .ThenInclude(jp => jp!.JournalGroup1Publication)
             .Include(p => p.IndexedPublication)
+            .Where(p => requestingAreaId != null &&
+                p.AuthorPublications.Any(ap =>
+                    ap.Author.UserId != null &&
+                    ap.Author.User!.AreaId == requestingAreaId))
             .OrderBy(p => p.Title)
             .ToListAsync(ct);
 
-        var journalPublications = publications
+        // Filtro de rango de fechas en memoria a granularidad de mes (YYYY-MM).
+        // Las publicaciones con fecha solo de año se expanden al mes mínimo (01) para
+        // el límite inferior y al mes máximo (12) para el superior, evitando falsos
+        // positivos cuando el rango no abarca el año completo.
+        var filtered = publications
+            .Where(p =>
+            {
+                var d = p.PublishedDate;
+                // Expande a YYYY-MM: año solo → YYYY-01 para from, YYYY-12 para to.
+                var dFrom = d.Length == 4 ? d + "-01" : d[..Math.Min(d.Length, 7)];
+                var dTo   = d.Length == 4 ? d + "-12" : d[..Math.Min(d.Length, 7)];
+                var fromOk = from == null || string.Compare(dFrom, from, StringComparison.Ordinal) >= 0;
+                var toOk   = to   == null || string.Compare(dTo,   to,   StringComparison.Ordinal) <= 0;
+                return fromOk && toOk;
+            })
+            .ToList();
+
+        var journalPublications = filtered
             .Where(p => p.PublicationType == PublicationType.Diario && p.JournalPublication is not null)
             .OrderBy(p => p.Title)
             .ToList();
 
-        var indexedPublications = publications
+        var indexedPublications = filtered
             .Where(p => p.PublicationType != PublicationType.Diario && p.IndexedPublication is not null)
             .OrderBy(p => p.Title)
             .ToList();
 
+        // Materializar sublistas para calcular conteos y reutilizarlas en el diccionario.
+        var g1           = journalPublications.Where(p => p.JournalPublication!.Group == 1).ToList();
+        var g2           = journalPublications.Where(p => p.JournalPublication!.Group == 2).ToList();
+        var g3           = journalPublications.Where(p => p.JournalPublication!.Group == 3).ToList();
+        var g4           = journalPublications.Where(p => p.JournalPublication!.Group == 4).ToList();
+        var libros       = indexedPublications.Where(p => p.PublicationType == PublicationType.Libro).ToList();
+        var monografias  = indexedPublications.Where(p => p.PublicationType == PublicationType.Monografía).ToList();
+        var capitulos    = indexedPublications.Where(p => p.PublicationType == PublicationType.Capítulo).ToList();
+        var artDiv       = indexedPublications.Where(p => p.PublicationType == PublicationType.Artículo_de_Divulgación).ToList();
+
         return new Dictionary<string, object>
         {
-            ["G1"] = journalPublications
-                .Where(p => p.JournalPublication!.Group == 1)
+            // ── Conteos para la primera hoja (columna "Publicados") ────────────
+            ["G1Count"]                   = g1.Count,
+            ["G2Count"]                   = g2.Count,
+            ["G3Count"]                   = g3.Count,
+            ["G4Count"]                   = g4.Count,
+            ["CapitulosCount"]            = capitulos.Count,
+            ["LibrosMonografiasCount"]    = libros.Count + monografias.Count,
+            ["ArticulosDivulgacionCount"] = artDiv.Count,
+
+            // ── Datos de cada hoja ─────────────────────────────────────────────
+            ["G1"] = g1
                 .Select((p, index) => new PublicacionG1RowDto
                 {
                     No = index + 1,
@@ -77,32 +143,13 @@ public sealed class AnexoPublicacionesReport : IDocumentReport
                     Cuartil = p.JournalPublication.JournalGroup1Publication?.Cuartil ?? string.Empty,
                 })
                 .ToList(),
-            ["G2"] = journalPublications
-                .Where(p => p.JournalPublication!.Group == 2)
-                .Select((p, index) => BuildJournalRow(p, index))
-                .ToList(),
-            ["G3"] = journalPublications
-                .Where(p => p.JournalPublication!.Group == 3)
-                .Select((p, index) => BuildJournalRow(p, index))
-                .ToList(),
-            ["G4"] = journalPublications
-                .Where(p => p.JournalPublication!.Group == 4)
-                .Select((p, index) => BuildJournalRow(p, index))
-                .ToList(),
-            ["Libros"] = indexedPublications
-                .Where(p => p.PublicationType == PublicationType.Libro)
-                .Select((p, index) => BuildIndexedRow(p, index))
-                .ToList(),
-            ["Monografias"] = indexedPublications
-                .Where(p => p.PublicationType == PublicationType.Monografía)
-                .Select((p, index) => BuildIndexedRow(p, index))
-                .ToList(),
-            ["Capitulos"] = indexedPublications
-                .Where(p => p.PublicationType == PublicationType.Capítulo)
-                .Select((p, index) => BuildIndexedRow(p, index))
-                .ToList(),
-            ["ArticulosDivulgacion"] = indexedPublications
-                .Where(p => p.PublicationType == PublicationType.Artículo_de_Divulgación)
+            ["G2"] = g2.Select((p, index) => BuildJournalRow(p, index)).ToList(),
+            ["G3"] = g3.Select((p, index) => BuildJournalRow(p, index)).ToList(),
+            ["G4"] = g4.Select((p, index) => BuildJournalRow(p, index)).ToList(),
+            ["Libros"]      = libros.Select((p, index) => BuildIndexedRow(p, index)).ToList(),
+            ["Monografias"] = monografias.Select((p, index) => BuildIndexedRow(p, index)).ToList(),
+            ["Capitulos"]   = capitulos.Select((p, index) => BuildIndexedRow(p, index)).ToList(),
+            ["ArticulosDivulgacion"] = artDiv
                 .Select((p, index) => new PublicacionDivulgacionRowDto
                 {
                     No = index + 1,

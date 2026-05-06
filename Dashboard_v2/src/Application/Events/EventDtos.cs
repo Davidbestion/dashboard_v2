@@ -18,6 +18,7 @@ public record EventDto
     public int PresentationCount { get; init; }
     public string? RedId { get; init; }
     public string? RedName { get; init; }
+    public List<string> AreaIdsPatrocinadoras { get; init; } = [];
 }
 
 public record PresentationDto

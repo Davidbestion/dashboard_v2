@@ -26,14 +26,10 @@ public sealed class AnexoPublicacionesTemplate : ExcelTemplateBase
         yield return new GrupoRevistasSheet(
             name: "G1",
             rangeName: "G1",
-            headerRow: 4,
-            dataRow: 5,
+            headerRow: 1,
+            dataRow: 2,
             hasQuartileColumn: true,
-            staticRows:
-            [
-                new PublicationStaticRow(2, 1, 4, "1)     Publicaciones en Web de la Ciencia (Science Citation Index Expanded (SCIE), Social Sciences Citation Index (SSCI), Arts and Humanities citation index (AHCI) y Scopus ."),
-                new PublicationStaticRow(3, 1, 5, "para buscar el cuartil de scopus revisar en scimago  https://www.scimagojr.com/"),
-            ],
+            staticRows: [],
             columnWidths: new Dictionary<int, double>
             {
                 [1] = 8,
@@ -46,16 +42,10 @@ public sealed class AnexoPublicacionesTemplate : ExcelTemplateBase
         yield return new GrupoRevistasSheet(
             name: "G2",
             rangeName: "G2",
-            headerRow: 8,
-            dataRow: 9,
+            headerRow: 1,
+            dataRow: 2,
             hasQuartileColumn: false,
-            staticRows:
-            [
-                new PublicationStaticRow(2, 1, 4, "2)     Publicaciones en bases de datos especializadas reconocidas "),
-                new PublicationStaticRow(3, 1, 4, "emerging citation index"),
-                new PublicationStaticRow(4, 1, 4, "scielo (www.scielo.com), EMERGING CITATION INDEX,  CHEMICAL ABSTRACT CA (http://info.cas. org), biological abstract BA (http://www.biosis.org)"),
-                new PublicationStaticRow(5, 1, 4, "COMPENDEX, MEDLINE, CAB International, Pascal, INSPEC"),
-            ],
+            staticRows: [],
             columnWidths: new Dictionary<int, double>
             {
                 [1] = 8,
@@ -67,16 +57,10 @@ public sealed class AnexoPublicacionesTemplate : ExcelTemplateBase
         yield return new GrupoRevistasSheet(
             name: "G3",
             rangeName: "G3",
-            headerRow: 8,
-            dataRow: 9,
+            headerRow: 1,
+            dataRow: 2,
             hasQuartileColumn: false,
-            staticRows:
-            [
-                new PublicationStaticRow(2, 1, 4, "clasificacion."),
-                new PublicationStaticRow(3, 1, 4, "ICYT, PERIODICA, CLASE, LILACS, REDALYC"),
-                new PublicationStaticRow(4, 1, 4, "LATINDEX CATALOGO 2,0"),
-                new PublicationStaticRow(5, 1, 4, "DOAJ, IME,"),
-            ],
+            staticRows: [],
             columnWidths: new Dictionary<int, double>
             {
                 [1] = 8,
@@ -88,14 +72,10 @@ public sealed class AnexoPublicacionesTemplate : ExcelTemplateBase
         yield return new GrupoRevistasSheet(
             name: "G4",
             rangeName: "G4",
-            headerRow: 4,
-            dataRow: 5,
+            headerRow: 1,
+            dataRow: 2,
             hasQuartileColumn: false,
-            staticRows:
-            [
-                new PublicationStaticRow(2, 1, 4, "Revistas nacionales certificadas por CITMA"),
-                new PublicationStaticRow(3, 1, 4, "Revistas extranjeras arbitradas"),
-            ],
+            staticRows: [],
             columnWidths: new Dictionary<int, double>
             {
                 [1] = 3.125,

@@ -15,13 +15,6 @@ namespace Dashboard_v2.Web.Endpoints;
 /// </summary>
 public class Documents : EndpointGroupBase
 {
-    // TODO(david): El endpoint expone 'anexo-eventos', pero hoy ese documento puede salir
-    // con formato roto por cómo ClosedXML.Report expande la hoja compuesta.
-    // Opciones para arreglarlo:
-    // 1. Mantener el endpoint y cambiar solo la estrategia de render a manual.
-    // 2. Usar la plantilla actual únicamente como base visual con coordenadas fijas.
-    // 3. Rediseñar el anexo en varias hojas si es compatible con el formato oficial.
-    // 4. Simplificar la plantilla para eliminar merges y rangos dinámicos apilados.
     private const string ExcelContentType =
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
@@ -30,7 +23,8 @@ public class Documents : EndpointGroupBase
         groupBuilder.MapGet("{reportName}", GetDocument)
             .RequireAuthorization(p => p.RequireRole(
                 nameof(RolesEnum.Superuser),
-                nameof(RolesEnum.Jefe_de_Grupo_de_investigacion)))
+                nameof(RolesEnum.Jefe_de_Grupo_de_investigacion),
+                nameof(RolesEnum.Vicedecano_de_investigacion)))
             .WithName("GetDocument")
             .Produces(200)
             .ProducesProblem(401)
@@ -38,10 +32,16 @@ public class Documents : EndpointGroupBase
             .ProducesProblem(404);
     }
 
-    private static async Task<IResult> GetDocument(string reportName, IDocumentService documentService, HttpContext httpContext)
+    private static async Task<IResult> GetDocument(
+        string reportName,
+        IDocumentService documentService,
+        HttpContext httpContext,
+        [Microsoft.AspNetCore.Mvc.FromQuery] string? from = null,
+        [Microsoft.AspNetCore.Mvc.FromQuery] string? to = null)
     {
         if (reportName.Equals("anexo-publicaciones", StringComparison.OrdinalIgnoreCase) &&
-            !httpContext.User.IsInRole(nameof(RolesEnum.Superuser)))
+            !httpContext.User.IsInRole(nameof(RolesEnum.Superuser)) &&
+            !httpContext.User.IsInRole(nameof(RolesEnum.Vicedecano_de_investigacion)))
         {
             return Results.Forbid();
         }
@@ -53,14 +53,23 @@ public class Documents : EndpointGroupBase
         }
 
         if (reportName.Equals("anexo-eventos", StringComparison.OrdinalIgnoreCase) &&
-            !httpContext.User.IsInRole(nameof(RolesEnum.Superuser)))
+            !httpContext.User.IsInRole(nameof(RolesEnum.Superuser)) &&
+            !httpContext.User.IsInRole(nameof(RolesEnum.Vicedecano_de_investigacion)))
         {
             return Results.Forbid();
         }
 
+        Dictionary<string, string>? parameters = null;
+        if (!string.IsNullOrWhiteSpace(from) || !string.IsNullOrWhiteSpace(to))
+        {
+            parameters = [];
+            if (!string.IsNullOrWhiteSpace(from)) parameters["from"] = from;
+            if (!string.IsNullOrWhiteSpace(to))   parameters["to"]   = to;
+        }
+
         try
         {
-            var bytes = await documentService.GenerateAsync(reportName);
+            var bytes = await documentService.GenerateAsync(reportName, parameters);
             var fileName = $"{reportName}_{DateTime.UtcNow:yyyy-MM}.xlsx";
             return Results.File(bytes, ExcelContentType, fileName);
         }

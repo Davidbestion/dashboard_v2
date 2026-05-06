@@ -66,5 +66,12 @@ public interface IDocumentReport
     /// Cada clave del diccionario debe coincidir exactamente con un Named Range
     /// definido en la plantilla .xlsx.
     /// </summary>
-    Task<IReadOnlyDictionary<string, object>> GatherVariablesAsync(CancellationToken ct);
+    /// <param name="parameters">
+    /// Parámetros de filtrado adicionales enviados por el cliente (ej. "from", "to").
+    /// Los reportes que no los necesiten pueden ignorarlos.
+    /// </param>
+    /// <param name="ct">Token de cancelación.</param>
+    Task<IReadOnlyDictionary<string, object>> GatherVariablesAsync(
+        IReadOnlyDictionary<string, string>? parameters,
+        CancellationToken ct);
 }

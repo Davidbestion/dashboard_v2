@@ -4,19 +4,11 @@ using TemplateGen.Core.Interfaces;
 namespace TemplateGen.Templates;
 
 /// <summary>
-/// Hoja única del anexo 3 de eventos y actividades científicas.
-/// Contiene varias tablas separadas y un pequeño bloque de resumen con
-/// variables escalares para los conteos que hoy sí pueden calcularse.
+/// Hoja compuesta original del anexo 3 (mantenida como referencia visual).
+/// Reemplazada por hojas individuales por sección en <see cref="AnexoEventosTemplate"/>.
 /// </summary>
 public sealed class EventosCientificosSheet : ISheetTemplate
 {
-    // TODO(david): Esta hoja compuesta se rompe al generarse con ClosedXML.Report
-    // porque combina varias tablas dinámicas apiladas, filas fusionadas y bloques fijos.
-    // Opciones para arreglarlo:
-    // 1. Generar toda la hoja manualmente sin ClosedXML.Report.
-    // 2. Conservar la plantilla visual, pero llenar cada sección con posiciones fijas.
-    // 3. Dividir las tablas en hojas separadas si el anexo lo admite.
-    // 4. Rediseñar la hoja para evitar merges y desplazamientos automáticos entre tablas.
     /// <summary>
     /// Nombre visible de la hoja.
     /// </summary>

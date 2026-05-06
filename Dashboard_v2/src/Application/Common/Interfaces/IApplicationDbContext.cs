@@ -17,6 +17,8 @@ public interface IApplicationDbContext
     DbSet<Country> Countries { get; }
     DbSet<Event> Events { get; }
     DbSet<EventType> EventTypes { get; }
+    DbSet<EventInstitution> EventInstitutions { get; }
+    DbSet<EventAreaPatrocinio> EventAreasPatrocinio { get; }
     DbSet<Presentation> Presentations { get; }
     DbSet<AuthorPresentation> AuthorPresentations { get; }
     DbSet<IndexedPublication> IndexedPublications { get; }

@@ -1258,11 +1258,15 @@ export class DocumentsClient {
         this.baseUrl = baseUrl ?? "";
     }
 
-    getDocument(reportName: string): Promise<void> {
-        let url_ = this.baseUrl + "/api/Documents/{reportName}";
+    getDocument(reportName: string, from: string | null | undefined, to: string | null | undefined): Promise<void> {
+        let url_ = this.baseUrl + "/api/Documents/{reportName}?";
         if (reportName === undefined || reportName === null)
             throw new globalThis.Error("The parameter 'reportName' must be defined.");
         url_ = url_.replace("{reportName}", encodeURIComponent("" + reportName));
+        if (from !== undefined && from !== null)
+            url_ += "from=" + encodeURIComponent("" + from) + "&";
+        if (to !== undefined && to !== null)
+            url_ += "to=" + encodeURIComponent("" + to) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -4612,6 +4616,48 @@ export class PublicationsClient {
         return Promise.resolve<PublicationDto[]>(null as any);
     }
 
+    getAreaPublications(): Promise<PublicationDto[]> {
+        let url_ = this.baseUrl + "/api/Publications/area";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetAreaPublications(_response);
+        });
+    }
+
+    protected processGetAreaPublications(response: Response): Promise<PublicationDto[]> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(PublicationDto.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<PublicationDto[]>(null as any);
+    }
+
     getMyPublications(): Promise<PublicationDto[]> {
         let url_ = this.baseUrl + "/api/Publications";
         url_ = url_.replace(/[?&]$/, "");
@@ -7510,6 +7556,7 @@ export class EventDto implements IEventDto {
     presentationCount?: number;
     redId?: string | undefined;
     redName?: string | undefined;
+    areaIdsPatrocinadoras?: string[];
 
     constructor(data?: IEventDto) {
         if (data) {
@@ -7536,6 +7583,11 @@ export class EventDto implements IEventDto {
             this.presentationCount = _data["presentationCount"];
             this.redId = _data["redId"];
             this.redName = _data["redName"];
+            if (Array.isArray(_data["areaIdsPatrocinadoras"])) {
+                this.areaIdsPatrocinadoras = [] as any;
+                for (let item of _data["areaIdsPatrocinadoras"])
+                    this.areaIdsPatrocinadoras!.push(item);
+            }
         }
     }
 
@@ -7562,6 +7614,11 @@ export class EventDto implements IEventDto {
         data["presentationCount"] = this.presentationCount;
         data["redId"] = this.redId;
         data["redName"] = this.redName;
+        if (Array.isArray(this.areaIdsPatrocinadoras)) {
+            data["areaIdsPatrocinadoras"] = [];
+            for (let item of this.areaIdsPatrocinadoras)
+                data["areaIdsPatrocinadoras"].push(item);
+        }
         return data;
     }
 }
@@ -7577,6 +7634,7 @@ export interface IEventDto {
     presentationCount?: number;
     redId?: string | undefined;
     redName?: string | undefined;
+    areaIdsPatrocinadoras?: string[];
 }
 
 export class CountryDto implements ICountryDto {
@@ -7701,6 +7759,7 @@ export class CreateEventRequest implements ICreateEventRequest {
     eventType?: number;
     institutions?: string[];
     redId?: string | undefined;
+    areaIdsPatrocinadoras?: string[];
 
     constructor(data?: ICreateEventRequest) {
         if (data) {
@@ -7722,6 +7781,11 @@ export class CreateEventRequest implements ICreateEventRequest {
                     this.institutions!.push(item);
             }
             this.redId = _data["redId"];
+            if (Array.isArray(_data["areaIdsPatrocinadoras"])) {
+                this.areaIdsPatrocinadoras = [] as any;
+                for (let item of _data["areaIdsPatrocinadoras"])
+                    this.areaIdsPatrocinadoras!.push(item);
+            }
         }
     }
 
@@ -7743,6 +7807,11 @@ export class CreateEventRequest implements ICreateEventRequest {
                 data["institutions"].push(item);
         }
         data["redId"] = this.redId;
+        if (Array.isArray(this.areaIdsPatrocinadoras)) {
+            data["areaIdsPatrocinadoras"] = [];
+            for (let item of this.areaIdsPatrocinadoras)
+                data["areaIdsPatrocinadoras"].push(item);
+        }
         return data;
     }
 }
@@ -7753,6 +7822,7 @@ export interface ICreateEventRequest {
     eventType?: number;
     institutions?: string[];
     redId?: string | undefined;
+    areaIdsPatrocinadoras?: string[];
 }
 
 export class UpdateEventRequest implements IUpdateEventRequest {
@@ -7761,6 +7831,7 @@ export class UpdateEventRequest implements IUpdateEventRequest {
     eventType?: number;
     institutions?: string[];
     redId?: string | undefined;
+    areaIdsPatrocinadoras?: string[];
 
     constructor(data?: IUpdateEventRequest) {
         if (data) {
@@ -7782,6 +7853,11 @@ export class UpdateEventRequest implements IUpdateEventRequest {
                     this.institutions!.push(item);
             }
             this.redId = _data["redId"];
+            if (Array.isArray(_data["areaIdsPatrocinadoras"])) {
+                this.areaIdsPatrocinadoras = [] as any;
+                for (let item of _data["areaIdsPatrocinadoras"])
+                    this.areaIdsPatrocinadoras!.push(item);
+            }
         }
     }
 
@@ -7803,6 +7879,11 @@ export class UpdateEventRequest implements IUpdateEventRequest {
                 data["institutions"].push(item);
         }
         data["redId"] = this.redId;
+        if (Array.isArray(this.areaIdsPatrocinadoras)) {
+            data["areaIdsPatrocinadoras"] = [];
+            for (let item of this.areaIdsPatrocinadoras)
+                data["areaIdsPatrocinadoras"].push(item);
+        }
         return data;
     }
 }
@@ -7813,6 +7894,7 @@ export interface IUpdateEventRequest {
     eventType?: number;
     institutions?: string[];
     redId?: string | undefined;
+    areaIdsPatrocinadoras?: string[];
 }
 
 export class GrupoDeInvestigacionDto implements IGrupoDeInvestigacionDto {

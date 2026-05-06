@@ -21,4 +21,7 @@ public class Area
 
     // Redes coordinadas por este área
     public ICollection<RedCoordinada> RedesCoordinadas { get; set; } = new List<RedCoordinada>();
+
+    // Eventos que este Área patrocina/auspicia (0,*)
+    public ICollection<Event> EventosPatrocinados { get; set; } = new List<Event>();
 }

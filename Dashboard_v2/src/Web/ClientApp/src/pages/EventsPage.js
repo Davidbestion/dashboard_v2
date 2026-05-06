@@ -32,21 +32,16 @@ async function apiFetch(url, options = {}) {
 // ─── Shared helpers ────────────────────────────────────────────────────────────
 
 const EMPTY_PRES = { name: '', eventId: '' };
-const EMPTY_EVENT = { name: '', countryId: '', eventType: '', institutions: [], redId: '' };
+const EMPTY_EVENT = { name: '', countryId: '', eventType: '', institutions: [], redId: '', areaIds: [] };
 
 const EVENT_TYPE_LABELS = { 0: 'Internacional', 1: 'Nacional', 2: 'De área', 3: 'Local' };
 
 export default function EventsPage() {
-  // TODO(david): La descarga de 'anexo-eventos' sigue apuntando a un documento que puede
-  // salir con formato roto por el uso actual de ClosedXML.Report en una sola hoja compuesta.
-  // Opciones para arreglarlo:
-  // 1. Mantener esta acción y cambiar el backend a generación manual estable.
-  // 2. Rellenar el .xlsx en coordenadas fijas sin rangos dinámicos.
-  // 3. Rehacer el anexo en varias hojas si el formato institucional lo admite.
-  // 4. Simplificar la plantilla para eliminar merges y bloques que dependan del corrimiento.
   const { user } = useAuth();
   const isSuperuser = user?.role === 'Superuser';
-  const [activeTab, setActiveTab] = useState('presentations');
+  const isVicedecano = user?.role === 'Vicedecano_de_investigacion';
+  const isManager = isSuperuser || isVicedecano;  // puede ver todos los eventos
+  const [activeTab, setActiveTab] = useState(isVicedecano ? 'events' : 'presentations');
   const [generatingAnexo, setGeneratingAnexo] = useState(false);
   const [anexoError, setAnexoError] = useState('');
 
@@ -54,6 +49,8 @@ export default function EventsPage() {
   const [countries, setCountries] = useState([]);
   const [eventTypes, setEventTypes] = useState([]);
   const [allEvents, setAllEvents] = useState([]);  // para el select del form de presentaciones
+  const [allInstitutions, setAllInstitutions] = useState([]);
+  const [allAreas, setAllAreas] = useState([]);
   const [reds, setReds] = useState([]);
 
   // PRESENTATIONS state
@@ -86,7 +83,9 @@ export default function EventsPage() {
   const [evDeleteLoading, setEvDeleteLoading] = useState(false);
   const [evDeleteError, setEvDeleteError] = useState('');
   // Institution input
-  const [instInput, setInstInput] = useState('');
+  const [selectedInstId, setSelectedInstId] = useState('');
+  // Area patrocinadora input
+  const [selectedAreaId, setSelectedAreaId] = useState('');
   // Inline new-institution
   const [showNewInstitution, setShowNewInstitution] = useState(false);
   const [newInstitutionInput, setNewInstitutionInput] = useState('');
@@ -109,11 +108,16 @@ export default function EventsPage() {
     setCountries(c);
     setEventTypes(et);
     setAllEvents(ae);
+    // Institutions for event form dropdown
+    try { setAllInstitutions(await apiFetch('/api/Institutions')); } catch { setAllInstitutions([]); }
+    // Areas for patrocinio picker
+    try { setAllAreas(await apiFetch('/api/Areas')); } catch { setAllAreas([]); }
     // Reds for event selection (optional)
     try { setReds(await apiFetch('/api/Redes')); } catch { setReds([]); }
   }, []);
 
   const loadPresentations = useCallback(async () => {
+    if (isVicedecano) { setPresLoading(false); return; }
     setPresLoading(true);
     setPresError('');
     try {
@@ -123,19 +127,19 @@ export default function EventsPage() {
     } finally {
       setPresLoading(false);
     }
-  }, [isSuperuser]);
+  }, [isSuperuser, isVicedecano]);
 
   const loadEvents = useCallback(async () => {
     setEvLoading(true);
     setEvError('');
     try {
-      setEvents(await apiFetch(isSuperuser ? '/api/Events/all' : '/api/Events'));
+      setEvents(await apiFetch(isManager ? '/api/Events/all' : '/api/Events'));
     } catch (e) {
       setEvError(e.message);
     } finally {
       setEvLoading(false);
     }
-  }, [isSuperuser]);
+  }, [isManager]);
 
   useEffect(() => {
     loadLookups();
@@ -269,9 +273,13 @@ export default function EventsPage() {
   function openCreateEv() {
     setEvEditing(null);
     setEvForm(EMPTY_EVENT);
-    setInstInput('');
+    setSelectedInstId('');
+    setSelectedAreaId('');
     setEvFormError('');
     resetNewCountry();
+    setShowNewInstitution(false);
+    setNewInstitutionInput('');
+    setNewInstitutionError('');
     setEvModal(true);
   }
 
@@ -282,11 +290,16 @@ export default function EventsPage() {
       countryId: ev.countryId?.toString(),
       eventType: String(ev.eventTypeId ?? ev.eventType ?? ''),
       institutions: [...ev.institutions],
-      redId: ev.redId ?? ev.RedId ?? ''
+      redId: ev.redId ?? ev.RedId ?? '',
+      areaIds: [...(ev.areaIdsPatrocinadoras ?? [])],
     });
-    setInstInput('');
+    setSelectedInstId('');
+    setSelectedAreaId('');
     setEvFormError('');
     resetNewCountry();
+    setShowNewInstitution(false);
+    setNewInstitutionInput('');
+    setNewInstitutionError('');
     setEvModal(true);
   }
 
@@ -317,7 +330,7 @@ export default function EventsPage() {
     setNewInstitutionError('');
     try {
       const created = await apiFetch('/api/Institutions', { method: 'POST', body: JSON.stringify({ nombre: name }) });
-      // Add created institution's nombre to the event institutions list
+      setAllInstitutions(prev => [...prev, created].sort((a, b) => a.nombre.localeCompare(b.nombre)));
       setEvForm(f => ({ ...f, institutions: [...f.institutions, created.nombre] }));
       setNewInstitutionInput('');
       setShowNewInstitution(false);
@@ -328,15 +341,28 @@ export default function EventsPage() {
     }
   }
 
-  function addInstitution() {
-    const val = instInput.trim();
-    if (!val) return;
-    setEvForm(f => ({ ...f, institutions: [...f.institutions, val] }));
-    setInstInput('');
+  function addSelectedInstitution() {
+    if (!selectedInstId) return;
+    const inst = allInstitutions.find(i => i.id === selectedInstId);
+    if (!inst) return;
+    if (evForm.institutions.includes(inst.nombre)) return;
+    setEvForm(f => ({ ...f, institutions: [...f.institutions, inst.nombre] }));
+    setSelectedInstId('');
   }
 
   function removeInstitution(idx) {
     setEvForm(f => ({ ...f, institutions: f.institutions.filter((_, i) => i !== idx) }));
+  }
+
+  function addSelectedArea() {
+    if (!selectedAreaId) return;
+    if (evForm.areaIds.includes(selectedAreaId)) return;
+    setEvForm(f => ({ ...f, areaIds: [...f.areaIds, selectedAreaId] }));
+    setSelectedAreaId('');
+  }
+
+  function removeArea(id) {
+    setEvForm(f => ({ ...f, areaIds: f.areaIds.filter(a => a !== id) }));
   }
 
   async function handleEvSubmit(e) {
@@ -350,6 +376,7 @@ export default function EventsPage() {
       eventType: parseInt(evForm.eventType, 10),
       institutions: evForm.institutions,
       redId: evForm.redId && evForm.redId.length > 0 ? evForm.redId : null,
+      areaIdsPatrocinadoras: evForm.areaIds,
     };
 
     try {
@@ -392,16 +419,18 @@ export default function EventsPage() {
       <Card>
         <CardHeader>
           <Nav tabs className="card-header-tabs">
-            <NavItem>
-              <RNavLink
-                active={activeTab === 'presentations'}
-                onClick={() => setActiveTab('presentations')}
-                style={{ cursor: 'pointer' }}
-              >
-                <i className="bi bi-mic me-1" />
-                {isSuperuser ? 'Presentaciones registradas' : 'Mis presentaciones'}
-              </RNavLink>
-            </NavItem>
+            {!isVicedecano && (
+              <NavItem>
+                <RNavLink
+                  active={activeTab === 'presentations'}
+                  onClick={() => setActiveTab('presentations')}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <i className="bi bi-mic me-1" />
+                  {isSuperuser ? 'Presentaciones registradas' : 'Mis presentaciones'}
+                </RNavLink>
+              </NavItem>
+            )}
             <NavItem>
               <RNavLink
                 active={activeTab === 'events'}
@@ -409,14 +438,14 @@ export default function EventsPage() {
                 style={{ cursor: 'pointer' }}
               >
                 <i className="bi bi-calendar-event me-1" />
-                {isSuperuser ? 'Eventos registrados' : 'Mis eventos'}
+                {isManager ? 'Eventos registrados' : 'Mis eventos'}
               </RNavLink>
             </NavItem>
           </Nav>
         </CardHeader>
 
         <CardBody>
-          {isSuperuser && (
+          {(isSuperuser || isVicedecano) && (
             <div className="d-flex justify-content-end mb-3">
               <Button color="success" size="sm" onClick={handleGenerateAnexo} disabled={generatingAnexo}>
                 {generatingAnexo ? <Spinner size="sm" /> : '⬇ Generar Anexo 3'}
@@ -516,7 +545,7 @@ export default function EventsPage() {
                     { key: 'edit',   label: 'Editar',   icon: 'bi-pencil', color: 'outline-secondary', show: () => !isSuperuser, onClick: ev => openEditEv(ev) },
                     { key: 'delete', label: 'Eliminar', icon: 'bi-trash',  color: 'outline-danger',    show: () => !isSuperuser, onClick: ev => { setEvToDelete(ev); setEvDeleteError(''); setEvDeleteModal(true); } },
                   ]}
-                  emptyMessage={isSuperuser ? 'No hay eventos registrados.' : 'No participas en ningún evento aún.'}
+                  emptyMessage={isManager ? 'No hay eventos registrados.' : 'No participas en ningún evento aún.'}
                 />
               )}
             </TabPane>
@@ -656,18 +685,18 @@ export default function EventsPage() {
                   </Badge>
                 ))}
               </div>
-              <InputGroup>
-                <Input
-                  placeholder="Nombre de institución..."
-                  value={instInput}
-                  onChange={e => setInstInput(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addInstitution(); } }}
-                />
-                <Button type="button" color="secondary" outline onClick={addInstitution}>
-                  <i className="bi bi-plus" />
+              <div className="d-flex gap-2 align-items-center">
+                <Input type="select" id="evInstitution" value={selectedInstId}
+                  onChange={e => setSelectedInstId(e.target.value)}>
+                  <option value="">— Selecciona una institución —</option>
+                  {allInstitutions
+                    .filter(i => !evForm.institutions.includes(i.nombre))
+                    .map(i => <option key={i.id} value={i.id}>{i.nombre}</option>)}
+                </Input>
+                <Button type="button" color="secondary" outline size="sm" style={{ whiteSpace: 'nowrap' }}
+                  onClick={addSelectedInstitution} disabled={!selectedInstId}>
+                  <i className="bi bi-plus" /> Agregar
                 </Button>
-              </InputGroup>
-              <div className="d-flex gap-2 align-items-center mt-2">
                 <Button type="button" color="secondary" outline size="sm" style={{ whiteSpace: 'nowrap' }}
                   onClick={() => { setShowNewInstitution(v => !v); setNewInstitutionError(''); }}>
                   <i className="bi bi-plus" /> Nuevo
@@ -691,6 +720,34 @@ export default function EventsPage() {
                   </InputGroup>
                 </div>
               )}
+            </FormGroup>
+
+            <FormGroup>
+              <Label>Áreas patrocinadoras</Label>
+              <div className="d-flex flex-wrap gap-1 mb-2">
+                {evForm.areaIds.map(aId => {
+                  const area = allAreas.find(a => a.id === aId);
+                  return (
+                    <Badge key={aId} color="primary" className="d-flex align-items-center gap-1 py-1 px-2">
+                      {area?.nombre ?? aId}
+                      <i className="bi bi-x" style={{ cursor: 'pointer' }} onClick={() => removeArea(aId)} />
+                    </Badge>
+                  );
+                })}
+              </div>
+              <div className="d-flex gap-2 align-items-center">
+                <Input type="select" value={selectedAreaId}
+                  onChange={e => setSelectedAreaId(e.target.value)}>
+                  <option value="">— Selecciona un área —</option>
+                  {allAreas
+                    .filter(a => !evForm.areaIds.includes(a.id))
+                    .map(a => <option key={a.id} value={a.id}>{a.nombre}</option>)}
+                </Input>
+                <Button type="button" color="secondary" outline size="sm" style={{ whiteSpace: 'nowrap' }}
+                  onClick={addSelectedArea} disabled={!selectedAreaId}>
+                  <i className="bi bi-plus" /> Agregar
+                </Button>
+              </div>
             </FormGroup>
 
             <FormGroup>

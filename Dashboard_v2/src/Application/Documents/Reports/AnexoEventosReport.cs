@@ -12,41 +12,27 @@ namespace Dashboard_v2.Application.Documents.Reports;
 /// Bloques rellenados automaticamente:
 /// - Eventos internacionales.
 /// - Eventos nacionales.
+/// - Eventos coauspiciados por el area del usuario que genera el reporte.
 /// - Conteo base de ponencias por categorias explicitamente modeladas.
 /// - Datos detallados de todas las ponencias.
 ///
 /// Bloques que quedan vacios o parcialmente vacios:
-/// - Eventos coauspiciados por el area.
 /// - Actividades cientificas en la UH.
 /// - Las columnas sobre primer autor del area y autores de otras areas.
 /// - Toda la seccion de conferencias magistrales.
-///
-/// Estas restricciones existen porque el dominio actual no guarda orden de autoria,
-/// no asocia el anexo a un area concreta, no distingue eventos coauspiciados
-/// ni actividades cientificas internas, y tampoco diferencia conferencias
-/// magistrales de otras presentaciones.
 /// </summary>
 public sealed class AnexoEventosReport : IDocumentReport
 {
-    // TODO(david): Este reporte sigue alimentando una plantilla de ClosedXML.Report que
-    // pierde formato cuando expande varias tablas dinámicas en la misma hoja.
-    // Opciones para arreglarlo:
-    // 1. Dejar de devolver variables para una hoja dinámica y construir el Excel manualmente.
-    // 2. Conservar la plantilla solo como guía visual y rellenar celdas fijas.
-    // 3. Repartir las secciones en hojas separadas si eso es aceptable.
-    // 4. Rediseñar la hoja para eliminar merges y bloques sensibles al corrimiento de filas.
     private const int InternacionalEventTypeId = 0;
     private const int NacionalEventTypeId = 1;
 
     private readonly IApplicationDbContext _context;
+    private readonly IUser _currentUser;
 
-    /// <summary>
-    /// Inicializa el reporte con acceso al contexto de aplicacion.
-    /// </summary>
-    /// <param name="context">Contexto usado para consultar eventos y ponencias.</param>
-    public AnexoEventosReport(IApplicationDbContext context)
+    public AnexoEventosReport(IApplicationDbContext context, IUser currentUser)
     {
         _context = context;
+        _currentUser = currentUser;
     }
 
     /// <summary>
@@ -66,16 +52,37 @@ public sealed class AnexoEventosReport : IDocumentReport
     /// </summary>
     /// <param name="ct">Token de cancelacion.</param>
     /// <returns>Variables para ClosedXML.Report.</returns>
-    public async Task<IReadOnlyDictionary<string, object>> GatherVariablesAsync(CancellationToken ct)
+    public async Task<IReadOnlyDictionary<string, object>> GatherVariablesAsync(IReadOnlyDictionary<string, string>? parameters, CancellationToken ct)
     {
+        // Obtener el área del usuario que genera el reporte
+        var userAreaId = await _context.Users
+            .AsNoTracking()
+            .Where(u => u.Id == _currentUser.Id)
+            .Select(u => u.AreaId)
+            .FirstOrDefaultAsync(ct);
+
         var events = await _context.Events
             .AsNoTracking()
             .Include(e => e.Country)
+            .Include(e => e.Institutions)
             .Include(e => e.Presentations)
                 .ThenInclude(p => p.AuthorPresentations)
                     .ThenInclude(ap => ap.Author)
             .OrderBy(e => e.Name)
             .ToListAsync(ct);
+
+        // Eventos coauspiciados = patrocinados por el área del usuario actual
+        List<Event> eventosCoauspiciados = [];
+        if (!string.IsNullOrWhiteSpace(userAreaId))
+        {
+            eventosCoauspiciados = await _context.Events
+                .AsNoTracking()
+                .Include(e => e.Country)
+                .Include(e => e.Institutions)
+                .Where(e => e.AreasPatrocinadoras.Any(a => a.Id == userAreaId))
+                .OrderBy(e => e.Name)
+                .ToListAsync(ct);
+        }
 
         var presentations = events
             .SelectMany(e => e.Presentations.Select(p => new { Event = e, Presentation = p }))
@@ -114,9 +121,16 @@ public sealed class AnexoEventosReport : IDocumentReport
                 })
                 .ToList(),
             // Estos apartados existen en el anexo oficial, pero el dominio actual
-            // no modela si un evento fue coauspiciado por el area ni si una
-            // actividad cientifica fue organizada internamente en la UH.
-            ["EventosCoauspiciados"] = Array.Empty<EventoCoauspiciadoRowDto>(),
+            // no modela si una actividad cientifica fue organizada internamente en la UH.
+            ["EventosCoauspiciados"] = eventosCoauspiciados
+                .Select(e => new EventoCoauspiciadoRowDto
+                {
+                    EventoCoauspiciado = e.Name,
+                    InstitucionExternaResponsable = BuildInstitutionsSummary(e),
+                    Internacional = e.EventTypeId == InternacionalEventTypeId ? "X" : string.Empty,
+                    Nacional = e.EventTypeId == NacionalEventTypeId ? "X" : string.Empty,
+                })
+                .ToList(),
             ["ActividadesCientificasUH"] = Array.Empty<ActividadCientificaUhRowDto>(),
             ["DatosPonencias"] = presentations
                 .Select(item => new DatosPonenciaRowDto

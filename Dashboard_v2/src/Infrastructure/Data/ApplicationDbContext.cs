@@ -21,6 +21,8 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<Country> Countries => Set<Country>();
     public DbSet<Event> Events => Set<Event>();
     public DbSet<EventType> EventTypes => Set<EventType>();
+    public DbSet<EventInstitution> EventInstitutions => Set<EventInstitution>();
+    public DbSet<EventAreaPatrocinio> EventAreasPatrocinio => Set<EventAreaPatrocinio>();
     public DbSet<Presentation> Presentations => Set<Presentation>();
     public DbSet<AuthorPresentation> AuthorPresentations => Set<AuthorPresentation>();
     public DbSet<IndexedPublication> IndexedPublications => Set<IndexedPublication>();

@@ -15,25 +15,22 @@ public class EventConfiguration : IEntityTypeConfiguration<Event>
         // Relación N:N con Institutions (evento organiza 1..N instituciones)
         builder.HasMany(e => e.Institutions)
             .WithMany(i => i.Events)
-            .UsingEntity<Dictionary<string, object>>(
-                "EventInstitution",
-                right => right
-                    .HasOne<Institution>()
+            .UsingEntity<EventInstitution>(
+                j => j
+                    .HasOne(ei => ei.Institution)
                     .WithMany()
-                    .HasForeignKey("InstitutionId")
-                    .HasPrincipalKey(i => i.Id)
+                    .HasForeignKey(ei => ei.InstitutionId)
                     .OnDelete(DeleteBehavior.Cascade),
-                left => left
-                    .HasOne<Event>()
+                j => j
+                    .HasOne(ei => ei.Event)
                     .WithMany()
-                    .HasForeignKey("EventId")
-                    .HasPrincipalKey(e => e.Id)
+                    .HasForeignKey(ei => ei.EventId)
                     .OnDelete(DeleteBehavior.Cascade),
-                join =>
+                j =>
                 {
-                    join.ToTable("EventsInstitutions");
-                    join.HasKey("EventId", "InstitutionId");
-                    join.Property<string>("InstitutionId").HasMaxLength(450);
+                    j.ToTable("EventsInstitutions");
+                    j.HasKey(ei => new { ei.EventId, ei.InstitutionId });
+                    j.Property(ei => ei.InstitutionId).HasMaxLength(450);
                 });
 
         builder.HasOne(e => e.Country)
@@ -51,5 +48,26 @@ public class EventConfiguration : IEntityTypeConfiguration<Event>
             .WithMany(r => r.Events)
             .HasForeignKey(e => e.RedId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        // Patrocinio: Área (0,*) ↔ Evento (0,*) — entidad de unión explícita
+        builder.HasMany(e => e.AreasPatrocinadoras)
+            .WithMany(a => a.EventosPatrocinados)
+            .UsingEntity<EventAreaPatrocinio>(
+                j => j
+                    .HasOne(ep => ep.Area)
+                    .WithMany()
+                    .HasForeignKey(ep => ep.AreaId)
+                    .OnDelete(DeleteBehavior.Cascade),
+                j => j
+                    .HasOne(ep => ep.Event)
+                    .WithMany()
+                    .HasForeignKey(ep => ep.EventId)
+                    .OnDelete(DeleteBehavior.Cascade),
+                j =>
+                {
+                    j.ToTable("EventAreasPatrocinio");
+                    j.HasKey(ep => new { ep.EventId, ep.AreaId });
+                    j.Property(ep => ep.AreaId).HasMaxLength(450);
+                });
     }
 }

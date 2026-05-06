@@ -31,7 +31,7 @@ public sealed class ArticulosDivulgacionSheet : ISheetTemplate
     /// <summary>
     /// Fila de datos del rango dinámico.
     /// </summary>
-    public int StartRow => 6;
+    public int StartRow => 2;
 
     /// <summary>
     /// Columna inicial del rango.
@@ -63,9 +63,8 @@ public sealed class ArticulosDivulgacionSheet : ISheetTemplate
         var ws = workbook.Worksheets.Add(Name);
 
         ApplyLayout(ws);
-        PublicationSheetHelper.WriteMergedTextRow(ws, 3, 1, 4, "Publicaciones en sitios webs, medios de prensa, repositorios, boletines, etc.");
-        PublicationSheetHelper.WriteHeaderRow(ws, 5, Headers);
-        PublicationSheetHelper.WriteTemplateRange(ws, RangeName, 6, 6, TemplateCells.ToArray());
+        PublicationSheetHelper.WriteHeaderRow(ws, 1, Headers);
+        PublicationSheetHelper.WriteTemplateRange(ws, RangeName, 2, 6, TemplateCells.ToArray());
     }
 
     /// <summary>

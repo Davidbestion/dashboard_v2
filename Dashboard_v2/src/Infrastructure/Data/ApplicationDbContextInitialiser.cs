@@ -115,14 +115,28 @@ public class ApplicationDbContextInitialiser
         if (!await _context.AwardTypes.AnyAsync())
         {
             _context.AwardTypes.AddRange(
-                new AwardType { Id = 0, Name = "Premio de la Academia de Ciencias"                  },
-                new AwardType { Id = 1, Name = "Premio MES"                                         },
-                new AwardType { Id = 2, Name = "Premio CITMA Innovación Tecnológica"                },
-                new AwardType { Id = 3, Name = "Premio CITMA Estudiantes y Jóvenes Investigadores"  },
-                new AwardType { Id = 4, Name = "Premio Forum Ciencia y Técnica"                     },
-                new AwardType { Id = 5, Name = "Premio Investigación UH"                            },
-                new AwardType { Id = 6, Name = "Otros premios (prensa, salud, sociedad, etc.)"      },
-                new AwardType { Id = 7, Name = "Premio Internacional"                               }
+                new AwardType { Id = 0, Name = "Premio de la Academia de Ciencias"  },
+                new AwardType { Id = 1, Name = "Premio de la Academia de Ciencias en ejes estrategicos" },
+                new AwardType { Id = 2, Name = "Premio de la Academia de Ciencias Provincial" },
+
+                new AwardType { Id = 3, Name = "Premio MES"                                         },
+
+                new AwardType { Id = 4, Name = "Premio CITMA Innovación Tecnológica"  }, 
+                new AwardType { Id = 5, Name = "Premio CITMA Provincial"  },
+                new AwardType { Id = 6, Name = "Premio CITMA Estudiantes y Jóvenes Investigadores"  },
+                new AwardType { Id = 7, Name = "Premio CITMA Resultados I+D" },
+                new AwardType { Id = 7, Name = "Premio CITMA Premios Especiales" },
+                
+                new AwardType { Id = 7, Name = "Premio Forum Ciencia y Técnica Relevantes provinciales"},
+                new AwardType { Id = 7, Name = "Premio Forum Ciencia y Técnica Destacados provinciales" },
+                new AwardType { Id = 7, Name = "Premio Forum Ciencia y Técnica Menciones provinciales" },
+                new AwardType { Id = 7, Name = "Premio Forum Ciencia y Técnica Relevantes municipales" },
+                new AwardType { Id = 7, Name = "Premio Forum Ciencia y Técnica Destacados municipales" },
+                new AwardType { Id = 7, Name = "Premio Forum Ciencia y Técnica Menciones municipales" },
+
+                new AwardType { Id = 8, Name = "Otros premios (prensa, salud, sociedad, etc.)"      },
+                new AwardType { Id = 8, Name = "Premio de Investigación UH"                            },
+                new AwardType { Id = 8, Name = "Premio Internacional"                               }
             );
             await _context.SaveChangesAsync();
         }

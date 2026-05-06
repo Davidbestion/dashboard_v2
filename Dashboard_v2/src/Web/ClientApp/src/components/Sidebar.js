@@ -59,6 +59,16 @@ const jefeDeProyectoGroups = [
   },
 ];
 
+const vicedecanoGroups = [
+  {
+    heading: 'Actividad del Área',
+    items: [
+      { to: '/publicaciones-area', icon: 'bi-journal-text', label: 'Publicaciones del Área' },
+      { to: '/events', icon: 'bi-mic', label: 'Eventos' },
+    ],
+  },
+];
+
 const adminGroups = [
   {
     heading: 'Administración',
@@ -110,6 +120,7 @@ export default function Sidebar({ collapsed, onToggle }) {
     ...(user?.role === 'Jefe_de_Grupo_de_investigacion' ? jefeGroups : []),
     ...(user?.role === 'Jefe_de_Redes' ? jefeRedesGroups : []),
     ...(user?.role === 'Jefe_de_Proyecto' ? jefeDeProyectoGroups : []),
+    ...(user?.role === 'Vicedecano_de_investigacion' ? vicedecanoGroups : []),
     ...(user?.role === 'Superuser' ? adminGroups : []),
   ];
 

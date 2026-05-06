@@ -9,14 +9,6 @@ namespace TemplateGen.Templates;
 /// </summary>
 internal static class EventosSheetHelper
 {
-    // TODO(david): El anexo de eventos pierde formato al expandirse con ClosedXML.Report
-    // cuando varias tablas dinámicas comparten la misma hoja y se mezclan con merges,
-    // bloques fijos y tablas vacías. Opciones para arreglarlo:
-    // 1. Dejar de usar rangos dinámicos aquí y escribir la hoja manualmente.
-    // 2. Mantener la plantilla, pero con espacios fijos y rellenado celda por celda.
-    // 3. Separar las tablas en hojas distintas si el formato institucional lo permite.
-    // 4. Mantener una sola hoja, pero eliminar merges y bloques intermedios que dependan
-    //    del corrimiento automático de filas.
     /// <summary>
     /// Aplica el estilo base de texto a una celda.
     /// </summary>

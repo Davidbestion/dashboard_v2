@@ -8,45 +8,45 @@ public class Events : EndpointGroupBase
     public override void Map(RouteGroupBuilder groupBuilder)
     {
         groupBuilder.MapGet("", GetMyEvents)
-            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Superuser)))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Superuser), nameof(RolesEnum.Vicedecano_de_investigacion)))
             .WithName("GetMyEvents")
             .Produces<List<EventDto>>(200);
 
         groupBuilder.MapGet("all", GetAllEvents)
-            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Superuser)))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Superuser), nameof(RolesEnum.Vicedecano_de_investigacion)))
             .WithName("GetAllEvents")
             .Produces<List<EventDto>>(200);
 
         groupBuilder.MapGet("countries", GetCountries)
-            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Superuser)))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Superuser), nameof(RolesEnum.Vicedecano_de_investigacion)))
             .WithName("GetCountries")
             .Produces<List<CountryDto>>(200);
 
         groupBuilder.MapPost("countries", CreateCountry)
-            .RequireAuthorization(p => p.RequireRole("Profesor"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Vicedecano_de_investigacion)))
             .WithName("CreateCountry")
             .Produces<CountryDto>(201)
             .ProducesProblem(400);
 
         groupBuilder.MapGet("types", GetEventTypes)
-            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Superuser)))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Superuser), nameof(RolesEnum.Vicedecano_de_investigacion)))
             .WithName("GetEventTypes")
             .Produces<List<EventTypeDto>>(200);
 
         groupBuilder.MapPost("", CreateEvent)
-            .RequireAuthorization(p => p.RequireRole("Profesor"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Vicedecano_de_investigacion)))
             .WithName("CreateEvent")
             .Produces(201)
             .ProducesProblem(400);
 
         groupBuilder.MapPut("{id}", UpdateEvent)
-            .RequireAuthorization(p => p.RequireRole("Profesor"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Vicedecano_de_investigacion)))
             .WithName("UpdateEvent")
             .Produces(200)
             .ProducesProblem(400);
 
         groupBuilder.MapDelete("{id}", DeleteEvent)
-            .RequireAuthorization(p => p.RequireRole("Profesor"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Vicedecano_de_investigacion)))
             .WithName("DeleteEvent")
             .Produces(200)
             .ProducesProblem(400);

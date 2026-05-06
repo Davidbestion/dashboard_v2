@@ -59,10 +59,9 @@ public sealed class LibrosMonografiasCapitulosSheet : ISheetTemplate
         var ws = workbook.Worksheets.Add(Name);
 
         ApplyLayout(ws);
-        WriteClassificationText(ws);
-        WriteIndexedTable(ws, 17, 18, 19, "Libros", "libros");
-        WriteIndexedTable(ws, 23, 24, 25, "Monografias", "monografias");
-        WriteIndexedTable(ws, 29, 30, 31, "Capitulos", "capitulo de libros");
+        WriteIndexedTable(ws, 1,  2,  3,  "Libros",     "libros");
+        WriteIndexedTable(ws, 6,  7,  8,  "Monografias", "monografias");
+        WriteIndexedTable(ws, 11, 12, 13, "Capitulos",   "capitulo de libros");
     }
 
     /// <summary>
@@ -76,35 +75,6 @@ public sealed class LibrosMonografiasCapitulosSheet : ISheetTemplate
         ws.Column(3).Width = 31;
         ws.Column(4).Width = 26.25;
         ws.Column(5).Width = 30.75;
-    }
-
-    /// <summary>
-    /// Escribe el bloque inicial de clasificación de libros y editoriales.
-    /// </summary>
-    /// <param name="ws">Hoja destino.</param>
-    private static void WriteClassificationText(IXLWorksheet ws)
-    {
-        var rows = new Dictionary<int, string>
-        {
-            [2] = "clasificacion.",
-            [3] = "GRUPO 1. Libros publicados por editoriales que están en el Web de la Ciencias",
-            [4] = "▪ Book Citation Index (BkCI) desarrollado por Clarivate analytics, se lanzó por primera vez en 2011 e indexa más de 60.000 libros editorialmente seleccionados, a partir de 2005. Estas bases de datos se recogen, además de libros y monografías en colecciones o aislados, actas de congresos, tesis doctorales, disertaciones y libros de texto. Tiene una edición de Ciencias Sociales y Humanidades y una de ciencia que abarca física, química, ingeniería, informática y tecnología, medicina clínica, ciencias de la vida, agricultura y biología. http://wokinfo.com/products_tools/multidisciplinary/bookcitationindex",
-            [5] = "GRUPO 2. Libros publicados por Editoriales de reconocido prestigio internacional",
-            [6] = "▪",
-            [7] = "SciELO Libros. La red realiza la publicación online de colecciones nacionales y temáticas de libros académicos con el fin de maximizar la visibilidad, accesibilidad, uso e impacto, de la investigación, los ensayos y los estudios que se han realizado. Los libros publicados se seleccionan según controles de calidad aplicados por un comité científico y los textos en formato digital se preparan por normas internacionales. http://books.scielo.org/es/introduccion/",
-            [8] = "▪",
-            [9] = "SPI (Scholarly Publishers Indicators in Humanities and Social Sciences) Es el resultado de un proyecto de investigación del CSIC para obtener indicadores de calidad para libros y editoriales de carácter científico en Humanidades y Ciencias Sociales. Muestra un ranking de editoriales basado en la opinión expertos en dichas áreas, de forma general para todas las áreas y especializado por disciplinas. http://ilia.cchs.csic.es/SPI/expanded_index.html",
-            [10] = "▪",
-            [11] = "Publishers Scholar Metrics. Es una herramienta elaborada por el grupo de investigación EC3 para medir el impacto de las editoriales de monografías científicas a partir del total de citas de los libros publicados indizados en Google",
-            [12] = "Académico hasta 2012 en el ámbito de las Humanidades y de las Ciencias Sociales. http://www.publishers-scholarmetrics.info/",
-            [13] = "GRUPO 3. Libros publicados por Editoriales con referencia nacional",
-        };
-
-        foreach (var (row, text) in rows)
-        {
-            ws.Cell(row, row == 2 ? 2 : 1).Value = text;
-            PublicationSheetHelper.ApplyTextStyle(ws.Cell(row, row == 2 ? 2 : 1), bold: row is 3 or 5 or 13);
-        }
     }
 
     /// <summary>

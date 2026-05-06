@@ -480,6 +480,26 @@ public sealed partial class PublicationService : IPublicationService
             .ToListAsync(ct);
     }
 
+    public async Task<List<PublicationDto>> GetAreaPublicationsAsync(CancellationToken ct = default)
+    {
+        var areaId = await _context.Users
+            .AsNoTracking()
+            .Where(u => u.Id == _currentUser.Id)
+            .Select(u => u.AreaId)
+            .FirstOrDefaultAsync(ct);
+
+        if (areaId == null)
+            return new List<PublicationDto>();
+
+        return await ProjectPublicationDtos(
+            _context.Publications.AsNoTracking()
+                .Where(p => p.AuthorPublications.Any(ap =>
+                    ap.Author.UserId != null &&
+                    ap.Author.User!.AreaId == areaId)))
+            .OrderBy(p => p.Title)
+            .ToListAsync(ct);
+    }
+
     public async Task<List<PublicationCrossRefDto>> SearchCrossRefCandidatesAsync(string? doi, string? title, CancellationToken ct = default)
     {
         if (!string.IsNullOrWhiteSpace(doi))

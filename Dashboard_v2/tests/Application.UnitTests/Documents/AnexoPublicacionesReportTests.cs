@@ -381,4 +381,178 @@ public class AnexoPublicacionesReportTests
         g1.Count.ShouldBe(1);
         g1[0].Titulo.ShouldBe("Nueva");
     }
+
+    // ── variables de conteo ───────────────────────────────────────────────────
+
+    /// <summary>
+    /// Los contadores escalares del diccionario (G1Count, G2Count, etc.) deben
+    /// coincidir con la longitud real de las listas correspondientes.
+    /// </summary>
+    [Test]
+    public async Task GatherVariablesAsync_CountVariables_MatchListLengths()
+    {
+        await using var db = BuildDb(nameof(GatherVariablesAsync_CountVariables_MatchListLengths));
+
+        var area = new Area { Id = "area-a", Nombre = "Área A" };
+        var user = new User { Id = "user-a", UserName = "u", UserLastName1 = "U", Email = "u@test.cu", AreaId = area.Id };
+        var author = new Author { Id = "auth-a", LastName = "A", Name = "A", SearchKey = "a", LastNameKey = "a", UserId = user.Id, User = user };
+
+        var g1 = CreateJournalPublication("G1", group: 1, author);
+        var g2 = CreateJournalPublication("G2", group: 2, author);
+        var libro = CreateIndexedPublication("Libro", PublicationType.Libro, author);
+        var cap = CreateIndexedPublication("Cap", PublicationType.Capítulo, author);
+        var divul = CreateIndexedPublication("Divul", PublicationType.Artículo_de_Divulgación, author);
+
+        db.Areas.Add(area);
+        db.Users.Add(user);
+        db.Authors.Add(author);
+        db.Publications.AddRange(g1, g2, libro, cap, divul);
+        await db.SaveChangesAsync();
+
+        var report = BuildReport(db, user.Id);
+        var variables = await report.GatherVariablesAsync(null, CancellationToken.None);
+
+        ((int)variables["G1Count"]).ShouldBe(((List<PublicacionG1RowDto>)variables["G1"]).Count);
+        ((int)variables["G2Count"]).ShouldBe(((List<PublicacionJournalRowDto>)variables["G2"]).Count);
+        ((int)variables["CapitulosCount"]).ShouldBe(((List<PublicacionIndexadaRowDto>)variables["Capitulos"]).Count);
+        ((int)variables["LibrosMonografiasCount"]).ShouldBe(
+            ((List<PublicacionIndexadaRowDto>)variables["Libros"]).Count +
+            ((List<PublicacionIndexadaRowDto>)variables["Monografias"]).Count);
+        ((int)variables["ArticulosDivulgacionCount"]).ShouldBe(((List<PublicacionDivulgacionRowDto>)variables["ArticulosDivulgacion"]).Count);
+    }
+
+    // ── campos de la fila G1 ──────────────────────────────────────────────────
+
+    /// <summary>
+    /// La fila G1 debe incluir el cuartil procedente de <see cref="JournalGroup1Publication"/>.
+    /// </summary>
+    [Test]
+    public async Task GatherVariablesAsync_G1Row_HasCuartilFromJournalGroup1Publication()
+    {
+        await using var db = BuildDb(nameof(GatherVariablesAsync_G1Row_HasCuartilFromJournalGroup1Publication));
+
+        var area = new Area { Id = "area-a", Nombre = "Área A" };
+        var user = new User { Id = "user-a", UserName = "u", UserLastName1 = "U", Email = "u@test.cu", AreaId = area.Id };
+        var author = new Author { Id = "auth-a", LastName = "A", Name = "A", SearchKey = "a", LastNameKey = "a", UserId = user.Id, User = user };
+
+        var pubId = Guid.NewGuid().ToString();
+        var pub = new Publication
+        {
+            Id = pubId,
+            Title = "Pub G1 con Cuartil",
+            PublicationData = "Datos",
+            PublishedDate = "2024",
+            PublicationType = PublicationType.Diario,
+            JournalPublication = new JournalPublication
+            {
+                PublicationId = pubId,
+                Group = 1,
+                DataBase = "WoS",
+                JournalGroup1Publication = new JournalGroup1Publication
+                {
+                    PublicationId = pubId,
+                    Cuartil = "Q1",
+                },
+            },
+        };
+        pub.AuthorPublications.Add(new AuthorPublication { AuthorId = author.Id, PublicationId = pubId, Author = author, Publication = pub });
+
+        db.Areas.Add(area);
+        db.Users.Add(user);
+        db.Authors.Add(author);
+        db.Publications.Add(pub);
+        await db.SaveChangesAsync();
+
+        var report = BuildReport(db, user.Id);
+        var variables = await report.GatherVariablesAsync(null, CancellationToken.None);
+
+        var g1 = (List<PublicacionG1RowDto>)variables["G1"];
+        g1.Count.ShouldBe(1);
+        g1[0].Cuartil.ShouldBe("Q1");
+    }
+
+    // ── BuildPublicationDetails ───────────────────────────────────────────────
+
+    /// <summary>
+    /// Cuando la publicación tiene DOI/URL, debe concatenarse al final de
+    /// <c>DatosPublicacion</c> con el prefijo " DOI/URL: ".
+    /// </summary>
+    [Test]
+    public async Task GatherVariablesAsync_BuildPublicationDetails_AppendsDoiWhenPresent()
+    {
+        await using var db = BuildDb(nameof(GatherVariablesAsync_BuildPublicationDetails_AppendsDoiWhenPresent));
+
+        var area = new Area { Id = "area-a", Nombre = "Área A" };
+        var user = new User { Id = "user-a", UserName = "u", UserLastName1 = "U", Email = "u@test.cu", AreaId = area.Id };
+        var author = new Author { Id = "auth-a", LastName = "A", Name = "A", SearchKey = "a", LastNameKey = "a", UserId = user.Id, User = user };
+
+        var pubWithDoi = CreateJournalPublication("Pub Con DOI", group: 1, author);
+        pubWithDoi.UrlDoi = "https://doi.org/10.1234/test";
+        pubWithDoi.PublicationData = "Revista X, Vol. 1";
+
+        var pubNoDoi = CreateJournalPublication("Pub Sin DOI", group: 2, author);
+        pubNoDoi.PublicationData = "Revista Y, Vol. 2";
+
+        db.Areas.Add(area);
+        db.Users.Add(user);
+        db.Authors.Add(author);
+        db.Publications.AddRange(pubWithDoi, pubNoDoi);
+        await db.SaveChangesAsync();
+
+        var report = BuildReport(db, user.Id);
+        var variables = await report.GatherVariablesAsync(null, CancellationToken.None);
+
+        var g1 = (List<PublicacionG1RowDto>)variables["G1"];
+        g1.Count.ShouldBe(1);
+        g1[0].DatosPublicacion.ShouldBe("Revista X, Vol. 1 DOI/URL: https://doi.org/10.1234/test");
+
+        var g2 = (List<PublicacionJournalRowDto>)variables["G2"];
+        g2.Count.ShouldBe(1);
+        g2[0].DatosPublicacion.ShouldBe("Revista Y, Vol. 2");
+    }
+
+    // ── BuildAuthorsSummary ───────────────────────────────────────────────────
+
+    /// <summary>
+    /// Los autores deben listarse en orden alfabético, independientemente del orden
+    /// en que fueron añadidos a la publicación.
+    /// </summary>
+    [Test]
+    public async Task GatherVariablesAsync_AuthorSummary_IsAlphabeticallyOrdered()
+    {
+        await using var db = BuildDb(nameof(GatherVariablesAsync_AuthorSummary_IsAlphabeticallyOrdered));
+
+        var area = new Area { Id = "area-a", Nombre = "Área A" };
+        var user = new User { Id = "user-a", UserName = "u", UserLastName1 = "U", Email = "u@test.cu", AreaId = area.Id };
+        // authorZ está vinculado al usuario del área solicitante → la pub se incluye
+        var authorZ = new Author { Id = "auth-z", LastName = "Zorrilla", Name = "Zorrilla, Carlos", SearchKey = "zorrilla carlos", LastNameKey = "zorrilla", UserId = user.Id, User = user };
+        var authorA = new Author { Id = "auth-a", LastName = "Álvarez", Name = "Álvarez, Ana", SearchKey = "alvarez ana", LastNameKey = "alvarez" };
+
+        var pubId = Guid.NewGuid().ToString();
+        var pub = new Publication
+        {
+            Id = pubId,
+            Title = "Pub Multiautor",
+            PublicationData = "Datos",
+            PublishedDate = "2024",
+            PublicationType = PublicationType.Diario,
+            JournalPublication = new JournalPublication { PublicationId = pubId, Group = 1, DataBase = "WoS" },
+        };
+        // Z añadido antes de A para verificar que el reporte ordena alfabéticamente
+        pub.AuthorPublications.Add(new AuthorPublication { AuthorId = authorZ.Id, PublicationId = pubId, Author = authorZ, Publication = pub });
+        pub.AuthorPublications.Add(new AuthorPublication { AuthorId = authorA.Id, PublicationId = pubId, Author = authorA, Publication = pub });
+
+        db.Areas.Add(area);
+        db.Users.Add(user);
+        db.Authors.AddRange(authorZ, authorA);
+        db.Publications.Add(pub);
+        await db.SaveChangesAsync();
+
+        var report = BuildReport(db, user.Id);
+        var variables = await report.GatherVariablesAsync(null, CancellationToken.None);
+
+        var g1 = (List<PublicacionG1RowDto>)variables["G1"];
+        g1.Count.ShouldBe(1);
+        g1[0].RelacionAutoria.ShouldBe("Álvarez, Ana, Zorrilla, Carlos");
+    }
 }

@@ -207,6 +207,7 @@ dotnet ef migrations remove --project src/Infrastructure --startup-project src/W
 - **Versionar las migraciones en Git**
 - **Revisar el código de migración generado antes de aplicarlo**
 - **Cumplir los principios SOLID en toda implementación** (ver sección abajo)
+- **Por cada nueva implementación o modificación de lógica existente, crear o actualizar los unit tests correspondientes** en `tests/Application.UnitTests/`. Los tests deben cubrir los casos principales (happy path) y los casos borde relevantes. No entregar una implementación sin sus tests.
 
 ## Principios SOLID — Obligatorios en toda implementación
 

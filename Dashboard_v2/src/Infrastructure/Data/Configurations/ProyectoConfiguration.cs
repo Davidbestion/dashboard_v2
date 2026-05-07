@@ -18,6 +18,7 @@ public class ProyectoConfiguration : IEntityTypeConfiguration<Proyecto>
         builder.Property(p => p.Titulo).IsRequired().HasMaxLength(500);
         builder.Property(p => p.JefeId).IsRequired().HasMaxLength(450);
         builder.Property(p => p.ClasificacionId).IsRequired().HasMaxLength(450);
+        builder.Property(p => p.AreaId).IsRequired().HasMaxLength(450);
 
         // FK: Proyecto → User (jefe). Restrict: no se puede eliminar un usuario que sea jefe de un proyecto.
         builder.HasOne(p => p.JefeUsuario)
@@ -28,6 +29,12 @@ public class ProyectoConfiguration : IEntityTypeConfiguration<Proyecto>
         builder.HasOne(p => p.Clasificacion)
             .WithMany(c => c.Proyectos)
             .HasForeignKey(p => p.ClasificacionId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // FK: Proyecto → Area (1:N). Restrict: no se puede eliminar un área que tenga proyectos.
+        builder.HasOne(p => p.Area)
+            .WithMany(a => a.Proyectos)
+            .HasForeignKey(p => p.AreaId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

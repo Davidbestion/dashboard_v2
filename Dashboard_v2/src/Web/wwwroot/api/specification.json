@@ -6113,6 +6113,12 @@
           "clasificacionNombre": {
             "type": "string"
           },
+          "areaId": {
+            "type": "string"
+          },
+          "areaNombre": {
+            "type": "string"
+          },
           "tipo": {
             "type": "string"
           },
@@ -6212,6 +6218,12 @@
           "clasificacionNombre": {
             "type": "string"
           },
+          "areaId": {
+            "type": "string"
+          },
+          "areaNombre": {
+            "type": "string"
+          },
           "publicacionesDerivadas": {
             "type": "array",
             "items": {
@@ -6270,6 +6282,9 @@
             "type": "boolean"
           },
           "clasificacionId": {
+            "type": "string"
+          },
+          "areaId": {
             "type": "string"
           }
         }

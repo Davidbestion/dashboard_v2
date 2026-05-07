@@ -24,5 +24,11 @@ public abstract class ProyectoBaseValidator<T> : AbstractValidator<T>
             .NotEmpty()
             .MustAsync(async (id, ct) => await context.Clasificaciones.AnyAsync(c => c.Id == id, ct))
             .WithMessage("La clasificación indicada no existe.");
+
+        RuleFor(x => x.AreaId)
+            .NotEmpty()
+            .WithMessage("El área de pertenencia es obligatoria.")
+            .MustAsync(async (id, ct) => await context.Areas.AnyAsync(a => a.Id == id, ct))
+            .WithMessage("El área indicada no existe.");
     }
 }

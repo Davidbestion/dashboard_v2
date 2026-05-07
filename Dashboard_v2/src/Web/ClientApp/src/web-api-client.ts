@@ -9222,6 +9222,8 @@ export class ProyectoResumenDto implements IProyectoResumenDto {
     numeroMiembros?: number;
     clasificacionId?: string;
     clasificacionNombre?: string;
+    areaId?: string;
+    areaNombre?: string;
     tipo?: string;
     codigoProyecto?: string | undefined;
     estadoDeEjecucion?: string | undefined;
@@ -9247,6 +9249,8 @@ export class ProyectoResumenDto implements IProyectoResumenDto {
             this.numeroMiembros = _data["numeroMiembros"];
             this.clasificacionId = _data["clasificacionId"];
             this.clasificacionNombre = _data["clasificacionNombre"];
+            this.areaId = _data["areaId"];
+            this.areaNombre = _data["areaNombre"];
             this.tipo = _data["tipo"];
             this.codigoProyecto = _data["codigoProyecto"];
             this.estadoDeEjecucion = _data["estadoDeEjecucion"];
@@ -9276,6 +9280,8 @@ export class ProyectoResumenDto implements IProyectoResumenDto {
         data["numeroMiembros"] = this.numeroMiembros;
         data["clasificacionId"] = this.clasificacionId;
         data["clasificacionNombre"] = this.clasificacionNombre;
+        data["areaId"] = this.areaId;
+        data["areaNombre"] = this.areaNombre;
         data["tipo"] = this.tipo;
         data["codigoProyecto"] = this.codigoProyecto;
         data["estadoDeEjecucion"] = this.estadoDeEjecucion;
@@ -9298,6 +9304,8 @@ export interface IProyectoResumenDto {
     numeroMiembros?: number;
     clasificacionId?: string;
     clasificacionNombre?: string;
+    areaId?: string;
+    areaNombre?: string;
     tipo?: string;
     codigoProyecto?: string | undefined;
     estadoDeEjecucion?: string | undefined;
@@ -9358,6 +9366,8 @@ export abstract class ProyectoBaseDto implements IProyectoBaseDto {
     tributaFormacionDoctoral?: boolean;
     clasificacionId?: string;
     clasificacionNombre?: string;
+    areaId?: string;
+    areaNombre?: string;
     publicacionesDerivadas?: string[];
 
     constructor(data?: IProyectoBaseDto) {
@@ -9383,6 +9393,8 @@ export abstract class ProyectoBaseDto implements IProyectoBaseDto {
             this.tributaFormacionDoctoral = _data["tributaFormacionDoctoral"];
             this.clasificacionId = _data["clasificacionId"];
             this.clasificacionNombre = _data["clasificacionNombre"];
+            this.areaId = _data["areaId"];
+            this.areaNombre = _data["areaNombre"];
             if (Array.isArray(_data["publicacionesDerivadas"])) {
                 this.publicacionesDerivadas = [] as any;
                 for (let item of _data["publicacionesDerivadas"])
@@ -9410,6 +9422,8 @@ export abstract class ProyectoBaseDto implements IProyectoBaseDto {
         data["tributaFormacionDoctoral"] = this.tributaFormacionDoctoral;
         data["clasificacionId"] = this.clasificacionId;
         data["clasificacionNombre"] = this.clasificacionNombre;
+        data["areaId"] = this.areaId;
+        data["areaNombre"] = this.areaNombre;
         if (Array.isArray(this.publicacionesDerivadas)) {
             data["publicacionesDerivadas"] = [];
             for (let item of this.publicacionesDerivadas)
@@ -9432,6 +9446,8 @@ export interface IProyectoBaseDto {
     tributaFormacionDoctoral?: boolean;
     clasificacionId?: string;
     clasificacionNombre?: string;
+    areaId?: string;
+    areaNombre?: string;
     publicacionesDerivadas?: string[];
 }
 
@@ -9481,6 +9497,7 @@ export abstract class ProyectoUpsertRequestBase implements IProyectoUpsertReques
     cantidadEstudiantesContratados?: number;
     tributaFormacionDoctoral?: boolean;
     clasificacionId?: string;
+    areaId?: string;
 
     constructor(data?: IProyectoUpsertRequestBase) {
         if (data) {
@@ -9501,6 +9518,7 @@ export abstract class ProyectoUpsertRequestBase implements IProyectoUpsertReques
             this.cantidadEstudiantesContratados = _data["cantidadEstudiantesContratados"];
             this.tributaFormacionDoctoral = _data["tributaFormacionDoctoral"];
             this.clasificacionId = _data["clasificacionId"];
+            this.areaId = _data["areaId"];
         }
     }
 
@@ -9519,6 +9537,7 @@ export abstract class ProyectoUpsertRequestBase implements IProyectoUpsertReques
         data["cantidadEstudiantesContratados"] = this.cantidadEstudiantesContratados;
         data["tributaFormacionDoctoral"] = this.tributaFormacionDoctoral;
         data["clasificacionId"] = this.clasificacionId;
+        data["areaId"] = this.areaId;
         return data;
     }
 }
@@ -9532,6 +9551,7 @@ export interface IProyectoUpsertRequestBase {
     cantidadEstudiantesContratados?: number;
     tributaFormacionDoctoral?: boolean;
     clasificacionId?: string;
+    areaId?: string;
 }
 
 export class ProyectoEnRevisionUpsertRequest extends ProyectoUpsertRequestBase implements IProyectoEnRevisionUpsertRequest {

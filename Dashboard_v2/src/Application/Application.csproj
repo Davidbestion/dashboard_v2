@@ -20,4 +20,8 @@
     <ProjectReference Include="..\Domain\Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Dashboard_v2.Application.UnitTests" />
+  </ItemGroup>
+
 </Project>

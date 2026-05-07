@@ -15,6 +15,8 @@ public record ProyectoResumenDto
     public int NumeroMiembros { get; init; }
     public string ClasificacionId { get; init; } = default!;
     public string ClasificacionNombre { get; init; } = default!;
+    public string AreaId { get; init; } = default!;
+    public string AreaNombre { get; init; } = default!;
     /// <summary>Slug de URL del tipo: "en-revision", "empresariales", etc. Usado por el frontend para construir rutas.</summary>
     public string Tipo { get; init; } = default!;
     // Campos extra útiles para el resumen
@@ -42,6 +44,8 @@ public abstract record ProyectoBaseDto
     public bool TributaFormacionDoctoral { get; init; }
     public string ClasificacionId { get; init; } = default!;
     public string ClasificacionNombre { get; init; } = default!;
+    public string AreaId { get; init; } = default!;
+    public string AreaNombre { get; init; } = default!;
     /// <summary>DOI/URLs de las publicaciones derivadas del proyecto.</summary>
     public List<string> PublicacionesDerivadas { get; init; } = [];
 }

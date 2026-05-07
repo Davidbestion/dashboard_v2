@@ -24,4 +24,7 @@ public class Area
 
     // Eventos que este Área patrocina/auspicia (0,*)
     public ICollection<Event> EventosPatrocinados { get; set; } = new List<Event>();
+
+    // Proyectos que pertenecen a este Área (0,*)
+    public ICollection<Proyecto> Proyectos { get; set; } = new List<Proyecto>();
 }

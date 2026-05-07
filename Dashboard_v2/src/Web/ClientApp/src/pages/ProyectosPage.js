@@ -52,6 +52,7 @@ const isEjecucion = (tipo) => tipo !== 'en-revision'; // all except EnRevision
 const emptyForm = {
   tipo: 'en-revision',
   titulo: '', jefeId: '',
+  areaId: '',
   numeroMiembros: 0, cantidadMiembrosUH: 0,
   cantidadEstudiantes: 0, cantidadEstudiantesContratados: 0,
   tributaFormacionDoctoral: false,
@@ -81,9 +82,12 @@ const emptyForm = {
 export default function ProyectosPage() {
   const { user } = useAuth();
   const isJefeDeProyecto = user?.role === 'Jefe_de_Proyecto';
+  const isSuperuser = user?.role === 'Superuser';
+  const canCreateProyecto = isJefeDeProyecto || isSuperuser;
   const [items, setItems] = useState([]);
   const [clasificaciones, setClasificaciones] = useState([]);
   const [jefes, setJefes] = useState([]);
+  const [areas, setAreas] = useState([]);
   const [tiposEjecucion, setTiposEjecucion] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -114,16 +118,18 @@ export default function ProyectosPage() {
     setLoading(true);
     setError('');
     try {
-      const [proyData, clasData, jefesData, tiposData] = await Promise.all([
+      const [proyData, clasData, jefesData, tiposData, areasData] = await Promise.all([
         apiFetch('/api/Proyectos'),
         apiFetch('/api/Clasificaciones'),
         apiFetch('/api/Users/jefes-de-proyecto'),
         apiFetch('/api/Proyectos/tipos-ejecucion'),
+        apiFetch('/api/Areas'),
       ]);
       setItems(proyData);
       setClasificaciones(clasData);
       setJefes(jefesData);
       setTiposEjecucion(tiposData);
+      setAreas(areasData);
     } catch (e) {
       setError(e.message);
     } finally {
@@ -139,6 +145,8 @@ export default function ProyectosPage() {
     setForm({
       ...emptyForm,
       clasificacionId: clasificaciones[0]?.id ?? '',
+      // For Jefe_de_Proyecto: pre-fill with their own area
+      areaId: isJefeDeProyecto ? (user?.areaId ?? '') : '',
       // For Jefe_de_Proyecto the server will override jefeId, but pre-fill for clarity
       jefeId: isJefeDeProyecto ? (user?.id ?? '') : '',
     });
@@ -156,6 +164,7 @@ export default function ProyectosPage() {
         tipo: item.tipo,
         titulo: full.titulo ?? '',
         jefeId: full.jefeId ?? '',
+        areaId: full.areaId ?? '',
         numeroMiembros: full.numeroMiembros ?? 0,
         cantidadMiembrosUH: full.cantidadMiembrosUH ?? 0,
         cantidadEstudiantes: full.cantidadEstudiantes ?? 0,
@@ -201,6 +210,7 @@ export default function ProyectosPage() {
     const base = {
       titulo: form.titulo,
       jefeId: form.jefeId,
+      areaId: form.areaId,
       numeroMiembros: form.numeroMiembros,
       cantidadMiembrosUH: form.cantidadMiembrosUH,
       cantidadEstudiantes: form.cantidadEstudiantes,
@@ -356,7 +366,9 @@ export default function ProyectosPage() {
             <Button color="outline-success" size="sm" onClick={handleGenerarAnexo} disabled={generatingAnexo}>
               {generatingAnexo ? <Spinner size="sm" /> : '⬇ Generar Anexo 4'}
             </Button>
-            <Button color="primary" size="sm" onClick={openCreate}>+ Nuevo proyecto</Button>
+            {canCreateProyecto && (
+              <Button color="primary" size="sm" onClick={openCreate}>+ Nuevo proyecto</Button>
+            )}
           </div>
         </CardHeader>
         <CardBody>
@@ -505,6 +517,18 @@ export default function ProyectosPage() {
                 <option value="">-- Seleccionar --</option>
                 {clasificaciones.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
               </Input>
+            </FormGroup>
+
+            <FormGroup>
+              <Label>Área de pertenencia *</Label>
+              {isJefeDeProyecto ? (
+                <Input plaintext readOnly value={user?.areaNombre ?? 'Sin área asignada'} />
+              ) : (
+                <Input type="select" value={form.areaId} onChange={set('areaId')}>
+                  <option value="">-- Seleccionar área --</option>
+                  {areas.map(a => <option key={a.id} value={a.id}>{a.nombre}</option>)}
+                </Input>
+              )}
             </FormGroup>
 
             <hr />

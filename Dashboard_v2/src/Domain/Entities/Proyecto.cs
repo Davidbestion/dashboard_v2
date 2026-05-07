@@ -30,6 +30,15 @@ public abstract class Proyecto
     public string ClasificacionId { get; set; } = default!;
     public Clasificacion Clasificacion { get; set; } = default!;
 
+    /// <summary>
+    /// FK al Área a la que pertenece el proyecto (obligatoria).
+    /// Un proyecto pertenece a exactamente un Área; un Área puede tener 0 o muchos proyectos.
+    /// </summary>
+    public string AreaId { get; set; } = default!;
+
+    /// <summary>Navegación al Área del proyecto.</summary>
+    public Area Area { get; set; } = default!;
+
     /// <summary>Publicaciones académicas derivadas de este proyecto (navegación inversa).</summary>
     public ICollection<Publication> PublicacionesDerivadas { get; set; } = new List<Publication>();
 }

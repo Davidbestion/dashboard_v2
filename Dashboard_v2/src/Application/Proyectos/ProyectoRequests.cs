@@ -15,6 +15,7 @@ public interface IProyectoUpsertRequest
     int CantidadEstudiantesContratados { get; }
     bool TributaFormacionDoctoral { get; }
     string ClasificacionId { get; }
+    string AreaId { get; }
 }
 
 /// <summary>
@@ -46,6 +47,7 @@ public abstract record ProyectoUpsertRequestBase : IProyectoUpsertRequest
     public int CantidadEstudiantesContratados { get; init; }
     public bool TributaFormacionDoctoral { get; init; }
     public string ClasificacionId { get; init; } = default!;
+    public string AreaId { get; init; } = default!;
 }
 
 /// <summary>

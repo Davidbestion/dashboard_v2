@@ -2,6 +2,7 @@ using Dashboard_v2.Application.Common.Interfaces;
 using Dashboard_v2.Application.Common.Models;
 using Dashboard_v2.Domain.Constants;
 using Dashboard_v2.Domain.Entities;
+using RolesEnum = Dashboard_v2.Domain.Enums.Roles;
 
 namespace Dashboard_v2.Application.Proyectos;
 
@@ -41,6 +42,8 @@ public sealed class ProyectoService : IProyectoService
                 NumeroMiembros = p.NumeroMiembros,
                 ClasificacionId = p.ClasificacionId,
                 ClasificacionNombre = p.Clasificacion.Nombre,
+                AreaId = p.AreaId,
+                AreaNombre = p.Area.Nombre,
                 Tipo = "en-revision",
                 Situacion = p.Situacion,
                 PublicacionesDerivadas = p.PublicacionesDerivadas.Select(pub => pub.UrlDoi ?? pub.Title).ToList()
@@ -290,8 +293,14 @@ public sealed class ProyectoService : IProyectoService
             return (jefeValidation, null);
         }
 
+        var (areaError, areaId) = await ResolveAreaIdAsync(request.AreaId, ct);
+        if (areaError is not null)
+        {
+            return (areaError, null);
+        }
+
         var proyecto = new TProyecto();
-        ApplyBase(proyecto, request, jefeId);
+        ApplyBase(proyecto, request, jefeId, areaId);
         applySpecific(proyecto, request);
 
         _context.Proyectos.Add(proyecto);
@@ -345,7 +354,13 @@ public sealed class ProyectoService : IProyectoService
             return jefeValidation;
         }
 
-        ApplyBase(proyecto, request, jefeId);
+        var (areaError, areaId) = await ResolveAreaIdAsync(request.AreaId, ct);
+        if (areaError is not null)
+        {
+            return areaError;
+        }
+
+        ApplyBase(proyecto, request, jefeId, areaId);
         applySpecific(proyecto, request);
 
         await _context.SaveChangesAsync(ct);
@@ -379,6 +394,7 @@ public sealed class ProyectoService : IProyectoService
 
         var proyecto = await _context.Proyectos.OfType<TProyecto>()
             .Include(x => x.Clasificacion)
+            .Include(x => x.Area)
             .Include(x => x.JefeUsuario)
             .Include(x => x.PublicacionesDerivadas)
             .FirstOrDefaultAsync(x => x.Id == id && (ownerFilter == null || x.JefeId == ownerFilter), ct);
@@ -405,6 +421,8 @@ public sealed class ProyectoService : IProyectoService
                 NumeroMiembros = p.NumeroMiembros,
                 ClasificacionId = p.ClasificacionId,
                 ClasificacionNombre = p.Clasificacion.Nombre,
+                AreaId = p.AreaId,
+                AreaNombre = p.Area.Nombre,
                 Tipo = tipo,
                 CodigoProyecto = p.CodigoProyecto,
                 EstadoDeEjecucion = p.EstadoDeEjecucion,
@@ -420,7 +438,7 @@ public sealed class ProyectoService : IProyectoService
         return (validationResult, jefeId);
     }
 
-    private static void ApplyBase(Proyecto proyecto, IProyectoUpsertRequest request, string jefeId)
+    private static void ApplyBase(Proyecto proyecto, IProyectoUpsertRequest request, string jefeId, string areaId)
     {
         ProyectoHelper.SetBase(
             proyecto,
@@ -431,7 +449,38 @@ public sealed class ProyectoService : IProyectoService
             request.CantidadEstudiantes,
             request.CantidadEstudiantesContratados,
             request.TributaFormacionDoctoral,
-            request.ClasificacionId);
+            request.ClasificacionId,
+            areaId);
+    }
+
+    /// <summary>
+    /// Resuelve el AreaId efectivo para la operación:
+    /// - Si el usuario activo es Jefe_de_Proyecto, se ignora el AreaId del request y se usa
+    ///   el que tenga asignado el propio usuario en la base de datos (seguridad: un jefe
+    ///   nunca puede asignar sus proyectos a un área que no es la suya).
+    /// - Si el usuario es Superuser u otro rol con permiso, se usa el AreaId del request.
+    /// </summary>
+    private async Task<(Result? Error, string AreaId)> ResolveAreaIdAsync(
+        string requestAreaId, CancellationToken ct)
+    {
+        var isJefe = _currentUser.Roles?.Contains(nameof(RolesEnum.Jefe_de_Proyecto)) == true;
+        if (!isJefe)
+        {
+            return (null, requestAreaId);
+        }
+
+        // Jefe_de_Proyecto: use their own assigned area, ignoring the request value.
+        var userAreaId = await _context.Users
+            .Where(u => u.Id == _currentUser.Id)
+            .Select(u => u.AreaId)
+            .FirstOrDefaultAsync(ct);
+
+        if (string.IsNullOrWhiteSpace(userAreaId))
+        {
+            return (Result.Failure(["El usuario no tiene un área asignada. Contacte a un administrador."]), string.Empty);
+        }
+
+        return (null, userAreaId);
     }
 
     private static void ApplyEjecucion(ProyectoEnEjecucion proyecto, IProyectoEnEjecucionUpsertRequest request, bool forceTributaDesarrolloLocal)
@@ -465,6 +514,8 @@ public sealed class ProyectoService : IProyectoService
             TributaFormacionDoctoral = proyecto.TributaFormacionDoctoral,
             ClasificacionId = proyecto.ClasificacionId,
             ClasificacionNombre = proyecto.Clasificacion.Nombre,
+            AreaId = proyecto.AreaId,
+            AreaNombre = proyecto.Area?.Nombre ?? string.Empty,
             Situacion = proyecto.Situacion,
             Tipo = proyecto.Tipo,
             PublicacionesDerivadas = GetPublicacionesDerivadas(proyecto)
@@ -487,6 +538,8 @@ public sealed class ProyectoService : IProyectoService
             TributaFormacionDoctoral = proyecto.TributaFormacionDoctoral,
             ClasificacionId = proyecto.ClasificacionId,
             ClasificacionNombre = proyecto.Clasificacion.Nombre,
+            AreaId = proyecto.AreaId,
+            AreaNombre = proyecto.Area?.Nombre ?? string.Empty,
             FechaInicio = proyecto.FechaInicio,
             FechaCierre = proyecto.FechaCierre,
             EstadoDeEjecucion = proyecto.EstadoDeEjecucion,
@@ -517,6 +570,8 @@ public sealed class ProyectoService : IProyectoService
             TributaFormacionDoctoral = proyecto.TributaFormacionDoctoral,
             ClasificacionId = proyecto.ClasificacionId,
             ClasificacionNombre = proyecto.Clasificacion.Nombre,
+            AreaId = proyecto.AreaId,
+            AreaNombre = proyecto.Area?.Nombre ?? string.Empty,
             FechaInicio = proyecto.FechaInicio,
             FechaCierre = proyecto.FechaCierre,
             EstadoDeEjecucion = proyecto.EstadoDeEjecucion,
@@ -548,6 +603,8 @@ public sealed class ProyectoService : IProyectoService
             TributaFormacionDoctoral = proyecto.TributaFormacionDoctoral,
             ClasificacionId = proyecto.ClasificacionId,
             ClasificacionNombre = proyecto.Clasificacion.Nombre,
+            AreaId = proyecto.AreaId,
+            AreaNombre = proyecto.Area?.Nombre ?? string.Empty,
             FechaInicio = proyecto.FechaInicio,
             FechaCierre = proyecto.FechaCierre,
             EstadoDeEjecucion = proyecto.EstadoDeEjecucion,
@@ -578,6 +635,8 @@ public sealed class ProyectoService : IProyectoService
             TributaFormacionDoctoral = proyecto.TributaFormacionDoctoral,
             ClasificacionId = proyecto.ClasificacionId,
             ClasificacionNombre = proyecto.Clasificacion.Nombre,
+            AreaId = proyecto.AreaId,
+            AreaNombre = proyecto.Area?.Nombre ?? string.Empty,
             FechaInicio = proyecto.FechaInicio,
             FechaCierre = proyecto.FechaCierre,
             EstadoDeEjecucion = proyecto.EstadoDeEjecucion,
@@ -608,6 +667,8 @@ public sealed class ProyectoService : IProyectoService
             TributaFormacionDoctoral = proyecto.TributaFormacionDoctoral,
             ClasificacionId = proyecto.ClasificacionId,
             ClasificacionNombre = proyecto.Clasificacion.Nombre,
+            AreaId = proyecto.AreaId,
+            AreaNombre = proyecto.Area?.Nombre ?? string.Empty,
             FechaInicio = proyecto.FechaInicio,
             FechaCierre = proyecto.FechaCierre,
             EstadoDeEjecucion = proyecto.EstadoDeEjecucion,
@@ -639,6 +700,8 @@ public sealed class ProyectoService : IProyectoService
             TributaFormacionDoctoral = proyecto.TributaFormacionDoctoral,
             ClasificacionId = proyecto.ClasificacionId,
             ClasificacionNombre = proyecto.Clasificacion.Nombre,
+            AreaId = proyecto.AreaId,
+            AreaNombre = proyecto.Area?.Nombre ?? string.Empty,
             FechaInicio = proyecto.FechaInicio,
             FechaCierre = proyecto.FechaCierre,
             EstadoDeEjecucion = proyecto.EstadoDeEjecucion,

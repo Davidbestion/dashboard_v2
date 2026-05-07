@@ -1,4 +1,5 @@
 using Dashboard_v2.Application.Common.Interfaces;
+using Dashboard_v2.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace Dashboard_v2.Web.Endpoints;
@@ -48,7 +49,7 @@ public class Redes : EndpointGroupBase
     private async Task<IResult> GetRedes(IApplicationDbContext db)
     {
         var list = await db.Reds
-            .Select(r => new RedDto(r.Id, r.Nombre, r.CountryId, r.Country != null ? r.Country.Name : null, r.CantidadProfesores))
+            .Select(r => new RedDto(r.Id, r.Nombre, r.CountryId, r.Country != null ? r.Country.Name : null, r.CantidadProfesores, (int)r.Tipo))
             .ToListAsync();
 
         return Results.Ok(list);
@@ -56,11 +57,15 @@ public class Redes : EndpointGroupBase
 
     private async Task<IResult> CreateRed(IApplicationDbContext db, CreateRedBody body)
     {
+        if (!Enum.IsDefined(typeof(TipoRed), body.Tipo))
+            return Results.BadRequest(new { errors = new[] { "Tipo de red no válido." } });
+
         var entity = new Dashboard_v2.Domain.Entities.Red
         {
             Nombre = body.Nombre,
             CountryId = body.CountryId,
             CantidadProfesores = body.CantidadProfesores,
+            Tipo = (TipoRed)body.Tipo,
         };
 
         db.Reds.Add(entity);
@@ -71,6 +76,9 @@ public class Redes : EndpointGroupBase
 
     private async Task<IResult> UpdateRed(IApplicationDbContext db, string id, UpdateRedBody body)
     {
+        if (!Enum.IsDefined(typeof(TipoRed), body.Tipo))
+            return Results.BadRequest(new { errors = new[] { "Tipo de red no válido." } });
+
         var e = await db.Reds.FindAsync(new object[] { id }, CancellationToken.None);
         if (e == null)
             return Results.NotFound(new { errors = new[] { "Red no encontrada." } });
@@ -78,6 +86,7 @@ public class Redes : EndpointGroupBase
         e.Nombre = body.Nombre;
         e.CountryId = body.CountryId;
         e.CantidadProfesores = body.CantidadProfesores;
+        e.Tipo = (TipoRed)body.Tipo;
 
         await db.SaveChangesAsync(CancellationToken.None);
         return Results.Ok(new { message = "Red actualizada." });
@@ -132,9 +141,9 @@ public class Redes : EndpointGroupBase
     }
 }
 
-public record RedDto(string Id, string Nombre, int? CountryId, string? CountryName, int CantidadProfesores);
-public record CreateRedBody(string Nombre, int CountryId, int CantidadProfesores);
-public record UpdateRedBody(string Nombre, int CountryId, int CantidadProfesores);
+public record RedDto(string Id, string Nombre, int? CountryId, string? CountryName, int CantidadProfesores, int Tipo);
+public record CreateRedBody(string Nombre, int CountryId, int CantidadProfesores, int Tipo);
+public record UpdateRedBody(string Nombre, int CountryId, int CantidadProfesores, int Tipo);
 
 public record EventForRedDto(int Id, string Name, bool Assigned);
 public record SetEventsBody(List<int> EventIds);

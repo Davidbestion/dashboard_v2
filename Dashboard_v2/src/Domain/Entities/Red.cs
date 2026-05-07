@@ -1,3 +1,5 @@
+using Dashboard_v2.Domain.Enums;
+
 namespace Dashboard_v2.Domain.Entities;
 
 /// <summary>
@@ -15,6 +17,11 @@ public class Red
     /// Nombre de la red.
     /// </summary>
     public string Nombre { get; set; } = default!;
+
+    /// <summary>
+    /// Tipo de la red: Universitaria, Nacional o Internacional.
+    /// </summary>
+    public TipoRed Tipo { get; set; } = TipoRed.Universitaria;
 
     /// <summary>
     /// Identificador del país al que pertenece la red.

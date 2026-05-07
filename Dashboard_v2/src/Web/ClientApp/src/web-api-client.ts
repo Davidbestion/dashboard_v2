@@ -10845,6 +10845,7 @@ export class RedDto implements IRedDto {
     countryId?: number | undefined;
     countryName?: string | undefined;
     cantidadProfesores?: number;
+    tipo?: number;
 
     constructor(data?: IRedDto) {
         if (data) {
@@ -10862,6 +10863,7 @@ export class RedDto implements IRedDto {
             this.countryId = _data["countryId"];
             this.countryName = _data["countryName"];
             this.cantidadProfesores = _data["cantidadProfesores"];
+            this.tipo = _data["tipo"];
         }
     }
 
@@ -10879,6 +10881,7 @@ export class RedDto implements IRedDto {
         data["countryId"] = this.countryId;
         data["countryName"] = this.countryName;
         data["cantidadProfesores"] = this.cantidadProfesores;
+        data["tipo"] = this.tipo;
         return data;
     }
 }
@@ -10889,12 +10892,14 @@ export interface IRedDto {
     countryId?: number | undefined;
     countryName?: string | undefined;
     cantidadProfesores?: number;
+    tipo?: number;
 }
 
 export class CreateRedBody implements ICreateRedBody {
     nombre?: string;
     countryId?: number;
     cantidadProfesores?: number;
+    tipo?: number;
 
     constructor(data?: ICreateRedBody) {
         if (data) {
@@ -10910,6 +10915,7 @@ export class CreateRedBody implements ICreateRedBody {
             this.nombre = _data["nombre"];
             this.countryId = _data["countryId"];
             this.cantidadProfesores = _data["cantidadProfesores"];
+            this.tipo = _data["tipo"];
         }
     }
 
@@ -10925,6 +10931,7 @@ export class CreateRedBody implements ICreateRedBody {
         data["nombre"] = this.nombre;
         data["countryId"] = this.countryId;
         data["cantidadProfesores"] = this.cantidadProfesores;
+        data["tipo"] = this.tipo;
         return data;
     }
 }
@@ -10933,12 +10940,14 @@ export interface ICreateRedBody {
     nombre?: string;
     countryId?: number;
     cantidadProfesores?: number;
+    tipo?: number;
 }
 
 export class UpdateRedBody implements IUpdateRedBody {
     nombre?: string;
     countryId?: number;
     cantidadProfesores?: number;
+    tipo?: number;
 
     constructor(data?: IUpdateRedBody) {
         if (data) {
@@ -10954,6 +10963,7 @@ export class UpdateRedBody implements IUpdateRedBody {
             this.nombre = _data["nombre"];
             this.countryId = _data["countryId"];
             this.cantidadProfesores = _data["cantidadProfesores"];
+            this.tipo = _data["tipo"];
         }
     }
 
@@ -10969,6 +10979,7 @@ export class UpdateRedBody implements IUpdateRedBody {
         data["nombre"] = this.nombre;
         data["countryId"] = this.countryId;
         data["cantidadProfesores"] = this.cantidadProfesores;
+        data["tipo"] = this.tipo;
         return data;
     }
 }
@@ -10977,6 +10988,7 @@ export interface IUpdateRedBody {
     nombre?: string;
     countryId?: number;
     cantidadProfesores?: number;
+    tipo?: number;
 }
 
 export class EventForRedDto implements IEventForRedDto {

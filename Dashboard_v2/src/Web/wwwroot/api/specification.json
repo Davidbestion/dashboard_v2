@@ -7019,6 +7019,10 @@
           "cantidadProfesores": {
             "type": "integer",
             "format": "int32"
+          },
+          "tipo": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -7036,6 +7040,10 @@
           "cantidadProfesores": {
             "type": "integer",
             "format": "int32"
+          },
+          "tipo": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -7051,6 +7059,10 @@
             "format": "int32"
           },
           "cantidadProfesores": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tipo": {
             "type": "integer",
             "format": "int32"
           }

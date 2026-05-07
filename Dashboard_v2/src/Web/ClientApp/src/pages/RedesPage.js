@@ -23,7 +23,13 @@ async function apiFetch(url, options = {}) {
   return data;
 }
 
-const emptyForm = { nombre: '', countryId: '', cantidadProfesores: 0 };
+const TIPOS_RED = [
+  { value: 0, label: 'Universitaria' },
+  { value: 1, label: 'Nacional' },
+  { value: 2, label: 'Internacional' },
+];
+
+const emptyForm = { nombre: '', countryId: '', cantidadProfesores: 0, tipo: 0 };
 
 export default function RedesPage() {
   const [items, setItems] = useState([]);
@@ -59,7 +65,7 @@ export default function RedesPage() {
   useEffect(() => { load(); }, [load]);
 
   function openCreate() { setEditing(null); setForm(emptyForm); setFormError(''); setModal(true); }
-  function openEdit(it) { setEditing(it); setForm({ nombre: it.nombre ?? it.Nombre, countryId: (it.countryId ?? it.CountryId ?? '')?.toString?.() ?? '', cantidadProfesores: it.cantidadProfesores ?? it.CantidadProfesores }); setFormError(''); setModal(true); }
+  function openEdit(it) { setEditing(it); setForm({ nombre: it.nombre ?? it.Nombre, countryId: (it.countryId ?? it.CountryId ?? '')?.toString?.() ?? '', cantidadProfesores: it.cantidadProfesores ?? it.CantidadProfesores, tipo: it.tipo ?? it.Tipo ?? 0 }); setFormError(''); setModal(true); }
 
   function openAssign(it) {
     setAssigningRed(it);
@@ -105,7 +111,7 @@ export default function RedesPage() {
 
   async function handleSave(e) {
     if (e) e.preventDefault(); setSaving(true); setFormError('');
-    const body = { nombre: form.nombre, countryId: form.countryId ? parseInt(form.countryId, 10) : null, cantidadProfesores: parseInt(form.cantidadProfesores, 10) };
+    const body = { nombre: form.nombre, countryId: form.countryId ? parseInt(form.countryId, 10) : null, cantidadProfesores: parseInt(form.cantidadProfesores, 10), tipo: parseInt(form.tipo, 10) };
     try {
       if (editing) await apiFetch(`/api/Redes/${editing.id}`, { method: 'PUT', body: JSON.stringify(body) });
       else await apiFetch('/api/Redes', { method: 'POST', body: JSON.stringify(body) });
@@ -141,6 +147,7 @@ export default function RedesPage() {
               { key: 'nombre',              label: 'Nombre', sortable: true, render: v => v },
               { key: 'countryName',         label: 'País' },
               { key: 'cantidadProfesores',  label: 'Cantidad profesores' },
+              { key: 'tipo',                label: 'Tipo', render: v => TIPOS_RED.find(t => t.value === v)?.label ?? v },
             ]}
             data={items}
             keyExtractor={i => i.id}
@@ -174,6 +181,13 @@ export default function RedesPage() {
             <FormGroup>
               <Label>Cantidad de profesores</Label>
               <Input type="number" value={form.cantidadProfesores} onChange={e => setForm(f => ({ ...f, cantidadProfesores: e.target.value }))} />
+            </FormGroup>
+            <FormGroup>
+              <Label for="redTipo">Tipo *</Label>
+              <Input type="select" id="redTipo" value={form.tipo} required
+                onChange={e => setForm(f => ({ ...f, tipo: e.target.value }))}>
+                {TIPOS_RED.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+              </Input>
             </FormGroup>
           </ModalBody>
           <ModalFooter>

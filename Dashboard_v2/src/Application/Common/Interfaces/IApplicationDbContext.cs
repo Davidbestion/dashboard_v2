@@ -39,6 +39,7 @@ public interface IApplicationDbContext
     DbSet<TipoProductoComercializado> TipoProductosComercializados { get; }
     DbSet<ProductoComercializado> ProductosComercializados { get; }
     DbSet<Patente> Patentes { get; }
+    DbSet<StoredFile> StoredFiles { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

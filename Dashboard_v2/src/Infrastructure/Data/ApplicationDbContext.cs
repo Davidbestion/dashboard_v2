@@ -44,6 +44,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<TipoProductoComercializado> TipoProductosComercializados => Set<TipoProductoComercializado>();
     public DbSet<ProductoComercializado> ProductosComercializados => Set<ProductoComercializado>();
     public DbSet<Patente> Patentes => Set<Patente>();
+    public DbSet<StoredFile> StoredFiles => Set<StoredFile>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

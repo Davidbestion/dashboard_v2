@@ -23,6 +23,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
     <PackageReference Include="ClosedXML" />
     <PackageReference Include="ClosedXML.Report" />
+    <PackageReference Include="Minio" />
     <!-- Forzar versiones seguras de dependencias transitivas de ClosedXML -->
     <PackageReference Include="System.Security.Cryptography.Xml" />
     <PackageReference Include="System.IO.Packaging" />

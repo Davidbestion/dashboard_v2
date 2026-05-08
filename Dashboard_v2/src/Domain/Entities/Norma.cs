@@ -9,4 +9,7 @@ public class Norma
     // Institución emisora (1..1)
     public string InstitutionId { get; set; } = default!;
     public Institution Institution { get; set; } = default!;
+
+    /// <summary>Usuarios que son creadores de esta norma (N:M).</summary>
+    public ICollection<UserNorma> Creadores { get; set; } = new List<UserNorma>();
 }

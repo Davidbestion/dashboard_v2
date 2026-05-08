@@ -18,4 +18,7 @@ public class Registro
     /// <summary>Archivo de evidencia/certificado adjunto (opcional).</summary>
     public int? EvidenceFileId { get; set; }
     public StoredFile? EvidenceFile { get; set; }
+
+    /// <summary>Usuarios que son creadores de este registro (N:M).</summary>
+    public ICollection<UserRegistro> Creadores { get; set; } = new List<UserRegistro>();
 }

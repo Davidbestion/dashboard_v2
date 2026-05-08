@@ -12,4 +12,7 @@ public class ProductoComercializado
     // Institución relacionada (0..*) -> (1..1) en Institución
     public string InstitutionId { get; set; } = default!;
     public Institution Institution { get; set; } = default!;
+
+    /// <summary>Usuarios que son creadores de este producto (N:M).</summary>
+    public ICollection<UserProductoComercializado> Creadores { get; set; } = new List<UserProductoComercializado>();
 }

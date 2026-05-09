@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Card, CardBody, CardHeader,
   Table, Button, Spinner, Alert, Badge,
   Modal, ModalHeader, ModalBody, ModalFooter,
-  Form, FormGroup, Label, Input,
+  Form, FormGroup, Label, Input, InputGroup, InputGroupText,
 } from 'reactstrap';
 import { useAuth } from '../contexts/AuthContext';
 import DataTable from '../components/DataTable';
@@ -112,7 +112,29 @@ export default function ProyectosPage() {
   const [selectedPubToLink, setSelectedPubToLink] = useState('');
   const [linkingPub, setLinkingPub] = useState(false);
 
+  // ─ Patentes manager ───────────────────────────────────────────────────────────────
+  const [patentesModal, setPatentesModal] = useState(false);
+  const [patentesTarget, setPatentesTarget] = useState(null);
+  const [patentesList, setPatentesList] = useState([]);
+  const [patentesLoading, setPatentesLoading] = useState(false);
+  const [patentesError, setPatentesError] = useState('');
+  const [availablePatentes, setAvailablePatentes] = useState([]);
+  const [selectedPatenteToLink, setSelectedPatenteToLink] = useState('');
+  const [linkingPatente, setLinkingPatente] = useState(false);
+  const [patentesSearch, setPatentesSearch] = useState('');
+
   const [generatingAnexo, setGeneratingAnexo] = useState(false);
+
+  const filteredPatentes = useMemo(() => {
+    const q = patentesSearch.trim().toLowerCase();
+    if (!q) return patentesList;
+    return patentesList.filter(p =>
+      String(p.titulo ?? '').toLowerCase().includes(q)
+      || String(p.numeroSolicitudConcesion ?? '').toLowerCase().includes(q)
+      || String(p.creador ?? '').toLowerCase().includes(q)
+      || String((p.creadores ?? []).join(', ')).toLowerCase().includes(q)
+    );
+  }, [patentesList, patentesSearch]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -357,6 +379,74 @@ export default function ProyectosPage() {
     }
   }
 
+  async function openPatentesManager(item) {
+    setPatentesTarget(item);
+    setPatentesError('');
+    setPatentesList([]);
+    setAvailablePatentes([]);
+    setSelectedPatenteToLink('');
+    setPatentesSearch('');
+    setPatentesLoading(true);
+    setPatentesModal(true);
+    try {
+      const [linked, allPatentes] = await Promise.all([
+        apiFetch(`/api/Proyectos/${item.id}/patentes`),
+        apiFetch('/api/Patentes/mis'),
+      ]);
+      setPatentesList(linked);
+      setAvailablePatentes(
+        allPatentes
+          .filter(p => !linked.some(lp => lp.patenteId === p.id))
+          .sort((a, b) => a.titulo.localeCompare(b.titulo))
+      );
+    } catch (e) {
+      setPatentesError(e.message);
+    } finally {
+      setPatentesLoading(false);
+    }
+  }
+
+  async function unlinkPatente(patenteId) {
+    setPatentesError('');
+    try {
+      await apiFetch(`/api/Proyectos/${patentesTarget.id}/patentes/${patenteId}`, { method: 'DELETE' });
+      const unlinked = patentesList.find(p => p.patenteId === patenteId);
+      setPatentesList(prev => prev.filter(p => p.patenteId !== patenteId));
+      if (unlinked) {
+        setAvailablePatentes(prev => [
+          ...prev,
+          { id: unlinked.patenteId, titulo: unlinked.titulo },
+        ].sort((a, b) => a.titulo.localeCompare(b.titulo)));
+      }
+      load();
+    } catch (e) {
+      setPatentesError(e.message);
+    }
+  }
+
+  async function linkPatente() {
+    if (!selectedPatenteToLink) return;
+    setLinkingPatente(true);
+    setPatentesError('');
+    try {
+      await apiFetch(`/api/Proyectos/${patentesTarget.id}/patentes/${selectedPatenteToLink}`, { method: 'POST' });
+      const linked = availablePatentes.find(p => p.id === selectedPatenteToLink);
+      setAvailablePatentes(prev => prev.filter(p => p.id !== selectedPatenteToLink));
+      if (linked) {
+        setPatentesList(prev => [
+          ...prev,
+          { patenteId: linked.id, titulo: linked.titulo },
+        ].sort((a, b) => a.titulo.localeCompare(b.titulo)));
+      }
+      setSelectedPatenteToLink('');
+      load();
+    } catch (e) {
+      setPatentesError(e.message);
+    } finally {
+      setLinkingPatente(false);
+    }
+  }
+
   return (
     <>
       <Card>
@@ -423,6 +513,7 @@ export default function ProyectosPage() {
               data={items}
               keyExtractor={item => item.id}
               actions={[
+                { key: 'patentes', label: 'Patentes', icon: 'bi-lightbulb', color: 'outline-info', onClick: item => openPatentesManager(item) },
                 { key: 'edit',   label: 'Editar',   icon: 'bi-pencil', color: 'outline-secondary', onClick: item => openEdit(item),        disabled: () => loadingEdit },
                 { key: 'delete', label: 'Eliminar', icon: 'bi-trash',  color: 'outline-danger',    onClick: item => setDeleteTarget(item) },
               ]}
@@ -777,6 +868,92 @@ export default function ProyectosPage() {
         </ModalBody>
         <ModalFooter>
           <Button color="secondary" onClick={() => setPubsModal(false)}>Cerrar</Button>
+        </ModalFooter>
+      </Modal>
+
+      <Modal isOpen={patentesModal} toggle={() => setPatentesModal(false)} size="lg" scrollable>
+        <ModalHeader toggle={() => setPatentesModal(false)}>
+          Patentes vinculadas
+        </ModalHeader>
+        <ModalBody>
+          <p className="text-muted small mb-3">
+            Proyecto: <strong>{patentesTarget?.titulo}</strong>
+          </p>
+          {patentesError && <Alert color="danger">{patentesError}</Alert>}
+          {!patentesLoading && availablePatentes.length > 0 && (
+            <div className="d-flex gap-2 align-items-center mb-3">
+              <Input type="select" value={selectedPatenteToLink}
+                     onChange={e => setSelectedPatenteToLink(e.target.value)}
+                     style={{ flex: 1 }}>
+                <option value="">— Vincular patente propia —</option>
+                {availablePatentes.map(p => (
+                  <option key={p.id} value={p.id}>{p.titulo}</option>
+                ))}
+              </Input>
+              <Button color="success" size="sm" onClick={linkPatente}
+                      disabled={!selectedPatenteToLink || linkingPatente}>
+                {linkingPatente ? <Spinner size="sm" /> : 'Vincular'}
+              </Button>
+            </div>
+          )}
+          {!patentesLoading && (
+            <InputGroup className="mb-3">
+              <InputGroupText>
+                <i className="bi bi-search" />
+              </InputGroupText>
+              <Input
+                value={patentesSearch}
+                onChange={e => setPatentesSearch(e.target.value)}
+                placeholder="Buscar por título, número de solicitud o creador"
+              />
+              {patentesSearch && (
+                <Button color="outline-secondary" onClick={() => setPatentesSearch('')}>
+                  Limpiar
+                </Button>
+              )}
+            </InputGroup>
+          )}
+          {patentesLoading ? (
+            <div className="text-center py-3"><Spinner /></div>
+          ) : filteredPatentes.length === 0 ? (
+            <p className="text-muted mb-0">Sin patentes vinculadas aún.</p>
+          ) : (
+            <DataTable
+              data={filteredPatentes}
+              keyExtractor={item => item.patenteId}
+              pageSize={5}
+              columns={[
+                { key: 'titulo', label: 'Título', sortable: true },
+                { key: 'numeroSolicitudConcesion', label: 'Nro. solicitud', sortable: true },
+                {
+                  key: 'esNacional',
+                  label: 'Tipo',
+                  sortable: true,
+                  sortValue: v => (v ? 1 : 0),
+                  render: v => (v ? 'Nacional' : 'Internacional'),
+                },
+                { key: 'creador', label: 'Creador', sortable: true, render: v => v || '—' },
+                {
+                  key: 'creadores',
+                  label: 'Creadores',
+                  render: v => (Array.isArray(v) && v.length ? v.join(', ') : '—'),
+                },
+              ]}
+              actionsLabel=""
+              actions={[
+                {
+                  key: 'unlink',
+                  label: 'Desvincular',
+                  icon: 'bi-x-lg',
+                  color: 'outline-danger',
+                  onClick: item => unlinkPatente(item.patenteId),
+                },
+              ]}
+            />
+          )}
+        </ModalBody>
+        <ModalFooter>
+          <Button color="secondary" onClick={() => setPatentesModal(false)}>Cerrar</Button>
         </ModalFooter>
       </Modal>
     </>

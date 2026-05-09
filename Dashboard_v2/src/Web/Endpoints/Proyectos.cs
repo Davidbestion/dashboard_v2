@@ -375,8 +375,23 @@ public class Proyectos : EndpointGroupBase
 
         var list = await db.ProyectoPatentes
             .Where(pp => pp.ProyectoId == id)
-            .Include(pp => pp.Patente)
-            .Select(pp => new { pp.PatenteId, Titulo = pp.Patente.Titulo })
+            .Select(pp => new
+            {
+                patenteId = pp.PatenteId,
+                titulo = pp.Patente.Titulo,
+                numeroSolicitudConcesion = pp.Patente.NumeroSolicitudConcesion,
+                esNacional = pp.Patente.EsNacional,
+                creador = pp.Patente.Creadores
+                    .OrderBy(c => c.User.UserName)
+                    .ThenBy(c => c.User.UserLastName1)
+                    .Select(c => (c.User.UserName + " " + c.User.UserLastName1).Trim())
+                    .FirstOrDefault(),
+                creadores = pp.Patente.Creadores
+                    .OrderBy(c => c.User.UserName)
+                    .ThenBy(c => c.User.UserLastName1)
+                    .Select(c => (c.User.UserName + " " + c.User.UserLastName1).Trim())
+                    .ToList()
+            })
             .ToListAsync(ct);
         return Results.Ok(list);
     }

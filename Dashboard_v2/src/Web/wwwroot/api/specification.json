@@ -2175,6 +2175,29 @@
         }
       }
     },
+    "/api/Normas/mis": {
+      "get": {
+        "tags": [
+          "Normas"
+        ],
+        "operationId": "GetMisNormas",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NormaDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Normas/{id}": {
       "put": {
         "tags": [
@@ -2307,6 +2330,167 @@
             "description": ""
           },
           "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Patentes/mis": {
+      "get": {
+        "tags": [
+          "Patentes"
+        ],
+        "operationId": "GetMisPatentes",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PatenteDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Patentes/{id}/proyectos": {
+      "get": {
+        "tags": [
+          "Patentes"
+        ],
+        "operationId": "GetProyectosDePatente",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProyectoPatenteDto"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Patentes/{id}/proyectos/{proyectoId}": {
+      "post": {
+        "tags": [
+          "Patentes"
+        ],
+        "operationId": "LinkProyectoAPatente",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "proyectoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 2
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Patentes"
+        ],
+        "operationId": "UnlinkProyectoDePatente",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "proyectoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 2
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "404": {
             "description": "",
             "content": {
               "application/json": {
@@ -2622,6 +2806,29 @@
         }
       }
     },
+    "/api/ProductosComercializados/mis": {
+      "get": {
+        "tags": [
+          "ProductosComercializados"
+        ],
+        "operationId": "GetMisProductosComercializados",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProductoDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/ProductosComercializados/{id}": {
       "put": {
         "tags": [
@@ -2885,6 +3092,124 @@
           },
           {
             "name": "pubId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 2
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Proyectos/{id}/patentes": {
+      "get": {
+        "tags": [
+          "Proyectos"
+        ],
+        "operationId": "GetPatentesDelProyecto",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/Proyectos/{id}/patentes/{patenteId}": {
+      "post": {
+        "tags": [
+          "Proyectos"
+        ],
+        "operationId": "LinkPatenteAProyecto",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "patenteId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 2
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Proyectos"
+        ],
+        "operationId": "UnlinkPatenteDeProyecto",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "patenteId",
             "in": "path",
             "required": true,
             "schema": {
@@ -4695,6 +5020,29 @@
         }
       }
     },
+    "/api/Registros/mis": {
+      "get": {
+        "tags": [
+          "Registros"
+        ],
+        "operationId": "GetMisRegistros",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RegistroDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Registros/{id}": {
       "put": {
         "tags": [
@@ -6209,6 +6557,12 @@
           },
           "institutionNombre": {
             "type": "string"
+          },
+          "creadores": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -6257,6 +6611,24 @@
           },
           "esNacional": {
             "type": "boolean"
+          },
+          "creadores": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "ProyectoPatenteDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "proyectoId": {
+            "type": "string"
+          },
+          "proyectoTitulo": {
+            "type": "string"
           }
         }
       },
@@ -6423,6 +6795,12 @@
           },
           "institutionNombre": {
             "type": "string"
+          },
+          "creadores": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -7532,6 +7910,12 @@
             "type": "integer",
             "format": "int32",
             "nullable": true
+          },
+          "creadores": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },

@@ -12,6 +12,14 @@ import GruposEstudiantilesPage from "./pages/GruposEstudiantilesPage";
 import RegistrosPage from "./pages/RegistrosPage";
 import NormasPage from "./pages/NormasPage";
 import PatentesPage from "./pages/PatentesPage";
+import MisPatentesPage from "./pages/MisPatentesPage";
+import MisRegistrosPage from "./pages/MisRegistrosPage";
+import MisNormasPage from "./pages/MisNormasPage";
+import MisProductosPage from "./pages/MisProductosPage";
+import PatentesAreaPage from "./pages/PatentesAreaPage";
+import RegistrosAreaPage from "./pages/RegistrosAreaPage";
+import NormasAreaPage from "./pages/NormasAreaPage";
+import ProductosAreaPage from "./pages/ProductosAreaPage";
 import ProductosComercializadosPage from "./pages/ProductosComercializadosPage";
 import RedesPage from "./pages/RedesPage";
 import LineasDeInvestigacionPage from "./pages/LineasDeInvestigacionPage";
@@ -117,6 +125,56 @@ const AppRoutes = [
     path: '/publicaciones-area',
     element: <PublicacionesConsultaPage apiUrl="/api/Publications/area" />,
     pageTitle: 'Publicaciones del Área',
+    vicedecanoOnly: true,
+  },
+  // Profesor — Mis producciones
+  {
+    path: '/mis-patentes',
+    element: <MisPatentesPage />,
+    pageTitle: 'Mis Patentes',
+    profesorOnly: true,
+  },
+  {
+    path: '/mis-registros',
+    element: <MisRegistrosPage />,
+    pageTitle: 'Mis Registros',
+    profesorOnly: true,
+  },
+  {
+    path: '/mis-normas',
+    element: <MisNormasPage />,
+    pageTitle: 'Mis Normas',
+    profesorOnly: true,
+  },
+  {
+    path: '/mis-productos',
+    element: <MisProductosPage />,
+    pageTitle: 'Mis Productos Comercializados',
+    profesorOnly: true,
+  },
+  // Vicedecano — producciones del área
+  {
+    path: '/patentes-area',
+    element: <PatentesAreaPage />,
+    pageTitle: 'Patentes del Área',
+    vicedecanoOnly: true,
+  },
+  {
+    path: '/registros-area',
+    element: <RegistrosAreaPage />,
+    pageTitle: 'Registros del Área',
+    vicedecanoOnly: true,
+  },
+  {
+    path: '/normas-area',
+    element: <NormasAreaPage />,
+    pageTitle: 'Normas del Área',
+    vicedecanoOnly: true,
+  },
+  {
+    path: '/productos-area',
+    element: <ProductosAreaPage />,
+    pageTitle: 'Productos del Área',
     vicedecanoOnly: true,
   },
   {

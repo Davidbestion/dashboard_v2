@@ -49,6 +49,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<UserNorma> UserNormas => Set<UserNorma>();
     public DbSet<UserProductoComercializado> UserProductosComercializados => Set<UserProductoComercializado>();
     public DbSet<UserPatente> UserPatentes => Set<UserPatente>();
+    public DbSet<ProyectoPatente> ProyectoPatentes => Set<ProyectoPatente>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

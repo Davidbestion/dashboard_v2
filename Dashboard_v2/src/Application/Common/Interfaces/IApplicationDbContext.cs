@@ -44,6 +44,7 @@ public interface IApplicationDbContext
     DbSet<UserNorma> UserNormas { get; }
     DbSet<UserProductoComercializado> UserProductosComercializados { get; }
     DbSet<UserPatente> UserPatentes { get; }
+    DbSet<ProyectoPatente> ProyectoPatentes { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

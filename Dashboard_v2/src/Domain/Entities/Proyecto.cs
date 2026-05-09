@@ -41,4 +41,7 @@ public abstract class Proyecto
 
     /// <summary>Publicaciones académicas derivadas de este proyecto (navegación inversa).</summary>
     public ICollection<Publication> PublicacionesDerivadas { get; set; } = new List<Publication>();
+
+    /// <summary>Patentes derivadas de este proyecto (N:M).</summary>
+    public ICollection<ProyectoPatente> PatentesDerivadas { get; set; } = new List<ProyectoPatente>();
 }

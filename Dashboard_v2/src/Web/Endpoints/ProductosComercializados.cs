@@ -1,5 +1,6 @@
 using Dashboard_v2.Application.Common.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using RolesEnum = Dashboard_v2.Domain.Enums.Roles;
 
 namespace Dashboard_v2.Web.Endpoints;
 
@@ -10,6 +11,11 @@ public class ProductosComercializados : EndpointGroupBase
         groupBuilder.MapGet("", GetAll)
             .RequireAuthorization()
             .WithName("GetProductosComercializados")
+            .Produces<List<ProductoDto>>(200);
+
+        groupBuilder.MapGet("mis", GetMis)
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Jefe_de_Proyecto), nameof(RolesEnum.Superuser)))
+            .WithName("GetMisProductosComercializados")
             .Produces<List<ProductoDto>>(200);
 
         groupBuilder.MapPost("", Create)
@@ -37,15 +43,31 @@ public class ProductosComercializados : EndpointGroupBase
         var list = await db.ProductosComercializados
             .Include(p => p.TipoProductoComercializado)
             .Include(p => p.Institution)
+            .Include(p => p.Creadores).ThenInclude(c => c.User)
             .Select(p => new ProductoDto(
-                p.Id,
-                p.Titulo,
-                p.TipoProductoComercializadoId,
-                p.TipoProductoComercializado.Nombre,
-                p.InstitutionId,
-                p.Institution.Nombre))
+                p.Id, p.Titulo,
+                p.TipoProductoComercializadoId, p.TipoProductoComercializado.Nombre,
+                p.InstitutionId, p.Institution.Nombre,
+                p.Creadores.Select(c => c.User.UserName + " " + c.User.UserLastName1).ToList()))
             .ToListAsync();
+        return Results.Ok(list);
+    }
 
+    private static async Task<IResult> GetMis(IApplicationDbContext db, IUser currentUser)
+    {
+        var userId = currentUser.Id;
+        var list = await db.UserProductosComercializados
+            .Where(up => up.UserId == userId)
+            .Include(up => up.ProductoComercializado).ThenInclude(p => p.TipoProductoComercializado)
+            .Include(up => up.ProductoComercializado).ThenInclude(p => p.Institution)
+            .Include(up => up.ProductoComercializado).ThenInclude(p => p.Creadores).ThenInclude(c => c.User)
+            .Select(up => new ProductoDto(
+                up.ProductoComercializado.Id, up.ProductoComercializado.Titulo,
+                up.ProductoComercializado.TipoProductoComercializadoId,
+                up.ProductoComercializado.TipoProductoComercializado.Nombre,
+                up.ProductoComercializado.InstitutionId, up.ProductoComercializado.Institution.Nombre,
+                up.ProductoComercializado.Creadores.Select(c => c.User.UserName + " " + c.User.UserLastName1).ToList()))
+            .ToListAsync();
         return Results.Ok(list);
     }
 
@@ -90,6 +112,6 @@ public class ProductosComercializados : EndpointGroupBase
     }
 }
 
-public record ProductoDto(string Id, string Titulo, string TipoProductoComercializadoId, string TipoProductoComercializadoNombre, string InstitutionId, string InstitutionNombre);
+public record ProductoDto(string Id, string Titulo, string TipoProductoComercializadoId, string TipoProductoComercializadoNombre, string InstitutionId, string InstitutionNombre, List<string> Creadores);
 public record CreateProductoBody(string Titulo, string TipoProductoComercializadoId, string InstitutionId);
 public record UpdateProductoBody(string Titulo, string TipoProductoComercializadoId, string InstitutionId);

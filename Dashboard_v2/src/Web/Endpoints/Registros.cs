@@ -1,5 +1,6 @@
 using Dashboard_v2.Application.Common.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using RolesEnum = Dashboard_v2.Domain.Enums.Roles;
 
 namespace Dashboard_v2.Web.Endpoints;
 
@@ -10,6 +11,11 @@ public class Registros : EndpointGroupBase
         groupBuilder.MapGet("", GetRegistros)
             .RequireAuthorization()
             .WithName("GetRegistros")
+            .Produces<List<RegistroDto>>(200);
+
+        groupBuilder.MapGet("mis", GetMisRegistros)
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Jefe_de_Proyecto), nameof(RolesEnum.Superuser)))
+            .WithName("GetMisRegistros")
             .Produces<List<RegistroDto>>(200);
 
         groupBuilder.MapPost("", CreateRegistro)
@@ -37,18 +43,29 @@ public class Registros : EndpointGroupBase
         var list = await db.Registros
             .Include(r => r.Country)
             .Include(r => r.Institution)
+            .Include(r => r.Creadores).ThenInclude(c => c.User)
             .Select(r => new RegistroDto(
-                r.Id,
-                r.Titulo,
-                r.NumeroCertificado,
-                r.EsInformatico,
-                r.CountryId,
-                r.Country.Name,
-                r.InstitutionId,
-                r.Institution.Nombre,
-                r.EvidenceFileId))
+                r.Id, r.Titulo, r.NumeroCertificado, r.EsInformatico,
+                r.CountryId, r.Country.Name, r.InstitutionId, r.Institution.Nombre, r.EvidenceFileId,
+                r.Creadores.Select(c => c.User.UserName + " " + c.User.UserLastName1).ToList()))
             .ToListAsync();
+        return Results.Ok(list);
+    }
 
+    private static async Task<IResult> GetMisRegistros(IApplicationDbContext db, IUser currentUser)
+    {
+        var userId = currentUser.Id;
+        var list = await db.UserRegistros
+            .Where(ur => ur.UserId == userId)
+            .Include(ur => ur.Registro).ThenInclude(r => r.Country)
+            .Include(ur => ur.Registro).ThenInclude(r => r.Institution)
+            .Include(ur => ur.Registro).ThenInclude(r => r.Creadores).ThenInclude(c => c.User)
+            .Select(ur => new RegistroDto(
+                ur.Registro.Id, ur.Registro.Titulo, ur.Registro.NumeroCertificado, ur.Registro.EsInformatico,
+                ur.Registro.CountryId, ur.Registro.Country.Name,
+                ur.Registro.InstitutionId, ur.Registro.Institution.Nombre, ur.Registro.EvidenceFileId,
+                ur.Registro.Creadores.Select(c => c.User.UserName + " " + c.User.UserLastName1).ToList()))
+            .ToListAsync();
         return Results.Ok(list);
     }
 
@@ -99,6 +116,6 @@ public class Registros : EndpointGroupBase
     }
 }
 
-public record RegistroDto(string Id, string Titulo, string NumeroCertificado, bool EsInformatico, int CountryId, string CountryName, string InstitutionId, string InstitutionNombre, int? EvidenceFileId);
+public record RegistroDto(string Id, string Titulo, string NumeroCertificado, bool EsInformatico, int CountryId, string CountryName, string InstitutionId, string InstitutionNombre, int? EvidenceFileId, List<string> Creadores);
 public record CreateRegistroBody(string Titulo, string NumeroCertificado, bool EsInformatico, int CountryId, string InstitutionId, int? EvidenceFileId = null);
 public record UpdateRegistroBody(string Titulo, string NumeroCertificado, bool EsInformatico, int CountryId, string InstitutionId, int? EvidenceFileId = null);

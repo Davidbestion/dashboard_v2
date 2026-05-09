@@ -9,4 +9,7 @@ public class Patente
 
     /// <summary>Usuarios que son creadores de esta patente (N:M).</summary>
     public ICollection<UserPatente> Creadores { get; set; } = new List<UserPatente>();
+
+    /// <summary>Proyectos de los que esta patente es resultado (N:M).</summary>
+    public ICollection<ProyectoPatente> ProyectosDerivados { get; set; } = new List<ProyectoPatente>();
 }

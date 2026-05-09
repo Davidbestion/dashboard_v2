@@ -18,6 +18,10 @@ const profesorGroups = [
       { to: '/publications', icon: 'bi-journal-text', label: 'Mis publicaciones' },
       { to: '/awards', icon: 'bi-trophy', label: 'Mis premios' },
       { to: '/events', icon: 'bi-mic', label: 'Mis eventos' },
+      { to: '/mis-patentes',  icon: 'bi-lightbulb', label: 'Mis Patentes' },
+      { to: '/mis-registros', icon: 'bi-clipboard-check', label: 'Mis Registros' },
+      { to: '/mis-normas',    icon: 'bi-file-earmark-text', label: 'Mis Normas' },
+      { to: '/mis-productos', icon: 'bi-box-seam', label: 'Mis Productos' },
     ],
   },
 ];
@@ -64,6 +68,10 @@ const vicedecanoGroups = [
     heading: 'Actividad del Área',
     items: [
       { to: '/publicaciones-area', icon: 'bi-journal-text', label: 'Publicaciones del Área' },
+      { to: '/patentes-area',       icon: 'bi-lightbulb',         label: 'Patentes del Área' },
+      { to: '/registros-area',      icon: 'bi-clipboard-check',   label: 'Registros del Área' },
+      { to: '/normas-area',         icon: 'bi-file-earmark-text', label: 'Normas del Área' },
+      { to: '/productos-area',      icon: 'bi-box-seam',          label: 'Productos del Área' },
       { to: '/events', icon: 'bi-mic', label: 'Eventos' },
     ],
   },

@@ -21,7 +21,7 @@ public class UserNormaConfiguration : IEntityTypeConfiguration<UserNorma>
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasOne(un => un.Norma)
-            .WithMany(n => n.Creadores)
+            .WithMany()
             .HasForeignKey(un => un.NormaId)
             .OnDelete(DeleteBehavior.Cascade);
     }

@@ -21,7 +21,7 @@ public class UserRegistroConfiguration : IEntityTypeConfiguration<UserRegistro>
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasOne(ur => ur.Registro)
-            .WithMany(r => r.Creadores)
+            .WithMany()
             .HasForeignKey(ur => ur.RegistroId)
             .OnDelete(DeleteBehavior.Cascade);
     }

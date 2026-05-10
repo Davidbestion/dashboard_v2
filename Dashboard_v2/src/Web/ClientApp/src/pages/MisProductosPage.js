@@ -5,6 +5,8 @@ import {
   Form, FormGroup, Label, Input, InputGroup,
 } from 'reactstrap';
 import FilterableDataTable from '../components/FilterableDataTable';
+import CoauthorPicker from '../components/CoauthorPicker';
+import { useAuth } from '../contexts/AuthContext';
 
 const EMPTY_FORM = { titulo: '', tipoProductoComercializadoId: '', institutionId: '' };
 
@@ -23,6 +25,7 @@ async function apiFetch(url, options = {}) {
 }
 
 export default function MisProductosPage() {
+  const { user } = useAuth();
   const [items, setItems]         = useState([]);
   const [institutions, setInstitutions] = useState([]);
   const [tipos, setTipos]         = useState([]);
@@ -34,6 +37,7 @@ export default function MisProductosPage() {
   const [form, setForm]           = useState(EMPTY_FORM);
   const [saving, setSaving]       = useState(false);
   const [formError, setFormError] = useState('');
+  const [coauthorTags, setCoauthorTags] = useState([]);
 
   const [showNewInst, setShowNewInst]       = useState(false);
   const [newInstInput, setNewInstInput]     = useState('');
@@ -59,14 +63,38 @@ export default function MisProductosPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  function openCreate() { setEditing(null); setForm(EMPTY_FORM); setFormError(''); setShowNewInst(false); setModal(true); }
-  function openEdit(item) { setEditing(item); setForm({ titulo: item.titulo, tipoProductoComercializadoId: item.tipoProductoComercializadoId, institutionId: item.institutionId }); setFormError(''); setShowNewInst(false); setModal(true); }
+  function openCreate() { setEditing(null); setForm(EMPTY_FORM); setFormError(''); setShowNewInst(false); setCoauthorTags([]); setModal(true); }
+  function mapCreatorToPickerEntry(creator) {
+    return {
+      id: creator.id,
+      name: creator.name,
+      type: 'author',
+      linkedUser: null,
+    };
+  }
+  function openEdit(item) {
+    setEditing(item);
+    setForm({ titulo: item.titulo, tipoProductoComercializadoId: item.tipoProductoComercializadoId, institutionId: item.institutionId });
+    const initialTags = (item.creadoresDetalle ?? [])
+      .filter(c => c.userId !== user?.id)
+      .map(mapCreatorToPickerEntry);
+    setCoauthorTags(initialTags);
+    setFormError('');
+    setShowNewInst(false);
+    setModal(true);
+  }
   async function handleSave(e) {
     if (e) e.preventDefault();
     setSaving(true); setFormError('');
+    const body = {
+      ...form,
+      additionalAuthorIds: coauthorTags.filter(t => t.type === 'author').map(t => t.id),
+      additionalAuthorNames: coauthorTags.filter(t => t.type === 'new').map(t => t.name),
+      additionalUserIds: coauthorTags.filter(t => t.type === 'user').map(t => t.id),
+    };
     try {
-      if (editing) await apiFetch(`/api/ProductosComercializados/${editing.id}`, { method: 'PUT', body: JSON.stringify(form) });
-      else         await apiFetch('/api/ProductosComercializados',               { method: 'POST', body: JSON.stringify(form) });
+      if (editing) await apiFetch(`/api/ProductosComercializados/${editing.id}`, { method: 'PUT', body: JSON.stringify(body) });
+      else         await apiFetch('/api/ProductosComercializados',               { method: 'POST', body: JSON.stringify(body) });
       setModal(false); await load();
     } catch (e) { setFormError(e.message); } finally { setSaving(false); }
   }
@@ -169,6 +197,10 @@ export default function MisProductosPage() {
                   <Button color="link" className="p-0 mt-1 small" onClick={() => setShowNewInst(true)}>+ Nueva institución</Button>
                 </>
               )}
+            </FormGroup>
+            <FormGroup>
+              <Label>Creadores</Label>
+              <CoauthorPicker value={coauthorTags} onChange={setCoauthorTags} />
             </FormGroup>
           </ModalBody>
           <ModalFooter>

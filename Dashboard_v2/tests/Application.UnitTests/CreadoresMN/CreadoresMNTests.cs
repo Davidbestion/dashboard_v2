@@ -156,13 +156,11 @@ public class CreadoresMNTests
         db.UserRegistros.Add(new UserRegistro { UserId = "u1", RegistroId = "r1" });
         await db.SaveChangesAsync();
 
-        var registro = await db.Registros
-            .Include(r => r.Creadores)
-            .ThenInclude(ur => ur.User)
-            .SingleAsync(r => r.Id == "r1");
+        var registroCreator = await db.UserRegistros
+            .Include(ur => ur.User)
+            .SingleAsync(ur => ur.RegistroId == "r1");
 
-        registro.Creadores.ShouldHaveSingleItem();
-        registro.Creadores.First().User.Id.ShouldBe("u1");
+        registroCreator.User.Id.ShouldBe("u1");
     }
 
     [Test]
@@ -315,13 +313,11 @@ public class CreadoresMNTests
         db.UserNormas.Add(new UserNorma { UserId = "u1", NormaId = "n1" });
         await db.SaveChangesAsync();
 
-        var norma = await db.Normas
-            .Include(n => n.Creadores)
-            .ThenInclude(un => un.User)
-            .SingleAsync(n => n.Id == "n1");
+        var normaCreator = await db.UserNormas
+            .Include(un => un.User)
+            .SingleAsync(un => un.NormaId == "n1");
 
-        norma.Creadores.ShouldHaveSingleItem();
-        norma.Creadores.First().User.Id.ShouldBe("u1");
+        normaCreator.User.Id.ShouldBe("u1");
     }
 
     [Test]
@@ -462,13 +458,11 @@ public class CreadoresMNTests
         });
         await db.SaveChangesAsync();
 
-        var producto = await db.ProductosComercializados
-            .Include(p => p.Creadores)
-            .ThenInclude(up => up.User)
-            .SingleAsync(p => p.Id == "p1");
+        var productoCreator = await db.UserProductosComercializados
+            .Include(up => up.User)
+            .SingleAsync(up => up.ProductoComercializadoId == "p1");
 
-        producto.Creadores.ShouldHaveSingleItem();
-        producto.Creadores.First().User.Id.ShouldBe("u1");
+        productoCreator.User.Id.ShouldBe("u1");
     }
 
     [Test]
@@ -599,13 +593,11 @@ public class CreadoresMNTests
         db.UserPatentes.Add(new UserPatente { UserId = "u1", PatenteId = "pat1" });
         await db.SaveChangesAsync();
 
-        var patente = await db.Patentes
-            .Include(p => p.Creadores)
-            .ThenInclude(up => up.User)
-            .SingleAsync(p => p.Id == "pat1");
+        var patenteCreator = await db.UserPatentes
+            .Include(up => up.User)
+            .SingleAsync(up => up.PatenteId == "pat1");
 
-        patente.Creadores.ShouldHaveSingleItem();
-        patente.Creadores.First().User.Id.ShouldBe("u1");
+        patenteCreator.User.Id.ShouldBe("u1");
     }
 
     [Test]

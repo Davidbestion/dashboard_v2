@@ -57,15 +57,4 @@ public class User
     /// </summary>
     public Area? Area { get; set; }
 
-    /// <summary>Registros de los que este usuario es creador (N:M).</summary>
-    public ICollection<UserRegistro> RegistrosCreados { get; set; } = new List<UserRegistro>();
-
-    /// <summary>Normas de las que este usuario es creador (N:M).</summary>
-    public ICollection<UserNorma> NormasCreadas { get; set; } = new List<UserNorma>();
-
-    /// <summary>Productos comercializados de los que este usuario es creador (N:M).</summary>
-    public ICollection<UserProductoComercializado> ProductosComercializadosCreados { get; set; } = new List<UserProductoComercializado>();
-
-    /// <summary>Patentes de las que este usuario es creador (N:M).</summary>
-    public ICollection<UserPatente> PatentesCreadas { get; set; } = new List<UserPatente>();
 }

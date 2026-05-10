@@ -6563,6 +6563,28 @@
             "items": {
               "type": "string"
             }
+          },
+          "creadoresDetalle": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NormaCreatorDto"
+            }
+          }
+        }
+      },
+      "NormaCreatorDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string",
+            "nullable": true
           }
         }
       },
@@ -6578,6 +6600,27 @@
           },
           "institutionId": {
             "type": "string"
+          },
+          "additionalAuthorIds": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "additionalAuthorNames": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "additionalUserIds": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -6593,6 +6636,27 @@
           },
           "institutionId": {
             "type": "string"
+          },
+          "additionalAuthorIds": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "additionalAuthorNames": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "additionalUserIds": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -6617,6 +6681,28 @@
             "items": {
               "type": "string"
             }
+          },
+          "creadoresDetalle": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreatorDto"
+            }
+          }
+        }
+      },
+      "CreatorDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string",
+            "nullable": true
           }
         }
       },
@@ -6644,6 +6730,27 @@
           },
           "esNacional": {
             "type": "boolean"
+          },
+          "additionalAuthorIds": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "additionalAuthorNames": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "additionalUserIds": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -6659,6 +6766,27 @@
           },
           "esNacional": {
             "type": "boolean"
+          },
+          "additionalAuthorIds": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "additionalAuthorNames": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "additionalUserIds": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -6801,6 +6929,28 @@
             "items": {
               "type": "string"
             }
+          },
+          "creadoresDetalle": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductoCreatorDto"
+            }
+          }
+        }
+      },
+      "ProductoCreatorDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string",
+            "nullable": true
           }
         }
       },
@@ -6816,6 +6966,27 @@
           },
           "institutionId": {
             "type": "string"
+          },
+          "additionalAuthorIds": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "additionalAuthorNames": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "additionalUserIds": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -6831,6 +7002,27 @@
           },
           "institutionId": {
             "type": "string"
+          },
+          "additionalAuthorIds": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "additionalAuthorNames": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "additionalUserIds": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -7916,6 +8108,28 @@
             "items": {
               "type": "string"
             }
+          },
+          "creadoresDetalle": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RegistroCreatorDto"
+            }
+          }
+        }
+      },
+      "RegistroCreatorDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string",
+            "nullable": true
           }
         }
       },
@@ -7943,6 +8157,27 @@
             "type": "integer",
             "format": "int32",
             "nullable": true
+          },
+          "additionalAuthorIds": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "additionalAuthorNames": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "additionalUserIds": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -7970,6 +8205,27 @@
             "type": "integer",
             "format": "int32",
             "nullable": true
+          },
+          "additionalAuthorIds": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "additionalAuthorNames": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "additionalUserIds": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
           }
         }
       },

@@ -19,6 +19,6 @@ public class Registro
     public int? EvidenceFileId { get; set; }
     public StoredFile? EvidenceFile { get; set; }
 
-    /// <summary>Usuarios que son creadores de este registro (N:M).</summary>
-    public ICollection<UserRegistro> Creadores { get; set; } = new List<UserRegistro>();
+    /// <summary>Autores que son creadores de este registro (N:M).</summary>
+    public ICollection<AuthorRegistro> Creadores { get; set; } = new List<AuthorRegistro>();
 }

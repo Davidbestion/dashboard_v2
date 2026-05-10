@@ -3,9 +3,11 @@ import {
   Card, CardBody, CardHeader,
   Button, Spinner, Alert,
   Modal, ModalHeader, ModalBody, ModalFooter,
-  Form, FormGroup, Label, Input, FormFeedback,
+  Form, FormGroup, Label, Input,
 } from 'reactstrap';
 import FilterableDataTable from '../components/FilterableDataTable';
+import CoauthorPicker from '../components/CoauthorPicker';
+import { useAuth } from '../contexts/AuthContext';
 
 const EMPTY_FORM = { titulo: '', numeroSolicitudConcesion: '', esNacional: true };
 
@@ -24,6 +26,7 @@ async function apiFetch(url, options = {}) {
 }
 
 export default function MisPatentesPage() {
+  const { user } = useAuth();
   const [items, setItems]   = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError]   = useState('');
@@ -34,6 +37,7 @@ export default function MisPatentesPage() {
   const [form, setForm]       = useState(EMPTY_FORM);
   const [saving, setSaving]   = useState(false);
   const [formError, setFormError] = useState('');
+  const [coauthorTags, setCoauthorTags] = useState([]);
 
   // Delete confirmation
   const [deleteModal, setDeleteModal]   = useState(false);
@@ -61,17 +65,36 @@ export default function MisPatentesPage() {
 
   // --- CRUD handlers ---
   function openCreate() {
-    setEditing(null); setForm(EMPTY_FORM); setFormError(''); setModal(true);
+    setEditing(null); setForm(EMPTY_FORM); setFormError(''); setCoauthorTags([]); setModal(true);
+  }
+  function mapCreatorToPickerEntry(creator) {
+    return {
+      id: creator.id,
+      name: creator.name,
+      type: 'author',
+      linkedUser: creator.userId ? { id: creator.userId } : null,
+    };
   }
   function openEdit(item) {
     setEditing(item);
     setForm({ titulo: item.titulo, numeroSolicitudConcesion: item.numeroSolicitudConcesion, esNacional: item.esNacional });
+    const initialTags = (item.creadoresDetalle ?? [])
+      .filter(c => c.userId !== user?.id)
+      .map(mapCreatorToPickerEntry);
+    setCoauthorTags(initialTags);
     setFormError(''); setModal(true);
   }
   async function handleSave(e) {
     if (e) e.preventDefault();
     setSaving(true); setFormError('');
-    const body = { titulo: form.titulo, numeroSolicitudConcesion: form.numeroSolicitudConcesion, esNacional: form.esNacional };
+    const body = {
+      titulo: form.titulo,
+      numeroSolicitudConcesion: form.numeroSolicitudConcesion,
+      esNacional: form.esNacional,
+      additionalAuthorIds: coauthorTags.filter(t => t.type === 'author').map(t => t.id),
+      additionalAuthorNames: coauthorTags.filter(t => t.type === 'new').map(t => t.name),
+      additionalUserIds: coauthorTags.filter(t => t.type === 'user').map(t => t.id),
+    };
     try {
       if (editing) await apiFetch(`/api/Patentes/${editing.id}`, { method: 'PUT', body: JSON.stringify(body) });
       else         await apiFetch('/api/Patentes',               { method: 'POST', body: JSON.stringify(body) });
@@ -189,6 +212,10 @@ export default function MisPatentesPage() {
                 <option value="true">Nacional</option>
                 <option value="false">Internacional</option>
               </Input>
+            </FormGroup>
+            <FormGroup>
+              <Label>Creadores</Label>
+              <CoauthorPicker value={coauthorTags} onChange={setCoauthorTags} />
             </FormGroup>
           </ModalBody>
           <ModalFooter>

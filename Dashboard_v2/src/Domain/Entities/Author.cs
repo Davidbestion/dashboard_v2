@@ -38,6 +38,10 @@ public class Author
     // Navegación
     public ICollection<AuthorPublication> AuthorPublications { get; set; } = new List<AuthorPublication>();
     public ICollection<AuthorPresentation> AuthorPresentations { get; set; } = new List<AuthorPresentation>();
+    public ICollection<AuthorPatente> AuthorPatentes { get; set; } = new List<AuthorPatente>();
+    public ICollection<AuthorRegistro> AuthorRegistros { get; set; } = new List<AuthorRegistro>();
+    public ICollection<AuthorNorma> AuthorNormas { get; set; } = new List<AuthorNorma>();
+    public ICollection<AuthorProductoComercializado> AuthorProductosComercializados { get; set; } = new List<AuthorProductoComercializado>();
 
     /// <summary>
     /// Crea un autor a partir de apellidos y nombres de pila.

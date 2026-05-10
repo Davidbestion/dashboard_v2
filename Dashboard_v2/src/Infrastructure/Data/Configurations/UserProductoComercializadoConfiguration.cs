@@ -21,7 +21,7 @@ public class UserProductoComercializadoConfiguration : IEntityTypeConfiguration<
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasOne(up => up.ProductoComercializado)
-            .WithMany(p => p.Creadores)
+            .WithMany()
             .HasForeignKey(up => up.ProductoComercializadoId)
             .OnDelete(DeleteBehavior.Cascade);
     }

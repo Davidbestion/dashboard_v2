@@ -371,4 +371,139 @@ public class AuthorResolutionTests
         result.ExactMatches.ShouldBeEmpty();
         result.FuzzyMatches.ShouldBeEmpty();
     }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // AuthorResolutionService.GetOrCreateForUserAsync
+    // Verifica que al crear una entidad (Registro, Norma, etc.) un usuario sin
+    // Author previo obtiene uno creado automáticamente y vinculado a él.
+    // ─────────────────────────────────────────────────────────────────────────
+
+    [Test]
+    public async Task GetOrCreateForUser_UserWithNoAuthor_CreatesAuthorWithUserId()
+    {
+        await using var db = BuildDb(nameof(GetOrCreateForUser_UserWithNoAuthor_CreatesAuthorWithUserId));
+
+        var userId = Guid.NewGuid().ToString();
+        db.Users.Add(new User
+        {
+            Id            = userId,
+            UserName      = "Ana",
+            UserLastName1 = "Pérez",
+            UserLastName2 = "Ruiz",
+            Email         = "ana@test.com",
+        });
+        await db.SaveChangesAsync();
+
+        var service = new AuthorResolutionService(db);
+        var author = await service.GetOrCreateForUserAsync(userId);
+
+        author.ShouldNotBeNull();
+        author!.UserId.ShouldBe(userId);
+        author.LastName.ShouldBe("Pérez Ruiz");
+        author.FirstName.ShouldBe("Ana");
+
+        // Must be persisted in DB
+        var inDb = await db.Authors.FindAsync(author.Id);
+        inDb.ShouldNotBeNull();
+    }
+
+    [Test]
+    public async Task GetOrCreateForUser_CalledTwice_ReturnsSameAuthor()
+    {
+        await using var db = BuildDb(nameof(GetOrCreateForUser_CalledTwice_ReturnsSameAuthor));
+
+        var userId = Guid.NewGuid().ToString();
+        db.Users.Add(new User
+        {
+            Id = userId, UserName = "Luis", UserLastName1 = "García", Email = "luis@test.com"
+        });
+        await db.SaveChangesAsync();
+
+        var service = new AuthorResolutionService(db);
+        var first  = await service.GetOrCreateForUserAsync(userId);
+        var second = await service.GetOrCreateForUserAsync(userId);
+
+        first!.Id.ShouldBe(second!.Id);
+        (await db.Authors.CountAsync()).ShouldBe(1);
+    }
+
+    [Test]
+    public async Task GetOrCreateForUser_UserAlreadyHasAuthor_ReturnsExisting()
+    {
+        await using var db = BuildDb(nameof(GetOrCreateForUser_UserAlreadyHasAuthor_ReturnsExisting));
+
+        var userId = Guid.NewGuid().ToString();
+        db.Users.Add(new User
+        {
+            Id = userId, UserName = "Carlos", UserLastName1 = "López", Email = "c@test.com"
+        });
+        var existing = Author.Create("López", "Carlos");
+        existing.UserId = userId;
+        db.Authors.Add(existing);
+        await db.SaveChangesAsync();
+
+        var service = new AuthorResolutionService(db);
+        var result = await service.GetOrCreateForUserAsync(userId);
+
+        result!.Id.ShouldBe(existing.Id);
+        (await db.Authors.CountAsync()).ShouldBe(1);
+    }
+
+    [Test]
+    public async Task GetOrCreateForUser_NonExistentUserId_ReturnsNull()
+    {
+        await using var db = BuildDb(nameof(GetOrCreateForUser_NonExistentUserId_ReturnsNull));
+
+        var service = new AuthorResolutionService(db);
+        var result = await service.GetOrCreateForUserAsync(Guid.NewGuid().ToString());
+
+        result.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task GetOrCreateForUser_UserWithTwoLastNames_NameFormattedCorrectly()
+    {
+        await using var db = BuildDb(nameof(GetOrCreateForUser_UserWithTwoLastNames_NameFormattedCorrectly));
+
+        var userId = Guid.NewGuid().ToString();
+        db.Users.Add(new User
+        {
+            Id            = userId,
+            UserName      = "María",
+            UserLastName1 = "González",
+            UserLastName2 = "Fernández",
+            Email         = "maria@test.com",
+        });
+        await db.SaveChangesAsync();
+
+        var service = new AuthorResolutionService(db);
+        var author = await service.GetOrCreateForUserAsync(userId);
+
+        author!.LastName.ShouldBe("González Fernández");
+        author.FirstName.ShouldBe("María");
+        author.Name.ShouldBe("González Fernández, María");
+    }
+
+    [Test]
+    public async Task GetOrCreateForUser_UserWithOnlyOneLastName_NameFormattedCorrectly()
+    {
+        await using var db = BuildDb(nameof(GetOrCreateForUser_UserWithOnlyOneLastName_NameFormattedCorrectly));
+
+        var userId = Guid.NewGuid().ToString();
+        db.Users.Add(new User
+        {
+            Id            = userId,
+            UserName      = "Pedro",
+            UserLastName1 = "Martínez",
+            Email         = "pedro@test.com",
+        });
+        await db.SaveChangesAsync();
+
+        var service = new AuthorResolutionService(db);
+        var author = await service.GetOrCreateForUserAsync(userId);
+
+        author!.LastName.ShouldBe("Martínez");
+        author.FirstName.ShouldBe("Pedro");
+        author.Name.ShouldBe("Martínez, Pedro");
+    }
 }

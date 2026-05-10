@@ -9402,6 +9402,7 @@ export class NormaDto implements INormaDto {
     institutionId?: string;
     institutionNombre?: string;
     creadores?: string[];
+    creadoresDetalle?: NormaCreatorDto[];
 
     constructor(data?: INormaDto) {
         if (data) {
@@ -9423,6 +9424,11 @@ export class NormaDto implements INormaDto {
                 this.creadores = [] as any;
                 for (let item of _data["creadores"])
                     this.creadores!.push(item);
+            }
+            if (Array.isArray(_data["creadoresDetalle"])) {
+                this.creadoresDetalle = [] as any;
+                for (let item of _data["creadoresDetalle"])
+                    this.creadoresDetalle!.push(NormaCreatorDto.fromJS(item));
             }
         }
     }
@@ -9446,6 +9452,11 @@ export class NormaDto implements INormaDto {
             for (let item of this.creadores)
                 data["creadores"].push(item);
         }
+        if (Array.isArray(this.creadoresDetalle)) {
+            data["creadoresDetalle"] = [];
+            for (let item of this.creadoresDetalle)
+                data["creadoresDetalle"].push(item ? item.toJSON() : undefined as any);
+        }
         return data;
     }
 }
@@ -9457,12 +9468,60 @@ export interface INormaDto {
     institutionId?: string;
     institutionNombre?: string;
     creadores?: string[];
+    creadoresDetalle?: NormaCreatorDto[];
+}
+
+export class NormaCreatorDto implements INormaCreatorDto {
+    id?: string;
+    name?: string;
+    userId?: string | undefined;
+
+    constructor(data?: INormaCreatorDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.name = _data["name"];
+            this.userId = _data["userId"];
+        }
+    }
+
+    static fromJS(data: any): NormaCreatorDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new NormaCreatorDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["name"] = this.name;
+        data["userId"] = this.userId;
+        return data;
+    }
+}
+
+export interface INormaCreatorDto {
+    id?: string;
+    name?: string;
+    userId?: string | undefined;
 }
 
 export class CreateNormaBody implements ICreateNormaBody {
     titulo?: string;
     tipo?: string;
     institutionId?: string;
+    additionalAuthorIds?: string[] | undefined;
+    additionalAuthorNames?: string[] | undefined;
+    additionalUserIds?: string[] | undefined;
 
     constructor(data?: ICreateNormaBody) {
         if (data) {
@@ -9478,6 +9537,21 @@ export class CreateNormaBody implements ICreateNormaBody {
             this.titulo = _data["titulo"];
             this.tipo = _data["tipo"];
             this.institutionId = _data["institutionId"];
+            if (Array.isArray(_data["additionalAuthorIds"])) {
+                this.additionalAuthorIds = [] as any;
+                for (let item of _data["additionalAuthorIds"])
+                    this.additionalAuthorIds!.push(item);
+            }
+            if (Array.isArray(_data["additionalAuthorNames"])) {
+                this.additionalAuthorNames = [] as any;
+                for (let item of _data["additionalAuthorNames"])
+                    this.additionalAuthorNames!.push(item);
+            }
+            if (Array.isArray(_data["additionalUserIds"])) {
+                this.additionalUserIds = [] as any;
+                for (let item of _data["additionalUserIds"])
+                    this.additionalUserIds!.push(item);
+            }
         }
     }
 
@@ -9493,6 +9567,21 @@ export class CreateNormaBody implements ICreateNormaBody {
         data["titulo"] = this.titulo;
         data["tipo"] = this.tipo;
         data["institutionId"] = this.institutionId;
+        if (Array.isArray(this.additionalAuthorIds)) {
+            data["additionalAuthorIds"] = [];
+            for (let item of this.additionalAuthorIds)
+                data["additionalAuthorIds"].push(item);
+        }
+        if (Array.isArray(this.additionalAuthorNames)) {
+            data["additionalAuthorNames"] = [];
+            for (let item of this.additionalAuthorNames)
+                data["additionalAuthorNames"].push(item);
+        }
+        if (Array.isArray(this.additionalUserIds)) {
+            data["additionalUserIds"] = [];
+            for (let item of this.additionalUserIds)
+                data["additionalUserIds"].push(item);
+        }
         return data;
     }
 }
@@ -9501,12 +9590,18 @@ export interface ICreateNormaBody {
     titulo?: string;
     tipo?: string;
     institutionId?: string;
+    additionalAuthorIds?: string[] | undefined;
+    additionalAuthorNames?: string[] | undefined;
+    additionalUserIds?: string[] | undefined;
 }
 
 export class UpdateNormaBody implements IUpdateNormaBody {
     titulo?: string;
     tipo?: string;
     institutionId?: string;
+    additionalAuthorIds?: string[] | undefined;
+    additionalAuthorNames?: string[] | undefined;
+    additionalUserIds?: string[] | undefined;
 
     constructor(data?: IUpdateNormaBody) {
         if (data) {
@@ -9522,6 +9617,21 @@ export class UpdateNormaBody implements IUpdateNormaBody {
             this.titulo = _data["titulo"];
             this.tipo = _data["tipo"];
             this.institutionId = _data["institutionId"];
+            if (Array.isArray(_data["additionalAuthorIds"])) {
+                this.additionalAuthorIds = [] as any;
+                for (let item of _data["additionalAuthorIds"])
+                    this.additionalAuthorIds!.push(item);
+            }
+            if (Array.isArray(_data["additionalAuthorNames"])) {
+                this.additionalAuthorNames = [] as any;
+                for (let item of _data["additionalAuthorNames"])
+                    this.additionalAuthorNames!.push(item);
+            }
+            if (Array.isArray(_data["additionalUserIds"])) {
+                this.additionalUserIds = [] as any;
+                for (let item of _data["additionalUserIds"])
+                    this.additionalUserIds!.push(item);
+            }
         }
     }
 
@@ -9537,6 +9647,21 @@ export class UpdateNormaBody implements IUpdateNormaBody {
         data["titulo"] = this.titulo;
         data["tipo"] = this.tipo;
         data["institutionId"] = this.institutionId;
+        if (Array.isArray(this.additionalAuthorIds)) {
+            data["additionalAuthorIds"] = [];
+            for (let item of this.additionalAuthorIds)
+                data["additionalAuthorIds"].push(item);
+        }
+        if (Array.isArray(this.additionalAuthorNames)) {
+            data["additionalAuthorNames"] = [];
+            for (let item of this.additionalAuthorNames)
+                data["additionalAuthorNames"].push(item);
+        }
+        if (Array.isArray(this.additionalUserIds)) {
+            data["additionalUserIds"] = [];
+            for (let item of this.additionalUserIds)
+                data["additionalUserIds"].push(item);
+        }
         return data;
     }
 }
@@ -9545,6 +9670,9 @@ export interface IUpdateNormaBody {
     titulo?: string;
     tipo?: string;
     institutionId?: string;
+    additionalAuthorIds?: string[] | undefined;
+    additionalAuthorNames?: string[] | undefined;
+    additionalUserIds?: string[] | undefined;
 }
 
 export class PatenteDto implements IPatenteDto {
@@ -9553,6 +9681,7 @@ export class PatenteDto implements IPatenteDto {
     numeroSolicitudConcesion?: string;
     esNacional?: boolean;
     creadores?: string[];
+    creadoresDetalle?: CreatorDto[];
 
     constructor(data?: IPatenteDto) {
         if (data) {
@@ -9573,6 +9702,11 @@ export class PatenteDto implements IPatenteDto {
                 this.creadores = [] as any;
                 for (let item of _data["creadores"])
                     this.creadores!.push(item);
+            }
+            if (Array.isArray(_data["creadoresDetalle"])) {
+                this.creadoresDetalle = [] as any;
+                for (let item of _data["creadoresDetalle"])
+                    this.creadoresDetalle!.push(CreatorDto.fromJS(item));
             }
         }
     }
@@ -9595,6 +9729,11 @@ export class PatenteDto implements IPatenteDto {
             for (let item of this.creadores)
                 data["creadores"].push(item);
         }
+        if (Array.isArray(this.creadoresDetalle)) {
+            data["creadoresDetalle"] = [];
+            for (let item of this.creadoresDetalle)
+                data["creadoresDetalle"].push(item ? item.toJSON() : undefined as any);
+        }
         return data;
     }
 }
@@ -9605,6 +9744,51 @@ export interface IPatenteDto {
     numeroSolicitudConcesion?: string;
     esNacional?: boolean;
     creadores?: string[];
+    creadoresDetalle?: CreatorDto[];
+}
+
+export class CreatorDto implements ICreatorDto {
+    id?: string;
+    name?: string;
+    userId?: string | undefined;
+
+    constructor(data?: ICreatorDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.name = _data["name"];
+            this.userId = _data["userId"];
+        }
+    }
+
+    static fromJS(data: any): CreatorDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new CreatorDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["name"] = this.name;
+        data["userId"] = this.userId;
+        return data;
+    }
+}
+
+export interface ICreatorDto {
+    id?: string;
+    name?: string;
+    userId?: string | undefined;
 }
 
 export class ProyectoPatenteDto implements IProyectoPatenteDto {
@@ -9651,6 +9835,9 @@ export class CreatePatenteBody implements ICreatePatenteBody {
     titulo?: string;
     numeroSolicitudConcesion?: string;
     esNacional?: boolean;
+    additionalAuthorIds?: string[] | undefined;
+    additionalAuthorNames?: string[] | undefined;
+    additionalUserIds?: string[] | undefined;
 
     constructor(data?: ICreatePatenteBody) {
         if (data) {
@@ -9666,6 +9853,21 @@ export class CreatePatenteBody implements ICreatePatenteBody {
             this.titulo = _data["titulo"];
             this.numeroSolicitudConcesion = _data["numeroSolicitudConcesion"];
             this.esNacional = _data["esNacional"];
+            if (Array.isArray(_data["additionalAuthorIds"])) {
+                this.additionalAuthorIds = [] as any;
+                for (let item of _data["additionalAuthorIds"])
+                    this.additionalAuthorIds!.push(item);
+            }
+            if (Array.isArray(_data["additionalAuthorNames"])) {
+                this.additionalAuthorNames = [] as any;
+                for (let item of _data["additionalAuthorNames"])
+                    this.additionalAuthorNames!.push(item);
+            }
+            if (Array.isArray(_data["additionalUserIds"])) {
+                this.additionalUserIds = [] as any;
+                for (let item of _data["additionalUserIds"])
+                    this.additionalUserIds!.push(item);
+            }
         }
     }
 
@@ -9681,6 +9883,21 @@ export class CreatePatenteBody implements ICreatePatenteBody {
         data["titulo"] = this.titulo;
         data["numeroSolicitudConcesion"] = this.numeroSolicitudConcesion;
         data["esNacional"] = this.esNacional;
+        if (Array.isArray(this.additionalAuthorIds)) {
+            data["additionalAuthorIds"] = [];
+            for (let item of this.additionalAuthorIds)
+                data["additionalAuthorIds"].push(item);
+        }
+        if (Array.isArray(this.additionalAuthorNames)) {
+            data["additionalAuthorNames"] = [];
+            for (let item of this.additionalAuthorNames)
+                data["additionalAuthorNames"].push(item);
+        }
+        if (Array.isArray(this.additionalUserIds)) {
+            data["additionalUserIds"] = [];
+            for (let item of this.additionalUserIds)
+                data["additionalUserIds"].push(item);
+        }
         return data;
     }
 }
@@ -9689,12 +9906,18 @@ export interface ICreatePatenteBody {
     titulo?: string;
     numeroSolicitudConcesion?: string;
     esNacional?: boolean;
+    additionalAuthorIds?: string[] | undefined;
+    additionalAuthorNames?: string[] | undefined;
+    additionalUserIds?: string[] | undefined;
 }
 
 export class UpdatePatenteBody implements IUpdatePatenteBody {
     titulo?: string;
     numeroSolicitudConcesion?: string;
     esNacional?: boolean;
+    additionalAuthorIds?: string[] | undefined;
+    additionalAuthorNames?: string[] | undefined;
+    additionalUserIds?: string[] | undefined;
 
     constructor(data?: IUpdatePatenteBody) {
         if (data) {
@@ -9710,6 +9933,21 @@ export class UpdatePatenteBody implements IUpdatePatenteBody {
             this.titulo = _data["titulo"];
             this.numeroSolicitudConcesion = _data["numeroSolicitudConcesion"];
             this.esNacional = _data["esNacional"];
+            if (Array.isArray(_data["additionalAuthorIds"])) {
+                this.additionalAuthorIds = [] as any;
+                for (let item of _data["additionalAuthorIds"])
+                    this.additionalAuthorIds!.push(item);
+            }
+            if (Array.isArray(_data["additionalAuthorNames"])) {
+                this.additionalAuthorNames = [] as any;
+                for (let item of _data["additionalAuthorNames"])
+                    this.additionalAuthorNames!.push(item);
+            }
+            if (Array.isArray(_data["additionalUserIds"])) {
+                this.additionalUserIds = [] as any;
+                for (let item of _data["additionalUserIds"])
+                    this.additionalUserIds!.push(item);
+            }
         }
     }
 
@@ -9725,6 +9963,21 @@ export class UpdatePatenteBody implements IUpdatePatenteBody {
         data["titulo"] = this.titulo;
         data["numeroSolicitudConcesion"] = this.numeroSolicitudConcesion;
         data["esNacional"] = this.esNacional;
+        if (Array.isArray(this.additionalAuthorIds)) {
+            data["additionalAuthorIds"] = [];
+            for (let item of this.additionalAuthorIds)
+                data["additionalAuthorIds"].push(item);
+        }
+        if (Array.isArray(this.additionalAuthorNames)) {
+            data["additionalAuthorNames"] = [];
+            for (let item of this.additionalAuthorNames)
+                data["additionalAuthorNames"].push(item);
+        }
+        if (Array.isArray(this.additionalUserIds)) {
+            data["additionalUserIds"] = [];
+            for (let item of this.additionalUserIds)
+                data["additionalUserIds"].push(item);
+        }
         return data;
     }
 }
@@ -9733,6 +9986,9 @@ export interface IUpdatePatenteBody {
     titulo?: string;
     numeroSolicitudConcesion?: string;
     esNacional?: boolean;
+    additionalAuthorIds?: string[] | undefined;
+    additionalAuthorNames?: string[] | undefined;
+    additionalUserIds?: string[] | undefined;
 }
 
 export class PresentationDto implements IPresentationDto {
@@ -10003,6 +10259,7 @@ export class ProductoDto implements IProductoDto {
     institutionId?: string;
     institutionNombre?: string;
     creadores?: string[];
+    creadoresDetalle?: ProductoCreatorDto[];
 
     constructor(data?: IProductoDto) {
         if (data) {
@@ -10025,6 +10282,11 @@ export class ProductoDto implements IProductoDto {
                 this.creadores = [] as any;
                 for (let item of _data["creadores"])
                     this.creadores!.push(item);
+            }
+            if (Array.isArray(_data["creadoresDetalle"])) {
+                this.creadoresDetalle = [] as any;
+                for (let item of _data["creadoresDetalle"])
+                    this.creadoresDetalle!.push(ProductoCreatorDto.fromJS(item));
             }
         }
     }
@@ -10049,6 +10311,11 @@ export class ProductoDto implements IProductoDto {
             for (let item of this.creadores)
                 data["creadores"].push(item);
         }
+        if (Array.isArray(this.creadoresDetalle)) {
+            data["creadoresDetalle"] = [];
+            for (let item of this.creadoresDetalle)
+                data["creadoresDetalle"].push(item ? item.toJSON() : undefined as any);
+        }
         return data;
     }
 }
@@ -10061,12 +10328,60 @@ export interface IProductoDto {
     institutionId?: string;
     institutionNombre?: string;
     creadores?: string[];
+    creadoresDetalle?: ProductoCreatorDto[];
+}
+
+export class ProductoCreatorDto implements IProductoCreatorDto {
+    id?: string;
+    name?: string;
+    userId?: string | undefined;
+
+    constructor(data?: IProductoCreatorDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.name = _data["name"];
+            this.userId = _data["userId"];
+        }
+    }
+
+    static fromJS(data: any): ProductoCreatorDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new ProductoCreatorDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["name"] = this.name;
+        data["userId"] = this.userId;
+        return data;
+    }
+}
+
+export interface IProductoCreatorDto {
+    id?: string;
+    name?: string;
+    userId?: string | undefined;
 }
 
 export class CreateProductoBody implements ICreateProductoBody {
     titulo?: string;
     tipoProductoComercializadoId?: string;
     institutionId?: string;
+    additionalAuthorIds?: string[] | undefined;
+    additionalAuthorNames?: string[] | undefined;
+    additionalUserIds?: string[] | undefined;
 
     constructor(data?: ICreateProductoBody) {
         if (data) {
@@ -10082,6 +10397,21 @@ export class CreateProductoBody implements ICreateProductoBody {
             this.titulo = _data["titulo"];
             this.tipoProductoComercializadoId = _data["tipoProductoComercializadoId"];
             this.institutionId = _data["institutionId"];
+            if (Array.isArray(_data["additionalAuthorIds"])) {
+                this.additionalAuthorIds = [] as any;
+                for (let item of _data["additionalAuthorIds"])
+                    this.additionalAuthorIds!.push(item);
+            }
+            if (Array.isArray(_data["additionalAuthorNames"])) {
+                this.additionalAuthorNames = [] as any;
+                for (let item of _data["additionalAuthorNames"])
+                    this.additionalAuthorNames!.push(item);
+            }
+            if (Array.isArray(_data["additionalUserIds"])) {
+                this.additionalUserIds = [] as any;
+                for (let item of _data["additionalUserIds"])
+                    this.additionalUserIds!.push(item);
+            }
         }
     }
 
@@ -10097,6 +10427,21 @@ export class CreateProductoBody implements ICreateProductoBody {
         data["titulo"] = this.titulo;
         data["tipoProductoComercializadoId"] = this.tipoProductoComercializadoId;
         data["institutionId"] = this.institutionId;
+        if (Array.isArray(this.additionalAuthorIds)) {
+            data["additionalAuthorIds"] = [];
+            for (let item of this.additionalAuthorIds)
+                data["additionalAuthorIds"].push(item);
+        }
+        if (Array.isArray(this.additionalAuthorNames)) {
+            data["additionalAuthorNames"] = [];
+            for (let item of this.additionalAuthorNames)
+                data["additionalAuthorNames"].push(item);
+        }
+        if (Array.isArray(this.additionalUserIds)) {
+            data["additionalUserIds"] = [];
+            for (let item of this.additionalUserIds)
+                data["additionalUserIds"].push(item);
+        }
         return data;
     }
 }
@@ -10105,12 +10450,18 @@ export interface ICreateProductoBody {
     titulo?: string;
     tipoProductoComercializadoId?: string;
     institutionId?: string;
+    additionalAuthorIds?: string[] | undefined;
+    additionalAuthorNames?: string[] | undefined;
+    additionalUserIds?: string[] | undefined;
 }
 
 export class UpdateProductoBody implements IUpdateProductoBody {
     titulo?: string;
     tipoProductoComercializadoId?: string;
     institutionId?: string;
+    additionalAuthorIds?: string[] | undefined;
+    additionalAuthorNames?: string[] | undefined;
+    additionalUserIds?: string[] | undefined;
 
     constructor(data?: IUpdateProductoBody) {
         if (data) {
@@ -10126,6 +10477,21 @@ export class UpdateProductoBody implements IUpdateProductoBody {
             this.titulo = _data["titulo"];
             this.tipoProductoComercializadoId = _data["tipoProductoComercializadoId"];
             this.institutionId = _data["institutionId"];
+            if (Array.isArray(_data["additionalAuthorIds"])) {
+                this.additionalAuthorIds = [] as any;
+                for (let item of _data["additionalAuthorIds"])
+                    this.additionalAuthorIds!.push(item);
+            }
+            if (Array.isArray(_data["additionalAuthorNames"])) {
+                this.additionalAuthorNames = [] as any;
+                for (let item of _data["additionalAuthorNames"])
+                    this.additionalAuthorNames!.push(item);
+            }
+            if (Array.isArray(_data["additionalUserIds"])) {
+                this.additionalUserIds = [] as any;
+                for (let item of _data["additionalUserIds"])
+                    this.additionalUserIds!.push(item);
+            }
         }
     }
 
@@ -10141,6 +10507,21 @@ export class UpdateProductoBody implements IUpdateProductoBody {
         data["titulo"] = this.titulo;
         data["tipoProductoComercializadoId"] = this.tipoProductoComercializadoId;
         data["institutionId"] = this.institutionId;
+        if (Array.isArray(this.additionalAuthorIds)) {
+            data["additionalAuthorIds"] = [];
+            for (let item of this.additionalAuthorIds)
+                data["additionalAuthorIds"].push(item);
+        }
+        if (Array.isArray(this.additionalAuthorNames)) {
+            data["additionalAuthorNames"] = [];
+            for (let item of this.additionalAuthorNames)
+                data["additionalAuthorNames"].push(item);
+        }
+        if (Array.isArray(this.additionalUserIds)) {
+            data["additionalUserIds"] = [];
+            for (let item of this.additionalUserIds)
+                data["additionalUserIds"].push(item);
+        }
         return data;
     }
 }
@@ -10149,6 +10530,9 @@ export interface IUpdateProductoBody {
     titulo?: string;
     tipoProductoComercializadoId?: string;
     institutionId?: string;
+    additionalAuthorIds?: string[] | undefined;
+    additionalAuthorNames?: string[] | undefined;
+    additionalUserIds?: string[] | undefined;
 }
 
 export class ProyectoResumenDto implements IProyectoResumenDto {
@@ -12060,6 +12444,7 @@ export class RegistroDto implements IRegistroDto {
     institutionNombre?: string;
     evidenceFileId?: number | undefined;
     creadores?: string[];
+    creadoresDetalle?: RegistroCreatorDto[];
 
     constructor(data?: IRegistroDto) {
         if (data) {
@@ -12085,6 +12470,11 @@ export class RegistroDto implements IRegistroDto {
                 this.creadores = [] as any;
                 for (let item of _data["creadores"])
                     this.creadores!.push(item);
+            }
+            if (Array.isArray(_data["creadoresDetalle"])) {
+                this.creadoresDetalle = [] as any;
+                for (let item of _data["creadoresDetalle"])
+                    this.creadoresDetalle!.push(RegistroCreatorDto.fromJS(item));
             }
         }
     }
@@ -12112,6 +12502,11 @@ export class RegistroDto implements IRegistroDto {
             for (let item of this.creadores)
                 data["creadores"].push(item);
         }
+        if (Array.isArray(this.creadoresDetalle)) {
+            data["creadoresDetalle"] = [];
+            for (let item of this.creadoresDetalle)
+                data["creadoresDetalle"].push(item ? item.toJSON() : undefined as any);
+        }
         return data;
     }
 }
@@ -12127,6 +12522,51 @@ export interface IRegistroDto {
     institutionNombre?: string;
     evidenceFileId?: number | undefined;
     creadores?: string[];
+    creadoresDetalle?: RegistroCreatorDto[];
+}
+
+export class RegistroCreatorDto implements IRegistroCreatorDto {
+    id?: string;
+    name?: string;
+    userId?: string | undefined;
+
+    constructor(data?: IRegistroCreatorDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.name = _data["name"];
+            this.userId = _data["userId"];
+        }
+    }
+
+    static fromJS(data: any): RegistroCreatorDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new RegistroCreatorDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["name"] = this.name;
+        data["userId"] = this.userId;
+        return data;
+    }
+}
+
+export interface IRegistroCreatorDto {
+    id?: string;
+    name?: string;
+    userId?: string | undefined;
 }
 
 export class CreateRegistroBody implements ICreateRegistroBody {
@@ -12136,6 +12576,9 @@ export class CreateRegistroBody implements ICreateRegistroBody {
     countryId?: number;
     institutionId?: string;
     evidenceFileId?: number | undefined;
+    additionalAuthorIds?: string[] | undefined;
+    additionalAuthorNames?: string[] | undefined;
+    additionalUserIds?: string[] | undefined;
 
     constructor(data?: ICreateRegistroBody) {
         if (data) {
@@ -12154,6 +12597,21 @@ export class CreateRegistroBody implements ICreateRegistroBody {
             this.countryId = _data["countryId"];
             this.institutionId = _data["institutionId"];
             this.evidenceFileId = _data["evidenceFileId"];
+            if (Array.isArray(_data["additionalAuthorIds"])) {
+                this.additionalAuthorIds = [] as any;
+                for (let item of _data["additionalAuthorIds"])
+                    this.additionalAuthorIds!.push(item);
+            }
+            if (Array.isArray(_data["additionalAuthorNames"])) {
+                this.additionalAuthorNames = [] as any;
+                for (let item of _data["additionalAuthorNames"])
+                    this.additionalAuthorNames!.push(item);
+            }
+            if (Array.isArray(_data["additionalUserIds"])) {
+                this.additionalUserIds = [] as any;
+                for (let item of _data["additionalUserIds"])
+                    this.additionalUserIds!.push(item);
+            }
         }
     }
 
@@ -12172,6 +12630,21 @@ export class CreateRegistroBody implements ICreateRegistroBody {
         data["countryId"] = this.countryId;
         data["institutionId"] = this.institutionId;
         data["evidenceFileId"] = this.evidenceFileId;
+        if (Array.isArray(this.additionalAuthorIds)) {
+            data["additionalAuthorIds"] = [];
+            for (let item of this.additionalAuthorIds)
+                data["additionalAuthorIds"].push(item);
+        }
+        if (Array.isArray(this.additionalAuthorNames)) {
+            data["additionalAuthorNames"] = [];
+            for (let item of this.additionalAuthorNames)
+                data["additionalAuthorNames"].push(item);
+        }
+        if (Array.isArray(this.additionalUserIds)) {
+            data["additionalUserIds"] = [];
+            for (let item of this.additionalUserIds)
+                data["additionalUserIds"].push(item);
+        }
         return data;
     }
 }
@@ -12183,6 +12656,9 @@ export interface ICreateRegistroBody {
     countryId?: number;
     institutionId?: string;
     evidenceFileId?: number | undefined;
+    additionalAuthorIds?: string[] | undefined;
+    additionalAuthorNames?: string[] | undefined;
+    additionalUserIds?: string[] | undefined;
 }
 
 export class UpdateRegistroBody implements IUpdateRegistroBody {
@@ -12192,6 +12668,9 @@ export class UpdateRegistroBody implements IUpdateRegistroBody {
     countryId?: number;
     institutionId?: string;
     evidenceFileId?: number | undefined;
+    additionalAuthorIds?: string[] | undefined;
+    additionalAuthorNames?: string[] | undefined;
+    additionalUserIds?: string[] | undefined;
 
     constructor(data?: IUpdateRegistroBody) {
         if (data) {
@@ -12210,6 +12689,21 @@ export class UpdateRegistroBody implements IUpdateRegistroBody {
             this.countryId = _data["countryId"];
             this.institutionId = _data["institutionId"];
             this.evidenceFileId = _data["evidenceFileId"];
+            if (Array.isArray(_data["additionalAuthorIds"])) {
+                this.additionalAuthorIds = [] as any;
+                for (let item of _data["additionalAuthorIds"])
+                    this.additionalAuthorIds!.push(item);
+            }
+            if (Array.isArray(_data["additionalAuthorNames"])) {
+                this.additionalAuthorNames = [] as any;
+                for (let item of _data["additionalAuthorNames"])
+                    this.additionalAuthorNames!.push(item);
+            }
+            if (Array.isArray(_data["additionalUserIds"])) {
+                this.additionalUserIds = [] as any;
+                for (let item of _data["additionalUserIds"])
+                    this.additionalUserIds!.push(item);
+            }
         }
     }
 
@@ -12228,6 +12722,21 @@ export class UpdateRegistroBody implements IUpdateRegistroBody {
         data["countryId"] = this.countryId;
         data["institutionId"] = this.institutionId;
         data["evidenceFileId"] = this.evidenceFileId;
+        if (Array.isArray(this.additionalAuthorIds)) {
+            data["additionalAuthorIds"] = [];
+            for (let item of this.additionalAuthorIds)
+                data["additionalAuthorIds"].push(item);
+        }
+        if (Array.isArray(this.additionalAuthorNames)) {
+            data["additionalAuthorNames"] = [];
+            for (let item of this.additionalAuthorNames)
+                data["additionalAuthorNames"].push(item);
+        }
+        if (Array.isArray(this.additionalUserIds)) {
+            data["additionalUserIds"] = [];
+            for (let item of this.additionalUserIds)
+                data["additionalUserIds"].push(item);
+        }
         return data;
     }
 }
@@ -12239,6 +12748,9 @@ export interface IUpdateRegistroBody {
     countryId?: number;
     institutionId?: string;
     evidenceFileId?: number | undefined;
+    additionalAuthorIds?: string[] | undefined;
+    additionalAuthorNames?: string[] | undefined;
+    additionalUserIds?: string[] | undefined;
 }
 
 export class RoleDto implements IRoleDto {

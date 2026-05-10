@@ -10,6 +10,6 @@ public class Norma
     public string InstitutionId { get; set; } = default!;
     public Institution Institution { get; set; } = default!;
 
-    /// <summary>Usuarios que son creadores de esta norma (N:M).</summary>
-    public ICollection<UserNorma> Creadores { get; set; } = new List<UserNorma>();
+    /// <summary>Autores que son creadores de esta norma (N:M).</summary>
+    public ICollection<AuthorNorma> Creadores { get; set; } = new List<AuthorNorma>();
 }

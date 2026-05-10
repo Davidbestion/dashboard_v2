@@ -382,14 +382,12 @@ public class Proyectos : EndpointGroupBase
                 numeroSolicitudConcesion = pp.Patente.NumeroSolicitudConcesion,
                 esNacional = pp.Patente.EsNacional,
                 creador = pp.Patente.Creadores
-                    .OrderBy(c => c.User.UserName)
-                    .ThenBy(c => c.User.UserLastName1)
-                    .Select(c => (c.User.UserName + " " + c.User.UserLastName1).Trim())
+                    .OrderBy(c => c.Author.Name)
+                    .Select(c => c.Author.Name)
                     .FirstOrDefault(),
                 creadores = pp.Patente.Creadores
-                    .OrderBy(c => c.User.UserName)
-                    .ThenBy(c => c.User.UserLastName1)
-                    .Select(c => (c.User.UserName + " " + c.User.UserLastName1).Trim())
+                    .OrderBy(c => c.Author.Name)
+                    .Select(c => c.Author.Name)
                     .ToList()
             })
             .ToListAsync(ct);

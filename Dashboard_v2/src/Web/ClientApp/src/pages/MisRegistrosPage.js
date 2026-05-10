@@ -5,6 +5,8 @@ import {
   Form, FormGroup, Label, Input, InputGroup,
 } from 'reactstrap';
 import FilterableDataTable from '../components/FilterableDataTable';
+import CoauthorPicker from '../components/CoauthorPicker';
+import { useAuth } from '../contexts/AuthContext';
 
 const EMPTY_FORM = { titulo: '', numeroCertificado: '', esInformatico: false, countryId: '', institutionId: '' };
 
@@ -23,6 +25,7 @@ async function apiFetch(url, options = {}) {
 }
 
 export default function MisRegistrosPage() {
+  const { user } = useAuth();
   const [items, setItems]         = useState([]);
   const [countries, setCountries] = useState([]);
   const [institutions, setInstitutions] = useState([]);
@@ -34,6 +37,7 @@ export default function MisRegistrosPage() {
   const [form, setForm]           = useState(EMPTY_FORM);
   const [saving, setSaving]       = useState(false);
   const [formError, setFormError] = useState('');
+  const [coauthorTags, setCoauthorTags] = useState([]);
 
   const [showNewInst, setShowNewInst]       = useState(false);
   const [newInstInput, setNewInstInput]     = useState('');
@@ -62,17 +66,38 @@ export default function MisRegistrosPage() {
   function openCreate() {
     setEditing(null);
     setForm({ ...EMPTY_FORM, countryId: countries.length > 0 ? String(countries[0].id) : '' });
-    setFormError(''); setShowNewInst(false); setModal(true);
+    setFormError(''); setShowNewInst(false); setCoauthorTags([]); setModal(true);
+  }
+  function mapCreatorToPickerEntry(creator) {
+    return {
+      id: creator.id,
+      name: creator.name,
+      type: 'author',
+      linkedUser: null,
+    };
   }
   function openEdit(item) {
     setEditing(item);
     setForm({ titulo: item.titulo, numeroCertificado: item.numeroCertificado, esInformatico: item.esInformatico, countryId: String(item.countryId ?? ''), institutionId: item.institutionId ?? '' });
+    const initialTags = (item.creadoresDetalle ?? [])
+      .filter(c => c.userId !== user?.id)
+      .map(mapCreatorToPickerEntry);
+    setCoauthorTags(initialTags);
     setFormError(''); setShowNewInst(false); setModal(true);
   }
   async function handleSave(e) {
     if (e) e.preventDefault();
     setSaving(true); setFormError('');
-    const body = { titulo: form.titulo, numeroCertificado: form.numeroCertificado, esInformatico: form.esInformatico, countryId: parseInt(form.countryId, 10), institutionId: form.institutionId };
+    const body = {
+      titulo: form.titulo,
+      numeroCertificado: form.numeroCertificado,
+      esInformatico: form.esInformatico,
+      countryId: parseInt(form.countryId, 10),
+      institutionId: form.institutionId,
+      additionalAuthorIds: coauthorTags.filter(t => t.type === 'author').map(t => t.id),
+      additionalAuthorNames: coauthorTags.filter(t => t.type === 'new').map(t => t.name),
+      additionalUserIds: coauthorTags.filter(t => t.type === 'user').map(t => t.id),
+    };
     try {
       if (editing) await apiFetch(`/api/Registros/${editing.id}`, { method: 'PUT', body: JSON.stringify(body) });
       else         await apiFetch('/api/Registros',               { method: 'POST', body: JSON.stringify(body) });
@@ -187,6 +212,10 @@ export default function MisRegistrosPage() {
                   <Button color="link" className="p-0 mt-1 small" onClick={() => setShowNewInst(true)}>+ Nueva institución</Button>
                 </>
               )}
+            </FormGroup>
+            <FormGroup>
+              <Label>Creadores</Label>
+              <CoauthorPicker value={coauthorTags} onChange={setCoauthorTags} />
             </FormGroup>
           </ModalBody>
           <ModalFooter>

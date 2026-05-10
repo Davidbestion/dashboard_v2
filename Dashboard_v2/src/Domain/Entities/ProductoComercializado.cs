@@ -13,6 +13,6 @@ public class ProductoComercializado
     public string InstitutionId { get; set; } = default!;
     public Institution Institution { get; set; } = default!;
 
-    /// <summary>Usuarios que son creadores de este producto (N:M).</summary>
-    public ICollection<UserProductoComercializado> Creadores { get; set; } = new List<UserProductoComercializado>();
+    /// <summary>Autores que son creadores de este producto (N:M).</summary>
+    public ICollection<AuthorProductoComercializado> Creadores { get; set; } = new List<AuthorProductoComercializado>();
 }

@@ -21,7 +21,7 @@ public class UserPatenteConfiguration : IEntityTypeConfiguration<UserPatente>
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasOne(up => up.Patente)
-            .WithMany(p => p.Creadores)
+            .WithMany()
             .HasForeignKey(up => up.PatenteId)
             .OnDelete(DeleteBehavior.Cascade);
     }

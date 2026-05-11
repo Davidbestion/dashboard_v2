@@ -1,8 +1,7 @@
 using Dashboard_v2.Application.Common.Interfaces;
+using Dashboard_v2.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using RolesEnum = Dashboard_v2.Domain.Enums.Roles;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Dashboard_v2.Web.Endpoints;
 
@@ -31,16 +30,18 @@ public class Registros : EndpointGroupBase
             .WithName("UpdateRegistro")
             .Produces(200)
             .ProducesProblem(400)
+            .ProducesProblem(403)
             .ProducesProblem(404);
 
         groupBuilder.MapDelete("{id}", DeleteRegistro)
             .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Jefe_de_Proyecto), nameof(RolesEnum.Superuser)))
             .WithName("DeleteRegistro")
             .Produces(200)
+            .ProducesProblem(403)
             .ProducesProblem(404);
     }
 
-    private async Task<IResult> GetRegistros(IApplicationDbContext db)
+    private static async Task<IResult> GetRegistros(IApplicationDbContext db)
     {
         var list = await db.Registros
             .Include(r => r.Country)
@@ -50,7 +51,7 @@ public class Registros : EndpointGroupBase
                 r.Id, r.Titulo, r.NumeroCertificado, r.EsInformatico,
                 r.CountryId, r.Country.Name, r.InstitutionId, r.Institution.Nombre, r.EvidenceFileId,
                 r.Creadores.Select(c => c.Author.Name).ToList(),
-                r.Creadores.Select(c => new RegistroCreatorDto(c.Author.Id, c.Author.Name, c.Author.UserId)).ToList()))
+                r.Creadores.Select(c => new CreatorDto(c.Author.Id, c.Author.Name, c.Author.UserId)).ToList()))
             .ToListAsync();
         return Results.Ok(list);
     }
@@ -71,18 +72,18 @@ public class Registros : EndpointGroupBase
                 ar.Registro.CountryId, ar.Registro.Country.Name,
                 ar.Registro.InstitutionId, ar.Registro.Institution.Nombre, ar.Registro.EvidenceFileId,
                 ar.Registro.Creadores.Select(c => c.Author.Name).ToList(),
-                ar.Registro.Creadores.Select(c => new RegistroCreatorDto(c.Author.Id, c.Author.Name, c.Author.UserId)).ToList()))
+                ar.Registro.Creadores.Select(c => new CreatorDto(c.Author.Id, c.Author.Name, c.Author.UserId)).ToList()))
             .ToListAsync();
         return Results.Ok(list);
     }
 
-    private async Task<IResult> CreateRegistro(IApplicationDbContext db, IUser currentUser, IAuthorResolutionService authorResolution, CreateRegistroBody body)
+    private static async Task<IResult> CreateRegistro(IApplicationDbContext db, IUser currentUser, IAuthorResolutionService authorResolution, IProductionCreatorService creatorService, CreateRegistroBody body)
     {
         var currentAuthor = await authorResolution.GetOrCreateForUserAsync(currentUser.Id!, CancellationToken.None);
         if (currentAuthor == null)
             return Results.BadRequest(new { errors = new[] { "Usuario actual no valido." } });
 
-        var registro = new Dashboard_v2.Domain.Entities.Registro
+        var registro = new Registro
         {
             Titulo = body.Titulo,
             NumeroCertificado = body.NumeroCertificado,
@@ -93,14 +94,18 @@ public class Registros : EndpointGroupBase
         };
         db.Registros.Add(registro);
 
-        registro.Creadores.Add(new Dashboard_v2.Domain.Entities.AuthorRegistro { AuthorId = currentAuthor.Id, RegistroId = registro.Id });
-        await AddAdditionalCreatorsAsync(db, authorResolution, registro, currentAuthor.Id, body.AdditionalAuthorIds, body.AdditionalAuthorNames, body.AdditionalUserIds);
+        registro.Creadores.Add(new AuthorRegistro { AuthorId = currentAuthor.Id, RegistroId = registro.Id });
+        await creatorService.AddAdditionalCreatorsAsync(
+            registro.Creadores, currentAuthor.Id,
+            authorId => new AuthorRegistro { AuthorId = authorId, RegistroId = registro.Id },
+            c => c.AuthorId,
+            body.AdditionalAuthorIds, body.AdditionalAuthorNames, body.AdditionalUserIds);
 
         await db.SaveChangesAsync(CancellationToken.None);
         return Results.Created($"/api/Registros/{registro.Id}", new { id = registro.Id });
     }
 
-    private async Task<IResult> UpdateRegistro(IApplicationDbContext db, IUser currentUser, IAuthorResolutionService authorResolution, string id, UpdateRegistroBody body)
+    private static async Task<IResult> UpdateRegistro(IApplicationDbContext db, IUser currentUser, IAuthorResolutionService authorResolution, IProductionCreatorService creatorService, string id, UpdateRegistroBody body)
     {
         var registro = await db.Registros
             .Include(r => r.Creadores)
@@ -131,13 +136,17 @@ public class Registros : EndpointGroupBase
         foreach (var creator in toRemove)
             registro.Creadores.Remove(creator);
 
-        await AddAdditionalCreatorsAsync(db, authorResolution, registro, currentAuthor.Id, body.AdditionalAuthorIds, body.AdditionalAuthorNames, body.AdditionalUserIds);
+        await creatorService.AddAdditionalCreatorsAsync(
+            registro.Creadores, currentAuthor.Id,
+            authorId => new AuthorRegistro { AuthorId = authorId, RegistroId = registro.Id },
+            c => c.AuthorId,
+            body.AdditionalAuthorIds, body.AdditionalAuthorNames, body.AdditionalUserIds);
 
         await db.SaveChangesAsync(CancellationToken.None);
         return Results.Ok(new { message = "Registro actualizado." });
     }
 
-    private async Task<IResult> DeleteRegistro(IApplicationDbContext db, IUser currentUser, IAuthorResolutionService authorResolution, string id)
+    private static async Task<IResult> DeleteRegistro(IApplicationDbContext db, IUser currentUser, IAuthorResolutionService authorResolution, string id)
     {
         var registro = await db.Registros.FindAsync(new object[] { id }, CancellationToken.None);
         if (registro == null)
@@ -159,40 +168,6 @@ public class Registros : EndpointGroupBase
         await db.SaveChangesAsync(CancellationToken.None);
         return Results.Ok(new { message = "Registro eliminado." });
     }
-
-    private static async Task AddAdditionalCreatorsAsync(
-        IApplicationDbContext db,
-        IAuthorResolutionService authorResolution,
-        Dashboard_v2.Domain.Entities.Registro registro,
-        string currentAuthorId,
-        IEnumerable<string>? additionalAuthorIds,
-        IEnumerable<string>? additionalAuthorNames,
-        IEnumerable<string>? additionalUserIds)
-    {
-        foreach (var authorId in (additionalAuthorIds ?? []).Where(id => !string.IsNullOrWhiteSpace(id)))
-        {
-            if (authorId == currentAuthorId) continue;
-            if (registro.Creadores.Any(c => c.AuthorId == authorId)) continue;
-            if (!await db.Authors.AnyAsync(a => a.Id == authorId, CancellationToken.None)) continue;
-            registro.Creadores.Add(new Dashboard_v2.Domain.Entities.AuthorRegistro { AuthorId = authorId, RegistroId = registro.Id });
-        }
-
-        foreach (var authorName in (additionalAuthorNames ?? []).Where(name => !string.IsNullOrWhiteSpace(name)))
-        {
-            var resolved = await authorResolution.ResolveByNameAsync(authorName, CancellationToken.None);
-            if (resolved.Id == currentAuthorId) continue;
-            if (registro.Creadores.Any(c => c.AuthorId == resolved.Id)) continue;
-            registro.Creadores.Add(new Dashboard_v2.Domain.Entities.AuthorRegistro { AuthorId = resolved.Id, RegistroId = registro.Id });
-        }
-
-        foreach (var userId in (additionalUserIds ?? []).Where(id => !string.IsNullOrWhiteSpace(id)))
-        {
-            var resolved = await authorResolution.GetOrCreateForUserAsync(userId, CancellationToken.None);
-            if (resolved == null || resolved.Id == currentAuthorId) continue;
-            if (registro.Creadores.Any(c => c.AuthorId == resolved.Id)) continue;
-            registro.Creadores.Add(new Dashboard_v2.Domain.Entities.AuthorRegistro { AuthorId = resolved.Id, RegistroId = registro.Id });
-        }
-    }
 }
 
 public record RegistroDto(
@@ -206,7 +181,7 @@ public record RegistroDto(
     string InstitutionNombre,
     int? EvidenceFileId,
     List<string> Creadores,
-    List<RegistroCreatorDto> CreadoresDetalle);
+    List<CreatorDto> CreadoresDetalle);
 public record CreateRegistroBody(
     string Titulo,
     string NumeroCertificado,
@@ -227,4 +202,3 @@ public record UpdateRegistroBody(
     List<string>? AdditionalAuthorIds = null,
     List<string>? AdditionalAuthorNames = null,
     List<string>? AdditionalUserIds = null);
-public record RegistroCreatorDto(string Id, string Name, string? UserId);

@@ -2935,6 +2935,13 @@ export class NormasClient {
             result400 = ProblemDetails.fromJS(resultData400);
             return throwException("A server side error occurred.", status, _responseText, _headers, result400);
             });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
+            });
         } else if (status === 404) {
             return response.text().then((_responseText) => {
             let result404: any = null;
@@ -2975,6 +2982,13 @@ export class NormasClient {
         if (status === 200) {
             return response.text().then((_responseText) => {
             return;
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
             });
         } else if (status === 404) {
             return response.text().then((_responseText) => {
@@ -3216,6 +3230,13 @@ export class PatentesClient {
             result400 = ProblemDetails.fromJS(resultData400);
             return throwException("A server side error occurred.", status, _responseText, _headers, result400);
             });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
+            });
         } else if (status === 404) {
             return response.text().then((_responseText) => {
             let result404: any = null;
@@ -3259,6 +3280,13 @@ export class PatentesClient {
         if (status === 204) {
             return response.text().then((_responseText) => {
             return;
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
             });
         } else if (status === 404) {
             return response.text().then((_responseText) => {
@@ -3312,6 +3340,13 @@ export class PatentesClient {
             result400 = ProblemDetails.fromJS(resultData400);
             return throwException("A server side error occurred.", status, _responseText, _headers, result400);
             });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
+            });
         } else if (status === 404) {
             return response.text().then((_responseText) => {
             let result404: any = null;
@@ -3352,6 +3387,13 @@ export class PatentesClient {
         if (status === 200) {
             return response.text().then((_responseText) => {
             return;
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
             });
         } else if (status === 404) {
             return response.text().then((_responseText) => {
@@ -3765,6 +3807,13 @@ export class ProductosComercializadosClient {
             result400 = ProblemDetails.fromJS(resultData400);
             return throwException("A server side error occurred.", status, _responseText, _headers, result400);
             });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
+            });
         } else if (status === 404) {
             return response.text().then((_responseText) => {
             let result404: any = null;
@@ -3805,6 +3854,13 @@ export class ProductosComercializadosClient {
         if (status === 200) {
             return response.text().then((_responseText) => {
             return;
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
             });
         } else if (status === 404) {
             return response.text().then((_responseText) => {
@@ -6369,6 +6425,13 @@ export class RegistrosClient {
             result400 = ProblemDetails.fromJS(resultData400);
             return throwException("A server side error occurred.", status, _responseText, _headers, result400);
             });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
+            });
         } else if (status === 404) {
             return response.text().then((_responseText) => {
             let result404: any = null;
@@ -6409,6 +6472,13 @@ export class RegistrosClient {
         if (status === 200) {
             return response.text().then((_responseText) => {
             return;
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
             });
         } else if (status === 404) {
             return response.text().then((_responseText) => {
@@ -9402,7 +9472,7 @@ export class NormaDto implements INormaDto {
     institutionId?: string;
     institutionNombre?: string;
     creadores?: string[];
-    creadoresDetalle?: NormaCreatorDto[];
+    creadoresDetalle?: CreatorDto[];
 
     constructor(data?: INormaDto) {
         if (data) {
@@ -9428,7 +9498,7 @@ export class NormaDto implements INormaDto {
             if (Array.isArray(_data["creadoresDetalle"])) {
                 this.creadoresDetalle = [] as any;
                 for (let item of _data["creadoresDetalle"])
-                    this.creadoresDetalle!.push(NormaCreatorDto.fromJS(item));
+                    this.creadoresDetalle!.push(CreatorDto.fromJS(item));
             }
         }
     }
@@ -9468,15 +9538,15 @@ export interface INormaDto {
     institutionId?: string;
     institutionNombre?: string;
     creadores?: string[];
-    creadoresDetalle?: NormaCreatorDto[];
+    creadoresDetalle?: CreatorDto[];
 }
 
-export class NormaCreatorDto implements INormaCreatorDto {
+export class CreatorDto implements ICreatorDto {
     id?: string;
     name?: string;
     userId?: string | undefined;
 
-    constructor(data?: INormaCreatorDto) {
+    constructor(data?: ICreatorDto) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -9493,9 +9563,9 @@ export class NormaCreatorDto implements INormaCreatorDto {
         }
     }
 
-    static fromJS(data: any): NormaCreatorDto {
+    static fromJS(data: any): CreatorDto {
         data = typeof data === 'object' ? data : {};
-        let result = new NormaCreatorDto();
+        let result = new CreatorDto();
         result.init(data);
         return result;
     }
@@ -9509,7 +9579,7 @@ export class NormaCreatorDto implements INormaCreatorDto {
     }
 }
 
-export interface INormaCreatorDto {
+export interface ICreatorDto {
     id?: string;
     name?: string;
     userId?: string | undefined;
@@ -9745,50 +9815,6 @@ export interface IPatenteDto {
     esNacional?: boolean;
     creadores?: string[];
     creadoresDetalle?: CreatorDto[];
-}
-
-export class CreatorDto implements ICreatorDto {
-    id?: string;
-    name?: string;
-    userId?: string | undefined;
-
-    constructor(data?: ICreatorDto) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.id = _data["id"];
-            this.name = _data["name"];
-            this.userId = _data["userId"];
-        }
-    }
-
-    static fromJS(data: any): CreatorDto {
-        data = typeof data === 'object' ? data : {};
-        let result = new CreatorDto();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["id"] = this.id;
-        data["name"] = this.name;
-        data["userId"] = this.userId;
-        return data;
-    }
-}
-
-export interface ICreatorDto {
-    id?: string;
-    name?: string;
-    userId?: string | undefined;
 }
 
 export class ProyectoPatenteDto implements IProyectoPatenteDto {
@@ -10259,7 +10285,7 @@ export class ProductoDto implements IProductoDto {
     institutionId?: string;
     institutionNombre?: string;
     creadores?: string[];
-    creadoresDetalle?: ProductoCreatorDto[];
+    creadoresDetalle?: CreatorDto[];
 
     constructor(data?: IProductoDto) {
         if (data) {
@@ -10286,7 +10312,7 @@ export class ProductoDto implements IProductoDto {
             if (Array.isArray(_data["creadoresDetalle"])) {
                 this.creadoresDetalle = [] as any;
                 for (let item of _data["creadoresDetalle"])
-                    this.creadoresDetalle!.push(ProductoCreatorDto.fromJS(item));
+                    this.creadoresDetalle!.push(CreatorDto.fromJS(item));
             }
         }
     }
@@ -10328,51 +10354,7 @@ export interface IProductoDto {
     institutionId?: string;
     institutionNombre?: string;
     creadores?: string[];
-    creadoresDetalle?: ProductoCreatorDto[];
-}
-
-export class ProductoCreatorDto implements IProductoCreatorDto {
-    id?: string;
-    name?: string;
-    userId?: string | undefined;
-
-    constructor(data?: IProductoCreatorDto) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.id = _data["id"];
-            this.name = _data["name"];
-            this.userId = _data["userId"];
-        }
-    }
-
-    static fromJS(data: any): ProductoCreatorDto {
-        data = typeof data === 'object' ? data : {};
-        let result = new ProductoCreatorDto();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["id"] = this.id;
-        data["name"] = this.name;
-        data["userId"] = this.userId;
-        return data;
-    }
-}
-
-export interface IProductoCreatorDto {
-    id?: string;
-    name?: string;
-    userId?: string | undefined;
+    creadoresDetalle?: CreatorDto[];
 }
 
 export class CreateProductoBody implements ICreateProductoBody {
@@ -12444,7 +12426,7 @@ export class RegistroDto implements IRegistroDto {
     institutionNombre?: string;
     evidenceFileId?: number | undefined;
     creadores?: string[];
-    creadoresDetalle?: RegistroCreatorDto[];
+    creadoresDetalle?: CreatorDto[];
 
     constructor(data?: IRegistroDto) {
         if (data) {
@@ -12474,7 +12456,7 @@ export class RegistroDto implements IRegistroDto {
             if (Array.isArray(_data["creadoresDetalle"])) {
                 this.creadoresDetalle = [] as any;
                 for (let item of _data["creadoresDetalle"])
-                    this.creadoresDetalle!.push(RegistroCreatorDto.fromJS(item));
+                    this.creadoresDetalle!.push(CreatorDto.fromJS(item));
             }
         }
     }
@@ -12522,51 +12504,7 @@ export interface IRegistroDto {
     institutionNombre?: string;
     evidenceFileId?: number | undefined;
     creadores?: string[];
-    creadoresDetalle?: RegistroCreatorDto[];
-}
-
-export class RegistroCreatorDto implements IRegistroCreatorDto {
-    id?: string;
-    name?: string;
-    userId?: string | undefined;
-
-    constructor(data?: IRegistroCreatorDto) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.id = _data["id"];
-            this.name = _data["name"];
-            this.userId = _data["userId"];
-        }
-    }
-
-    static fromJS(data: any): RegistroCreatorDto {
-        data = typeof data === 'object' ? data : {};
-        let result = new RegistroCreatorDto();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["id"] = this.id;
-        data["name"] = this.name;
-        data["userId"] = this.userId;
-        return data;
-    }
-}
-
-export interface IRegistroCreatorDto {
-    id?: string;
-    name?: string;
-    userId?: string | undefined;
+    creadoresDetalle?: CreatorDto[];
 }
 
 export class CreateRegistroBody implements ICreateRegistroBody {

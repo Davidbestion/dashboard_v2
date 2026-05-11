@@ -1,8 +1,7 @@
 using Dashboard_v2.Application.Common.Interfaces;
+using Dashboard_v2.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using RolesEnum = Dashboard_v2.Domain.Enums.Roles;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Dashboard_v2.Web.Endpoints;
 
@@ -31,16 +30,18 @@ public class ProductosComercializados : EndpointGroupBase
             .WithName("UpdateProductoComercializado")
             .Produces(200)
             .ProducesProblem(400)
+            .ProducesProblem(403)
             .ProducesProblem(404);
 
         groupBuilder.MapDelete("{id}", Delete)
             .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Jefe_de_Proyecto), nameof(RolesEnum.Superuser)))
             .WithName("DeleteProductoComercializado")
             .Produces(200)
+            .ProducesProblem(403)
             .ProducesProblem(404);
     }
 
-    private async Task<IResult> GetAll(IApplicationDbContext db)
+    private static async Task<IResult> GetAll(IApplicationDbContext db)
     {
         var list = await db.ProductosComercializados
             .Include(p => p.TipoProductoComercializado)
@@ -51,7 +52,7 @@ public class ProductosComercializados : EndpointGroupBase
                 p.TipoProductoComercializadoId, p.TipoProductoComercializado.Nombre,
                 p.InstitutionId, p.Institution.Nombre,
                 p.Creadores.Select(c => c.Author.Name).ToList(),
-                p.Creadores.Select(c => new ProductoCreatorDto(c.Author.Id, c.Author.Name, c.Author.UserId)).ToList()))
+                p.Creadores.Select(c => new CreatorDto(c.Author.Id, c.Author.Name, c.Author.UserId)).ToList()))
             .ToListAsync();
         return Results.Ok(list);
     }
@@ -73,18 +74,18 @@ public class ProductosComercializados : EndpointGroupBase
                 ap.ProductoComercializado.TipoProductoComercializado.Nombre,
                 ap.ProductoComercializado.InstitutionId, ap.ProductoComercializado.Institution.Nombre,
                 ap.ProductoComercializado.Creadores.Select(c => c.Author.Name).ToList(),
-                ap.ProductoComercializado.Creadores.Select(c => new ProductoCreatorDto(c.Author.Id, c.Author.Name, c.Author.UserId)).ToList()))
+                ap.ProductoComercializado.Creadores.Select(c => new CreatorDto(c.Author.Id, c.Author.Name, c.Author.UserId)).ToList()))
             .ToListAsync();
         return Results.Ok(list);
     }
 
-    private async Task<IResult> Create(IApplicationDbContext db, IUser currentUser, IAuthorResolutionService authorResolution, CreateProductoBody body)
+    private static async Task<IResult> Create(IApplicationDbContext db, IUser currentUser, IAuthorResolutionService authorResolution, IProductionCreatorService creatorService, CreateProductoBody body)
     {
         var currentAuthor = await authorResolution.GetOrCreateForUserAsync(currentUser.Id!, CancellationToken.None);
         if (currentAuthor == null)
             return Results.BadRequest(new { errors = new[] { "Usuario actual no valido." } });
 
-        var item = new Dashboard_v2.Domain.Entities.ProductoComercializado
+        var item = new ProductoComercializado
         {
             Titulo = body.Titulo,
             TipoProductoComercializadoId = body.TipoProductoComercializadoId,
@@ -92,14 +93,18 @@ public class ProductosComercializados : EndpointGroupBase
         };
         db.ProductosComercializados.Add(item);
 
-        item.Creadores.Add(new Dashboard_v2.Domain.Entities.AuthorProductoComercializado { AuthorId = currentAuthor.Id, ProductoComercializadoId = item.Id });
-        await AddAdditionalCreatorsAsync(db, authorResolution, item, currentAuthor.Id, body.AdditionalAuthorIds, body.AdditionalAuthorNames, body.AdditionalUserIds);
+        item.Creadores.Add(new AuthorProductoComercializado { AuthorId = currentAuthor.Id, ProductoComercializadoId = item.Id });
+        await creatorService.AddAdditionalCreatorsAsync(
+            item.Creadores, currentAuthor.Id,
+            authorId => new AuthorProductoComercializado { AuthorId = authorId, ProductoComercializadoId = item.Id },
+            c => c.AuthorId,
+            body.AdditionalAuthorIds, body.AdditionalAuthorNames, body.AdditionalUserIds);
 
         await db.SaveChangesAsync(CancellationToken.None);
         return Results.Created($"/api/ProductosComercializados/{item.Id}", new { id = item.Id });
     }
 
-    private async Task<IResult> Update(IApplicationDbContext db, IUser currentUser, IAuthorResolutionService authorResolution, string id, UpdateProductoBody body)
+    private static async Task<IResult> Update(IApplicationDbContext db, IUser currentUser, IAuthorResolutionService authorResolution, IProductionCreatorService creatorService, string id, UpdateProductoBody body)
     {
         var item = await db.ProductosComercializados
             .Include(p => p.Creadores)
@@ -127,13 +132,17 @@ public class ProductosComercializados : EndpointGroupBase
         foreach (var creator in toRemove)
             item.Creadores.Remove(creator);
 
-        await AddAdditionalCreatorsAsync(db, authorResolution, item, currentAuthor.Id, body.AdditionalAuthorIds, body.AdditionalAuthorNames, body.AdditionalUserIds);
+        await creatorService.AddAdditionalCreatorsAsync(
+            item.Creadores, currentAuthor.Id,
+            authorId => new AuthorProductoComercializado { AuthorId = authorId, ProductoComercializadoId = item.Id },
+            c => c.AuthorId,
+            body.AdditionalAuthorIds, body.AdditionalAuthorNames, body.AdditionalUserIds);
 
         await db.SaveChangesAsync(CancellationToken.None);
         return Results.Ok(new { message = "Producto actualizado." });
     }
 
-    private async Task<IResult> Delete(IApplicationDbContext db, IUser currentUser, IAuthorResolutionService authorResolution, string id)
+    private static async Task<IResult> Delete(IApplicationDbContext db, IUser currentUser, IAuthorResolutionService authorResolution, string id)
     {
         var item = await db.ProductosComercializados.FindAsync(new object[] { id }, CancellationToken.None);
         if (item == null)
@@ -155,40 +164,6 @@ public class ProductosComercializados : EndpointGroupBase
         await db.SaveChangesAsync(CancellationToken.None);
         return Results.Ok(new { message = "Producto eliminado." });
     }
-
-    private static async Task AddAdditionalCreatorsAsync(
-        IApplicationDbContext db,
-        IAuthorResolutionService authorResolution,
-        Dashboard_v2.Domain.Entities.ProductoComercializado item,
-        string currentAuthorId,
-        IEnumerable<string>? additionalAuthorIds,
-        IEnumerable<string>? additionalAuthorNames,
-        IEnumerable<string>? additionalUserIds)
-    {
-        foreach (var authorId in (additionalAuthorIds ?? []).Where(id => !string.IsNullOrWhiteSpace(id)))
-        {
-            if (authorId == currentAuthorId) continue;
-            if (item.Creadores.Any(c => c.AuthorId == authorId)) continue;
-            if (!await db.Authors.AnyAsync(a => a.Id == authorId, CancellationToken.None)) continue;
-            item.Creadores.Add(new Dashboard_v2.Domain.Entities.AuthorProductoComercializado { AuthorId = authorId, ProductoComercializadoId = item.Id });
-        }
-
-        foreach (var authorName in (additionalAuthorNames ?? []).Where(name => !string.IsNullOrWhiteSpace(name)))
-        {
-            var resolved = await authorResolution.ResolveByNameAsync(authorName, CancellationToken.None);
-            if (resolved.Id == currentAuthorId) continue;
-            if (item.Creadores.Any(c => c.AuthorId == resolved.Id)) continue;
-            item.Creadores.Add(new Dashboard_v2.Domain.Entities.AuthorProductoComercializado { AuthorId = resolved.Id, ProductoComercializadoId = item.Id });
-        }
-
-        foreach (var userId in (additionalUserIds ?? []).Where(id => !string.IsNullOrWhiteSpace(id)))
-        {
-            var resolved = await authorResolution.GetOrCreateForUserAsync(userId, CancellationToken.None);
-            if (resolved == null || resolved.Id == currentAuthorId) continue;
-            if (item.Creadores.Any(c => c.AuthorId == resolved.Id)) continue;
-            item.Creadores.Add(new Dashboard_v2.Domain.Entities.AuthorProductoComercializado { AuthorId = resolved.Id, ProductoComercializadoId = item.Id });
-        }
-    }
 }
 
 public record ProductoDto(
@@ -199,7 +174,7 @@ public record ProductoDto(
     string InstitutionId,
     string InstitutionNombre,
     List<string> Creadores,
-    List<ProductoCreatorDto> CreadoresDetalle);
+    List<CreatorDto> CreadoresDetalle);
 public record CreateProductoBody(
     string Titulo,
     string TipoProductoComercializadoId,
@@ -214,4 +189,3 @@ public record UpdateProductoBody(
     List<string>? AdditionalAuthorIds = null,
     List<string>? AdditionalAuthorNames = null,
     List<string>? AdditionalUserIds = null);
-public record ProductoCreatorDto(string Id, string Name, string? UserId);

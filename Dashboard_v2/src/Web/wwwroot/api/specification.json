@@ -2241,6 +2241,16 @@
               }
             }
           },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
           "404": {
             "description": "",
             "content": {
@@ -2272,6 +2282,16 @@
         "responses": {
           "200": {
             "description": ""
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
           },
           "404": {
             "description": "",
@@ -2449,6 +2469,16 @@
               }
             }
           },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
           "404": {
             "description": "",
             "content": {
@@ -2489,6 +2519,16 @@
         "responses": {
           "204": {
             "description": ""
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
           },
           "404": {
             "description": "",
@@ -2546,6 +2586,16 @@
               }
             }
           },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
           "404": {
             "description": "",
             "content": {
@@ -2577,6 +2627,16 @@
         "responses": {
           "200": {
             "description": ""
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
           },
           "404": {
             "description": "",
@@ -2872,6 +2932,16 @@
               }
             }
           },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
           "404": {
             "description": "",
             "content": {
@@ -2903,6 +2973,16 @@
         "responses": {
           "200": {
             "description": ""
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
           },
           "404": {
             "description": "",
@@ -5086,6 +5166,16 @@
               }
             }
           },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
           "404": {
             "description": "",
             "content": {
@@ -5117,6 +5207,16 @@
         "responses": {
           "200": {
             "description": ""
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
           },
           "404": {
             "description": "",
@@ -6567,12 +6667,12 @@
           "creadoresDetalle": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/NormaCreatorDto"
+              "$ref": "#/components/schemas/CreatorDto"
             }
           }
         }
       },
-      "NormaCreatorDto": {
+      "CreatorDto": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
@@ -6687,22 +6787,6 @@
             "items": {
               "$ref": "#/components/schemas/CreatorDto"
             }
-          }
-        }
-      },
-      "CreatorDto": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "userId": {
-            "type": "string",
-            "nullable": true
           }
         }
       },
@@ -6933,24 +7017,8 @@
           "creadoresDetalle": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/ProductoCreatorDto"
+              "$ref": "#/components/schemas/CreatorDto"
             }
-          }
-        }
-      },
-      "ProductoCreatorDto": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "userId": {
-            "type": "string",
-            "nullable": true
           }
         }
       },
@@ -8112,24 +8180,8 @@
           "creadoresDetalle": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/RegistroCreatorDto"
+              "$ref": "#/components/schemas/CreatorDto"
             }
-          }
-        }
-      },
-      "RegistroCreatorDto": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "userId": {
-            "type": "string",
-            "nullable": true
           }
         }
       },

@@ -430,15 +430,14 @@ export default function ProyectosPage() {
     setPatentesError('');
     try {
       await apiFetch(`/api/Proyectos/${patentesTarget.id}/patentes/${selectedPatenteToLink}`, { method: 'POST' });
-      const linked = availablePatentes.find(p => p.id === selectedPatenteToLink);
-      setAvailablePatentes(prev => prev.filter(p => p.id !== selectedPatenteToLink));
-      if (linked) {
-        setPatentesList(prev => [
-          ...prev,
-          { patenteId: linked.id, titulo: linked.titulo },
-        ].sort((a, b) => a.titulo.localeCompare(b.titulo)));
-      }
       setSelectedPatenteToLink('');
+      const linked = await apiFetch(`/api/Proyectos/${patentesTarget.id}/patentes`);
+      setPatentesList(linked);
+      setAvailablePatentes(prev =>
+        prev
+          .filter(p => p.id !== selectedPatenteToLink)
+          .sort((a, b) => a.titulo.localeCompare(b.titulo))
+      );
       load();
     } catch (e) {
       setPatentesError(e.message);

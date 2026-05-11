@@ -1,8 +1,7 @@
 using Dashboard_v2.Application.Common.Interfaces;
+using Dashboard_v2.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using RolesEnum = Dashboard_v2.Domain.Enums.Roles;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Dashboard_v2.Web.Endpoints;
 
@@ -31,12 +30,14 @@ public class Patentes : EndpointGroupBase
             .WithName("LinkProyectoAPatente")
             .Produces(204)
             .ProducesProblem(400)
+            .ProducesProblem(403)
             .ProducesProblem(404);
 
         groupBuilder.MapDelete("{id}/proyectos/{proyectoId}", UnlinkProyectoDePatente)
             .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Jefe_de_Proyecto), nameof(RolesEnum.Superuser)))
             .WithName("UnlinkProyectoDePatente")
             .Produces(204)
+            .ProducesProblem(403)
             .ProducesProblem(404);
 
         groupBuilder.MapPost("", CreatePatente)
@@ -50,12 +51,14 @@ public class Patentes : EndpointGroupBase
             .WithName("UpdatePatente")
             .Produces(200)
             .ProducesProblem(400)
+            .ProducesProblem(403)
             .ProducesProblem(404);
 
         groupBuilder.MapDelete("{id}", DeletePatente)
             .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Jefe_de_Proyecto), nameof(RolesEnum.Superuser)))
             .WithName("DeletePatente")
             .Produces(200)
+            .ProducesProblem(403)
             .ProducesProblem(404);
     }
 
@@ -127,10 +130,10 @@ public class Patentes : EndpointGroupBase
             var esCreador = await db.AuthorPatentes.AnyAsync(
                 ap => ap.PatenteId == id && ap.AuthorId == currentAuthor.Id);
             if (!esCreador)
-                return Results.BadRequest(new { errors = new[] { "Solo puedes vincular proyectos a tus propias patentes." } });
+                return Results.Forbid();
         }
 
-        db.ProyectoPatentes.Add(new Dashboard_v2.Domain.Entities.ProyectoPatente
+        db.ProyectoPatentes.Add(new ProyectoPatente
         {
             ProyectoId = proyectoId,
             PatenteId = id
@@ -157,7 +160,7 @@ public class Patentes : EndpointGroupBase
             var esCreador = await db.AuthorPatentes.AnyAsync(
                 ap => ap.PatenteId == id && ap.AuthorId == currentAuthor.Id);
             if (!esCreador)
-                return Results.BadRequest(new { errors = new[] { "Solo puedes desvincular proyectos de tus propias patentes." } });
+                return Results.Forbid();
         }
 
         db.ProyectoPatentes.Remove(link);
@@ -169,13 +172,14 @@ public class Patentes : EndpointGroupBase
         IApplicationDbContext db,
         IUser currentUser,
         IAuthorResolutionService authorResolution,
+        IProductionCreatorService creatorService,
         CreatePatenteBody body)
     {
         var currentAuthor = await authorResolution.GetOrCreateForUserAsync(currentUser.Id!, CancellationToken.None);
         if (currentAuthor == null)
             return Results.BadRequest(new { errors = new[] { "Usuario actual no valido." } });
 
-        var p = new Dashboard_v2.Domain.Entities.Patente
+        var p = new Patente
         {
             Titulo = body.Titulo,
             NumeroSolicitudConcesion = body.NumeroSolicitudConcesion,
@@ -183,8 +187,12 @@ public class Patentes : EndpointGroupBase
         };
         db.Patentes.Add(p);
 
-        p.Creadores.Add(new Dashboard_v2.Domain.Entities.AuthorPatente { AuthorId = currentAuthor.Id, PatenteId = p.Id });
-        await AddAdditionalCreatorsAsync(db, authorResolution, p, currentAuthor.Id, body.AdditionalAuthorIds, body.AdditionalAuthorNames, body.AdditionalUserIds);
+        p.Creadores.Add(new AuthorPatente { AuthorId = currentAuthor.Id, PatenteId = p.Id });
+        await creatorService.AddAdditionalCreatorsAsync(
+            p.Creadores, currentAuthor.Id,
+            authorId => new AuthorPatente { AuthorId = authorId, PatenteId = p.Id },
+            c => c.AuthorId,
+            body.AdditionalAuthorIds, body.AdditionalAuthorNames, body.AdditionalUserIds);
 
         await db.SaveChangesAsync(CancellationToken.None);
         return Results.Created($"/api/Patentes/{p.Id}", new { id = p.Id });
@@ -194,6 +202,7 @@ public class Patentes : EndpointGroupBase
         IApplicationDbContext db,
         IUser currentUser,
         IAuthorResolutionService authorResolution,
+        IProductionCreatorService creatorService,
         string id,
         UpdatePatenteBody body)
     {
@@ -223,7 +232,11 @@ public class Patentes : EndpointGroupBase
         foreach (var creator in toRemove)
             p.Creadores.Remove(creator);
 
-        await AddAdditionalCreatorsAsync(db, authorResolution, p, currentAuthor.Id, body.AdditionalAuthorIds, body.AdditionalAuthorNames, body.AdditionalUserIds);
+        await creatorService.AddAdditionalCreatorsAsync(
+            p.Creadores, currentAuthor.Id,
+            authorId => new AuthorPatente { AuthorId = authorId, PatenteId = p.Id },
+            c => c.AuthorId,
+            body.AdditionalAuthorIds, body.AdditionalAuthorNames, body.AdditionalUserIds);
 
         await db.SaveChangesAsync(CancellationToken.None);
         return Results.Ok(new { message = "Patente actualizada." });
@@ -250,40 +263,6 @@ public class Patentes : EndpointGroupBase
         db.Patentes.Remove(p);
         await db.SaveChangesAsync(CancellationToken.None);
         return Results.Ok(new { message = "Patente eliminada." });
-    }
-
-    private static async Task AddAdditionalCreatorsAsync(
-        IApplicationDbContext db,
-        IAuthorResolutionService authorResolution,
-        Dashboard_v2.Domain.Entities.Patente patente,
-        string currentAuthorId,
-        IEnumerable<string>? additionalAuthorIds,
-        IEnumerable<string>? additionalAuthorNames,
-        IEnumerable<string>? additionalUserIds)
-    {
-        foreach (var authorId in (additionalAuthorIds ?? []).Where(id => !string.IsNullOrWhiteSpace(id)))
-        {
-            if (authorId == currentAuthorId) continue;
-            if (patente.Creadores.Any(c => c.AuthorId == authorId)) continue;
-            if (!await db.Authors.AnyAsync(a => a.Id == authorId, CancellationToken.None)) continue;
-            patente.Creadores.Add(new Dashboard_v2.Domain.Entities.AuthorPatente { AuthorId = authorId, PatenteId = patente.Id });
-        }
-
-        foreach (var authorName in (additionalAuthorNames ?? []).Where(name => !string.IsNullOrWhiteSpace(name)))
-        {
-            var resolved = await authorResolution.ResolveByNameAsync(authorName, CancellationToken.None);
-            if (resolved.Id == currentAuthorId) continue;
-            if (patente.Creadores.Any(c => c.AuthorId == resolved.Id)) continue;
-            patente.Creadores.Add(new Dashboard_v2.Domain.Entities.AuthorPatente { AuthorId = resolved.Id, PatenteId = patente.Id });
-        }
-
-        foreach (var userId in (additionalUserIds ?? []).Where(id => !string.IsNullOrWhiteSpace(id)))
-        {
-            var resolved = await authorResolution.GetOrCreateForUserAsync(userId, CancellationToken.None);
-            if (resolved == null || resolved.Id == currentAuthorId) continue;
-            if (patente.Creadores.Any(c => c.AuthorId == resolved.Id)) continue;
-            patente.Creadores.Add(new Dashboard_v2.Domain.Entities.AuthorPatente { AuthorId = resolved.Id, PatenteId = patente.Id });
-        }
     }
 }
 

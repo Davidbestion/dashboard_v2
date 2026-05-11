@@ -60,6 +60,7 @@ public static class DependencyInjection
         builder.Services.AddScoped<IPermissionService, PermissionService>();
         builder.Services.AddScoped<IAuthorCleanupService, AuthorCleanupService>();
         builder.Services.AddScoped<Dashboard_v2.Application.Common.Interfaces.IAuthorResolutionService, Dashboard_v2.Application.Common.AuthorResolutionService>();
+        builder.Services.AddScoped<Dashboard_v2.Application.Common.Interfaces.IProductionCreatorService, Dashboard_v2.Application.Common.ProductionCreatorService>();
         builder.Services.AddSingleton<IDocumentRenderer, DocumentRenderer>();
         // Servicios de aplicación (Service Layer)
         builder.Services.AddScoped<Dashboard_v2.Application.Universidades.IUniversidadService, Dashboard_v2.Application.Universidades.UniversidadService>();

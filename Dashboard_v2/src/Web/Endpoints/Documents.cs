@@ -18,6 +18,8 @@ public class Documents : EndpointGroupBase
     private const string ExcelContentType =
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
+    private const string ZipContentType = "application/zip";
+
     public override void Map(RouteGroupBuilder groupBuilder)
     {
         groupBuilder.MapGet("{reportName}", GetDocument)
@@ -70,6 +72,13 @@ public class Documents : EndpointGroupBase
         try
         {
             var bytes = await documentService.GenerateAsync(reportName, parameters);
+
+            if (documentService.IsZipReport(reportName))
+            {
+                var zipFileName = $"{reportName}_{DateTime.UtcNow:yyyy-MM}.zip";
+                return Results.File(bytes, ZipContentType, zipFileName);
+            }
+
             var fileName = $"{reportName}_{DateTime.UtcNow:yyyy-MM}.xlsx";
             return Results.File(bytes, ExcelContentType, fileName);
         }

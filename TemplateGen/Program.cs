@@ -32,6 +32,8 @@ var templates = new Dictionary<string, (string Descripcion, Action Generate)>(St
     ["eventos"] = ("Anexo 3 — Eventos y actividades científicas", () => new AnexoEventosTemplate().Generate()),
     ["proyectos"] = ("Anexo 4 — Proyectos de Investigación", () => new AnexoProyectosTemplate().Generate()),
     ["registros"] = ("Anexo 7 — Patentes, Registros, Normas y Productos", () => new AnexoRegistrosTemplate().Generate()),
+    ["redes-nac-inter"] = ("Anexo 6 — Redes Nacionales e Internacionales", () => new AnexoRedesNacInterTemplate().Generate()),
+    ["redes-universitaria"] = ("Anexo 6 — Plantilla Red Universitaria (una por red)", () => new AnexoRedUniversitariaTemplate().Generate()),
 };
 
 // ─── Modo línea de comandos ────────────────────────────────────────────────

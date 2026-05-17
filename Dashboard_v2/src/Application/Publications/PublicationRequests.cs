@@ -19,6 +19,8 @@ public record CreatePublicationRequest
     public int? Group { get; init; }
     public string? Cuartil { get; init; }
     public string? ProyectoId { get; init; }
+    /// <summary>ID de la red que genera esta publicación (opcional). Solo puede ser especificado por un Jefe_de_Redes.</summary>
+    public string? RedId { get; init; }
     /// <summary>ID del archivo de evidencia/certificado subido previamente (opcional).</summary>
     public int? EvidenceFileId { get; init; }
 }
@@ -40,6 +42,8 @@ public record UpdatePublicationRequest
     public int? Group { get; init; }
     public string? Cuartil { get; init; }
     public string? ProyectoId { get; init; }
+    /// <summary>ID de la red que genera esta publicación (opcional). Solo puede ser especificado por un Jefe_de_Redes.</summary>
+    public string? RedId { get; init; }
     /// <summary>ID del archivo de evidencia/certificado subido previamente (opcional). Null elimina la evidencia actual.</summary>
     public int? EvidenceFileId { get; init; }
 }

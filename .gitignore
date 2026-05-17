@@ -225,3 +225,6 @@ __marimo__/
 
 # CODEX files
 *.codex
+
+# Language server cache
+*.lscache

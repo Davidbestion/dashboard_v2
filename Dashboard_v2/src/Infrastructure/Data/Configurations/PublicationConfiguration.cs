@@ -37,5 +37,15 @@ public class PublicationConfiguration : IEntityTypeConfiguration<Publication>
             .HasForeignKey(p => p.EvidenceFileId)
             .OnDelete(DeleteBehavior.SetNull)
             .IsRequired(false);
+
+        builder.Property(p => p.RedId).HasMaxLength(450);
+
+        // Una publicación puede haber sido generada por una red (opcional).
+        // Si la red se borra, la publicación queda desvinculada (SetNull).
+        builder.HasOne(p => p.Red)
+            .WithMany(r => r.Publications)
+            .HasForeignKey(p => p.RedId)
+            .OnDelete(DeleteBehavior.SetNull)
+            .IsRequired(false);
     }
 }

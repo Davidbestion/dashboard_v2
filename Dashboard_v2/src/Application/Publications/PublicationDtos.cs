@@ -54,6 +54,10 @@ public record PublicationDto
     public string? ProyectoId { get; init; }
     /// <summary>Título del proyecto vinculado cuando la publicación deriva de uno.</summary>
     public string? ProyectoTitulo { get; init; }
+    /// <summary>ID de la red que generó esta publicación. Null si no está vinculada a ninguna red.</summary>
+    public string? RedId { get; init; }
+    /// <summary>Nombre de la red vinculada. Null si no está vinculada a ninguna red.</summary>
+    public string? RedNombre { get; init; }
     /// <summary>ID del archivo de evidencia/certificado adjunto. Null si no tiene.</summary>
     public int? EvidenceFileId { get; init; }
 }

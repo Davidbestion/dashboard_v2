@@ -22,6 +22,7 @@ import NormasAreaPage from "./pages/NormasAreaPage";
 import ProductosAreaPage from "./pages/ProductosAreaPage";
 import ProductosComercializadosPage from "./pages/ProductosComercializadosPage";
 import RedesPage from "./pages/RedesPage";
+import RedesPublicacionesPage from "./pages/RedesPublicacionesPage";
 import LineasDeInvestigacionPage from "./pages/LineasDeInvestigacionPage";
 import ProyectosPage from "./pages/ProyectosPage";
 import ClasificacionesPage from "./pages/ClasificacionesPage";
@@ -212,6 +213,12 @@ const AppRoutes = [
     element: <RedesPage />,
     pageTitle: 'Redes',
     jefeRedesOrAdminOnly: true,
+  },
+  {
+    path: '/mis-redes-publicaciones',
+    element: <RedesPublicacionesPage />,
+    pageTitle: 'Publicaciones de mis Redes',
+    jefeRedesOrProfesorOnly: true,
   },
 ];
 

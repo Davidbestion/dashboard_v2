@@ -4328,6 +4328,29 @@
         }
       }
     },
+    "/api/Publications/redes": {
+      "get": {
+        "tags": [
+          "Publications"
+        ],
+        "operationId": "GetMyRedPublications",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PublicationDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Publications": {
       "get": {
         "tags": [
@@ -4856,6 +4879,94 @@
             "description": ""
           },
           "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Redes/mis-redes": {
+      "get": {
+        "tags": [
+          "Redes"
+        ],
+        "operationId": "GetMisRedes",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RedConCoordinadoresDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Redes/{id}/coordinadores/{areaId}": {
+      "put": {
+        "tags": [
+          "Redes"
+        ],
+        "operationId": "AsignarCoordinador",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "areaId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 2
+          }
+        ],
+        "requestBody": {
+          "x-name": "body",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AsignarCoordinadorBody"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 3
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
             "description": "",
             "content": {
               "application/json": {
@@ -7678,6 +7789,14 @@
             "type": "string",
             "nullable": true
           },
+          "redId": {
+            "type": "string",
+            "nullable": true
+          },
+          "redNombre": {
+            "type": "string",
+            "nullable": true
+          },
           "evidenceFileId": {
             "type": "integer",
             "format": "int32",
@@ -7802,6 +7921,10 @@
             "nullable": true
           },
           "proyectoId": {
+            "type": "string",
+            "nullable": true
+          },
+          "redId": {
             "type": "string",
             "nullable": true
           },
@@ -8030,6 +8153,10 @@
             "type": "string",
             "nullable": true
           },
+          "redId": {
+            "type": "string",
+            "nullable": true
+          },
           "evidenceFileId": {
             "type": "integer",
             "format": "int32",
@@ -8063,6 +8190,66 @@
           "tipo": {
             "type": "integer",
             "format": "int32"
+          }
+        }
+      },
+      "RedConCoordinadoresDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "tipo": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "countryName": {
+            "type": "string",
+            "nullable": true
+          },
+          "cantidadProfesores": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "coordinadores": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CoordinadorAreaDto"
+            }
+          }
+        }
+      },
+      "CoordinadorAreaDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "areaId": {
+            "type": "string"
+          },
+          "areaNombre": {
+            "type": "string"
+          },
+          "coordinadorId": {
+            "type": "string"
+          },
+          "coordinadorNombre": {
+            "type": "string"
+          },
+          "coordinadorEmail": {
+            "type": "string"
+          }
+        }
+      },
+      "AsignarCoordinadorBody": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "coordinadorId": {
+            "type": "string"
           }
         }
       },

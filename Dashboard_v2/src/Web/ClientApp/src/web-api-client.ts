@@ -5454,6 +5454,48 @@ export class PublicationsClient {
         return Promise.resolve<PublicationDto[]>(null as any);
     }
 
+    getMyRedPublications(): Promise<PublicationDto[]> {
+        let url_ = this.baseUrl + "/api/Publications/redes";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetMyRedPublications(_response);
+        });
+    }
+
+    protected processGetMyRedPublications(response: Response): Promise<PublicationDto[]> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(PublicationDto.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<PublicationDto[]>(null as any);
+    }
+
     getMyPublications(): Promise<PublicationDto[]> {
         let url_ = this.baseUrl + "/api/Publications";
         url_ = url_.replace(/[?&]$/, "");
@@ -6052,6 +6094,103 @@ export class RedesClient {
             let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
             result400 = ProblemDetails.fromJS(resultData400);
             return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    getMisRedes(): Promise<RedConCoordinadoresDto[]> {
+        let url_ = this.baseUrl + "/api/Redes/mis-redes";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetMisRedes(_response);
+        });
+    }
+
+    protected processGetMisRedes(response: Response): Promise<RedConCoordinadoresDto[]> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(RedConCoordinadoresDto.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<RedConCoordinadoresDto[]>(null as any);
+    }
+
+    asignarCoordinador(id: string, areaId: string, body: AsignarCoordinadorBody): Promise<void> {
+        let url_ = this.baseUrl + "/api/Redes/{id}/coordinadores/{areaId}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        if (areaId === undefined || areaId === null)
+            throw new globalThis.Error("The parameter 'areaId' must be defined.");
+        url_ = url_.replace("{areaId}", encodeURIComponent("" + areaId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processAsignarCoordinador(_response);
+        });
+    }
+
+    protected processAsignarCoordinador(response: Response): Promise<void> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
             });
         } else if (status !== 200 && status !== 204) {
             return response.text().then((_responseText) => {
@@ -11491,6 +11630,8 @@ export class PublicationDto implements IPublicationDto {
     journalPublication?: JournalPublicationDto | undefined;
     proyectoId?: string | undefined;
     proyectoTitulo?: string | undefined;
+    redId?: string | undefined;
+    redNombre?: string | undefined;
     evidenceFileId?: number | undefined;
 
     constructor(data?: IPublicationDto) {
@@ -11519,6 +11660,8 @@ export class PublicationDto implements IPublicationDto {
             this.journalPublication = _data["journalPublication"] ? JournalPublicationDto.fromJS(_data["journalPublication"]) : undefined as any;
             this.proyectoId = _data["proyectoId"];
             this.proyectoTitulo = _data["proyectoTitulo"];
+            this.redId = _data["redId"];
+            this.redNombre = _data["redNombre"];
             this.evidenceFileId = _data["evidenceFileId"];
         }
     }
@@ -11547,6 +11690,8 @@ export class PublicationDto implements IPublicationDto {
         data["journalPublication"] = this.journalPublication ? this.journalPublication.toJSON() : undefined as any;
         data["proyectoId"] = this.proyectoId;
         data["proyectoTitulo"] = this.proyectoTitulo;
+        data["redId"] = this.redId;
+        data["redNombre"] = this.redNombre;
         data["evidenceFileId"] = this.evidenceFileId;
         return data;
     }
@@ -11564,6 +11709,8 @@ export interface IPublicationDto {
     journalPublication?: JournalPublicationDto | undefined;
     proyectoId?: string | undefined;
     proyectoTitulo?: string | undefined;
+    redId?: string | undefined;
+    redNombre?: string | undefined;
     evidenceFileId?: number | undefined;
 }
 
@@ -11717,6 +11864,7 @@ export class CreatePublicationRequest implements ICreatePublicationRequest {
     group?: number | undefined;
     cuartil?: string | undefined;
     proyectoId?: string | undefined;
+    redId?: string | undefined;
     evidenceFileId?: number | undefined;
 
     constructor(data?: ICreatePublicationRequest) {
@@ -11755,6 +11903,7 @@ export class CreatePublicationRequest implements ICreatePublicationRequest {
             this.group = _data["group"];
             this.cuartil = _data["cuartil"];
             this.proyectoId = _data["proyectoId"];
+            this.redId = _data["redId"];
             this.evidenceFileId = _data["evidenceFileId"];
         }
     }
@@ -11793,6 +11942,7 @@ export class CreatePublicationRequest implements ICreatePublicationRequest {
         data["group"] = this.group;
         data["cuartil"] = this.cuartil;
         data["proyectoId"] = this.proyectoId;
+        data["redId"] = this.redId;
         data["evidenceFileId"] = this.evidenceFileId;
         return data;
     }
@@ -11812,6 +11962,7 @@ export interface ICreatePublicationRequest {
     group?: number | undefined;
     cuartil?: string | undefined;
     proyectoId?: string | undefined;
+    redId?: string | undefined;
     evidenceFileId?: number | undefined;
 }
 
@@ -12077,6 +12228,7 @@ export class UpdatePublicationBody implements IUpdatePublicationBody {
     group?: number | undefined;
     cuartil?: string | undefined;
     proyectoId?: string | undefined;
+    redId?: string | undefined;
     evidenceFileId?: number | undefined;
 
     constructor(data?: IUpdatePublicationBody) {
@@ -12115,6 +12267,7 @@ export class UpdatePublicationBody implements IUpdatePublicationBody {
             this.group = _data["group"];
             this.cuartil = _data["cuartil"];
             this.proyectoId = _data["proyectoId"];
+            this.redId = _data["redId"];
             this.evidenceFileId = _data["evidenceFileId"];
         }
     }
@@ -12153,6 +12306,7 @@ export class UpdatePublicationBody implements IUpdatePublicationBody {
         data["group"] = this.group;
         data["cuartil"] = this.cuartil;
         data["proyectoId"] = this.proyectoId;
+        data["redId"] = this.redId;
         data["evidenceFileId"] = this.evidenceFileId;
         return data;
     }
@@ -12172,6 +12326,7 @@ export interface IUpdatePublicationBody {
     group?: number | undefined;
     cuartil?: string | undefined;
     proyectoId?: string | undefined;
+    redId?: string | undefined;
     evidenceFileId?: number | undefined;
 }
 
@@ -12229,6 +12384,158 @@ export interface IRedDto {
     countryName?: string | undefined;
     cantidadProfesores?: number;
     tipo?: number;
+}
+
+export class RedConCoordinadoresDto implements IRedConCoordinadoresDto {
+    id?: string;
+    nombre?: string;
+    tipo?: number;
+    countryName?: string | undefined;
+    cantidadProfesores?: number;
+    coordinadores?: CoordinadorAreaDto[];
+
+    constructor(data?: IRedConCoordinadoresDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.nombre = _data["nombre"];
+            this.tipo = _data["tipo"];
+            this.countryName = _data["countryName"];
+            this.cantidadProfesores = _data["cantidadProfesores"];
+            if (Array.isArray(_data["coordinadores"])) {
+                this.coordinadores = [] as any;
+                for (let item of _data["coordinadores"])
+                    this.coordinadores!.push(CoordinadorAreaDto.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): RedConCoordinadoresDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new RedConCoordinadoresDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["nombre"] = this.nombre;
+        data["tipo"] = this.tipo;
+        data["countryName"] = this.countryName;
+        data["cantidadProfesores"] = this.cantidadProfesores;
+        if (Array.isArray(this.coordinadores)) {
+            data["coordinadores"] = [];
+            for (let item of this.coordinadores)
+                data["coordinadores"].push(item ? item.toJSON() : undefined as any);
+        }
+        return data;
+    }
+}
+
+export interface IRedConCoordinadoresDto {
+    id?: string;
+    nombre?: string;
+    tipo?: number;
+    countryName?: string | undefined;
+    cantidadProfesores?: number;
+    coordinadores?: CoordinadorAreaDto[];
+}
+
+export class CoordinadorAreaDto implements ICoordinadorAreaDto {
+    areaId?: string;
+    areaNombre?: string;
+    coordinadorId?: string;
+    coordinadorNombre?: string;
+    coordinadorEmail?: string;
+
+    constructor(data?: ICoordinadorAreaDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.areaId = _data["areaId"];
+            this.areaNombre = _data["areaNombre"];
+            this.coordinadorId = _data["coordinadorId"];
+            this.coordinadorNombre = _data["coordinadorNombre"];
+            this.coordinadorEmail = _data["coordinadorEmail"];
+        }
+    }
+
+    static fromJS(data: any): CoordinadorAreaDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new CoordinadorAreaDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["areaId"] = this.areaId;
+        data["areaNombre"] = this.areaNombre;
+        data["coordinadorId"] = this.coordinadorId;
+        data["coordinadorNombre"] = this.coordinadorNombre;
+        data["coordinadorEmail"] = this.coordinadorEmail;
+        return data;
+    }
+}
+
+export interface ICoordinadorAreaDto {
+    areaId?: string;
+    areaNombre?: string;
+    coordinadorId?: string;
+    coordinadorNombre?: string;
+    coordinadorEmail?: string;
+}
+
+export class AsignarCoordinadorBody implements IAsignarCoordinadorBody {
+    coordinadorId?: string;
+
+    constructor(data?: IAsignarCoordinadorBody) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.coordinadorId = _data["coordinadorId"];
+        }
+    }
+
+    static fromJS(data: any): AsignarCoordinadorBody {
+        data = typeof data === 'object' ? data : {};
+        let result = new AsignarCoordinadorBody();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["coordinadorId"] = this.coordinadorId;
+        return data;
+    }
+}
+
+export interface IAsignarCoordinadorBody {
+    coordinadorId?: string;
 }
 
 export class CreateRedBody implements ICreateRedBody {

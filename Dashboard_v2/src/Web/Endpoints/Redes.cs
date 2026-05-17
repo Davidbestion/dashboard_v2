@@ -13,6 +13,22 @@ public class Redes : EndpointGroupBase
             .WithName("GetRedes")
             .Produces<List<RedDto>>(200);
 
+        // GET /api/Redes/mis-redes
+        // Jefe_de_Redes → todas las redes con info de coordinadores.
+        // Profesor       → solo las redes que coordina.
+        groupBuilder.MapGet("mis-redes", GetMisRedes)
+            .RequireAuthorization(p => p.RequireRole("Jefe_de_Redes", "Profesor", "Superuser"))
+            .WithName("GetMisRedes")
+            .Produces<List<RedConCoordinadoresDto>>(200);
+
+        // PUT /api/Redes/{id}/coordinadores/{areaId} — Jefe_de_Redes asigna coordinador a un área de una red
+        groupBuilder.MapPut("{id}/coordinadores/{areaId}", AsignarCoordinador)
+            .RequireAuthorization(p => p.RequireRole("Jefe_de_Redes", "Superuser"))
+            .WithName("AsignarCoordinador")
+            .Produces(200)
+            .ProducesProblem(400)
+            .ProducesProblem(404);
+
         groupBuilder.MapPost("", CreateRed)
             .RequireAuthorization(p => p.RequireRole("Superuser", "Jefe_de_Redes"))
             .WithName("CreateRed")
@@ -44,6 +60,100 @@ public class Redes : EndpointGroupBase
             .Produces(200)
             .ProducesProblem(400)
             .ProducesProblem(404);
+    }
+
+    private async Task<IResult> GetMisRedes(IApplicationDbContext db, IUser currentUser, HttpContext http)
+    {
+        var isJefe = http.User.IsInRole("Jefe_de_Redes") || http.User.IsInRole("Superuser");
+
+        IQueryable<Dashboard_v2.Domain.Entities.Red> query;
+
+        if (isJefe)
+        {
+            // El Jefe ve TODAS las redes
+            query = db.Reds.AsNoTracking();
+        }
+        else
+        {
+            // El coordinador (Profesor) ve solo las redes que coordina
+            var coordinatedRedIds = await db.RedesCoordinadas
+                .AsNoTracking()
+                .Where(rc => rc.CoordinadorId == currentUser.Id)
+                .Select(rc => rc.RedId)
+                .Distinct()
+                .ToListAsync();
+
+            if (coordinatedRedIds.Count == 0)
+                return Results.Ok(new List<RedConCoordinadoresDto>());
+
+            query = db.Reds.AsNoTracking().Where(r => coordinatedRedIds.Contains(r.Id));
+        }
+
+        var reds = await query
+            .Include(r => r.RedesCoordinadas)
+                .ThenInclude(rc => rc.Area)
+            .Include(r => r.RedesCoordinadas)
+                .ThenInclude(rc => rc.Coordinador)
+            .Include(r => r.Country)
+            .OrderBy(r => r.Nombre)
+            .ToListAsync();
+
+        var result = reds.Select(r => new RedConCoordinadoresDto(
+            r.Id,
+            r.Nombre,
+            (int)r.Tipo,
+            r.Country?.Name,
+            r.CantidadProfesores,
+            r.RedesCoordinadas.Select(rc => new CoordinadorAreaDto(
+                rc.AreaId,
+                rc.Area?.Nombre ?? string.Empty,
+                rc.CoordinadorId,
+                rc.Coordinador != null
+                    ? $"{rc.Coordinador.UserName} {rc.Coordinador.UserLastName1}"
+                    : string.Empty,
+                rc.Coordinador?.Email ?? string.Empty
+            )).ToList()
+        )).ToList();
+
+        return Results.Ok(result);
+    }
+
+    private async Task<IResult> AsignarCoordinador(
+        IApplicationDbContext db,
+        string id,
+        string areaId,
+        AsignarCoordinadorBody body)
+    {
+        var red = await db.Reds.FindAsync(new object[] { id }, CancellationToken.None);
+        if (red == null)
+            return Results.NotFound(new { errors = new[] { "Red no encontrada." } });
+
+        // Verificar que el usuario coordinador existe
+        var coordinador = await db.Users.FindAsync(new object[] { body.CoordinadorId }, CancellationToken.None);
+        if (coordinador == null)
+            return Results.BadRequest(new { errors = new[] { "Usuario coordinador no encontrado." } });
+
+        // Buscar o crear el registro RedCoordinada
+        var rc = await db.RedesCoordinadas
+            .FirstOrDefaultAsync(x => x.RedId == id && x.AreaId == areaId, CancellationToken.None);
+
+        if (rc == null)
+        {
+            rc = new Dashboard_v2.Domain.Entities.RedCoordinada
+            {
+                RedId = id,
+                AreaId = areaId,
+                CoordinadorId = body.CoordinadorId,
+            };
+            db.RedesCoordinadas.Add(rc);
+        }
+        else
+        {
+            rc.CoordinadorId = body.CoordinadorId;
+        }
+
+        await db.SaveChangesAsync(CancellationToken.None);
+        return Results.Ok(new { message = "Coordinador asignado correctamente." });
     }
 
     private async Task<IResult> GetRedes(IApplicationDbContext db)
@@ -142,8 +252,11 @@ public class Redes : EndpointGroupBase
 }
 
 public record RedDto(string Id, string Nombre, int? CountryId, string? CountryName, int CantidadProfesores, int Tipo);
+public record RedConCoordinadoresDto(string Id, string Nombre, int Tipo, string? CountryName, int CantidadProfesores, List<CoordinadorAreaDto> Coordinadores);
+public record CoordinadorAreaDto(string AreaId, string AreaNombre, string CoordinadorId, string CoordinadorNombre, string CoordinadorEmail);
 public record CreateRedBody(string Nombre, int CountryId, int CantidadProfesores, int Tipo);
 public record UpdateRedBody(string Nombre, int CountryId, int CantidadProfesores, int Tipo);
 
 public record EventForRedDto(int Id, string Name, bool Assigned);
 public record SetEventsBody(List<int> EventIds);
+public record AsignarCoordinadorBody(string CoordinadorId);

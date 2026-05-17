@@ -15,6 +15,7 @@ public interface IPublicationService
     Task<List<PublicationDto>> GetMyPublicationsAsync(CancellationToken ct = default);
     Task<List<PublicationDto>> GetAllPublicationsAsync(CancellationToken ct = default);
     Task<List<PublicationDto>> GetAreaPublicationsAsync(CancellationToken ct = default);
+    Task<List<PublicationDto>> GetMyRedPublicationsAsync(CancellationToken ct = default);
     Task<List<PublicationTypeDto>> GetPublicationTypesAsync();
     Task<List<PublicationCrossRefDto>> SearchCrossRefCandidatesAsync(string? doi, string? title, CancellationToken ct = default);
     Task<List<PublicationCrossRefDto>> SearchOpenAireCandidatesAsync(string? doi, string? title, CancellationToken ct = default);

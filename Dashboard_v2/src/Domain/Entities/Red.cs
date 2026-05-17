@@ -54,4 +54,9 @@ public class Red
     /// Áreas que coordinan esta red (relación agregada RedCoordinada)
     /// </summary>
     public ICollection<RedCoordinada> RedesCoordinadas { get; set; } = new List<RedCoordinada>();
+
+    /// <summary>
+    /// Publicaciones generadas por esta red.
+    /// </summary>
+    public ICollection<Publication> Publications { get; set; } = new List<Publication>();
 }

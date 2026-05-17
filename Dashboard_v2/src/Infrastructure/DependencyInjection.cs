@@ -155,6 +155,8 @@ public static class DependencyInjection
         builder.Services.AddScoped<IDocumentReport, AnexoPremiosReport>();
         builder.Services.AddScoped<IDocumentReport, AnexoEventosReport>();
         builder.Services.AddScoped<IDocumentReport, ProyectosReport>();
+        builder.Services.AddScoped<IDocumentReport, AnexoRedesNacInterReport>();
+        builder.Services.AddScoped<IZipDocumentReport, AnexoRedesUniversitariasReport>();
 
         // ── MinIO / Almacenamiento de archivos ────────────────────────────────
         var minioSection = builder.Configuration

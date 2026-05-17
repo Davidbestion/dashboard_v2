@@ -62,6 +62,8 @@ public sealed partial class PublicationService : IPublicationService
         if (author == null)
             return (Result.Failure(new[] { "Usuario no encontrado." }), null);
 
+        var initialAuthors = new List<AuthorPublication> { new() { AuthorId = author.Id } };
+
         var publication = new Publication
         {
             Title = request.Title.Trim(),
@@ -72,8 +74,9 @@ public sealed partial class PublicationService : IPublicationService
             UrlDoi = string.IsNullOrWhiteSpace(request.UrlDoi) ? null : request.UrlDoi.Trim(),
             NormalizedUrlDoi = string.IsNullOrWhiteSpace(request.UrlDoi) ? null : NormalizeUrlDoi(request.UrlDoi),
             ProyectoId = string.IsNullOrWhiteSpace(request.ProyectoId) ? null : request.ProyectoId,
+            RedId = null,
             EvidenceFileId = request.EvidenceFileId,
-            AuthorPublications = new List<AuthorPublication> { new() { AuthorId = author.Id } }
+            AuthorPublications = initialAuthors
         };
 
         await AddCoauthorsAsync(publication, author, request.AdditionalAuthorIds, request.AdditionalAuthorNames, request.AdditionalUserIds, ct);
@@ -141,6 +144,7 @@ public sealed partial class PublicationService : IPublicationService
         publication.UrlDoi = string.IsNullOrWhiteSpace(request.UrlDoi) ? null : request.UrlDoi.Trim();
         publication.NormalizedUrlDoi = string.IsNullOrWhiteSpace(request.UrlDoi) ? null : NormalizeUrlDoi(request.UrlDoi);
         publication.ProyectoId = string.IsNullOrWhiteSpace(request.ProyectoId) ? null : request.ProyectoId;
+        publication.RedId = string.IsNullOrWhiteSpace(request.RedId) ? publication.RedId : request.RedId;
         publication.EvidenceFileId = request.EvidenceFileId;
 
         var dataBase = string.IsNullOrWhiteSpace(request.DataBase) ? null : request.DataBase.Trim();
@@ -597,8 +601,42 @@ public sealed partial class PublicationService : IPublicationService
             },
             ProyectoId = p.ProyectoId,
             ProyectoTitulo = p.Proyecto != null ? p.Proyecto.Titulo : null,
+            RedId = p.RedId,
+            RedNombre = p.Red != null ? p.Red.Nombre : null,
             EvidenceFileId = p.EvidenceFileId,
         });
+    }
+
+    public async Task<List<PublicationDto>> GetMyRedPublicationsAsync(CancellationToken ct = default)
+    {
+        var isJefe = _currentUser.Roles?.Contains(nameof(Dashboard_v2.Domain.Enums.Roles.Jefe_de_Redes)) == true
+                  || _currentUser.Roles?.Contains("Superuser") == true;
+
+        if (isJefe)
+        {
+            // El Jefe de Redes ve TODAS las publicaciones vinculadas a alguna red
+            return await ProjectPublicationDtos(
+                _context.Publications.AsNoTracking()
+                    .Where(p => p.RedId != null))
+                .OrderBy(p => p.Title)
+                .ToListAsync(ct);
+        }
+
+        // El coordinador (Profesor) ve solo las publicaciones de sus redes
+        var myRedIds = await _context.RedesCoordinadas
+            .AsNoTracking()
+            .Where(rc => rc.CoordinadorId == _currentUser.Id)
+            .Select(rc => rc.RedId)
+            .ToListAsync(ct);
+
+        if (myRedIds.Count == 0)
+            return new List<PublicationDto>();
+
+        return await ProjectPublicationDtos(
+            _context.Publications.AsNoTracking()
+                .Where(p => p.RedId != null && myRedIds.Contains(p.RedId)))
+            .OrderBy(p => p.Title)
+            .ToListAsync(ct);
     }
 
     public Task<List<PublicationTypeDto>> GetPublicationTypesAsync()

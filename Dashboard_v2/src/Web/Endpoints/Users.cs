@@ -14,7 +14,7 @@ public class Users : EndpointGroupBase
     public override void Map(RouteGroupBuilder groupBuilder)
     {
         groupBuilder.MapGet("", GetUsers)
-            .RequireAuthorization(policy => policy.RequireRole(nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Grupo_de_investigacion)))
+            .RequireAuthorization(policy => policy.RequireRole(nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Grupo_de_investigacion), nameof(RolesEnum.Jefe_de_Redes)))
             .WithName("GetUsers")
             .Produces<List<UserWithRolesDto>>(200);
 

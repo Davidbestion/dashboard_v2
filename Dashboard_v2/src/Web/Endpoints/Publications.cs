@@ -32,6 +32,14 @@ public class Publications : EndpointGroupBase
             .WithName("GetAreaPublications")
             .Produces<List<PublicationDto>>(200);
 
+        // GET /api/Publications/redes
+        // Jefe_de_Redes → todas las publicaciones con RedId.
+        // Profesor       → solo las de las redes que coordina.
+        groupBuilder.MapGet("redes", GetMyRedPublications)
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Jefe_de_Redes), nameof(RolesEnum.Profesor)))
+            .WithName("GetMyRedPublications")
+            .Produces<List<PublicationDto>>(200);
+
         // GET /api/Publications — publicaciones del usuario autenticado
         groupBuilder.MapGet("", GetMyPublications)
             .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor)))
@@ -127,6 +135,12 @@ public class Publications : EndpointGroupBase
     private async Task<IResult> GetAreaPublications(IPublicationService service)
     {
         var pubs = await service.GetAreaPublicationsAsync();
+        return Results.Ok(pubs);
+    }
+
+    private async Task<IResult> GetMyRedPublications(IPublicationService service)
+    {
+        var pubs = await service.GetMyRedPublicationsAsync();
         return Results.Ok(pubs);
     }
 
@@ -249,6 +263,7 @@ public class Publications : EndpointGroupBase
             Group = body.Group,
             Cuartil = body.Cuartil,
             ProyectoId = body.ProyectoId,
+            RedId = body.RedId,
             EvidenceFileId = body.EvidenceFileId,
         };
 
@@ -287,4 +302,5 @@ public record UpdatePublicationBody(
     int? Group,
     string? Cuartil,
     string? ProyectoId,
+    string? RedId,
     int? EvidenceFileId);

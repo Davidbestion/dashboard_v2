@@ -35,6 +35,15 @@ const investigacionGroups = [
   },
 ];
 
+const coordinadorGroups = [
+  {
+    heading: 'Coordinación de Redes',
+    items: [
+      { to: '/mis-redes-publicaciones', icon: 'bi-journal-text', label: 'Publicaciones de Redes' },
+    ],
+  },
+];
+
 const jefeGroups = [
   {
     heading: 'Investigación',
@@ -49,6 +58,7 @@ const jefeRedesGroups = [
     heading: 'Gestión de Redes',
     items: [
       { to: '/redes', icon: 'bi-globe', label: 'Redes' },
+      { to: '/mis-redes-publicaciones', icon: 'bi-journal-text', label: 'Publicaciones de Redes' },
     ],
   },
 ];
@@ -124,7 +134,7 @@ export default function Sidebar({ collapsed, onToggle }) {
 
   const groups = [
     ...baseGroups,
-    ...(user?.role === 'Profesor' ? [...profesorGroups, ...investigacionGroups] : []),
+    ...(user?.role === 'Profesor' ? [...profesorGroups, ...investigacionGroups, ...coordinadorGroups] : []),
     ...(user?.role === 'Jefe_de_Grupo_de_investigacion' ? jefeGroups : []),
     ...(user?.role === 'Jefe_de_Redes' ? jefeRedesGroups : []),
     ...(user?.role === 'Jefe_de_Proyecto' ? jefeDeProyectoGroups : []),

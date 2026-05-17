@@ -34,6 +34,11 @@ public class Publication
     /// <summary>Navegación al proyecto. Null si la publicación no está vinculada a un proyecto.</summary>
     public Proyecto? Proyecto { get; set; }
 
+    /// <summary>FK opcional a la red que generó esta publicación. Null si no está vinculada a ninguna red.</summary>
+    public string? RedId { get; set; }
+    /// <summary>Navegación a la red. Null si la publicación no está vinculada a una red.</summary>
+    public Red? Red { get; set; }
+
     /// <summary>Archivo de evidencia/certificado adjunto (opcional).</summary>
     public int? EvidenceFileId { get; set; }
     public StoredFile? EvidenceFile { get; set; }

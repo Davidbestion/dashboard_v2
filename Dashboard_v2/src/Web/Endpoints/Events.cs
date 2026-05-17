@@ -18,12 +18,12 @@ public class Events : EndpointGroupBase
             .Produces<List<EventDto>>(200);
 
         groupBuilder.MapGet("countries", GetCountries)
-            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Superuser), nameof(RolesEnum.Vicedecano_de_investigacion)))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Superuser), nameof(RolesEnum.Vicedecano_de_investigacion), nameof(RolesEnum.Jefe_de_Redes)))
             .WithName("GetCountries")
             .Produces<List<CountryDto>>(200);
 
         groupBuilder.MapPost("countries", CreateCountry)
-            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Vicedecano_de_investigacion)))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Vicedecano_de_investigacion), nameof(RolesEnum.Jefe_de_Redes), nameof(RolesEnum.Superuser)))
             .WithName("CreateCountry")
             .Produces<CountryDto>(201)
             .ProducesProblem(400);

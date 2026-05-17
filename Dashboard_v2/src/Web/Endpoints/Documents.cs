@@ -18,13 +18,16 @@ public class Documents : EndpointGroupBase
     private const string ExcelContentType =
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
+    private const string ZipContentType = "application/zip";
+
     public override void Map(RouteGroupBuilder groupBuilder)
     {
         groupBuilder.MapGet("{reportName}", GetDocument)
             .RequireAuthorization(p => p.RequireRole(
                 nameof(RolesEnum.Superuser),
                 nameof(RolesEnum.Jefe_de_Grupo_de_investigacion),
-                nameof(RolesEnum.Vicedecano_de_investigacion)))
+                nameof(RolesEnum.Vicedecano_de_investigacion),
+                nameof(RolesEnum.Jefe_de_Redes)))
             .WithName("GetDocument")
             .Produces(200)
             .ProducesProblem(401)
@@ -59,6 +62,14 @@ public class Documents : EndpointGroupBase
             return Results.Forbid();
         }
 
+        // Jefe_de_Redes solo puede acceder a los reportes de redes.
+        if (httpContext.User.IsInRole(nameof(RolesEnum.Jefe_de_Redes)) &&
+            !httpContext.User.IsInRole(nameof(RolesEnum.Superuser)) &&
+            !reportName.StartsWith("anexo-redes-", StringComparison.OrdinalIgnoreCase))
+        {
+            return Results.Forbid();
+        }
+
         Dictionary<string, string>? parameters = null;
         if (!string.IsNullOrWhiteSpace(from) || !string.IsNullOrWhiteSpace(to))
         {
@@ -70,6 +81,13 @@ public class Documents : EndpointGroupBase
         try
         {
             var bytes = await documentService.GenerateAsync(reportName, parameters);
+
+            if (documentService.IsZipReport(reportName))
+            {
+                var zipFileName = $"{reportName}_{DateTime.UtcNow:yyyy-MM}.zip";
+                return Results.File(bytes, ZipContentType, zipFileName);
+            }
+
             var fileName = $"{reportName}_{DateTime.UtcNow:yyyy-MM}.xlsx";
             return Results.File(bytes, ExcelContentType, fileName);
         }

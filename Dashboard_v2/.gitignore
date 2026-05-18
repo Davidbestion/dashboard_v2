@@ -493,3 +493,6 @@ src/Web/data/wos/*.xlsx
 # Code coverage reports (generated locally by ReportGenerator)
 coveragereport/
 coveragereport*/
+
+# Secrets — nunca subir al repositorio
+.env

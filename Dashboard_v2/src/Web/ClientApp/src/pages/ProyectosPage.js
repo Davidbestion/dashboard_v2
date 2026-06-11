@@ -59,25 +59,124 @@ const emptyForm = {
   tributaDesarrolloLocal: false,
   clasificacionId: '',
   // EnRevision
-  situacion: '', tipoRevision: '',
+  situacionesIds: [], tipoRevision: '',
   // EnEjecucion
   fechaInicio: '', fechaInicioDay: '', fechaCierre: '', fechaCierreDay: '',
-  estadoDeEjecucion: '', codigoProyecto: '',
-  entidadEjecutoraPrincipal: '', entidadEjecutoraParticipante: '',
-  contribucionSectoresEstrategicos: '', contribucionEjesEstrategicos: '',
+  estadosDeEjecucionIds: [], codigoProyecto: '',
+  entidadesEjecutorasPrincipalesIds: [], entidadesEjecutorasParticipantesIds: [],
+  sectoresEstrategicosIds: [], ejesEstrategicosIds: [],
   // PE
-  empresa: '',
+  empresasIds: [],
   // PAP
-  nombrePrograma: '', tipoPAP: 1,
+  programasIds: [], tipoPAP: 1,
   // PDL
-  municipio: '',
+  provinciaId: '', municipioId: '',
   // PNE
-  entidadNoEmpresarial: '',
-  // PRCI
-  fuenteFinanciacion: '', terminosReferencia: '',
-  // PNAP
-  financiamientoUH: '',
+  entidadesIds: [],
+  // PRCI + PNAP
+  fuentesFinanciacionIds: [], terminosReferencia: '',
 };
+
+function MultiSelectPicker({ label, options, selectedIds, onChange, intIds, onCreate }) {
+  const [inputVal, setInputVal] = useState('');
+  const [open, setOpen] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState('');
+
+  const available = options.filter(o => !selectedIds.includes(o.id));
+  const filtered = inputVal
+    ? available.filter(o => o.nombre.toLowerCase().includes(inputVal.toLowerCase()))
+    : available;
+  const hasExactMatch = options.some(
+    o => o.nombre.toLowerCase() === inputVal.trim().toLowerCase()
+  );
+  const canCreate = onCreate && inputVal.trim().length > 0 && !hasExactMatch;
+  const showDropdown = open && (filtered.length > 0 || canCreate);
+
+  function addById(id) {
+    const parsedId = intIds ? parseInt(id) : id;
+    if (!selectedIds.includes(parsedId)) onChange([...selectedIds, parsedId]);
+    setInputVal('');
+    setOpen(false);
+  }
+
+  async function handleCreate() {
+    if (!canCreate || creating) return;
+    setCreating(true);
+    setCreateError('');
+    try {
+      const created = await onCreate(inputVal.trim());
+      if (created) {
+        const id = intIds ? created.id : String(created.id);
+        onChange([...selectedIds, id]);
+        setInputVal('');
+        setOpen(false);
+      }
+    } catch (e) {
+      setCreateError(e.message);
+    } finally {
+      setCreating(false);
+    }
+  }
+
+  function remove(id) { onChange(selectedIds.filter(x => x !== id)); }
+
+  return (
+    <FormGroup>
+      <Label>{label}</Label>
+      {selectedIds.length > 0 && (
+        <div className="d-flex flex-wrap gap-1 mb-2">
+          {selectedIds.map(id => {
+            const opt = options.find(o => o.id === id);
+            return (
+              <Badge key={id} color="secondary" className="d-flex align-items-center gap-1 py-1 px-2">
+                {opt?.nombre ?? id}
+                <i className="bi bi-x" style={{ cursor: 'pointer' }} onClick={() => remove(id)} />
+              </Badge>
+            );
+          })}
+        </div>
+      )}
+      <div style={{ position: 'relative' }}>
+        <Input
+          value={inputVal}
+          onChange={e => { setInputVal(e.target.value); setOpen(true); }}
+          onFocus={() => setOpen(true)}
+          onBlur={() => setTimeout(() => setOpen(false), 150)}
+          placeholder={onCreate ? 'Buscar o escribir para crear...' : 'Buscar...'}
+        />
+        {showDropdown && (
+          <div style={{
+            position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 9999,
+            background: '#fff', border: '1px solid #dee2e6',
+            borderRadius: '0 0 0.25rem 0.25rem', maxHeight: '180px', overflowY: 'auto',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+          }}>
+            {filtered.slice(0, 12).map(o => (
+              <div key={o.id} className="dropdown-item"
+                style={{ cursor: 'pointer', padding: '0.4rem 0.75rem' }}
+                onMouseDown={e => { e.preventDefault(); addById(o.id); }}>
+                {o.nombre}
+              </div>
+            ))}
+            {canCreate && (
+              <div className="dropdown-item text-primary"
+                style={{
+                  cursor: creating ? 'default' : 'pointer',
+                  padding: '0.4rem 0.75rem', fontStyle: 'italic',
+                  borderTop: filtered.length > 0 ? '1px solid #dee2e6' : 'none',
+                }}
+                onMouseDown={e => { e.preventDefault(); handleCreate(); }}>
+                {creating ? <Spinner size="sm" /> : `+ Crear "${inputVal.trim()}"`}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+      {createError && <small className="text-danger">{createError}</small>}
+    </FormGroup>
+  );
+}
 
 export default function ProyectosPage() {
   const { user } = useAuth();
@@ -89,6 +188,11 @@ export default function ProyectosPage() {
   const [jefes, setJefes] = useState([]);
   const [areas, setAreas] = useState([]);
   const [tiposEjecucion, setTiposEjecucion] = useState([]);
+  const [institutions, setInstitutions] = useState([]);
+  const [nomencladores, setNomencladores] = useState({
+    estados: [], situaciones: [], sectores: [], ejes: [],
+    fuentes: [], programas: [], provincias: [], municipios: [],
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -125,6 +229,27 @@ export default function ProyectosPage() {
 
   const [generatingAnexo, setGeneratingAnexo] = useState(false);
 
+  async function createInstitution(nombre) {
+    const created = await apiFetch('/api/Institutions', {
+      method: 'POST', body: JSON.stringify({ nombre }),
+    });
+    setInstitutions(prev => [...prev, created].sort((a, b) => a.nombre.localeCompare(b.nombre)));
+    return created;
+  }
+
+  function makeNomencladr(key, endpoint) {
+    return async (nombre) => {
+      const created = await apiFetch(endpoint, {
+        method: 'POST', body: JSON.stringify({ nombre }),
+      });
+      setNomencladores(prev => ({
+        ...prev,
+        [key]: [...prev[key], created].sort((a, b) => a.nombre.localeCompare(b.nombre)),
+      }));
+      return created;
+    };
+  }
+
   const filteredPatentes = useMemo(() => {
     const q = patentesSearch.trim().toLowerCase();
     if (!q) return patentesList;
@@ -140,18 +265,42 @@ export default function ProyectosPage() {
     setLoading(true);
     setError('');
     try {
-      const [proyData, clasData, jefesData, tiposData, areasData] = await Promise.all([
+      const [
+        proyData, clasData, jefesData, tiposData, areasData, instData,
+        estadosData, situacionesData, sectoresData, ejesData,
+        fuentesData, programasData, provinciasData, municipiosData,
+      ] = await Promise.all([
         apiFetch('/api/Proyectos'),
         apiFetch('/api/Clasificaciones'),
         apiFetch('/api/Users/jefes-de-proyecto'),
         apiFetch('/api/Proyectos/tipos-ejecucion'),
         apiFetch('/api/Areas'),
+        apiFetch('/api/Institutions').catch(() => []),
+        apiFetch('/api/Nomencladores/estados').catch(() => []),
+        apiFetch('/api/Nomencladores/situaciones').catch(() => []),
+        apiFetch('/api/Nomencladores/sectores').catch(() => []),
+        apiFetch('/api/Nomencladores/ejes').catch(() => []),
+        apiFetch('/api/Nomencladores/fuentes').catch(() => []),
+        apiFetch('/api/Nomencladores/programas').catch(() => []),
+        apiFetch('/api/Nomencladores/provincias').catch(() => []),
+        apiFetch('/api/Nomencladores/municipios').catch(() => []),
       ]);
       setItems(proyData);
       setClasificaciones(clasData);
       setJefes(jefesData);
       setTiposEjecucion(tiposData);
       setAreas(areasData);
+      setInstitutions(instData);
+      setNomencladores({
+        estados: estadosData,
+        situaciones: situacionesData,
+        sectores: sectoresData,
+        ejes: ejesData,
+        fuentes: fuentesData,
+        programas: programasData,
+        provincias: provinciasData,
+        municipios: municipiosData,
+      });
     } catch (e) {
       setError(e.message);
     } finally {
@@ -181,6 +330,7 @@ export default function ProyectosPage() {
     setLoadingEdit(true);
     try {
       const full = await apiFetch(`/api/Proyectos/${item.tipo}/${item.id}`);
+      const mun = nomencladores.municipios.find(m => m.id === full.municipioId);
       setEditing(item);
       setForm({
         tipo: item.tipo,
@@ -194,26 +344,26 @@ export default function ProyectosPage() {
         tributaFormacionDoctoral: full.tributaFormacionDoctoral ?? false,
         tributaDesarrolloLocal: full.tributaDesarrolloLocal ?? false,
         clasificacionId: full.clasificacionId ?? '',
-        situacion: full.situacion ?? '',
+        situacionesIds: (full.situaciones ?? []).map(s => s.id),
         tipoRevision: full.tipo ?? '',
         fechaInicio: full.fechaInicio ? full.fechaInicio.substring(0, 7) : '',
         fechaInicioDay: full.fechaInicio ? String(parseInt(full.fechaInicio.substring(8, 10))) : '',
         fechaCierre: full.fechaCierre ? full.fechaCierre.substring(0, 7) : '',
         fechaCierreDay: full.fechaCierre ? String(parseInt(full.fechaCierre.substring(8, 10))) : '',
-        estadoDeEjecucion: full.estadoDeEjecucion ?? '',
+        estadosDeEjecucionIds: (full.estadosDeEjecucion ?? []).map(e => e.id),
         codigoProyecto: full.codigoProyecto ?? '',
-        entidadEjecutoraPrincipal: full.entidadEjecutoraPrincipal ?? '',
-        entidadEjecutoraParticipante: full.entidadEjecutoraParticipante ?? '',
-        contribucionSectoresEstrategicos: full.contribucionSectoresEstrategicos ?? '',
-        contribucionEjesEstrategicos: full.contribucionEjesEstrategicos ?? '',
-        empresa: full.empresa ?? '',
-        nombrePrograma: full.nombrePrograma ?? '',
-        tipoPAP: full.tipoPAP ?? 1,
-        municipio: full.municipio ?? '',
-        entidadNoEmpresarial: full.entidadNoEmpresarial ?? '',
-        fuenteFinanciacion: full.fuenteFinanciacion ?? '',
+        entidadesEjecutorasPrincipalesIds: (full.entidadesEjecutorasPrincipales ?? []).map(e => e.id),
+        entidadesEjecutorasParticipantesIds: (full.entidadesEjecutorasParticipantes ?? []).map(e => e.id),
+        sectoresEstrategicosIds: (full.sectoresEstrategicos ?? []).map(s => s.id),
+        ejesEstrategicosIds: (full.ejesEstrategicos ?? []).map(e => e.id),
+        empresasIds: (full.empresas ?? []).map(e => e.id),
+        programasIds: (full.programas ?? []).map(p => p.id),
+        provinciaId: mun ? String(mun.provinciaId) : '',
+        municipioId: full.municipioId ? String(full.municipioId) : '',
+        entidadesIds: (full.entidades ?? []).map(e => e.id),
+        fuentesFinanciacionIds: (full.fuentesFinanciacion ?? []).map(f => f.id),
         terminosReferencia: full.terminosReferencia ?? '',
-        financiamientoUH: full.financiamientoUH ?? '',
+        tipoPAP: full.tipoPAP ?? 1,
       });
       setModal(true);
     } catch (e) {
@@ -240,26 +390,26 @@ export default function ProyectosPage() {
       tributaFormacionDoctoral: form.tributaFormacionDoctoral,
       clasificacionId: form.clasificacionId,
     };
-    if (t === 'en-revision') return { ...base, situacion: form.situacion, tipo: form.tipoRevision };
+    if (t === 'en-revision') return { ...base, situacionesIds: form.situacionesIds, tipo: form.tipoRevision };
     const ejecucion = {
       ...base,
       fechaInicio: form.fechaInicio ? `${form.fechaInicio}-${String(parseInt(form.fechaInicioDay) || 1).padStart(2, '0')}` : null,
       fechaCierre: form.fechaCierre ? `${form.fechaCierre}-${String(parseInt(form.fechaCierreDay) || 1).padStart(2, '0')}` : null,
-      estadoDeEjecucion: form.estadoDeEjecucion,
+      estadosDeEjecucionIds: form.estadosDeEjecucionIds,
       codigoProyecto: form.codigoProyecto,
-      entidadEjecutoraPrincipal: form.entidadEjecutoraPrincipal,
-      entidadEjecutoraParticipante: form.entidadEjecutoraParticipante || null,
-      contribucionSectoresEstrategicos: form.contribucionSectoresEstrategicos || null,
-      contribucionEjesEstrategicos: form.contribucionEjesEstrategicos || null,
+      entidadesEjecutorasPrincipalesIds: form.entidadesEjecutorasPrincipalesIds,
+      entidadesEjecutorasParticipantesIds: form.entidadesEjecutorasParticipantesIds,
+      sectoresEstrategicosIds: form.sectoresEstrategicosIds,
+      ejesEstrategicosIds: form.ejesEstrategicosIds,
       tributaDesarrolloLocal: form.tributaDesarrolloLocal,
     };
     switch (t) {
-      case 'empresariales': return { ...ejecucion, empresa: form.empresa };
-      case 'apoyo-programa': return { ...ejecucion, nombrePrograma: form.nombrePrograma, tipoPAP: parseInt(form.tipoPAP) };
-      case 'desarrollo-local': return { ...ejecucion, municipio: form.municipio };
-      case 'no-empresariales': return { ...ejecucion, entidadNoEmpresarial: form.entidadNoEmpresarial };
-      case 'colaboracion-internacional': return { ...ejecucion, fuenteFinanciacion: form.fuenteFinanciacion, terminosReferencia: form.terminosReferencia };
-      case 'pnap': return { ...ejecucion, financiamientoUH: form.financiamientoUH };
+      case 'empresariales': return { ...ejecucion, empresasIds: form.empresasIds };
+      case 'apoyo-programa': return { ...ejecucion, programasIds: form.programasIds, tipoPAP: parseInt(form.tipoPAP) };
+      case 'desarrollo-local': return { ...ejecucion, municipioId: parseInt(form.municipioId) || 0 };
+      case 'no-empresariales': return { ...ejecucion, entidadesIds: form.entidadesIds };
+      case 'colaboracion-internacional': return { ...ejecucion, fuentesFinanciacionIds: form.fuentesFinanciacionIds, terminosReferencia: form.terminosReferencia };
+      case 'pnap': return { ...ejecucion, fuentesFinanciacionIds: form.fuentesFinanciacionIds };
       default: return base;
     }
   }
@@ -626,10 +776,14 @@ export default function ProyectosPage() {
             {/* Campos específicos: En Revisión */}
             {tipo === 'en-revision' && (
               <>
-                <FormGroup>
-                  <Label>Situación *</Label>
-                  <Input value={form.situacion} onChange={set('situacion')} placeholder="Situación actual" />
-                </FormGroup>
+                <MultiSelectPicker
+                  label="Situaciones"
+                  options={nomencladores.situaciones}
+                  selectedIds={form.situacionesIds}
+                  onChange={ids => setForm(f => ({ ...f, situacionesIds: ids }))}
+                  intIds
+                  onCreate={makeNomencladr('situaciones', '/api/Nomencladores/situaciones')}
+                />
                 <FormGroup>
                   <Label>Tipo (revisión) *</Label>
                   <Input type="select" value={form.tipoRevision} onChange={set('tipoRevision')}>
@@ -678,33 +832,49 @@ export default function ProyectosPage() {
                 <div className="row">
                   <div className="col-md-6">
                     <FormGroup>
-                      <Label>Estado de ejecución *</Label>
-                      <Input value={form.estadoDeEjecucion} onChange={set('estadoDeEjecucion')} placeholder="Ej: En curso, Suspendido..." />
-                    </FormGroup>
-                  </div>
-                  <div className="col-md-6">
-                    <FormGroup>
                       <Label>Código del proyecto *</Label>
                       <Input value={form.codigoProyecto} onChange={set('codigoProyecto')} placeholder="Código" />
                     </FormGroup>
                   </div>
                 </div>
-                <FormGroup>
-                  <Label>Entidad ejecutora principal *</Label>
-                  <Input value={form.entidadEjecutoraPrincipal} onChange={set('entidadEjecutoraPrincipal')} />
-                </FormGroup>
-                <FormGroup>
-                  <Label>Entidad ejecutora participante</Label>
-                  <Input value={form.entidadEjecutoraParticipante} onChange={set('entidadEjecutoraParticipante')} />
-                </FormGroup>
-                <FormGroup>
-                  <Label>Contribución a sectores estratégicos</Label>
-                  <Input type="textarea" rows={2} value={form.contribucionSectoresEstrategicos} onChange={set('contribucionSectoresEstrategicos')} />
-                </FormGroup>
-                <FormGroup>
-                  <Label>Contribución a ejes estratégicos</Label>
-                  <Input type="textarea" rows={2} value={form.contribucionEjesEstrategicos} onChange={set('contribucionEjesEstrategicos')} />
-                </FormGroup>
+                <MultiSelectPicker
+                  label="Estados de ejecución"
+                  options={nomencladores.estados}
+                  selectedIds={form.estadosDeEjecucionIds}
+                  onChange={ids => setForm(f => ({ ...f, estadosDeEjecucionIds: ids }))}
+                  intIds
+                  onCreate={makeNomencladr('estados', '/api/Nomencladores/estados')}
+                />
+                <MultiSelectPicker
+                  label="Entidades ejecutoras principales *"
+                  options={institutions}
+                  selectedIds={form.entidadesEjecutorasPrincipalesIds}
+                  onChange={ids => setForm(f => ({ ...f, entidadesEjecutorasPrincipalesIds: ids }))}
+                  onCreate={createInstitution}
+                />
+                <MultiSelectPicker
+                  label="Entidades ejecutoras participantes"
+                  options={institutions}
+                  selectedIds={form.entidadesEjecutorasParticipantesIds}
+                  onChange={ids => setForm(f => ({ ...f, entidadesEjecutorasParticipantesIds: ids }))}
+                  onCreate={createInstitution}
+                />
+                <MultiSelectPicker
+                  label="Sectores estratégicos"
+                  options={nomencladores.sectores}
+                  selectedIds={form.sectoresEstrategicosIds}
+                  onChange={ids => setForm(f => ({ ...f, sectoresEstrategicosIds: ids }))}
+                  intIds
+                  onCreate={makeNomencladr('sectores', '/api/Nomencladores/sectores')}
+                />
+                <MultiSelectPicker
+                  label="Ejes estratégicos"
+                  options={nomencladores.ejes}
+                  selectedIds={form.ejesEstrategicosIds}
+                  onChange={ids => setForm(f => ({ ...f, ejesEstrategicosIds: ids }))}
+                  intIds
+                  onCreate={makeNomencladr('ejes', '/api/Nomencladores/ejes')}
+                />
                 {/* TributaDesarrolloLocal: oculto para PDL (siempre true) */}
                 {tipo !== 'desarrollo-local' && (
                   <FormGroup check className="mb-2">
@@ -717,19 +887,26 @@ export default function ProyectosPage() {
 
             {/* PE — Empresarial */}
             {tipo === 'empresariales' && (
-              <FormGroup>
-                <Label>Empresa *</Label>
-                <Input value={form.empresa} onChange={set('empresa')} placeholder="Nombre de la empresa" />
-              </FormGroup>
+              <MultiSelectPicker
+                label="Empresas *"
+                options={institutions}
+                selectedIds={form.empresasIds}
+                onChange={ids => setForm(f => ({ ...f, empresasIds: ids }))}
+                onCreate={createInstitution}
+              />
             )}
 
             {/* PAP */}
             {tipo === 'apoyo-programa' && (
               <>
-                <FormGroup>
-                  <Label>Nombre del programa *</Label>
-                  <Input value={form.nombrePrograma} onChange={set('nombrePrograma')} placeholder="Nombre del programa" />
-                </FormGroup>
+                <MultiSelectPicker
+                  label="Programas *"
+                  options={nomencladores.programas}
+                  selectedIds={form.programasIds}
+                  onChange={ids => setForm(f => ({ ...f, programasIds: ids }))}
+                  intIds
+                  onCreate={makeNomencladr('programas', '/api/Nomencladores/programas')}
+                />
                 <FormGroup>
                   <Label>Tipo PAP *</Label>
                   <Input type="select" value={form.tipoPAP} onChange={set('tipoPAP')}>
@@ -743,8 +920,23 @@ export default function ProyectosPage() {
             {tipo === 'desarrollo-local' && (
               <>
                 <FormGroup>
+                  <Label>Provincia *</Label>
+                  <Input type="select" value={form.provinciaId}
+                    onChange={e => setForm(f => ({ ...f, provinciaId: e.target.value, municipioId: '' }))}>
+                    <option value="">— Seleccionar —</option>
+                    {nomencladores.provincias.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+                  </Input>
+                </FormGroup>
+                <FormGroup>
                   <Label>Municipio *</Label>
-                  <Input value={form.municipio} onChange={set('municipio')} placeholder="Municipio" />
+                  <Input type="select" value={form.municipioId}
+                    onChange={e => setForm(f => ({ ...f, municipioId: e.target.value }))}
+                    disabled={!form.provinciaId}>
+                    <option value="">— Seleccionar —</option>
+                    {nomencladores.municipios
+                      .filter(m => String(m.provinciaId) === form.provinciaId)
+                      .map(m => <option key={m.id} value={m.id}>{m.nombre}</option>)}
+                  </Input>
                 </FormGroup>
                 <p className="text-muted small mb-2">
                   <em>Los PDL tributan siempre al desarrollo local.</em>
@@ -754,19 +946,26 @@ export default function ProyectosPage() {
 
             {/* PNE */}
             {tipo === 'no-empresariales' && (
-              <FormGroup>
-                <Label>Entidad no empresarial *</Label>
-                <Input value={form.entidadNoEmpresarial} onChange={set('entidadNoEmpresarial')} placeholder="Entidad" />
-              </FormGroup>
+              <MultiSelectPicker
+                label="Entidades no empresariales *"
+                options={institutions}
+                selectedIds={form.entidadesIds}
+                onChange={ids => setForm(f => ({ ...f, entidadesIds: ids }))}
+                onCreate={createInstitution}
+              />
             )}
 
             {/* PRCI */}
             {tipo === 'colaboracion-internacional' && (
               <>
-                <FormGroup>
-                  <Label>Fuente de financiación *</Label>
-                  <Input value={form.fuenteFinanciacion} onChange={set('fuenteFinanciacion')} placeholder="Fuente de financiación" />
-                </FormGroup>
+                <MultiSelectPicker
+                  label="Fuentes de financiación *"
+                  options={nomencladores.fuentes}
+                  selectedIds={form.fuentesFinanciacionIds}
+                  onChange={ids => setForm(f => ({ ...f, fuentesFinanciacionIds: ids }))}
+                  intIds
+                  onCreate={makeNomencladr('fuentes', '/api/Nomencladores/fuentes')}
+                />
                 <FormGroup>
                   <Label>Términos de referencia *</Label>
                   <Input type="textarea" rows={3} value={form.terminosReferencia} onChange={set('terminosReferencia')} />
@@ -776,10 +975,14 @@ export default function ProyectosPage() {
 
             {/* PNAP */}
             {tipo === 'pnap' && (
-              <FormGroup>
-                <Label>Financiamiento UH *</Label>
-                <Input value={form.financiamientoUH} onChange={set('financiamientoUH')} placeholder="Detalles del financiamiento" />
-              </FormGroup>
+              <MultiSelectPicker
+                label="Fuentes de financiamiento *"
+                options={nomencladores.fuentes}
+                selectedIds={form.fuentesFinanciacionIds}
+                onChange={ids => setForm(f => ({ ...f, fuentesFinanciacionIds: ids }))}
+                intIds
+                onCreate={makeNomencladr('fuentes', '/api/Nomencladores/fuentes')}
+              />
             )}
           </Form>
         </ModalBody>

@@ -2119,6 +2119,248 @@
         }
       }
     },
+    "/api/Nomencladores/estados": {
+      "get": {
+        "tags": [
+          "Nomencladores"
+        ],
+        "operationId": "GetEstadosProyecto",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Nomencladores"
+        ],
+        "operationId": "CreateEstadoProyecto",
+        "requestBody": {
+          "x-name": "req",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NomencladorCreateRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/Nomencladores/situaciones": {
+      "get": {
+        "tags": [
+          "Nomencladores"
+        ],
+        "operationId": "GetSituacionesProyecto",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Nomencladores"
+        ],
+        "operationId": "CreateSituacionProyecto",
+        "requestBody": {
+          "x-name": "req",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NomencladorCreateRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/Nomencladores/sectores": {
+      "get": {
+        "tags": [
+          "Nomencladores"
+        ],
+        "operationId": "GetSectoresEstrategicos",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Nomencladores"
+        ],
+        "operationId": "CreateSectorEstrategico",
+        "requestBody": {
+          "x-name": "req",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NomencladorCreateRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/Nomencladores/ejes": {
+      "get": {
+        "tags": [
+          "Nomencladores"
+        ],
+        "operationId": "GetEjesEstrategicos",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Nomencladores"
+        ],
+        "operationId": "CreateEjeEstrategico",
+        "requestBody": {
+          "x-name": "req",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NomencladorCreateRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/Nomencladores/fuentes": {
+      "get": {
+        "tags": [
+          "Nomencladores"
+        ],
+        "operationId": "GetFuentesFinanciacion",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Nomencladores"
+        ],
+        "operationId": "CreateFuenteFinanciacion",
+        "requestBody": {
+          "x-name": "req",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NomencladorCreateRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/Nomencladores/programas": {
+      "get": {
+        "tags": [
+          "Nomencladores"
+        ],
+        "operationId": "GetProgramas",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Nomencladores"
+        ],
+        "operationId": "CreatePrograma",
+        "requestBody": {
+          "x-name": "req",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NomencladorCreateRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/Nomencladores/provincias": {
+      "get": {
+        "tags": [
+          "Nomencladores"
+        ],
+        "operationId": "GetProvincias",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/Nomencladores/municipios": {
+      "get": {
+        "tags": [
+          "Nomencladores"
+        ],
+        "operationId": "GetMunicipios",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/Normas": {
       "get": {
         "tags": [
@@ -6747,6 +6989,16 @@
             "items": {
               "type": "string"
             }
+          }
+        }
+      },
+      "NomencladorCreateRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "nullable": true
           }
         }
       },

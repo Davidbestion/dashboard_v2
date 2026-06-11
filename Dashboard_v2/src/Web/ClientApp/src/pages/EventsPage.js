@@ -8,7 +8,6 @@ import {
   Modal, ModalHeader, ModalBody, ModalFooter,
   Form, FormGroup, Label, Input, InputGroup,
 } from 'reactstrap';
-import CoauthorPicker from '../components/CoauthorPicker';
 import { useAuth } from '../contexts/AuthContext';
 import DataTable from '../components/DataTable';
 import FilterableDataTable from '../components/FilterableDataTable';
@@ -32,8 +31,8 @@ async function apiFetch(url, options = {}) {
 
 // ─── Shared helpers ────────────────────────────────────────────────────────────
 
-const EMPTY_PRES = { name: '', eventId: '' };
-const EMPTY_EVENT = { name: '', countryId: '', eventType: '', institutions: [], redId: '', areaIds: [], evidenceFileId: null };
+const EMPTY_PRES = { name: '', eventId: '', fecha: '' };
+const EMPTY_EVENT = { name: '', countryId: '', eventType: '', institutions: [], redId: '', organizadorIds: [], evidenceFileId: null };
 
 const EVENT_TYPE_LABELS = { 0: 'Internacional', 1: 'Nacional', 2: 'De área', 3: 'Local' };
 
@@ -51,7 +50,7 @@ export default function EventsPage() {
   const [eventTypes, setEventTypes] = useState([]);
   const [allEvents, setAllEvents] = useState([]);  // para el select del form de presentaciones
   const [allInstitutions, setAllInstitutions] = useState([]);
-  const [allAreas, setAllAreas] = useState([]);
+  const [allUsers, setAllUsers] = useState([]);
   const [reds, setReds] = useState([]);
 
   // PRESENTATIONS state
@@ -68,8 +67,6 @@ export default function EventsPage() {
   const [presDeleteLoading, setPresDeleteLoading] = useState(false);
   const [presDeleteError, setPresDeleteError] = useState('');
 
-  // Coauthor tag-picker
-  const [coauthorTags, setCoauthorTags] = useState([]);
   // EVENTS state
   const [events, setEvents] = useState([]);
   const [evLoading, setEvLoading] = useState(true);
@@ -85,8 +82,8 @@ export default function EventsPage() {
   const [evDeleteError, setEvDeleteError] = useState('');
   // Institution input
   const [selectedInstId, setSelectedInstId] = useState('');
-  // Area patrocinadora input
-  const [selectedAreaId, setSelectedAreaId] = useState('');
+  // Organizador input
+  const [selectedOrganizadorId, setSelectedOrganizadorId] = useState('');
   // Inline new-institution
   const [showNewInstitution, setShowNewInstitution] = useState(false);
   const [newInstitutionInput, setNewInstitutionInput] = useState('');
@@ -111,8 +108,8 @@ export default function EventsPage() {
     setAllEvents(ae);
     // Institutions for event form dropdown
     try { setAllInstitutions(await apiFetch('/api/Institutions')); } catch { setAllInstitutions([]); }
-    // Areas for patrocinio picker
-    try { setAllAreas(await apiFetch('/api/Areas')); } catch { setAllAreas([]); }
+    // Users for organizador picker
+    try { setAllUsers(await apiFetch('/api/Users')); } catch { setAllUsers([]); }
     // Reds for event selection (optional)
     try { setReds(await apiFetch('/api/Redes')); } catch { setReds([]); }
   }, []);
@@ -175,38 +172,22 @@ export default function EventsPage() {
     }
   }
 
-  /**
-   * Normaliza un autor de presentación para reutilizar el picker basado en tarjetas.
-   * Los autores ligados a cuentas reales mantienen el snapshot del usuario para mostrar
-   * área, universidad y categorías institucionales.
-   */
-  function mapAuthorToPickerEntry(author) {
-    return {
-      id: author.id,
-      name: author.name,
-      type: 'author',
-      linkedUser: author.linkedUser ?? null,
-    };
-  }
-
   // ── Presentations CRUD ─────────────────────────────────────────────────────
 
   function openCreatePres() {
     setPresEditing(null);
     setPresForm(EMPTY_PRES);
-    setCoauthorTags([]);
     setPresFormError('');
     setPresModal(true);
   }
 
   function openEditPres(pres) {
     setPresEditing(pres);
-    setPresForm({ name: pres.name, eventId: pres.eventId.toString() });
-    setCoauthorTags(
-      (pres.authors ?? [])
-        .filter(author => author.userId !== user?.id)
-        .map(mapAuthorToPickerEntry)
-    );
+    setPresForm({
+      name: pres.name,
+      eventId: pres.eventId.toString(),
+      fecha: pres.fecha ? pres.fecha.substring(0, 10) : '',
+    });
     setPresFormError('');
     setPresModal(true);
   }
@@ -216,18 +197,10 @@ export default function EventsPage() {
     setPresFormLoading(true);
     setPresFormError('');
 
-    const coauthorIds = coauthorTags.filter(t => t.type === 'author').map(t => t.id);
-    const coauthorUserIds = coauthorTags.filter(t => t.type === 'user').map(t => t.id);
-    const coauthorNames = coauthorTags
-      .filter(t => t.type === 'new')
-      .map(t => t.name);
-
     const body = {
       name: presForm.name.trim(),
       eventId: parseInt(presForm.eventId, 10),
-      coauthorIds,
-      coauthorUserIds,
-      coauthorNames,
+      fecha: presForm.fecha || new Date().toISOString().substring(0, 10),
     };
 
     try {
@@ -275,7 +248,7 @@ export default function EventsPage() {
     setEvEditing(null);
     setEvForm(EMPTY_EVENT);
     setSelectedInstId('');
-    setSelectedAreaId('');
+    setSelectedOrganizadorId('');
     setEvFormError('');
     resetNewCountry();
     setShowNewInstitution(false);
@@ -292,11 +265,11 @@ export default function EventsPage() {
       eventType: String(ev.eventTypeId ?? ev.eventType ?? ''),
       institutions: [...ev.institutions],
       redId: ev.redId ?? ev.RedId ?? '',
-      areaIds: [...(ev.areaIdsPatrocinadoras ?? [])],
+      organizadorIds: [...(ev.organizadorIds ?? [])],
       evidenceFileId: ev.evidenceFileId ?? null,
     });
     setSelectedInstId('');
-    setSelectedAreaId('');
+    setSelectedOrganizadorId('');
     setEvFormError('');
     resetNewCountry();
     setShowNewInstitution(false);
@@ -356,15 +329,15 @@ export default function EventsPage() {
     setEvForm(f => ({ ...f, institutions: f.institutions.filter((_, i) => i !== idx) }));
   }
 
-  function addSelectedArea() {
-    if (!selectedAreaId) return;
-    if (evForm.areaIds.includes(selectedAreaId)) return;
-    setEvForm(f => ({ ...f, areaIds: [...f.areaIds, selectedAreaId] }));
-    setSelectedAreaId('');
+  function addSelectedOrganizador() {
+    if (!selectedOrganizadorId) return;
+    if (evForm.organizadorIds.includes(selectedOrganizadorId)) return;
+    setEvForm(f => ({ ...f, organizadorIds: [...f.organizadorIds, selectedOrganizadorId] }));
+    setSelectedOrganizadorId('');
   }
 
-  function removeArea(id) {
-    setEvForm(f => ({ ...f, areaIds: f.areaIds.filter(a => a !== id) }));
+  function removeOrganizador(id) {
+    setEvForm(f => ({ ...f, organizadorIds: f.organizadorIds.filter(x => x !== id) }));
   }
 
   async function handleEvSubmit(e) {
@@ -378,7 +351,7 @@ export default function EventsPage() {
       eventType: parseInt(evForm.eventType, 10),
       institutions: evForm.institutions,
       redId: evForm.redId && evForm.redId.length > 0 ? evForm.redId : null,
-      areaIdsPatrocinadoras: evForm.areaIds,
+      organizadorIds: evForm.organizadorIds,
       evidenceFileId: evForm.evidenceFileId ?? null,
     };
 
@@ -482,11 +455,15 @@ export default function EventsPage() {
                     { key: 'name',      label: 'Nombre', sortable: true },
                     { key: 'eventName', label: 'Evento', sortable: true },
                     {
-                      key: 'authors',
-                      label: 'Autores',
-                      render: authors => (authors || []).map(a => (
-                        <Badge key={a.id} color={a.userId ? 'info' : 'secondary'} pill className="me-1">{a.name}</Badge>
-                      )),
+                      key: 'fecha',
+                      label: 'Fecha',
+                      sortable: true,
+                      render: v => v ? new Date(v).toLocaleDateString('es-CU') : '—',
+                    },
+                    {
+                      key: 'user',
+                      label: 'Presentador',
+                      render: u => u ? `${u.userName ?? ''} ${u.userLastName1 ?? ''}`.trim() : '—',
                     },
                   ]}
                   data={presentations}
@@ -589,13 +566,9 @@ export default function EventsPage() {
             </FormGroup>
 
             <FormGroup>
-              <Label>Coautores</Label>
-              <CoauthorPicker
-                value={coauthorTags}
-                onChange={setCoauthorTags}
-                placeholder="Buscar coautor o escribir nombre libre..."
-                helpText="Selecciona una tarjeta del resultado o escribe un nombre nuevo y presiona Enter. Los usuarios del sistema se guardan conservando su vínculo con el perfil de autor."
-              />
+              <Label for="presFecha">Fecha *</Label>
+              <Input type="date" id="presFecha" value={presForm.fecha}
+                onChange={e => setPresForm(f => ({ ...f, fecha: e.target.value }))} />
             </FormGroup>
           </ModalBody>
           <ModalFooter>
@@ -728,28 +701,28 @@ export default function EventsPage() {
             </FormGroup>
 
             <FormGroup>
-              <Label>Áreas patrocinadoras</Label>
+              <Label>Organizadores</Label>
               <div className="d-flex flex-wrap gap-1 mb-2">
-                {evForm.areaIds.map(aId => {
-                  const area = allAreas.find(a => a.id === aId);
+                {evForm.organizadorIds.map(uid => {
+                  const u = allUsers.find(x => x.id === uid);
                   return (
-                    <Badge key={aId} color="primary" className="d-flex align-items-center gap-1 py-1 px-2">
-                      {area?.nombre ?? aId}
-                      <i className="bi bi-x" style={{ cursor: 'pointer' }} onClick={() => removeArea(aId)} />
+                    <Badge key={uid} color="primary" className="d-flex align-items-center gap-1 py-1 px-2">
+                      {u ? `${u.nombreCompleto} (${u.email})` : uid}
+                      <i className="bi bi-x" style={{ cursor: 'pointer' }} onClick={() => removeOrganizador(uid)} />
                     </Badge>
                   );
                 })}
               </div>
               <div className="d-flex gap-2 align-items-center">
-                <Input type="select" value={selectedAreaId}
-                  onChange={e => setSelectedAreaId(e.target.value)}>
-                  <option value="">— Selecciona un área —</option>
-                  {allAreas
-                    .filter(a => !evForm.areaIds.includes(a.id))
-                    .map(a => <option key={a.id} value={a.id}>{a.nombre}</option>)}
+                <Input type="select" value={selectedOrganizadorId}
+                  onChange={e => setSelectedOrganizadorId(e.target.value)}>
+                  <option value="">— Selecciona un organizador —</option>
+                  {allUsers
+                    .filter(u => !evForm.organizadorIds.includes(u.id))
+                    .map(u => <option key={u.id} value={u.id}>{u.nombreCompleto} ({u.email})</option>)}
                 </Input>
                 <Button type="button" color="secondary" outline size="sm" style={{ whiteSpace: 'nowrap' }}
-                  onClick={addSelectedArea} disabled={!selectedAreaId}>
+                  onClick={addSelectedOrganizador} disabled={!selectedOrganizadorId}>
                   <i className="bi bi-plus" /> Agregar
                 </Button>
               </div>

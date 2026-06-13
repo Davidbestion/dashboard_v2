@@ -920,27 +920,17 @@ export default function ProyectosPage() {
             {tipo === 'desarrollo-local' && (
               <>
                 <FormGroup>
-                  <Label>Provincia *</Label>
-                  <Input type="select" value={form.provinciaId}
-                    onChange={e => setForm(f => ({ ...f, provinciaId: e.target.value, municipioId: '' }))}>
-                    <option value="">— Seleccionar —</option>
-                    {nomencladores.provincias.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
-                  </Input>
-                </FormGroup>
-                <FormGroup>
                   <Label>Municipio *</Label>
                   <Input type="select" value={form.municipioId}
-                    onChange={e => setForm(f => ({ ...f, municipioId: e.target.value }))}
-                    disabled={!form.provinciaId}>
+                    onChange={e => setForm(f => ({ ...f, municipioId: e.target.value }))}>
                     <option value="">— Seleccionar —</option>
-                    {nomencladores.municipios
-                      .filter(m => String(m.provinciaId) === form.provinciaId)
-                      .map(m => <option key={m.id} value={m.id}>{m.nombre}</option>)}
+                    {nomencladores.municipios.map(m => <option key={m.id} value={m.id}>{m.nombre}</option>)}
                   </Input>
                 </FormGroup>
-                <p className="text-muted small mb-2">
-                  <em>Los PDL tributan siempre al desarrollo local.</em>
-                </p>
+                <FormGroup check className="mb-2">
+                  <Input type="checkbox" id="tributaDesarrolloLocalPDL" checked disabled />
+                  <Label check for="tributaDesarrolloLocalPDL">Tributa al desarrollo local</Label>
+                </FormGroup>
               </>
             )}
 

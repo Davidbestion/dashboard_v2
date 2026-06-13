@@ -146,7 +146,7 @@ export default function Sidebar({ collapsed, onToggle }) {
     <aside className={`sidebar${collapsed ? ' sidebar--collapsed' : ''}`}>
       <div className="sidebar__brand">
         {!collapsed && (
-          <span className="sidebar__brand-name">Dashboard v2</span>
+          <span className="sidebar__brand-name">SIGIP</span>
         )}
         <button
           className="sidebar__toggle"

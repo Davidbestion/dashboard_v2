@@ -23,6 +23,8 @@ public record CreatePublicationRequest
     public string? RedId { get; init; }
     /// <summary>ID del archivo de evidencia/certificado subido previamente (opcional).</summary>
     public int? EvidenceFileId { get; init; }
+    /// <summary>Solo para Superuser: ID del usuario que será el autor de la publicación.</summary>
+    public string? TargetUserId { get; init; }
 }
 
 public record UpdatePublicationRequest

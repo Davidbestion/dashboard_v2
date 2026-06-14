@@ -31,6 +31,8 @@ public record CreatePresentationRequest
     public string Name { get; init; } = default!;
     public int EventId { get; init; }
     public DateOnly Fecha { get; init; }
+    /// <summary>Solo para Superuser: ID del usuario al que se le asigna la presentación.</summary>
+    public string? TargetUserId { get; init; }
 }
 
 public record UpdatePresentationRequest

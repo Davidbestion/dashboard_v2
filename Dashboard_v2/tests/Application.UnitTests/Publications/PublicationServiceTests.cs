@@ -1138,4 +1138,167 @@ public class PublicationServiceTests
         updated.JournalPublication!.JournalGroup1Publication.ShouldNotBeNull();
         updated.JournalPublication.JournalGroup1Publication!.Cuartil.ShouldBe("Q1");
     }
+
+    // ─── Superuser bypass ────────────────────────────────────────────────────
+
+    private void SetupSuperuser()
+    {
+        _currentUser.Setup(u => u.Id).Returns("super-1");
+        _currentUser.Setup(u => u.Roles).Returns(new List<string> { "Superuser" });
+    }
+
+    private Author SeedAuthorForUser(string userId)
+    {
+        var author = new Author
+        {
+            Id = Guid.NewGuid().ToString(),
+            UserId = userId,
+            LastName = userId,
+            Name = userId,
+            SearchKey = userId.ToLowerInvariant(),
+            LastNameKey = userId.ToLowerInvariant(),
+        };
+        _db.Authors.Add(author);
+        return author;
+    }
+
+    private Publication SeedPublicationForAuthor(Author author)
+    {
+        var pub = new Publication
+        {
+            Id = Guid.NewGuid().ToString(),
+            Title = "Test Pub",
+            NormalizedTitle = "test pub",
+            PublicationData = "{}",
+            PublicationType = PublicationType.Artículo_de_Divulgación,
+            PublishedDate = "2024",
+            AuthorPublications = new List<AuthorPublication> { new() { AuthorId = author.Id } },
+            IndexedPublication = new IndexedPublication { Index = 1 }
+        };
+        _db.Publications.Add(pub);
+        return pub;
+    }
+
+    [Test]
+    public async Task GetMyPublicationsAsync_Superuser_ReturnsAllPublications()
+    {
+        var authorA = SeedAuthorForUser("user-a");
+        var authorB = SeedAuthorForUser("user-b");
+        SeedPublicationForAuthor(authorA);
+        SeedPublicationForAuthor(authorB);
+        await _db.SaveChangesAsync();
+
+        SetupSuperuser();
+        var result = await _sut.GetMyPublicationsAsync();
+
+        result.Count.ShouldBe(2);
+    }
+
+    [Test]
+    public async Task GetByIdAsync_Superuser_ReturnsPublicationRegardlessOfAuthorship()
+    {
+        var authorA = SeedAuthorForUser("user-a");
+        var pub = SeedPublicationForAuthor(authorA);
+        await _db.SaveChangesAsync();
+
+        SetupSuperuser();
+        var result = await _sut.GetByIdAsync(pub.Id);
+
+        result.ShouldNotBeNull();
+        result!.Id.ShouldBe(pub.Id);
+    }
+
+    [Test]
+    public async Task CreateAsync_Superuser_WithTargetUserId_CreatesPublicationForTargetUser()
+    {
+        var targetAuthor = new Author
+        {
+            Id = "author-target",
+            UserId = "user-target",
+            LastName = "Target",
+            Name = "Target",
+            SearchKey = "target",
+            LastNameKey = "target",
+        };
+        _db.Authors.Add(targetAuthor);
+        await _db.SaveChangesAsync();
+
+        _authorResolution
+            .Setup(r => r.GetOrCreateForUserAsync("user-target", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(targetAuthor);
+
+        SetupSuperuser();
+        var (result, id) = await _sut.CreateAsync(new CreatePublicationRequest
+        {
+            Title = "Pub del Superuser",
+            PublicationData = "{}",
+            PublicationType = PublicationType.Artículo_de_Divulgación,
+            PublishedDate = "2024",
+            Index = 1,
+            TargetUserId = "user-target"
+        });
+
+        result.Succeeded.ShouldBeTrue();
+        var pub = await _db.Publications.Include(p => p.AuthorPublications).FirstAsync(p => p.Id == id);
+        pub.AuthorPublications.ShouldContain(ap => ap.AuthorId == "author-target");
+    }
+
+    [Test]
+    public async Task CreateAsync_Superuser_WithoutTargetUserId_ReturnsFailure()
+    {
+        SetupSuperuser();
+
+        var (result, _) = await _sut.CreateAsync(new CreatePublicationRequest
+        {
+            Title = "Pub Sin Target",
+            PublicationData = "{}",
+            PublicationType = PublicationType.Artículo_de_Divulgación,
+            PublishedDate = "2024"
+        });
+
+        result.Succeeded.ShouldBeFalse();
+        result.Errors.ShouldContain(e => e.Contains("TargetUserId"));
+    }
+
+    [Test]
+    public async Task UpdateAsync_Superuser_CanUpdatePublicationWithoutBeingAuthor()
+    {
+        var authorA = SeedAuthorForUser("user-a");
+        var pub = SeedPublicationForAuthor(authorA);
+        await _db.SaveChangesAsync();
+
+        SetupSuperuser();
+        var result = await _sut.UpdateAsync(new UpdatePublicationRequest
+        {
+            Id = pub.Id,
+            Title = "Updated by Superuser",
+            PublicationData = "{}",
+            PublicationType = PublicationType.Artículo_de_Divulgación,
+            PublishedDate = "2025",
+            AdditionalAuthorIds = [],
+            AdditionalAuthorNames = [],
+            AdditionalUserIds = []
+        });
+
+        result.Succeeded.ShouldBeTrue();
+        (await _db.Publications.FindAsync(pub.Id))!.Title.ShouldBe("Updated by Superuser");
+    }
+
+    [Test]
+    public async Task DeleteAsync_Superuser_CanDeletePublicationWithoutBeingAuthor()
+    {
+        var authorA = SeedAuthorForUser("user-a");
+        var pub = SeedPublicationForAuthor(authorA);
+        await _db.SaveChangesAsync();
+
+        _authorCleanup
+            .Setup(c => c.CleanupIfOrphanedAsync(It.IsAny<List<string>>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        SetupSuperuser();
+        var result = await _sut.DeleteAsync(pub.Id);
+
+        result.Succeeded.ShouldBeTrue();
+        (await _db.Publications.FindAsync(pub.Id)).ShouldBeNull();
+    }
 }

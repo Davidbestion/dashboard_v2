@@ -8,6 +8,8 @@ public record CreateAwardRequest
     public DateTime AwardedAt { get; init; }
     /// <summary>ID del archivo de evidencia/certificado subido previamente (opcional).</summary>
     public int? EvidenceFileId { get; init; }
+    /// <summary>Solo para Superuser: ID del usuario al que se le asigna el premio.</summary>
+    public string? TargetUserId { get; init; }
 }
 
 public record UpdateAwardRequest

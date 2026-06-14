@@ -20,7 +20,8 @@ public sealed class EventService : IEventService
 
     public async Task<List<EventDto>> GetMyEventsAsync(CancellationToken ct = default)
     {
-        if (IsSuperuser) return await GetAllEventsAsync(ct);
+        if (IsSuperuser)
+            return await GetAllEventsAsync(ct);
 
         var userId = _currentUser.Id;
 
@@ -341,27 +342,14 @@ public sealed class EventService : IEventService
         if (!await _context.Events.AnyAsync(e => e.Id == request.EventId, ct))
             return (Result.Failure(new[] { "El evento seleccionado no existe." }), null);
 
-        string presUserId;
-        if (IsSuperuser)
-        {
-            if (string.IsNullOrWhiteSpace(request.TargetUserId))
-                return (Result.Failure(new[] { "El Superuser debe especificar el usuario (TargetUserId)." }), null);
-            if (!await _context.Users.AnyAsync(u => u.Id == request.TargetUserId, ct))
-                return (Result.Failure(["Usuario destinatario no encontrado."]), null);
-            presUserId = request.TargetUserId;
-        }
-        else
-        {
-            if (!await _context.Users.AnyAsync(u => u.Id == _currentUser.Id, ct))
-                return (Result.Failure(["Usuario no encontrado."]), null);
-            presUserId = _currentUser.Id!;
-        }
+        if (!await _context.Users.AnyAsync(u => u.Id == _currentUser.Id, ct))
+            return (Result.Failure(["Usuario no encontrado."]), null);
 
         var presentation = new Presentation
         {
             Name = request.Name.Trim(),
             EventId = request.EventId,
-            UserId = presUserId,
+            UserId = _currentUser.Id!,
             Fecha = request.Fecha,
         };
 
@@ -379,7 +367,7 @@ public sealed class EventService : IEventService
         if (presentation is null)
             return Result.Failure(new[] { "Presentación no encontrada." });
 
-        if (!IsSuperuser && presentation.UserId != _currentUser.Id)
+        if (presentation.UserId != _currentUser.Id)
             return Result.Failure(new[] { "No tienes permiso para modificar esta presentación." });
 
         if (!await _context.Events.AnyAsync(e => e.Id == request.EventId, ct))
@@ -399,7 +387,7 @@ public sealed class EventService : IEventService
         if (presentation is null)
             return Result.Failure(new[] { "Presentación no encontrada." });
 
-        if (!IsSuperuser && presentation.UserId != _currentUser.Id)
+        if (presentation.UserId != _currentUser.Id)
             return Result.Failure(new[] { "No tienes permiso para eliminar esta presentación." });
 
         _context.Presentations.Remove(presentation);

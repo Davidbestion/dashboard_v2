@@ -10,6 +10,7 @@ import { useAuth } from '../contexts/AuthContext';
 import DataTable from '../components/DataTable';
 import FilterableDataTable from '../components/FilterableDataTable';
 import CertificateUpload, { CertificateViewButton } from '../components/CertificateUpload';
+import UserPicker from '../components/UserPicker';
 
 async function apiFetch(url, options = {}) {
   const response = await fetch(url, {
@@ -70,6 +71,7 @@ const EMPTY_FORM = {
   awardType: '0',
   awardedAt: _todayDDMM,
   evidenceFileId: null,
+  targetUserId: '',
 };
 
 function buildEmptyForm(awardCatalog) {
@@ -94,6 +96,7 @@ export default function AwardsPage() {
   const isSuperuser = user?.role === 'Superuser';
   const [awards, setAwards] = useState([]);
   const [awardCatalog, setAwardCatalog] = useState([]);
+  const [allUsers, setAllUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [generatingAnexo, setGeneratingAnexo] = useState(false);
@@ -119,23 +122,41 @@ export default function AwardsPage() {
       const url = isSuperuser ? '/api/Awards/todas' : '/api/Awards';
       const data = await apiFetch(url);
 
-      // Flatten grouped awards -> one row per otorgamiento (granting)
-      const rows = (data ?? []).flatMap(a => (a.grantings ?? []).map(g => {
-        const recipients = g.recipients ?? [];
-        const owner = recipients.find(r => r.userId === user?.id);
-        return {
-          awardId: a.awardId,
-          awardName: a.awardName,
-          awardTypeId: a.awardTypeId,
-          awardTypeName: a.awardTypeName,
-          awardedAt: g.awardedAt,
-          year: (g.awardedAt ? parseInt(g.awardedAt.substring(0, 4), 10) : new Date().getFullYear()),
-          recipients: recipients,
-          ownerRecipientId: owner ? owner.id : null,
-          ownerEvidenceFileId: owner?.evidenceFileId ?? null,
-          isMine: !!owner,
-        };
-      }));
+      let rows;
+      if (isSuperuser) {
+        // One row per recipient so each row has its own actionable UserAwarded.Id
+        rows = (data ?? []).flatMap(a => (a.grantings ?? []).flatMap(g =>
+          (g.recipients ?? []).map(r => ({
+            id: r.id,
+            awardId: a.awardId,
+            awardName: a.awardName,
+            awardTypeId: a.awardTypeId,
+            awardTypeName: a.awardTypeName,
+            awardedAt: g.awardedAt,
+            year: g.awardedAt ? parseInt(g.awardedAt.substring(0, 4), 10) : new Date().getFullYear(),
+            recipientUserId: r.userId,
+            recipientDisplayName: r.userDisplayName,
+            evidenceFileId: r.evidenceFileId,
+          }))
+        ));
+      } else {
+        rows = (data ?? []).flatMap(a => (a.grantings ?? []).map(g => {
+          const recipients = g.recipients ?? [];
+          const owner = recipients.find(r => r.userId === user?.id);
+          return {
+            awardId: a.awardId,
+            awardName: a.awardName,
+            awardTypeId: a.awardTypeId,
+            awardTypeName: a.awardTypeName,
+            awardedAt: g.awardedAt,
+            year: g.awardedAt ? parseInt(g.awardedAt.substring(0, 4), 10) : new Date().getFullYear(),
+            recipients: recipients,
+            ownerRecipientId: owner ? owner.id : null,
+            ownerEvidenceFileId: owner?.evidenceFileId ?? null,
+            isMine: !!owner,
+          };
+        }));
+      }
 
       setAwards(rows);
     } catch (e) {
@@ -143,24 +164,23 @@ export default function AwardsPage() {
     } finally {
       setLoading(false);
     }
-  }, [isSuperuser]);
+  }, [isSuperuser, user?.id]);
 
   const loadAwardCatalog = useCallback(async () => {
-    if (isSuperuser) {
-      setAwardCatalog([]);
-      return;
-    }
-
     try {
       const data = await apiFetch('/api/Awards/catalogo');
       setAwardCatalog(data);
     } catch (e) {
       setError(prev => prev || e.message);
     }
-  }, [isSuperuser]);
+  }, []);
 
   useEffect(() => { loadAwards(); }, [loadAwards]);
   useEffect(() => { loadAwardCatalog(); }, [loadAwardCatalog]);
+  useEffect(() => {
+    if (!isSuperuser) return;
+    apiFetch('/api/Users').then(setAllUsers).catch(() => {});
+  }, [isSuperuser]);
 
   async function handleGenerateAnexo() {
     setGeneratingAnexo(true);
@@ -259,6 +279,10 @@ export default function AwardsPage() {
 
   async function handleSubmit(e) {
     e.preventDefault();
+    if (isSuperuser && !editing && !form.targetUserId) {
+      setFormError('Debes seleccionar un usuario destinatario.');
+      return;
+    }
     setFormLoading(true);
     setFormError('');
     const body = {
@@ -267,6 +291,7 @@ export default function AwardsPage() {
       awardTypeId: form.createNewAward ? parseInt(form.awardType, 10) : null,
       awardedAt: (ddmmToISO(form.awardedAt) || form.awardedAt) + 'T00:00:00Z',
       evidenceFileId: form.evidenceFileId ?? null,
+      ...(isSuperuser && !editing ? { targetUserId: form.targetUserId } : {}),
     };
     try {
       if (editing) {
@@ -316,16 +341,17 @@ export default function AwardsPage() {
       <Card>
         <CardHeader className="d-flex justify-content-between align-items-center">
           <span className="fw-semibold">{isSuperuser ? 'Premios' : 'Mis premios'}</span>
-          {isSuperuser ? (
-            <Button color="success" size="sm" onClick={handleGenerateAnexo} disabled={generatingAnexo}>
-              {generatingAnexo ? <Spinner size="sm" /> : '⬇ Generar Anexo 5'}
-            </Button>
-          ) : (
+          <div className="d-flex gap-2">
             <Button color="primary" size="sm" onClick={openCreate}>
               <i className="bi bi-plus-lg me-1" />
               Nuevo premio
             </Button>
-          )}
+            {isSuperuser && (
+              <Button color="success" size="sm" onClick={handleGenerateAnexo} disabled={generatingAnexo}>
+                {generatingAnexo ? <Spinner size="sm" /> : '⬇ Generar Anexo 5'}
+              </Button>
+            )}
+          </div>
         </CardHeader>
 
         <CardBody>
@@ -342,22 +368,50 @@ export default function AwardsPage() {
           {!loading && !error && (
             <FilterableDataTable
               filterConfig={{
-                search: { fields: ['awardName'], placeholder: 'Buscar premio...' },
+                search: {
+                  fields: isSuperuser ? ['awardName', 'recipientDisplayName'] : ['awardName'],
+                  placeholder: 'Buscar premio...',
+                },
                 filters: [
                   { key: 'awardTypeId', label: 'Tipo',
                     options: AWARD_TYPES.map(t => ({ value: String(t.value), label: t.label })),
                     match: (item, val) => String(item.awardTypeId) === val },
-                  { key: 'recipient', label: 'Usuario',
+                  ...(!isSuperuser ? [{
+                    key: 'recipient', label: 'Usuario',
                     options: [...new Map(
                       awards.flatMap(a => a.recipients ?? []).map(r => [r.id, r])
                     ).values()]
                       .sort((a, b) => a.userDisplayName.localeCompare(b.userDisplayName))
                       .map(r => ({ value: String(r.id), label: r.userDisplayName })),
-                    match: (item, val) => (item.recipients ?? []).some(r => String(r.id) === val) },
+                    match: (item, val) => (item.recipients ?? []).some(r => String(r.id) === val),
+                  }] : []),
                 ],
               }}
               loading={loading}
-              columns={[
+              columns={isSuperuser ? [
+                { key: 'awardName', label: 'Nombre', sortable: true },
+                {
+                  key: 'awardTypeId',
+                  label: 'Tipo',
+                  render: (v, a) => <Badge color="info" pill>{v != null ? awardTypeLabel(v) : (a.awardTypeName ?? 'Desconocido')}</Badge>,
+                },
+                {
+                  key: 'awardedAt',
+                  label: 'Fecha',
+                  sortable: true,
+                  render: v => new Date(v).toLocaleDateString('es-CU', { timeZone: 'UTC' }),
+                },
+                {
+                  key: 'recipientDisplayName',
+                  label: 'Receptor',
+                  render: (v, a) => (
+                    <span>
+                      {v ?? '—'}
+                      {a.evidenceFileId && <CertificateViewButton fileId={a.evidenceFileId} />}
+                    </span>
+                  ),
+                },
+              ] : [
                 { key: 'awardName', label: 'Nombre', sortable: true },
                 {
                   key: 'awardTypeId',
@@ -376,9 +430,7 @@ export default function AwardsPage() {
                   render: recipients => (recipients || []).map(r => (
                     <span key={r.id} className="d-inline-block me-3 align-middle">
                       <small>{r.userDisplayName}</small>
-                      {r.evidenceFileId && (
-                        <CertificateViewButton fileId={r.evidenceFileId} />
-                      )}
+                      {r.evidenceFileId && <CertificateViewButton fileId={r.evidenceFileId} />}
                     </span>
                   )),
                 },
@@ -391,16 +443,24 @@ export default function AwardsPage() {
                   label: 'Editar',
                   icon: 'bi-pencil',
                   color: 'outline-secondary',
-                  show: a => !isSuperuser && a.isMine,
-                  onClick: a => openEdit({ id: a.ownerRecipientId, awardName: a.awardName, awardTypeId: a.awardTypeId, awardedAt: a.awardedAt, evidenceFileId: a.ownerEvidenceFileId }),
+                  show: a => isSuperuser || a.isMine,
+                  onClick: a => openEdit(
+                    isSuperuser
+                      ? { id: a.id, awardName: a.awardName, awardTypeId: a.awardTypeId, awardedAt: a.awardedAt, evidenceFileId: a.evidenceFileId }
+                      : { id: a.ownerRecipientId, awardName: a.awardName, awardTypeId: a.awardTypeId, awardedAt: a.awardedAt, evidenceFileId: a.ownerEvidenceFileId }
+                  ),
                 },
                 {
                   key: 'delete',
                   label: 'Eliminar',
                   icon: 'bi-trash',
                   color: 'outline-danger',
-                  show: a => !isSuperuser && a.isMine,
-                  onClick: a => openDelete({ id: a.ownerRecipientId, awardName: a.awardName }),
+                  show: a => isSuperuser || a.isMine,
+                  onClick: a => openDelete(
+                    isSuperuser
+                      ? { id: a.id, awardName: a.awardName }
+                      : { id: a.ownerRecipientId, awardName: a.awardName }
+                  ),
                 },
               ]}
               emptyMessage={isSuperuser ? 'No hay premios registrados.' : 'No tienes premios registrados.'}
@@ -410,7 +470,7 @@ export default function AwardsPage() {
       </Card>
 
       {/* Modal crear / editar */}
-      <Modal isOpen={modal} toggle={closeModal}>
+      <Modal isOpen={modal} toggle={closeModal} size="lg">
         <Form onSubmit={handleSubmit}>
           <ModalHeader toggle={closeModal}>
             {editing ? 'Editar premio' : 'Registrar nuevo premio'}
@@ -418,6 +478,17 @@ export default function AwardsPage() {
 
           <ModalBody>
             {formError && <Alert color="danger">{formError}</Alert>}
+
+            {isSuperuser && !editing && (
+              <FormGroup>
+                <Label>Usuario destinatario <span className="text-danger">*</span></Label>
+                <UserPicker
+                  users={allUsers}
+                  value={form.targetUserId}
+                  onChange={id => setForm(f => ({ ...f, targetUserId: id }))}
+                />
+              </FormGroup>
+            )}
 
             <FormGroup>
               <Label>Premio *</Label>

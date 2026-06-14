@@ -34,6 +34,8 @@ public sealed partial class PublicationService : IPublicationService
         _authorCleanup = authorCleanup;
     }
 
+    private bool IsSuperuser => _currentUser.Roles?.Contains("Superuser") == true;
+
     public async Task<(Result Result, string? PublicationId)> CreateAsync(CreatePublicationRequest request, CancellationToken ct = default)
     {
         if (!System.Enum.IsDefined(typeof(Dashboard_v2.Domain.Enums.PublicationType), request.PublicationType))
@@ -57,7 +59,19 @@ public sealed partial class PublicationService : IPublicationService
             return (Result.Failure(new[] { "La indexaci\u00f3n es obligatoria para este tipo de publicaci\u00f3n (1, 2 o 3)." }), null);
         }
 
-        var author = await _authorResolution.GetOrCreateForUserAsync(_currentUser.Id!, ct);
+        string authorUserId;
+        if (IsSuperuser)
+        {
+            if (string.IsNullOrWhiteSpace(request.TargetUserId))
+                return (Result.Failure(new[] { "El Superuser debe especificar el usuario autor (TargetUserId)." }), null);
+            authorUserId = request.TargetUserId;
+        }
+        else
+        {
+            authorUserId = _currentUser.Id!;
+        }
+
+        var author = await _authorResolution.GetOrCreateForUserAsync(authorUserId, ct);
         if (author == null)
             return (Result.Failure(new[] { "Usuario no encontrado." }), null);
 
@@ -110,15 +124,20 @@ public sealed partial class PublicationService : IPublicationService
 
     public async Task<Result> UpdateAsync(UpdatePublicationRequest request, CancellationToken ct = default)
     {
-        var currentAuthor = await _authorResolution.GetOrCreateForUserAsync(_currentUser.Id!, ct);
-        if (currentAuthor == null)
-            return Result.Failure(new[] { "Publicación no encontrada o no tienes permiso para editarla." });
+        Author? currentAuthor = null;
 
-        var isAuthor = await _context.AuthorPublications
-            .AnyAsync(ap => ap.PublicationId == request.Id && ap.AuthorId == currentAuthor.Id, ct);
+        if (!IsSuperuser)
+        {
+            currentAuthor = await _authorResolution.GetOrCreateForUserAsync(_currentUser.Id!, ct);
+            if (currentAuthor == null)
+                return Result.Failure(new[] { "Publicación no encontrada o no tienes permiso para editarla." });
 
-        if (!isAuthor)
-            return Result.Failure(new[] { "Publicación no encontrada o no tienes permiso para editarla." });
+            var isAuthor = await _context.AuthorPublications
+                .AnyAsync(ap => ap.PublicationId == request.Id && ap.AuthorId == currentAuthor.Id, ct);
+
+            if (!isAuthor)
+                return Result.Failure(new[] { "Publicación no encontrada o no tienes permiso para editarla." });
+        }
 
         var publication = await _context.Publications
             .Include(p => p.AuthorPublications)
@@ -228,17 +247,29 @@ public sealed partial class PublicationService : IPublicationService
             }
         }
 
-        var removedAuthorIds = publication.AuthorPublications
-            .Where(ap => ap.AuthorId != currentAuthor.Id)
-            .Select(ap => ap.AuthorId)
-            .ToList();
-        foreach (var authorIdToRemove in removedAuthorIds)
+        // For Superuser, resolve primary author from the publication itself (they're not listed as author)
+        if (currentAuthor == null)
         {
-            var ap = publication.AuthorPublications.First(x => x.AuthorId == authorIdToRemove);
-            publication.AuthorPublications.Remove(ap);
+            var primaryAuthorId = publication.AuthorPublications.FirstOrDefault()?.AuthorId;
+            if (primaryAuthorId != null)
+                currentAuthor = await _context.Authors.FindAsync(new object[] { primaryAuthorId }, ct);
         }
 
-        await AddCoauthorsAsync(publication, currentAuthor, request.AdditionalAuthorIds, request.AdditionalAuthorNames, request.AdditionalUserIds, ct);
+        List<string> removedAuthorIds = [];
+        if (currentAuthor != null)
+        {
+            removedAuthorIds = publication.AuthorPublications
+                .Where(ap => ap.AuthorId != currentAuthor.Id)
+                .Select(ap => ap.AuthorId)
+                .ToList();
+            foreach (var authorIdToRemove in removedAuthorIds)
+            {
+                var ap = publication.AuthorPublications.First(x => x.AuthorId == authorIdToRemove);
+                publication.AuthorPublications.Remove(ap);
+            }
+
+            await AddCoauthorsAsync(publication, currentAuthor, request.AdditionalAuthorIds, request.AdditionalAuthorNames, request.AdditionalUserIds, ct);
+        }
 
         await _context.SaveChangesAsync(ct);
 
@@ -408,11 +439,14 @@ public sealed partial class PublicationService : IPublicationService
 
     public async Task<Result> DeleteAsync(string id, CancellationToken ct = default)
     {
-        var isAuthor = await _context.AuthorPublications
-            .AnyAsync(ap => ap.PublicationId == id && ap.Author.UserId == _currentUser.Id, ct);
+        if (!IsSuperuser)
+        {
+            var isAuthor = await _context.AuthorPublications
+                .AnyAsync(ap => ap.PublicationId == id && ap.Author.UserId == _currentUser.Id, ct);
 
-        if (!isAuthor)
-            return Result.Failure(new[] { "Publicación no encontrada o no tienes permiso para eliminarla." });
+            if (!isAuthor)
+                return Result.Failure(new[] { "Publicación no encontrada o no tienes permiso para eliminarla." });
+        }
 
         var publication = await _context.Publications
             .Include(p => p.AuthorPublications)
@@ -433,6 +467,9 @@ public sealed partial class PublicationService : IPublicationService
 
     public async Task<PublicationDto?> GetByIdAsync(string id, CancellationToken ct = default)
     {
+        if (IsSuperuser)
+            return await GetPublicByIdAsync(id, ct);
+
         var authorId = await _context.Authors
             .AsNoTracking()
             .Where(a => a.UserId == _currentUser.Id)
@@ -462,6 +499,9 @@ public sealed partial class PublicationService : IPublicationService
 
     public async Task<List<PublicationDto>> GetMyPublicationsAsync(CancellationToken ct = default)
     {
+        if (IsSuperuser)
+            return await GetAllPublicationsAsync(ct);
+
         var authorId = await _context.Authors
             .AsNoTracking()
             .Where(a => a.UserId == _currentUser.Id)

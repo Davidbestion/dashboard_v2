@@ -12,6 +12,7 @@ import { useAuth } from '../contexts/AuthContext';
 import DataTable from '../components/DataTable';
 import FilterableDataTable from '../components/FilterableDataTable';
 import CertificateUpload, { CertificateViewButton } from '../components/CertificateUpload';
+import UserPicker from '../components/UserPicker';
 
 async function apiFetch(url, options = {}) {
   const response = await fetch(url, {
@@ -41,7 +42,7 @@ function ddmmToISO(v) {
   return `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`;
 }
 
-const EMPTY_PRES = { name: '', eventId: '', fecha: '' };
+const EMPTY_PRES = { name: '', eventId: '', fecha: '', targetUserId: '' };
 const EMPTY_EVENT = { name: '', countryId: '', eventType: '', institutions: [], redId: '', organizadorIds: [], evidenceFileId: null };
 
 const EVENT_TYPE_LABELS = { 0: 'Internacional', 1: 'Nacional', 2: 'De área', 3: 'Local' };
@@ -206,6 +207,10 @@ export default function EventsPage() {
 
   async function handlePresSubmit(e) {
     e.preventDefault();
+    if (isSuperuser && !presEditing && !presForm.targetUserId) {
+      setPresFormError('Debes seleccionar el usuario presentador.');
+      return;
+    }
     setPresFormLoading(true);
     setPresFormError('');
 
@@ -213,6 +218,7 @@ export default function EventsPage() {
       name: presForm.name.trim(),
       eventId: parseInt(presForm.eventId, 10),
       fecha: ddmmToISO(presForm.fecha) || new Date().toISOString().substring(0, 10),
+      ...(isSuperuser && !presEditing ? { targetUserId: presForm.targetUserId } : {}),
     };
 
     try {
@@ -446,14 +452,12 @@ export default function EventsPage() {
 
             {/* ── PRESENTATIONS TAB ── */}
             <TabPane tabId="presentations">
-              {!isSuperuser && (
-                <div className="d-flex justify-content-end mb-3">
-                  <Button color="primary" size="sm" onClick={openCreatePres}>
-                    <i className="bi bi-plus-lg me-1" />
-                    Nueva presentación
-                  </Button>
-                </div>
-              )}
+              <div className="d-flex justify-content-end mb-3">
+                <Button color="primary" size="sm" onClick={openCreatePres}>
+                  <i className="bi bi-plus-lg me-1" />
+                  Nueva presentación
+                </Button>
+              </div>
 
               {presLoading && <div className="text-center py-4"><Spinner color="primary" /></div>}
               {!presLoading && presError && <Alert color="danger">{presError}</Alert>}
@@ -485,8 +489,8 @@ export default function EventsPage() {
                   data={presentations}
                   keyExtractor={p => p.id}
                   actions={[
-                    { key: 'edit',   label: 'Editar',   icon: 'bi-pencil', color: 'outline-secondary', show: () => !isSuperuser, onClick: p => openEditPres(p) },
-                    { key: 'delete', label: 'Eliminar', icon: 'bi-trash',  color: 'outline-danger',    show: () => !isSuperuser, onClick: p => { setPresToDelete(p); setPresDeleteError(''); setPresDeleteModal(true); } },
+                    { key: 'edit',   label: 'Editar',   icon: 'bi-pencil', color: 'outline-secondary', onClick: p => openEditPres(p) },
+                    { key: 'delete', label: 'Eliminar', icon: 'bi-trash',  color: 'outline-danger',    onClick: p => { setPresToDelete(p); setPresDeleteError(''); setPresDeleteModal(true); } },
                   ]}
                   emptyMessage={isSuperuser ? 'No hay presentaciones registradas.' : 'No tienes presentaciones registradas.'}
                 />
@@ -495,7 +499,7 @@ export default function EventsPage() {
 
             {/* ── EVENTS TAB ── */}
             <TabPane tabId="events">
-              {!isSuperuser && (
+              {!isVicedecano && (
                 <div className="d-flex justify-content-end mb-3">
                   <Button color="primary" size="sm" onClick={openCreateEv}>
                     <i className="bi bi-plus-lg me-1" />
@@ -538,8 +542,8 @@ export default function EventsPage() {
                   data={events}
                   keyExtractor={ev => ev.id}
                   actions={[
-                    { key: 'edit',   label: 'Editar',   icon: 'bi-pencil', color: 'outline-secondary', show: () => !isSuperuser && !isVicedecano, onClick: ev => openEditEv(ev) },
-                    { key: 'delete', label: 'Eliminar', icon: 'bi-trash',  color: 'outline-danger',    show: () => !isSuperuser && !isVicedecano, onClick: ev => { setEvToDelete(ev); setEvDeleteError(''); setEvDeleteModal(true); } },
+                    { key: 'edit',   label: 'Editar',   icon: 'bi-pencil', color: 'outline-secondary', show: () => !isVicedecano, onClick: ev => openEditEv(ev) },
+                    { key: 'delete', label: 'Eliminar', icon: 'bi-trash',  color: 'outline-danger',    show: () => !isVicedecano, onClick: ev => { setEvToDelete(ev); setEvDeleteError(''); setEvDeleteModal(true); } },
                     { key: 'certificate', label: 'Certificado', show: ev => ev.evidenceFileId != null,
                       render: ev => <CertificateViewButton fileId={ev.evidenceFileId} /> },
                   ]}
@@ -559,6 +563,17 @@ export default function EventsPage() {
           </ModalHeader>
           <ModalBody>
             {presFormError && <Alert color="danger">{presFormError}</Alert>}
+
+            {isSuperuser && !presEditing && (
+              <FormGroup>
+                <Label>Usuario presentador <span className="text-danger">*</span></Label>
+                <UserPicker
+                  users={allUsers}
+                  value={presForm.targetUserId}
+                  onChange={id => setPresForm(f => ({ ...f, targetUserId: id }))}
+                />
+              </FormGroup>
+            )}
 
             <FormGroup>
               <Label for="presName">Nombre *</Label>
@@ -762,7 +777,7 @@ export default function EventsPage() {
               <CertificateUpload
                 fileId={evForm.evidenceFileId}
                 onFileIdChange={id => setEvForm(f => ({ ...f, evidenceFileId: id }))}
-                canManage={!isManager}
+                canManage
                 canView
                 disabled={evFormLoading}
               />

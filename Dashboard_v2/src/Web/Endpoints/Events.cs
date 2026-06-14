@@ -34,19 +34,19 @@ public class Events : EndpointGroupBase
             .Produces<List<EventTypeDto>>(200);
 
         groupBuilder.MapPost("", CreateEvent)
-            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Vicedecano_de_investigacion)))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Vicedecano_de_investigacion), nameof(RolesEnum.Superuser)))
             .WithName("CreateEvent")
             .Produces(201)
             .ProducesProblem(400);
 
         groupBuilder.MapPut("{id}", UpdateEvent)
-            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Vicedecano_de_investigacion)))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Vicedecano_de_investigacion), nameof(RolesEnum.Superuser)))
             .WithName("UpdateEvent")
             .Produces(200)
             .ProducesProblem(400);
 
         groupBuilder.MapDelete("{id}", DeleteEvent)
-            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Vicedecano_de_investigacion)))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Vicedecano_de_investigacion), nameof(RolesEnum.Superuser)))
             .WithName("DeleteEvent")
             .Produces(200)
             .ProducesProblem(400);

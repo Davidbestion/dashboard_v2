@@ -19,19 +19,19 @@ public class Presentations : EndpointGroupBase
             .Produces<List<PresentationDto>>(200);
 
         groupBuilder.MapPost("", CreatePresentation)
-            .RequireAuthorization(p => p.RequireRole("Profesor"))
+            .RequireAuthorization(p => p.RequireRole("Profesor", "Superuser"))
             .WithName("CreatePresentation")
             .Produces(201)
             .ProducesProblem(400);
 
         groupBuilder.MapPut("{id}", UpdatePresentation)
-            .RequireAuthorization(p => p.RequireRole("Profesor"))
+            .RequireAuthorization(p => p.RequireRole("Profesor", "Superuser"))
             .WithName("UpdatePresentation")
             .Produces(200)
             .ProducesProblem(400);
 
         groupBuilder.MapDelete("{id}", DeletePresentation)
-            .RequireAuthorization(p => p.RequireRole("Profesor"))
+            .RequireAuthorization(p => p.RequireRole("Profesor", "Superuser"))
             .WithName("DeletePresentation")
             .Produces(200)
             .ProducesProblem(400);

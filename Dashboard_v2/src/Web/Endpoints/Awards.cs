@@ -12,13 +12,13 @@ public class Awards : EndpointGroupBase
     {
         // GET /api/Awards — premios del usuario autenticado
         groupBuilder.MapGet("", GetMyAwards)
-            .RequireAuthorization(p => p.RequireRole("Profesor"))
+            .RequireAuthorization(p => p.RequireRole("Profesor", "Superuser"))
             .WithName("GetMyAwards")
             .Produces<List<AwardWithGrantingsDto>>(200);
 
         // GET /api/Awards/catalogo — catálogo reutilizable de premios
         groupBuilder.MapGet("catalogo", GetCatalog)
-            .RequireAuthorization(p => p.RequireRole("Profesor"))
+            .RequireAuthorization(p => p.RequireRole("Profesor", "Superuser"))
             .WithName("GetAwardCatalog")
             .Produces<List<AwardCatalogDto>>(200);
 
@@ -30,14 +30,14 @@ public class Awards : EndpointGroupBase
 
         // POST /api/Awards
         groupBuilder.MapPost("", CreateAward)
-            .RequireAuthorization(p => p.RequireRole("Profesor"))
+            .RequireAuthorization(p => p.RequireRole("Profesor", "Superuser"))
             .WithName("CreateAward")
             .Produces(201)
             .ProducesProblem(400);
 
         // PUT /api/Awards/{id}
         groupBuilder.MapPut("{id}", UpdateAward)
-            .RequireAuthorization(p => p.RequireRole("Profesor"))
+            .RequireAuthorization(p => p.RequireRole("Profesor", "Superuser"))
             .WithName("UpdateAward")
             .Produces(200)
             .ProducesProblem(400)
@@ -45,7 +45,7 @@ public class Awards : EndpointGroupBase
 
         // DELETE /api/Awards/{id}
         groupBuilder.MapDelete("{id}", DeleteAward)
-            .RequireAuthorization(p => p.RequireRole("Profesor"))
+            .RequireAuthorization(p => p.RequireRole("Profesor", "Superuser"))
             .WithName("DeleteAward")
             .Produces(200)
             .ProducesProblem(400)

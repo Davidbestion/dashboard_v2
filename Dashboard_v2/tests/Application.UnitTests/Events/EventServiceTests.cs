@@ -739,4 +739,128 @@ public class EventServiceTests
         result.Succeeded.ShouldBeTrue();
         (await _db.Presentations.FindAsync(51)).ShouldBeNull();
     }
+
+    // ─── Superuser bypass ────────────────────────────────────────────────────
+
+    private void SetupSuperuser()
+    {
+        _currentUser.Setup(u => u.Id).Returns("super-1");
+        _currentUser.Setup(u => u.Roles).Returns(new List<string> { "Superuser" });
+    }
+
+    [Test]
+    public async Task GetMyEventsAsync_Superuser_ReturnsAllEvents()
+    {
+        await SeedBaseDataAsync();
+        _db.Users.Add(MakeUser("user-a"));
+        _db.Users.Add(MakeUser("user-b"));
+        _db.Events.Add(MakeEvent(100, "Event A"));
+        _db.Events.Add(MakeEvent(101, "Event B"));
+        await _db.SaveChangesAsync();
+        _db.Presentations.Add(new Presentation { EventId = 100, UserId = "user-a", Name = "P", Fecha = DateOnly.FromDateTime(DateTime.UtcNow) });
+        await _db.SaveChangesAsync();
+
+        SetupSuperuser();
+        var result = await _sut.GetMyEventsAsync();
+
+        result.Count.ShouldBe(2);
+    }
+
+    [Test]
+    public async Task GetMyPresentationsAsync_Superuser_ReturnsAllPresentations()
+    {
+        await SeedBaseDataAsync();
+        _db.Users.Add(MakeUser("user-a"));
+        _db.Users.Add(MakeUser("user-b"));
+        _db.Events.Add(MakeEvent(200));
+        await _db.SaveChangesAsync();
+        _db.Presentations.Add(new Presentation { EventId = 200, UserId = "user-a", Name = "PA", Fecha = DateOnly.FromDateTime(DateTime.UtcNow) });
+        _db.Presentations.Add(new Presentation { EventId = 200, UserId = "user-b", Name = "PB", Fecha = DateOnly.FromDateTime(DateTime.UtcNow) });
+        await _db.SaveChangesAsync();
+
+        SetupSuperuser();
+        var result = await _sut.GetMyPresentationsAsync();
+
+        result.Count.ShouldBe(2);
+    }
+
+    [Test]
+    public async Task CreatePresentationAsync_Superuser_WithTargetUserId_CreatesForTargetUser()
+    {
+        await SeedBaseDataAsync();
+        _db.Users.Add(MakeUser("user-target"));
+        _db.Events.Add(MakeEvent(300));
+        await _db.SaveChangesAsync();
+
+        SetupSuperuser();
+        var (result, id) = await _sut.CreatePresentationAsync(new CreatePresentationRequest
+        {
+            Name = "Ponencia Delegada",
+            EventId = 300,
+            Fecha = DateOnly.FromDateTime(DateTime.UtcNow),
+            TargetUserId = "user-target"
+        });
+
+        result.Succeeded.ShouldBeTrue();
+        var pres = await _db.Presentations.FindAsync(id);
+        pres!.UserId.ShouldBe("user-target");
+    }
+
+    [Test]
+    public async Task CreatePresentationAsync_Superuser_WithoutTargetUserId_ReturnsFailure()
+    {
+        await SeedBaseDataAsync();
+        _db.Events.Add(MakeEvent(301));
+        await _db.SaveChangesAsync();
+
+        SetupSuperuser();
+        var (result, _) = await _sut.CreatePresentationAsync(new CreatePresentationRequest
+        {
+            Name = "Ponencia Sin Target",
+            EventId = 301,
+            Fecha = DateOnly.FromDateTime(DateTime.UtcNow)
+        });
+
+        result.Succeeded.ShouldBeFalse();
+        result.Errors.ShouldContain(e => e.Contains("TargetUserId"));
+    }
+
+    [Test]
+    public async Task UpdatePresentationAsync_Superuser_CanUpdateAnotherUserPresentation()
+    {
+        await SeedBaseDataAsync();
+        _db.Users.Add(MakeUser("user-a"));
+        _db.Events.Add(MakeEvent(400));
+        await _db.SaveChangesAsync();
+        _db.Presentations.Add(new Presentation { Id = 400, EventId = 400, UserId = "user-a", Name = "Original", Fecha = DateOnly.FromDateTime(DateTime.UtcNow) });
+        await _db.SaveChangesAsync();
+
+        SetupSuperuser();
+        var result = await _sut.UpdatePresentationAsync(400, new UpdatePresentationRequest
+        {
+            Name = "Modificada por Superuser",
+            EventId = 400,
+            Fecha = DateOnly.FromDateTime(DateTime.UtcNow)
+        });
+
+        result.Succeeded.ShouldBeTrue();
+        (await _db.Presentations.FindAsync(400))!.Name.ShouldBe("Modificada por Superuser");
+    }
+
+    [Test]
+    public async Task DeletePresentationAsync_Superuser_CanDeleteAnotherUserPresentation()
+    {
+        await SeedBaseDataAsync();
+        _db.Users.Add(MakeUser("user-a"));
+        _db.Events.Add(MakeEvent(500));
+        await _db.SaveChangesAsync();
+        _db.Presentations.Add(new Presentation { Id = 500, EventId = 500, UserId = "user-a", Name = "Para Borrar", Fecha = DateOnly.FromDateTime(DateTime.UtcNow) });
+        await _db.SaveChangesAsync();
+
+        SetupSuperuser();
+        var result = await _sut.DeletePresentationAsync(500);
+
+        result.Succeeded.ShouldBeTrue();
+        (await _db.Presentations.FindAsync(500)).ShouldBeNull();
+    }
 }

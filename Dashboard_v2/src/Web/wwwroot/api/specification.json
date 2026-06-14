@@ -6615,6 +6615,10 @@
             "type": "integer",
             "format": "int32",
             "nullable": true
+          },
+          "targetUserId": {
+            "type": "string",
+            "nullable": true
           }
         }
       },
@@ -7404,6 +7408,10 @@
           "fecha": {
             "type": "string",
             "format": "date"
+          },
+          "targetUserId": {
+            "type": "string",
+            "nullable": true
           }
         }
       },
@@ -8363,6 +8371,10 @@
           "evidenceFileId": {
             "type": "integer",
             "format": "int32",
+            "nullable": true
+          },
+          "targetUserId": {
+            "type": "string",
             "nullable": true
           }
         }

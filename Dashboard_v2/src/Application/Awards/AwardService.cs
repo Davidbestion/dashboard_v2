@@ -20,8 +20,13 @@ public sealed class AwardService : IAwardService
         _currentUser = currentUser;
     }
 
+    private bool IsSuperuser => _currentUser.Roles?.Contains("Superuser") == true;
+
     public async Task<List<AwardWithGrantingsDto>> GetMyAwardsAsync(CancellationToken ct = default)
     {
+        if (IsSuperuser)
+            return await GetAllAwardsAsync(ct);
+
         var userAwardeds = await _context.UserAwardeds
             .AsNoTracking()
             .Include(ua => ua.Award)
@@ -130,13 +135,27 @@ public sealed class AwardService : IAwardService
 
     public async Task<(Result Result, int? AwardedId)> CreateAsync(CreateAwardRequest request, CancellationToken ct = default)
     {
+        string userId;
+        if (IsSuperuser)
+        {
+            if (string.IsNullOrWhiteSpace(request.TargetUserId))
+                return (Result.Failure(new[] { "El Superuser debe especificar el usuario destinatario (TargetUserId)." }), null);
+            if (!await _context.Users.AnyAsync(u => u.Id == request.TargetUserId, ct))
+                return (Result.Failure(new[] { "El usuario destinatario no existe." }), null);
+            userId = request.TargetUserId;
+        }
+        else
+        {
+            userId = _currentUser.Id!;
+        }
+
         var (result, award) = await ResolveAwardAsync(request.AwardId, request.NewAwardName, request.AwardTypeId, ct);
         if (!result.Succeeded || award is null)
             return (result, null);
 
         var userAwarded = new UserAwarded
         {
-            UserId = _currentUser.Id!,
+            UserId = userId,
             AwardId = award.Id,
             AwardedAt = request.AwardedAt,
             EvidenceFileId = request.EvidenceFileId,
@@ -155,7 +174,7 @@ public sealed class AwardService : IAwardService
         if (userAwarded is null)
             return Result.Failure(new[] { "Premio no encontrado." });
 
-        if (userAwarded.UserId != _currentUser.Id)
+        if (!IsSuperuser && userAwarded.UserId != _currentUser.Id)
             return Result.Failure(new[] { "No tienes permiso para modificar este premio." });
 
         var (result, award) = await ResolveAwardAsync(request.AwardId, request.NewAwardName, request.AwardTypeId, ct);
@@ -178,7 +197,7 @@ public sealed class AwardService : IAwardService
         if (userAwarded is null)
             return Result.Failure(new[] { "Premio no encontrado." });
 
-        if (userAwarded.UserId != _currentUser.Id)
+        if (!IsSuperuser && userAwarded.UserId != _currentUser.Id)
             return Result.Failure(new[] { "No tienes permiso para eliminar este premio." });
 
         _context.UserAwardeds.Remove(userAwarded);

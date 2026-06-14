@@ -291,4 +291,117 @@ public class AwardServiceTests
         result.Succeeded.ShouldBeTrue();
         (await _db.UserAwardeds.AnyAsync(ua => ua.Id == 1)).ShouldBeFalse();
     }
+
+    // ─── Superuser bypass ────────────────────────────────────────────────────
+
+    private void SetupSuperuser(string id = "super-1")
+    {
+        _currentUser.Setup(u => u.Id).Returns(id);
+        _currentUser.Setup(u => u.Roles).Returns(new List<string> { "Superuser" });
+    }
+
+    [Test]
+    public async Task GetMyAwardsAsync_Superuser_ReturnsAllUsers()
+    {
+        await SeedBaseDataAsync();
+        _db.Users.Add(new User { Id = "user-2", UserName = "bob", Email = "bob@test.com", UserLastName1 = "B" });
+        _db.UserAwardeds.Add(new UserAwarded { UserId = "user-1", AwardId = 1, AwardedAt = DateTime.Today });
+        _db.UserAwardeds.Add(new UserAwarded { UserId = "user-2", AwardId = 1, AwardedAt = DateTime.Today });
+        await _db.SaveChangesAsync();
+
+        SetupSuperuser();
+        var result = await _sut.GetMyAwardsAsync();
+
+        result.ShouldNotBeEmpty();
+        result.SelectMany(a => a.Grantings).SelectMany(g => g.Recipients)
+            .Select(r => r.UserId)
+            .ShouldContain("user-1");
+        result.SelectMany(a => a.Grantings).SelectMany(g => g.Recipients)
+            .Select(r => r.UserId)
+            .ShouldContain("user-2");
+    }
+
+    [Test]
+    public async Task CreateAsync_Superuser_WithTargetUserId_CreatesForTargetUser()
+    {
+        await SeedBaseDataAsync();
+        _db.Users.Add(new User { Id = "user-2", UserName = "bob", Email = "bob@test.com", UserLastName1 = "B" });
+        await _db.SaveChangesAsync();
+
+        SetupSuperuser();
+        var (result, id) = await _sut.CreateAsync(new CreateAwardRequest
+        {
+            AwardId = 1,
+            AwardedAt = DateTime.Today,
+            TargetUserId = "user-2"
+        });
+
+        result.Succeeded.ShouldBeTrue();
+        var record = await _db.UserAwardeds.FindAsync(id);
+        record!.UserId.ShouldBe("user-2");
+    }
+
+    [Test]
+    public async Task CreateAsync_Superuser_WithoutTargetUserId_ReturnsFailure()
+    {
+        await SeedBaseDataAsync();
+        SetupSuperuser();
+
+        var (result, _) = await _sut.CreateAsync(new CreateAwardRequest
+        {
+            AwardId = 1,
+            AwardedAt = DateTime.Today
+        });
+
+        result.Succeeded.ShouldBeFalse();
+        result.Errors.ShouldContain(e => e.Contains("TargetUserId"));
+    }
+
+    [Test]
+    public async Task CreateAsync_Superuser_WithNonExistentTargetUser_ReturnsFailure()
+    {
+        await SeedBaseDataAsync();
+        SetupSuperuser();
+
+        var (result, _) = await _sut.CreateAsync(new CreateAwardRequest
+        {
+            AwardId = 1,
+            AwardedAt = DateTime.Today,
+            TargetUserId = "ghost-user"
+        });
+
+        result.Succeeded.ShouldBeFalse();
+        result.Errors.ShouldContain(e => e.Contains("destinatario"));
+    }
+
+    [Test]
+    public async Task UpdateAsync_Superuser_CanUpdateAnotherUsersAward()
+    {
+        await SeedBaseDataAsync();
+        _db.UserAwardeds.Add(new UserAwarded { Id = 10, UserId = "user-1", AwardId = 1, AwardedAt = DateTime.Today });
+        await _db.SaveChangesAsync();
+
+        SetupSuperuser("super-1");
+        var result = await _sut.UpdateAsync(10, new UpdateAwardRequest
+        {
+            AwardId = 1,
+            AwardedAt = DateTime.Today.AddDays(-1)
+        });
+
+        result.Succeeded.ShouldBeTrue();
+    }
+
+    [Test]
+    public async Task DeleteAsync_Superuser_CanDeleteAnotherUsersAward()
+    {
+        await SeedBaseDataAsync();
+        _db.UserAwardeds.Add(new UserAwarded { Id = 11, UserId = "user-1", AwardId = 1, AwardedAt = DateTime.Today });
+        await _db.SaveChangesAsync();
+
+        SetupSuperuser("super-1");
+        var result = await _sut.DeleteAsync(11);
+
+        result.Succeeded.ShouldBeTrue();
+        (await _db.UserAwardeds.FindAsync(11)).ShouldBeNull();
+    }
 }

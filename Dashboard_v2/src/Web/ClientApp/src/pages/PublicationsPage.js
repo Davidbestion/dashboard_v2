@@ -12,6 +12,7 @@ import {
 } from 'reactstrap';
 import { useAuth } from '../contexts/AuthContext';
 import CoauthorPicker from '../components/CoauthorPicker';
+import UserPicker from '../components/UserPicker';
 import AuthorResolutionModal from '../components/AuthorResolutionModal';
 import DataTable from '../components/DataTable';
 import FilterableDataTable from '../components/FilterableDataTable';
@@ -147,15 +148,18 @@ const EMPTY_FORM = {
   group: '',
   cuartil: '',
   evidenceFileId: null,
+  targetUserId: '',
 };
 
 export default function PublicationsPage() {
   const { user } = useAuth();
+  const isSuperuser = user?.role === 'Superuser';
   const [publications, setPublications] = useState([]);
   const [types, setTypes] = useState([]);
   const [basesdedatos, setBasesdedatos] = useState([]);
   const [proyectos, setProyectos] = useState([]);
   const [proyectosError, setProyectosError] = useState(false);
+  const [allUsers, setAllUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -215,7 +219,7 @@ export default function PublicationsPage() {
     setError('');
     try {
       const [pubs, pubTypes, cats, dbs] = await Promise.all([
-        apiFetch('/api/Publications'),
+        apiFetch(isSuperuser ? '/api/Publications/todas' : '/api/Publications'),
         apiFetch('/api/Publications/types'),
         apiFetch('/api/Proyectos/catalogo').catch(() => null),
         apiFetch('/api/Nomencladores/basesdedatos'),
@@ -235,9 +239,13 @@ export default function PublicationsPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isSuperuser]);
 
   useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => {
+    if (!isSuperuser) return;
+    apiFetch('/api/Users').then(setAllUsers).catch(() => {});
+  }, [isSuperuser]);
 
   async function createBaseDeDatos(nombre) {
     const created = await apiFetch('/api/Nomencladores/basesdedatos', {
@@ -352,6 +360,10 @@ export default function PublicationsPage() {
       setFormError('El título y el tipo de publicación son obligatorios.');
       return;
     }
+    if (isSuperuser && !editing && !form.targetUserId) {
+      setFormError('Debes seleccionar el autor principal.');
+      return;
+    }
     if (!form.publishedDate.trim() || !/^\d{4}(-\d{2}(-\d{2})?)?$/.test(form.publishedDate.trim())) {
       setFormError('La fecha de publicación es obligatoria. Use el formato AAAA, AAAA-MM o AAAA-MM-DD.');
       return;
@@ -427,6 +439,7 @@ export default function PublicationsPage() {
         group: parseInt(form.publicationType, 10) === 0 ? parseInt(form.group, 10) || null : null,
         cuartil: parseInt(form.publicationType, 10) === 0 && parseInt(form.group, 10) === 1 ? form.cuartil || null : null,
         evidenceFileId: form.evidenceFileId ?? null,
+        ...(isSuperuser ? { targetUserId: form.targetUserId } : {}),
       }),
     });
     setModal(false);
@@ -949,6 +962,19 @@ export default function PublicationsPage() {
           {formError && <Alert color="danger">{formError}</Alert>}
           <Form>
             {/* ══ Sección 1: datos principales ══════════════════════════ */}
+            {isSuperuser && !editing && (
+              <FormGroup>
+                <Label>Autor principal (usuario) <span className="text-danger">*</span></Label>
+                <small className="d-block text-muted mb-1">
+                  El usuario cuyo perfil de autor quedará vinculado como autor principal.
+                </small>
+                <UserPicker
+                  users={allUsers}
+                  value={form.targetUserId}
+                  onChange={id => setForm(f => ({ ...f, targetUserId: id }))}
+                />
+              </FormGroup>
+            )}
             <FormGroup>
               <Label for="title">Título <span className="text-danger">*</span></Label>
               <Input

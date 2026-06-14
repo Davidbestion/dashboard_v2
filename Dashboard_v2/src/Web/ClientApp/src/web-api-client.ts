@@ -9005,6 +9005,7 @@ export class CreateAwardRequest implements ICreateAwardRequest {
     awardTypeId?: number | undefined;
     awardedAt?: Date;
     evidenceFileId?: number | undefined;
+    targetUserId?: string | undefined;
 
     constructor(data?: ICreateAwardRequest) {
         if (data) {
@@ -9022,6 +9023,7 @@ export class CreateAwardRequest implements ICreateAwardRequest {
             this.awardTypeId = _data["awardTypeId"];
             this.awardedAt = _data["awardedAt"] ? new Date(_data["awardedAt"].toString()) : undefined as any;
             this.evidenceFileId = _data["evidenceFileId"];
+            this.targetUserId = _data["targetUserId"];
         }
     }
 
@@ -9039,6 +9041,7 @@ export class CreateAwardRequest implements ICreateAwardRequest {
         data["awardTypeId"] = this.awardTypeId;
         data["awardedAt"] = this.awardedAt ? this.awardedAt.toISOString() : undefined as any;
         data["evidenceFileId"] = this.evidenceFileId;
+        data["targetUserId"] = this.targetUserId;
         return data;
     }
 }
@@ -9049,6 +9052,7 @@ export interface ICreateAwardRequest {
     awardTypeId?: number | undefined;
     awardedAt?: Date;
     evidenceFileId?: number | undefined;
+    targetUserId?: string | undefined;
 }
 
 export class UpdateAwardRequest implements IUpdateAwardRequest {
@@ -10927,6 +10931,7 @@ export class CreatePresentationRequest implements ICreatePresentationRequest {
     name?: string;
     eventId?: number;
     fecha?: Date;
+    targetUserId?: string | undefined;
 
     constructor(data?: ICreatePresentationRequest) {
         if (data) {
@@ -10942,6 +10947,7 @@ export class CreatePresentationRequest implements ICreatePresentationRequest {
             this.name = _data["name"];
             this.eventId = _data["eventId"];
             this.fecha = _data["fecha"] ? new Date(_data["fecha"].toString()) : undefined as any;
+            this.targetUserId = _data["targetUserId"];
         }
     }
 
@@ -10957,6 +10963,7 @@ export class CreatePresentationRequest implements ICreatePresentationRequest {
         data["name"] = this.name;
         data["eventId"] = this.eventId;
         data["fecha"] = this.fecha ? formatDate(this.fecha) : undefined as any;
+        data["targetUserId"] = this.targetUserId;
         return data;
     }
 }
@@ -10965,6 +10972,7 @@ export interface ICreatePresentationRequest {
     name?: string;
     eventId?: number;
     fecha?: Date;
+    targetUserId?: string | undefined;
 }
 
 export class UpdatePresentationRequest implements IUpdatePresentationRequest {
@@ -12741,6 +12749,7 @@ export class CreatePublicationRequest implements ICreatePublicationRequest {
     proyectoId?: string | undefined;
     redId?: string | undefined;
     evidenceFileId?: number | undefined;
+    targetUserId?: string | undefined;
 
     constructor(data?: ICreatePublicationRequest) {
         if (data) {
@@ -12780,6 +12789,7 @@ export class CreatePublicationRequest implements ICreatePublicationRequest {
             this.proyectoId = _data["proyectoId"];
             this.redId = _data["redId"];
             this.evidenceFileId = _data["evidenceFileId"];
+            this.targetUserId = _data["targetUserId"];
         }
     }
 
@@ -12819,6 +12829,7 @@ export class CreatePublicationRequest implements ICreatePublicationRequest {
         data["proyectoId"] = this.proyectoId;
         data["redId"] = this.redId;
         data["evidenceFileId"] = this.evidenceFileId;
+        data["targetUserId"] = this.targetUserId;
         return data;
     }
 }
@@ -12839,6 +12850,7 @@ export interface ICreatePublicationRequest {
     proyectoId?: string | undefined;
     redId?: string | undefined;
     evidenceFileId?: number | undefined;
+    targetUserId?: string | undefined;
 }
 
 export enum PublicationType {

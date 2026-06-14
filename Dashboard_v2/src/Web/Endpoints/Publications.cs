@@ -16,7 +16,7 @@ public class Publications : EndpointGroupBase
     {
         // GET /api/Publications/types — lista los tipos disponibles (para el selector)
         groupBuilder.MapGet("types", GetPublicationTypes)
-            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor)))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Superuser)))
             .WithName("GetPublicationTypes")
             .Produces<List<PublicationTypeDto>>(200);
 
@@ -42,47 +42,47 @@ public class Publications : EndpointGroupBase
 
         // GET /api/Publications — publicaciones del usuario autenticado
         groupBuilder.MapGet("", GetMyPublications)
-            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor)))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Superuser)))
             .WithName("GetMyPublications")
             .Produces<List<PublicationDto>>(200);
 
         // GET /api/Publications/{id}
         groupBuilder.MapGet("{id}", GetPublicationById)
-            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor)))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Superuser)))
             .WithName("GetPublicationById")
             .Produces<PublicationDto>(200)
             .ProducesProblem(404);
 
         // GET /api/Publications/public/{id} — obtener detalle público de una publicación (sin exigir ser autor)
         groupBuilder.MapGet("public/{id}", GetPublicationPublicById)
-            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor)))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Superuser)))
             .WithName("GetPublicationPublicById")
             .Produces<PublicationDto>(200)
             .ProducesProblem(404);
 
         // POST /api/Publications
         groupBuilder.MapPost("", CreatePublication)
-            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor)))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Superuser)))
             .WithName("CreatePublication")
             .Produces(201)
             .ProducesProblem(400);
 
         // GET /api/Publications/duplicates?title=...&doi=...&url=...
         groupBuilder.MapGet("duplicates", FindDuplicates)
-            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor)))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Superuser)))
             .WithName("FindPublicationDuplicates")
             .Produces<List<PublicationDuplicateDto>>(200);
 
         // GET /api/Publications/crossref?doi=&title=
         groupBuilder.MapGet("crossref", GetCrossRefCandidates)
-            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor)))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Superuser)))
             .WithName("GetCrossRefCandidates")
             .Produces<List<PublicationCrossRefDto>>(200);
 
         // GET /api/Publications/openaire?doi=&title=
         // Searches OpenAIRE — covers SciELO, PubMed, institutional repos and more.
         groupBuilder.MapGet("openaire", GetOpenAireCandidates)
-            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor)))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Superuser)))
             .WithName("GetOpenAireCandidates")
             .Produces<List<PublicationCrossRefDto>>(200);
 
@@ -90,14 +90,14 @@ public class Publications : EndpointGroupBase
         // Best-effort: fetch CrossRef metadata for the DOI/title and resolve
         // the journal's database/group using configured providers.
         groupBuilder.MapGet("resolve-database", ResolveDatabaseFromCrossRef)
-            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor)))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Superuser)))
             .WithName("ResolvePublicationDatabaseFromCrossRef")
             .Produces<Dashboard_v2.Application.Publications.PublicationDatabaseMatchDto>(200)
             .ProducesProblem(404);
 
         // POST /api/Publications/{id}/coauthors -> assign current user as coauthor (idempotent)
         groupBuilder.MapPost("{id}/coauthors", AddCurrentUserAsCoauthor)
-            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor)))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Superuser)))
             .WithName("AddCurrentUserAsCoauthor")
             .Produces(200)
             .ProducesProblem(400)
@@ -105,7 +105,7 @@ public class Publications : EndpointGroupBase
 
         // PUT /api/Publications/{id}
         groupBuilder.MapPut("{id}", UpdatePublication)
-            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor)))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Superuser)))
             .WithName("UpdatePublication")
             .Produces(200)
             .ProducesProblem(400)
@@ -113,7 +113,7 @@ public class Publications : EndpointGroupBase
 
         // DELETE /api/Publications/{id}
         groupBuilder.MapDelete("{id}", DeletePublication)
-            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor)))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Superuser)))
             .WithName("DeletePublication")
             .Produces(200)
             .ProducesProblem(400)

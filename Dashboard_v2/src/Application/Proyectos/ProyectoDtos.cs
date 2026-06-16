@@ -113,3 +113,11 @@ public record ProyectoPublicacionDto
 
 /// <summary>Par mínimo Id/Título para el selector de proyectos en formularios de publicaciones.</summary>
 public record ProyectoCatalogoDto(string Id, string Titulo);
+
+public record ProyectoPatenteResumenDto(
+    string PatenteId,
+    string Titulo,
+    string NumeroSolicitudConcesion,
+    bool EsNacional,
+    string? Creador,
+    List<string> Creadores);

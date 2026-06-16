@@ -9,7 +9,7 @@ namespace Dashboard_v2.Application.Proyectos;
 /// Implementa la lógica CRUD de proyectos y mantiene el detalle por subtipo dentro
 /// de una única capa de servicio coherente con el resto de la aplicación.
 /// </summary>
-public sealed class ProyectoService : IProyectoService
+public sealed class ProyectoService : IProyectoQueryService, IProyectoCommandService, IProyectoService
 {
     private readonly IApplicationDbContext _context;
     private readonly IUser _currentUser;
@@ -418,6 +418,65 @@ public sealed class ProyectoService : IProyectoService
                 .Where(f => body.FuentesFinanciacionIds.Contains(f.Id))
                 .ToListAsync(ct);
         }, ct, additionalIncludes: q => q.Include(p => p.FuentesFinanciacion));
+
+    // ── Patentes derivadas ────────────────────────────────────────────────────
+
+    public async Task<List<ProyectoPatenteResumenDto>> GetPatentesDelProyectoAsync(string proyectoId, CancellationToken ct = default)
+    {
+        var ownerFilter = ProyectoHelper.GetOwnerFilter(_currentUser);
+        if (ownerFilter is not null && !await _context.Proyectos.AnyAsync(p => p.Id == proyectoId && p.JefeId == ownerFilter, ct))
+            return [];
+
+        return await _context.ProyectoPatentes
+            .Where(pp => pp.ProyectoId == proyectoId)
+            .Select(pp => new ProyectoPatenteResumenDto(
+                pp.PatenteId,
+                pp.Patente.Titulo,
+                pp.Patente.NumeroSolicitudConcesion,
+                pp.Patente.EsNacional,
+                pp.Patente.Creadores.OrderBy(c => c.Author.Name).Select(c => c.Author.Name).FirstOrDefault(),
+                pp.Patente.Creadores.OrderBy(c => c.Author.Name).Select(c => c.Author.Name).ToList()))
+            .ToListAsync(ct);
+    }
+
+    public async Task<Result> LinkPatenteAsync(string proyectoId, string patenteId, CancellationToken ct = default)
+    {
+        var proyecto = await _context.Proyectos.FirstOrDefaultAsync(p => p.Id == proyectoId, ct);
+        if (proyecto is null)
+            return Result.Failure(["Proyecto no encontrado."]);
+        if (!await _context.Patentes.AnyAsync(p => p.Id == patenteId, ct))
+            return Result.Failure(["Patente no encontrada."]);
+        if (await _context.ProyectoPatentes.AnyAsync(pp => pp.ProyectoId == proyectoId && pp.PatenteId == patenteId, ct))
+            return Result.Failure(["El vínculo ya existe."]);
+
+        var ownerFilter = ProyectoHelper.GetOwnerFilter(_currentUser);
+        if (ownerFilter is not null && proyecto.JefeId != ownerFilter)
+            return Result.Failure(["No tiene permisos sobre este proyecto."]);
+
+        _context.ProyectoPatentes.Add(new ProyectoPatente { ProyectoId = proyectoId, PatenteId = patenteId });
+        await _context.SaveChangesAsync(ct);
+        return Result.Success();
+    }
+
+    public async Task<Result> UnlinkPatenteAsync(string proyectoId, string patenteId, CancellationToken ct = default)
+    {
+        var proyecto = await _context.Proyectos.FirstOrDefaultAsync(p => p.Id == proyectoId, ct);
+        if (proyecto is null)
+            return Result.Failure(["Proyecto no encontrado."]);
+
+        var ownerFilter = ProyectoHelper.GetOwnerFilter(_currentUser);
+        if (ownerFilter is not null && proyecto.JefeId != ownerFilter)
+            return Result.Failure(["No tiene permisos sobre este proyecto."]);
+
+        var link = await _context.ProyectoPatentes
+            .FirstOrDefaultAsync(pp => pp.ProyectoId == proyectoId && pp.PatenteId == patenteId, ct);
+        if (link is null)
+            return Result.Failure(["Vínculo no encontrado."]);
+
+        _context.ProyectoPatentes.Remove(link);
+        await _context.SaveChangesAsync(ct);
+        return Result.Success();
+    }
 
     // ── Generic CRUD helpers ──────────────────────────────────────────────────
 

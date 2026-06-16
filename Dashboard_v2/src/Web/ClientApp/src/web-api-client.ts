@@ -4883,7 +4883,7 @@ export class ProyectosClient {
         return Promise.resolve<void>(null as any);
     }
 
-    getPatentesDelProyecto(id: string): Promise<void> {
+    getPatentesDelProyecto(id: string): Promise<ProyectoPatenteResumenDto[]> {
         let url_ = this.baseUrl + "/api/Proyectos/{id}/patentes";
         if (id === undefined || id === null)
             throw new globalThis.Error("The parameter 'id' must be defined.");
@@ -4893,6 +4893,7 @@ export class ProyectosClient {
         let options_: RequestInit = {
             method: "GET",
             headers: {
+                "Accept": "application/json"
             }
         };
 
@@ -4901,20 +4902,30 @@ export class ProyectosClient {
         });
     }
 
-    protected processGetPatentesDelProyecto(response: Response): Promise<void> {
+    protected processGetPatentesDelProyecto(response: Response): Promise<ProyectoPatenteResumenDto[]> {
         followIfLoginRedirect(response);
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
-            return;
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(ProyectoPatenteResumenDto.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return result200;
             });
         } else if (status !== 200 && status !== 204) {
             return response.text().then((_responseText) => {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<void>(null as any);
+        return Promise.resolve<ProyectoPatenteResumenDto[]>(null as any);
     }
 
     linkPatenteAProyecto(id: string, patenteId: string): Promise<void> {
@@ -4952,6 +4963,13 @@ export class ProyectosClient {
             let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
             result400 = ProblemDetails.fromJS(resultData400);
             return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
             });
         } else if (status === 404) {
             return response.text().then((_responseText) => {
@@ -4996,6 +5014,13 @@ export class ProyectosClient {
         if (status === 204) {
             return response.text().then((_responseText) => {
             return;
+            });
+        } else if (status === 403) {
+            return response.text().then((_responseText) => {
+            let result403: any = null;
+            let resultData403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result403);
             });
         } else if (status === 404) {
             return response.text().then((_responseText) => {
@@ -11699,6 +11724,70 @@ export class ProyectoCatalogoDto implements IProyectoCatalogoDto {
 export interface IProyectoCatalogoDto {
     id?: string;
     titulo?: string;
+}
+
+export class ProyectoPatenteResumenDto implements IProyectoPatenteResumenDto {
+    patenteId?: string;
+    titulo?: string;
+    numeroSolicitudConcesion?: string;
+    esNacional?: boolean;
+    creador?: string | undefined;
+    creadores?: string[];
+
+    constructor(data?: IProyectoPatenteResumenDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.patenteId = _data["patenteId"];
+            this.titulo = _data["titulo"];
+            this.numeroSolicitudConcesion = _data["numeroSolicitudConcesion"];
+            this.esNacional = _data["esNacional"];
+            this.creador = _data["creador"];
+            if (Array.isArray(_data["creadores"])) {
+                this.creadores = [] as any;
+                for (let item of _data["creadores"])
+                    this.creadores!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): ProyectoPatenteResumenDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new ProyectoPatenteResumenDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["patenteId"] = this.patenteId;
+        data["titulo"] = this.titulo;
+        data["numeroSolicitudConcesion"] = this.numeroSolicitudConcesion;
+        data["esNacional"] = this.esNacional;
+        data["creador"] = this.creador;
+        if (Array.isArray(this.creadores)) {
+            data["creadores"] = [];
+            for (let item of this.creadores)
+                data["creadores"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface IProyectoPatenteResumenDto {
+    patenteId?: string;
+    titulo?: string;
+    numeroSolicitudConcesion?: string;
+    esNacional?: boolean;
+    creador?: string | undefined;
+    creadores?: string[];
 }
 
 export class SetParticipantesRequest implements ISetParticipantesRequest {

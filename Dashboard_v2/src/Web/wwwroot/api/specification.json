@@ -3589,7 +3589,17 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProyectoPatenteResumenDto"
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -3625,6 +3635,16 @@
             "description": ""
           },
           "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
             "description": "",
             "content": {
               "application/json": {
@@ -3674,6 +3694,16 @@
         "responses": {
           "204": {
             "description": ""
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
           },
           "404": {
             "description": "",
@@ -7834,6 +7864,34 @@
           },
           "titulo": {
             "type": "string"
+          }
+        }
+      },
+      "ProyectoPatenteResumenDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "patenteId": {
+            "type": "string"
+          },
+          "titulo": {
+            "type": "string"
+          },
+          "numeroSolicitudConcesion": {
+            "type": "string"
+          },
+          "esNacional": {
+            "type": "boolean"
+          },
+          "creador": {
+            "type": "string",
+            "nullable": true
+          },
+          "creadores": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },

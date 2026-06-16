@@ -144,7 +144,10 @@ public static class DependencyInjection
         builder.Services.AddScoped<Dashboard_v2.Application.Users.IUserService, Dashboard_v2.Application.Users.UserService>();
         builder.Services.AddScoped<Dashboard_v2.Application.Authors.IAuthorService, Dashboard_v2.Application.Authors.AuthorService>();
         builder.Services.AddScoped<Dashboard_v2.Application.Roles.IRoleService, Dashboard_v2.Application.Roles.RoleService>();
-        builder.Services.AddScoped<IProyectoService, ProyectoService>();
+        builder.Services.AddScoped<ProyectoService>();
+        builder.Services.AddScoped<IProyectoService>(sp => sp.GetRequiredService<ProyectoService>());
+        builder.Services.AddScoped<Dashboard_v2.Application.Proyectos.IProyectoQueryService>(sp => sp.GetRequiredService<ProyectoService>());
+        builder.Services.AddScoped<Dashboard_v2.Application.Proyectos.IProyectoCommandService>(sp => sp.GetRequiredService<ProyectoService>());
         builder.Services.AddScoped<Dashboard_v2.Application.Redes.IRedService, Dashboard_v2.Application.Redes.RedService>();
         builder.Services.AddScoped<Dashboard_v2.Application.Patentes.IPatenteService, Dashboard_v2.Application.Patentes.PatenteService>();
         builder.Services.AddScoped<Dashboard_v2.Application.Normas.INormaService, Dashboard_v2.Application.Normas.NormaService>();

@@ -1,4 +1,5 @@
 using Dashboard_v2.Application.Awards;
+using RolesEnum = Dashboard_v2.Domain.Enums.Roles;
 
 namespace Dashboard_v2.Web.Endpoints;
 
@@ -26,6 +27,12 @@ public class Awards : EndpointGroupBase
         groupBuilder.MapGet("todas", GetAllAwards)
             .RequireAuthorization(p => p.RequireRole("Superuser"))
             .WithName("GetAllAwards")
+            .Produces<List<AwardWithGrantingsDto>>(200);
+
+        // GET /api/Awards/area — premios del área del Vicedecano
+        groupBuilder.MapGet("area", GetAreaAwards)
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Vicedecano_de_investigacion)))
+            .WithName("GetAreaAwards")
             .Produces<List<AwardWithGrantingsDto>>(200);
 
         // POST /api/Awards
@@ -66,6 +73,12 @@ public class Awards : EndpointGroupBase
     private async Task<IResult> GetAllAwards(IAwardService service)
     {
         var awards = await service.GetAllAwardsAsync();
+        return Results.Ok(awards);
+    }
+
+    private async Task<IResult> GetAreaAwards(IAwardService service)
+    {
+        var awards = await service.GetAreaAwardsAsync();
         return Results.Ok(awards);
     }
 

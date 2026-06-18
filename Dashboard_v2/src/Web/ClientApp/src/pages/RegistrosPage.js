@@ -6,7 +6,6 @@ import {
   Form, FormGroup, Label, Input, InputGroup,
 } from 'reactstrap';
 import { useAuth } from '../contexts/AuthContext';
-import DataTable from '../components/DataTable';
 import FilterableDataTable from '../components/FilterableDataTable';
 import CertificateUpload, { CertificateViewButton } from '../components/CertificateUpload';
 
@@ -225,6 +224,7 @@ export default function RegistrosPage() {
                 render: it => <CertificateViewButton fileId={it.evidenceFileId} /> },
             ]}
             emptyMessage="No hay registros."
+            detailConfig
           />
         </CardBody>
       </Card>

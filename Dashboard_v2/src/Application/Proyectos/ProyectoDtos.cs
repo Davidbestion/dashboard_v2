@@ -5,6 +5,9 @@ namespace Dashboard_v2.Application.Proyectos;
 /// <summary>DTO mínimo para un nomenclador con Id entero.</summary>
 public record NomencladorDto(int Id, string Nombre);
 
+/// <summary>Referencia mínima a un usuario participante en un proyecto.</summary>
+public record UserRefDto(string Id, string NombreCompleto, string Email);
+
 /// <summary>DTO mínimo para una referencia a institución (Id = Guid como string).</summary>
 public record InstitutionRefDto(string Id, string Nombre);
 
@@ -19,8 +22,7 @@ public record ProyectoResumenDto
     public int NumeroMiembros { get; init; }
     public string ClasificacionId { get; init; } = default!;
     public string ClasificacionNombre { get; init; } = default!;
-    public string AreaId { get; init; } = default!;
-    public string AreaNombre { get; init; } = default!;
+    public List<UserRefDto> Participantes { get; init; } = [];
     /// <summary>Slug de URL del tipo: "en-revision", "empresariales", etc.</summary>
     public string Tipo { get; init; } = default!;
     public string? CodigoProyecto { get; init; }
@@ -44,8 +46,7 @@ public abstract record ProyectoBaseDto
     public bool TributaFormacionDoctoral { get; init; }
     public string ClasificacionId { get; init; } = default!;
     public string ClasificacionNombre { get; init; } = default!;
-    public string AreaId { get; init; } = default!;
-    public string AreaNombre { get; init; } = default!;
+    public List<UserRefDto> Participantes { get; init; } = [];
     public List<string> PublicacionesDerivadas { get; init; } = [];
 }
 
@@ -112,3 +113,11 @@ public record ProyectoPublicacionDto
 
 /// <summary>Par mínimo Id/Título para el selector de proyectos en formularios de publicaciones.</summary>
 public record ProyectoCatalogoDto(string Id, string Titulo);
+
+public record ProyectoPatenteResumenDto(
+    string PatenteId,
+    string Titulo,
+    string NumeroSolicitudConcesion,
+    bool EsNacional,
+    string? Creador,
+    List<string> Creadores);

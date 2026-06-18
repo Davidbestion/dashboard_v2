@@ -45,12 +45,10 @@ export default function RedesPublicacionesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Red seleccionada actualmente
   const [selectedRedId, setSelectedRedId] = useState(null);
 
-  // Modal asignar coordinador (solo Jefe_de_Redes)
+  // Modal asignar coordinador
   const [coordModal, setCoordModal] = useState(false);
-  const [coordAreaId, setCoordAreaId] = useState('');
   const [coordUserId, setCoordUserId] = useState('');
   const [coordUserSearch, setCoordUserSearch] = useState('');
   const [coordUserResults, setCoordUserResults] = useState([]);
@@ -68,7 +66,6 @@ export default function RedesPublicacionesPage() {
       ]);
       setRedes(redsData ?? []);
       setPublications(pubsData ?? []);
-      // Auto-seleccionar la primera red al cargar (o mantener la selección si ya hay una)
       setSelectedRedId(prev => prev ?? (redsData?.[0]?.id ?? null));
     } catch (e) {
       setError(e.message);
@@ -79,16 +76,11 @@ export default function RedesPublicacionesPage() {
 
   useEffect(() => { loadData(); }, [loadData]);
 
-  // ── helpers ────────────────────────────────────────────────────────────────
-
   function pubsForRed(redId) {
     return publications.filter(p => p.redId === redId);
   }
 
-  // ── Asignar coordinador (solo Jefe_de_Redes) ───────────────────────────────
-
   function openCoordModal() {
-    setCoordAreaId('');
     setCoordUserId('');
     setCoordUserSearch('');
     setCoordUserResults([]);
@@ -111,11 +103,10 @@ export default function RedesPublicacionesPage() {
   }
 
   async function handleAsignarCoordinador() {
-    if (!coordAreaId) { setCoordError('Seleccione un área.'); return; }
     if (!coordUserId) { setCoordError('Seleccione un usuario coordinador.'); return; }
     setCoordLoading(true); setCoordError(''); setCoordSuccess('');
     try {
-      await apiFetch(`/api/Redes/${selectedRedId}/coordinadores/${coordAreaId}`, {
+      await apiFetch(`/api/Redes/${selectedRedId}/coordinador`, {
         method: 'PUT',
         body: JSON.stringify({ coordinadorId: coordUserId }),
       });
@@ -127,8 +118,6 @@ export default function RedesPublicacionesPage() {
       setCoordLoading(false);
     }
   }
-
-  // ── render helpers ─────────────────────────────────────────────────────────
 
   function authorsList(authors) {
     return (authors ?? []).map((a, i) => (
@@ -144,8 +133,6 @@ export default function RedesPublicacionesPage() {
   const selectedPubs = selectedRed ? pubsForRed(selectedRed.id) : [];
   const tipoColor = TIPO_RED_COLORS[selectedRed?.tipo] ?? 'secondary';
 
-  // ── loading / error ────────────────────────────────────────────────────────
-
   if (loading) {
     return (
       <div className="d-flex justify-content-center mt-5">
@@ -153,8 +140,6 @@ export default function RedesPublicacionesPage() {
       </div>
     );
   }
-
-  // ── main render ────────────────────────────────────────────────────────────
 
   return (
     <>
@@ -164,7 +149,7 @@ export default function RedesPublicacionesPage() {
         </h2>
         <p className="text-muted mb-0">
           {isJefe
-            ? 'Seleccione una red para ver su información, coordinadores y publicaciones.'
+            ? 'Seleccione una red para ver su información, coordinador y publicaciones.'
             : 'Vea la información y publicaciones de la red que coordina.'}
         </p>
       </div>
@@ -177,7 +162,6 @@ export default function RedesPublicacionesPage() {
         </Alert>
       )}
 
-      {/* ── Selector de red ── */}
       {redes.length > 0 && (
         <FormGroup className="mb-4" style={{ maxWidth: 420 }}>
           <Label className="fw-semibold">
@@ -195,7 +179,6 @@ export default function RedesPublicacionesPage() {
         </FormGroup>
       )}
 
-      {/* ── Detalle de la red seleccionada ── */}
       {selectedRed && (
         <Card className="shadow-sm">
           <CardHeader className="d-flex justify-content-between align-items-start gap-2 flex-wrap py-3">
@@ -214,46 +197,37 @@ export default function RedesPublicacionesPage() {
               </span>
             </div>
             {isJefe && (
-              <Button size="sm" color="outline-secondary" onClick={() => openCoordModal()}>
+              <Button size="sm" color="outline-secondary" onClick={openCoordModal}>
                 <i className="bi bi-person-gear me-1" />Asignar coordinador
               </Button>
             )}
           </CardHeader>
 
           <CardBody>
-            {/* Coordinadores por área */}
-            {selectedRed.coordinadores.length > 0 && (
-              <div className="mb-4">
-                <p className="text-muted small fw-semibold mb-2">
-                  <i className="bi bi-diagram-3 me-1" />Coordinadores por área
-                </p>
-                <div className="d-flex flex-wrap gap-2">
-                  {selectedRed.coordinadores.map(c => (
-                    <div
-                      key={c.areaId}
-                      className="border rounded px-3 py-2 bg-light small"
-                      style={{ minWidth: '200px' }}
-                    >
-                      <div className="fw-semibold text-primary">
-                        <i className="bi bi-building me-1" />{c.areaNombre}
-                      </div>
-                      <div className="mt-1">
-                        <i className="bi bi-person me-1 text-secondary" />
-                        {c.coordinadorNombre || <span className="text-muted fst-italic">Sin asignar</span>}
-                      </div>
-                      {c.coordinadorEmail && (
-                        <div className="text-muted mt-1">
-                          <i className="bi bi-envelope me-1" />
-                          <a href={`mailto:${c.coordinadorEmail}`} className="text-muted">
-                            {c.coordinadorEmail}
-                          </a>
-                        </div>
-                      )}
+            {/* Coordinador */}
+            <div className="mb-4">
+              <p className="text-muted small fw-semibold mb-1">
+                <i className="bi bi-person-badge me-1" />Coordinador
+              </p>
+              {selectedRed.coordinadorNombre
+                ? (
+                  <div className="border rounded px-3 py-2 bg-light small" style={{ maxWidth: 320 }}>
+                    <div className="fw-semibold text-primary">
+                      <i className="bi bi-person me-1" />{selectedRed.coordinadorNombre}
                     </div>
-                  ))}
-                </div>
-              </div>
-            )}
+                    {selectedRed.coordinadorEmail && (
+                      <div className="text-muted mt-1">
+                        <i className="bi bi-envelope me-1" />
+                        <a href={`mailto:${selectedRed.coordinadorEmail}`} className="text-muted">
+                          {selectedRed.coordinadorEmail}
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                )
+                : <span className="text-muted small fst-italic">Sin coordinador asignado.</span>
+              }
+            </div>
 
             {/* Publicaciones */}
             <div className="mb-2">
@@ -303,7 +277,7 @@ export default function RedesPublicacionesPage() {
         </Card>
       )}
 
-      {/* ── Modal asignar coordinador (solo Jefe_de_Redes) ── */}
+      {/* Modal asignar coordinador */}
       {isJefe && (
         <Modal isOpen={coordModal} toggle={() => setCoordModal(false)}>
           <ModalHeader toggle={() => setCoordModal(false)}>
@@ -312,23 +286,6 @@ export default function RedesPublicacionesPage() {
           <ModalBody>
             {coordError && <Alert color="danger">{coordError}</Alert>}
             {coordSuccess && <Alert color="success">{coordSuccess}</Alert>}
-
-            <FormGroup>
-              <Label>Área *</Label>
-              <Input
-                type="select"
-                value={coordAreaId}
-                onChange={e => setCoordAreaId(e.target.value)}
-              >
-                <option value="">— Selecciona un área —</option>
-                {(selectedRed?.coordinadores ?? []).map(c => (
-                  <option key={c.areaId} value={c.areaId}>{c.areaNombre}</option>
-                ))}
-              </Input>
-              <small className="text-muted">
-                Solo se muestran las áreas ya vinculadas a esta red.
-              </small>
-            </FormGroup>
 
             <FormGroup>
               <Label>Buscar usuario coordinador *</Label>

@@ -9,8 +9,8 @@ using Shouldly;
 namespace Dashboard_v2.Application.UnitTests.Redes;
 
 /// <summary>
-/// Verifica que la configuración EF Core de Red y RedCoordinada
-/// (RedConfiguration / RedCoordinadaConfiguration) define correctamente
+/// Verifica que la configuración EF Core de Red y ParticipacionEnRed
+/// (RedConfiguration / ParticipacionEnRedConfiguration) define correctamente
 /// las propiedades, restricciones y relaciones del modelo.
 /// </summary>
 public class RedEfConfigurationTests
@@ -84,6 +84,24 @@ public class RedEfConfigurationTests
     }
 
     [Test]
+    public void Red_CoordinadorId_IsNullable()
+    {
+        var et = _model.FindEntityType(typeof(Red))!;
+        var prop = et.FindProperty(nameof(Red.CoordinadorId))!;
+
+        prop.IsNullable.ShouldBeTrue();
+    }
+
+    [Test]
+    public void Red_CoordinadorId_HasMaxLength450()
+    {
+        var et = _model.FindEntityType(typeof(Red))!;
+        var prop = et.FindProperty(nameof(Red.CoordinadorId))!;
+
+        prop.GetMaxLength().ShouldBe(450);
+    }
+
+    [Test]
     public void Red_Tipo_ExistsInModel()
     {
         var et = _model.FindEntityType(typeof(Red))!;
@@ -116,6 +134,27 @@ public class RedEfConfigurationTests
     }
 
     [Test]
+    public void Red_Coordinador_ForeignKey_IsCoordinadorId()
+    {
+        var et = _model.FindEntityType(typeof(Red))!;
+        var fk = et.GetForeignKeys()
+            .SingleOrDefault(f => f.PrincipalEntityType.ClrType == typeof(User));
+
+        fk.ShouldNotBeNull();
+        fk!.Properties.Single().Name.ShouldBe(nameof(Red.CoordinadorId));
+    }
+
+    [Test]
+    public void Red_Coordinador_DeleteBehavior_IsSetNull()
+    {
+        var et = _model.FindEntityType(typeof(Red))!;
+        var fk = et.GetForeignKeys()
+            .Single(f => f.PrincipalEntityType.ClrType == typeof(User));
+
+        fk.DeleteBehavior.ShouldBe(DeleteBehavior.SetNull);
+    }
+
+    [Test]
     public void Red_Events_Relationship_IsOneToMany()
     {
         var et = _model.FindEntityType(typeof(Red))!;
@@ -137,108 +176,74 @@ public class RedEfConfigurationTests
     }
 
     [Test]
-    public void Red_Usuarios_Relationship_IsSkipNavigation()
+    public void Red_Participaciones_Relationship_IsCollectionNavigation()
     {
         var et = _model.FindEntityType(typeof(Red))!;
-        var nav = et.GetSkipNavigations().SingleOrDefault(n => n.Name == nameof(Red.Usuarios));
+        var nav = et.GetNavigations().SingleOrDefault(n => n.Name == nameof(Red.Participaciones));
 
         nav.ShouldNotBeNull();
         nav!.IsCollection.ShouldBeTrue();
     }
 
-    [Test]
-    public void Red_RedesCoordinadas_Relationship_IsCollectionNavigation()
-    {
-        var et = _model.FindEntityType(typeof(Red))!;
-        var nav = et.GetNavigations().SingleOrDefault(n => n.Name == nameof(Red.RedesCoordinadas));
-
-        nav.ShouldNotBeNull();
-        nav!.IsCollection.ShouldBeTrue();
-    }
-
-    // ── RedCoordinada: tabla y clave ─────────────────────────────────────────
+    // ── ParticipacionEnRed: tabla y clave ────────────────────────────────────
 
     [Test]
-    public void RedCoordinada_TableName_IsRedesCoordinadas()
+    public void ParticipacionEnRed_TableName_IsParticipacionesEnRed()
     {
-        var et = _model.FindEntityType(typeof(RedCoordinada))!;
+        var et = _model.FindEntityType(typeof(ParticipacionEnRed))!;
 
-        et.GetTableName().ShouldBe("RedesCoordinadas");
+        et.GetTableName().ShouldBe("ParticipacionesEnRed");
     }
 
     [Test]
-    public void RedCoordinada_PrimaryKey_IsId()
+    public void ParticipacionEnRed_PrimaryKey_IsComposite_RedId_AuthorId()
     {
-        var et = _model.FindEntityType(typeof(RedCoordinada))!;
+        var et = _model.FindEntityType(typeof(ParticipacionEnRed))!;
         var pk = et.FindPrimaryKey()!;
+        var names = pk.Properties.Select(p => p.Name).ToList();
 
-        pk.Properties.Single().Name.ShouldBe(nameof(RedCoordinada.Id));
+        names.ShouldContain(nameof(ParticipacionEnRed.RedId));
+        names.ShouldContain(nameof(ParticipacionEnRed.AuthorId));
+        pk.Properties.Count.ShouldBe(2);
     }
 
-    // ── RedCoordinada: propiedades ───────────────────────────────────────────
+    // ── ParticipacionEnRed: propiedades ──────────────────────────────────────
 
     [Test]
-    public void RedCoordinada_Id_HasMaxLength450()
+    public void ParticipacionEnRed_RedId_HasMaxLength450()
     {
-        var et = _model.FindEntityType(typeof(RedCoordinada))!;
-        var prop = et.FindProperty(nameof(RedCoordinada.Id))!;
+        var et = _model.FindEntityType(typeof(ParticipacionEnRed))!;
+        var prop = et.FindProperty(nameof(ParticipacionEnRed.RedId))!;
 
         prop.GetMaxLength().ShouldBe(450);
     }
 
     [Test]
-    public void RedCoordinada_RedId_IsRequired()
+    public void ParticipacionEnRed_AuthorId_HasMaxLength450()
     {
-        var et = _model.FindEntityType(typeof(RedCoordinada))!;
-        var prop = et.FindProperty(nameof(RedCoordinada.RedId))!;
-
-        prop.IsNullable.ShouldBeFalse();
-    }
-
-    [Test]
-    public void RedCoordinada_RedId_HasMaxLength450()
-    {
-        var et = _model.FindEntityType(typeof(RedCoordinada))!;
-        var prop = et.FindProperty(nameof(RedCoordinada.RedId))!;
+        var et = _model.FindEntityType(typeof(ParticipacionEnRed))!;
+        var prop = et.FindProperty(nameof(ParticipacionEnRed.AuthorId))!;
 
         prop.GetMaxLength().ShouldBe(450);
     }
 
-    [Test]
-    public void RedCoordinada_AreaId_IsRequired()
-    {
-        var et = _model.FindEntityType(typeof(RedCoordinada))!;
-        var prop = et.FindProperty(nameof(RedCoordinada.AreaId))!;
-
-        prop.IsNullable.ShouldBeFalse();
-    }
+    // ── ParticipacionEnRed: relaciones ───────────────────────────────────────
 
     [Test]
-    public void RedCoordinada_CoordinadorId_IsRequired()
+    public void ParticipacionEnRed_Red_ForeignKey_IsRedId()
     {
-        var et = _model.FindEntityType(typeof(RedCoordinada))!;
-        var prop = et.FindProperty(nameof(RedCoordinada.CoordinadorId))!;
-
-        prop.IsNullable.ShouldBeFalse();
-    }
-
-    // ── RedCoordinada: relaciones ────────────────────────────────────────────
-
-    [Test]
-    public void RedCoordinada_Red_ForeignKey_IsRedId()
-    {
-        var et = _model.FindEntityType(typeof(RedCoordinada))!;
+        var et = _model.FindEntityType(typeof(ParticipacionEnRed))!;
         var fk = et.GetForeignKeys()
             .SingleOrDefault(f => f.PrincipalEntityType.ClrType == typeof(Red));
 
         fk.ShouldNotBeNull();
-        fk!.Properties.Single().Name.ShouldBe(nameof(RedCoordinada.RedId));
+        fk!.Properties.Single().Name.ShouldBe(nameof(ParticipacionEnRed.RedId));
     }
 
     [Test]
-    public void RedCoordinada_Red_DeleteBehavior_IsCascade()
+    public void ParticipacionEnRed_Red_DeleteBehavior_IsCascade()
     {
-        var et = _model.FindEntityType(typeof(RedCoordinada))!;
+        var et = _model.FindEntityType(typeof(ParticipacionEnRed))!;
         var fk = et.GetForeignKeys()
             .Single(f => f.PrincipalEntityType.ClrType == typeof(Red));
 
@@ -246,25 +251,23 @@ public class RedEfConfigurationTests
     }
 
     [Test]
-    public void RedCoordinada_Coordinador_DeleteBehavior_IsRestrict()
+    public void ParticipacionEnRed_Author_ForeignKey_IsAuthorId()
     {
-        var et = _model.FindEntityType(typeof(RedCoordinada))!;
+        var et = _model.FindEntityType(typeof(ParticipacionEnRed))!;
         var fk = et.GetForeignKeys()
-            .Single(f => f.PrincipalEntityType.ClrType == typeof(User));
+            .SingleOrDefault(f => f.PrincipalEntityType.ClrType == typeof(Author));
 
-        fk.DeleteBehavior.ShouldBe(DeleteBehavior.Restrict);
+        fk.ShouldNotBeNull();
+        fk!.Properties.Single().Name.ShouldBe(nameof(ParticipacionEnRed.AuthorId));
     }
 
     [Test]
-    public void RedCoordinada_HasUniqueIndex_OnRedIdAndAreaId()
+    public void ParticipacionEnRed_Author_DeleteBehavior_IsCascade()
     {
-        var et = _model.FindEntityType(typeof(RedCoordinada))!;
-        var uniqueIndex = et.GetIndexes()
-            .SingleOrDefault(ix => ix.IsUnique &&
-                ix.Properties.Count == 2 &&
-                ix.Properties.Any(p => p.Name == nameof(RedCoordinada.RedId)) &&
-                ix.Properties.Any(p => p.Name == nameof(RedCoordinada.AreaId)));
+        var et = _model.FindEntityType(typeof(ParticipacionEnRed))!;
+        var fk = et.GetForeignKeys()
+            .Single(f => f.PrincipalEntityType.ClrType == typeof(Author));
 
-        uniqueIndex.ShouldNotBeNull();
+        fk.DeleteBehavior.ShouldBe(DeleteBehavior.Cascade);
     }
 }

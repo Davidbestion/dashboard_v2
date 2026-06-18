@@ -9,7 +9,6 @@ import {
   Form, FormGroup, Label, Input, InputGroup,
 } from 'reactstrap';
 import { useAuth } from '../contexts/AuthContext';
-import DataTable from '../components/DataTable';
 import FilterableDataTable from '../components/FilterableDataTable';
 import CertificateUpload, { CertificateViewButton } from '../components/CertificateUpload';
 import UserPicker from '../components/UserPicker';
@@ -126,11 +125,15 @@ export default function EventsPage() {
   }, []);
 
   const loadPresentations = useCallback(async () => {
-    if (isVicedecano) { setPresLoading(false); return; }
     setPresLoading(true);
     setPresError('');
     try {
-      setPresentations(await apiFetch(isSuperuser ? '/api/Presentations/all' : '/api/Presentations'));
+      const url = isSuperuser
+        ? '/api/Presentations/all'
+        : isVicedecano
+          ? '/api/Presentations/area'
+          : '/api/Presentations';
+      setPresentations(await apiFetch(url));
     } catch (e) {
       setPresError(e.message);
     } finally {
@@ -413,18 +416,20 @@ export default function EventsPage() {
       <Card>
         <CardHeader>
           <Nav tabs className="card-header-tabs">
-            {!isVicedecano && (
-              <NavItem>
-                <RNavLink
-                  active={activeTab === 'presentations'}
-                  onClick={() => setActiveTab('presentations')}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <i className="bi bi-mic me-1" />
-                  {isSuperuser ? 'Presentaciones registradas' : 'Mis presentaciones'}
-                </RNavLink>
-              </NavItem>
-            )}
+            <NavItem>
+              <RNavLink
+                active={activeTab === 'presentations'}
+                onClick={() => setActiveTab('presentations')}
+                style={{ cursor: 'pointer' }}
+              >
+                <i className="bi bi-mic me-1" />
+                {isSuperuser
+                  ? 'Presentaciones registradas'
+                  : isVicedecano
+                    ? 'Presentaciones del Área'
+                    : 'Mis presentaciones'}
+              </RNavLink>
+            </NavItem>
             <NavItem>
               <RNavLink
                 active={activeTab === 'events'}
@@ -452,12 +457,14 @@ export default function EventsPage() {
 
             {/* ── PRESENTATIONS TAB ── */}
             <TabPane tabId="presentations">
-              <div className="d-flex justify-content-end mb-3">
-                <Button color="primary" size="sm" onClick={openCreatePres}>
-                  <i className="bi bi-plus-lg me-1" />
-                  Nueva presentación
-                </Button>
-              </div>
+              {!isVicedecano && (
+                <div className="d-flex justify-content-end mb-3">
+                  <Button color="primary" size="sm" onClick={openCreatePres}>
+                    <i className="bi bi-plus-lg me-1" />
+                    Nueva presentación
+                  </Button>
+                </div>
+              )}
 
               {presLoading && <div className="text-center py-4"><Spinner color="primary" /></div>}
               {!presLoading && presError && <Alert color="danger">{presError}</Alert>}
@@ -488,11 +495,16 @@ export default function EventsPage() {
                   ]}
                   data={presentations}
                   keyExtractor={p => p.id}
-                  actions={[
+                  actions={isVicedecano ? [] : [
                     { key: 'edit',   label: 'Editar',   icon: 'bi-pencil', color: 'outline-secondary', onClick: p => openEditPres(p) },
                     { key: 'delete', label: 'Eliminar', icon: 'bi-trash',  color: 'outline-danger',    onClick: p => { setPresToDelete(p); setPresDeleteError(''); setPresDeleteModal(true); } },
                   ]}
-                  emptyMessage={isSuperuser ? 'No hay presentaciones registradas.' : 'No tienes presentaciones registradas.'}
+                  emptyMessage={
+                    isSuperuser ? 'No hay presentaciones registradas.'
+                    : isVicedecano ? 'No hay presentaciones registradas en el área.'
+                    : 'No tienes presentaciones registradas.'
+                  }
+                  detailConfig
                 />
               )}
             </TabPane>
@@ -548,6 +560,7 @@ export default function EventsPage() {
                       render: ev => <CertificateViewButton fileId={ev.evidenceFileId} /> },
                   ]}
                   emptyMessage={isManager ? 'No hay eventos registrados.' : 'No participas en ningún evento aún.'}
+                  detailConfig
                 />
               )}
             </TabPane>

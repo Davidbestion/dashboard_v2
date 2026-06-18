@@ -21,13 +21,23 @@ public sealed class EventService : IEventService
     public async Task<List<EventDto>> GetMyEventsAsync(CancellationToken ct = default)
     {
         if (IsSuperuser) return await GetAllEventsAsync(ct);
+        return await QueryEventsAsync(EventScope.ForUser(_currentUser.Id ?? string.Empty), ct);
+    }
 
-        var userId = _currentUser.Id;
+    public Task<List<EventDto>> GetAllEventsAsync(CancellationToken ct = default)
+        => QueryEventsAsync(EventScope.All, ct);
 
-        var rawEvents = await _context.Events
-            .AsNoTracking()
-            .Where(e => e.Participaciones.Any(p => p.UserId == userId)
-                     || e.Organizadores.Any(o => o.UserId == userId))
+    public async Task<List<EventDto>> GetAreaEventsAsync(CancellationToken ct = default)
+    {
+        var areaId = await _context.GetUserAreaIdAsync(_currentUser.Id, ct) ?? string.Empty;
+        return await QueryEventsAsync(EventScope.ForArea(areaId), ct);
+    }
+
+    /// <summary>Aplica el alcance dado, proyecta a <see cref="EventDto"/> y completa el conteo de ponencias.</summary>
+    private async Task<List<EventDto>> QueryEventsAsync(EventScope scope, CancellationToken ct)
+    {
+        var rawEvents = await scope.Apply(_context.Events.AsNoTracking())
+            .OrderBy(e => e.Name)
             .Select(e => new
             {
                 e.Id, e.Name, e.CountryId,
@@ -40,7 +50,6 @@ public sealed class EventService : IEventService
                 OrganizadorIds = e.Organizadores.Select(o => o.UserId).ToList(),
                 e.EvidenceFileId,
             })
-            .OrderBy(e => e.Name)
             .ToListAsync(ct);
 
         var counts = await GetPresentationCountsAsync(rawEvents.Select(e => e.Id), ct);
@@ -62,42 +71,35 @@ public sealed class EventService : IEventService
         }).ToList();
     }
 
-    public async Task<List<EventDto>> GetAllEventsAsync(CancellationToken ct = default)
+    /// <summary>
+    /// Alcance de visibilidad para el listado de eventos: todos, por usuario
+    /// (participante u organizador) o por área académica.
+    /// </summary>
+    private sealed class EventScope
     {
-        var rawEvents = await _context.Events
-            .AsNoTracking()
-            .OrderBy(e => e.Name)
-            .Select(e => new
-            {
-                e.Id, e.Name, e.CountryId,
-                CountryName = e.Country.Name,
-                e.EventTypeId,
-                EventTypeName = e.EventType.Name,
-                Institutions = e.Institutions.Select(i => i.Nombre).ToList(),
-                e.RedId,
-                RedName = e.Red != null ? e.Red.Nombre : null,
-                OrganizadorIds = e.Organizadores.Select(o => o.UserId).ToList(),
-                e.EvidenceFileId,
-            })
-            .ToListAsync(ct);
+        private readonly string? _userId;
+        private readonly string? _areaId;
 
-        var counts = await GetPresentationCountsAsync(rawEvents.Select(e => e.Id), ct);
-
-        return rawEvents.Select(e => new EventDto
+        private EventScope(string? userId, string? areaId)
         {
-            Id = e.Id,
-            Name = e.Name,
-            CountryId = e.CountryId,
-            CountryName = e.CountryName,
-            EventTypeId = e.EventTypeId,
-            EventTypeName = e.EventTypeName,
-            Institutions = e.Institutions,
-            PresentationCount = counts.GetValueOrDefault(e.Id, 0),
-            RedId = e.RedId,
-            RedName = e.RedName,
-            OrganizadorIds = e.OrganizadorIds,
-            EvidenceFileId = e.EvidenceFileId,
-        }).ToList();
+            _userId = userId;
+            _areaId = areaId;
+        }
+
+        public static EventScope All { get; } = new(null, null);
+        public static EventScope ForUser(string userId) => new(userId, null);
+        public static EventScope ForArea(string areaId) => new(null, areaId);
+
+        public IQueryable<Event> Apply(IQueryable<Event> source)
+        {
+            if (_userId != null)
+                return source.Where(e => e.Participaciones.Any(p => p.UserId == _userId)
+                                       || e.Organizadores.Any(o => o.UserId == _userId));
+            if (_areaId != null)
+                return source.Where(e => e.Organizadores.Any(o => o.User != null && o.User.AreaId == _areaId)
+                                       || e.Participaciones.Any(p => p.User != null && p.User.AreaId == _areaId));
+            return source;
+        }
     }
 
     public Task<List<CountryDto>> GetCountriesAsync(CancellationToken ct = default)
@@ -332,6 +334,44 @@ public sealed class EventService : IEventService
             .OrderBy(p => p.EventName)
             .ThenBy(p => p.Name)
             .ToListAsync(ct);
+
+    public async Task<List<PresentationDto>> GetAreaPresentationsAsync(CancellationToken ct = default)
+    {
+        var areaId = await _context.GetUserAreaIdAsync(_currentUser.Id, ct) ?? string.Empty;
+        return await _context.Presentations
+            .AsNoTracking()
+            .Where(p => p.Event.Organizadores.Any(o => o.User != null && o.User.AreaId == areaId)
+                     || p.Event.Participaciones.Any(part => part.User != null && part.User.AreaId == areaId))
+            .Select(p => new PresentationDto
+            {
+                Id = p.Id,
+                Name = p.Name,
+                EventId = p.EventId,
+                EventName = p.Event.Name,
+                Fecha = p.Fecha,
+                UserId = p.UserId,
+                User = new LinkedUserSummaryDto
+                {
+                    Id = p.User.Id,
+                    UserName = p.User.UserName,
+                    UserLastName1 = p.User.UserLastName1,
+                    UserLastName2 = p.User.UserLastName2,
+                    Email = p.User.Email,
+                    IsTrained = p.User.IsTrained,
+                    ScientificCategory = (int)p.User.ScientificCategory,
+                    TeachingCategory = (int)p.User.TeachingCategory,
+                    InvestigationCategory = (int)p.User.InvestigationCategory,
+                    AreaId = p.User.AreaId,
+                    AreaNombre = p.User.Area != null ? p.User.Area.Nombre : null,
+                    UniversidadId = p.User.Area != null ? p.User.Area.UniversidadId : null,
+                    UniversidadNombre = p.User.Area != null && p.User.Area.Universidad != null
+                        ? p.User.Area.Universidad.Nombre : null,
+                },
+            })
+            .OrderBy(p => p.EventName)
+            .ThenBy(p => p.Name)
+            .ToListAsync(ct);
+    }
 
     public async Task<(Result Result, int? PresentationId)> CreatePresentationAsync(CreatePresentationRequest request, CancellationToken ct = default)
     {

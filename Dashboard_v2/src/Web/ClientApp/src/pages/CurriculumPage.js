@@ -76,7 +76,7 @@ export default function CurriculumPage() {
       setLoading(true);
       setError('');
       try {
-        const [pubs, pres, events, grupos, rawAwards, lineas, areas] = await Promise.all([
+        const [pubs, pres, events, grupos, rawAwards, lineas, areas, proyectos] = await Promise.all([
           silentFetch('/api/Publications'),
           silentFetch('/api/Presentations'),
           silentFetch('/api/Events'),
@@ -84,6 +84,7 @@ export default function CurriculumPage() {
           silentFetch('/api/Awards'),
           silentFetch('/api/LineasDeInvestigacion'),
           silentFetch('/api/Areas'),
+          silentFetch('/api/Proyectos/participacion'),
         ]);
 
         // /api/Awards returns AwardWithGrantingsDto[]
@@ -104,13 +105,14 @@ export default function CurriculumPage() {
           : null;
 
         setCv({
-          pubs:     pubs     ?? [],
-          pres:     pres     ?? [],
-          events:   events   ?? [],
-          grupos:   grupos   ?? [],
+          pubs:      pubs      ?? [],
+          pres:      pres      ?? [],
+          events:    events    ?? [],
+          grupos:    grupos    ?? [],
           awards,
-          lineas:   lineas   ?? [],
+          lineas:    lineas    ?? [],
           areaInfo,
+          proyectos: proyectos ?? [],
         });
       } catch (e) {
         setError(e.message);
@@ -130,7 +132,7 @@ export default function CurriculumPage() {
   }
   if (error) return <Alert color="danger">{error}</Alert>;
 
-  const { pubs, pres, events, grupos, awards, lineas, areaInfo } = cv;
+  const { pubs, pres, events, grupos, awards, lineas, areaInfo, proyectos } = cv;
 
   // Líneas index for name lookup  (API returns objects with id + nombre)
   const lineasById = Object.fromEntries(
@@ -449,6 +451,31 @@ export default function CurriculumPage() {
                 </li>
               );
             })}
+          </ul>
+        </CvSection>
+
+        {/* ── Proyectos de Investigación ───────────────────────────── */}
+        <CvSection
+          title="Proyectos de Investigación"
+          icon="bi-kanban"
+          empty={proyectos.length === 0}
+          emptyMsg="No se han registrado participaciones en proyectos."
+        >
+          <ul className="cv-list">
+            {proyectos.map((p, i) => (
+              <li key={p.id ?? i} className="cv-list__item">
+                <span className="cv-item__title">{p.titulo}</span>
+                {p.clasificacionNombre && (
+                  <span className="cv-item__meta"> — {p.clasificacionNombre}</span>
+                )}
+                {p.codigoProyecto && (
+                  <span className="cv-item__meta"> ({p.codigoProyecto})</span>
+                )}
+                {p.jefe && (
+                  <div className="cv-item__sub">Jefe: {p.jefe}</div>
+                )}
+              </li>
+            ))}
           </ul>
         </CvSection>
 

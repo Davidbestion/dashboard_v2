@@ -7,7 +7,6 @@ public interface IApplicationDbContext
 {
     DbSet<User> Users { get; }
     DbSet<UserRole> UserRoles { get; }
-    DbSet<Resource> Resources { get; }
     DbSet<Publication> Publications { get; }
     DbSet<Author> Authors { get; }
     DbSet<AuthorPublication> AuthorPublications { get; }
@@ -38,7 +37,7 @@ public interface IApplicationDbContext
     DbSet<Norma> Normas { get; }
     DbSet<TipoNorma> TiposNorma { get; }
     DbSet<Red> Reds { get; }
-    DbSet<RedCoordinada> RedesCoordinadas { get; }
+    DbSet<ParticipacionEnRed> ParticipacionesEnRed { get; }
     DbSet<TipoProductoComercializado> TipoProductosComercializados { get; }
     DbSet<ProductoComercializado> ProductosComercializados { get; }
     DbSet<Patente> Patentes { get; }

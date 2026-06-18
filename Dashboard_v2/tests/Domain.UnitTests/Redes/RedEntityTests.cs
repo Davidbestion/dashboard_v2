@@ -42,6 +42,14 @@ public class RedEntityTests
     }
 
     [Test]
+    public void Red_DefaultCoordinadorId_IsNull()
+    {
+        var red = new Red { Nombre = "Test" };
+
+        red.CoordinadorId.ShouldBeNull();
+    }
+
+    [Test]
     public void Red_DefaultEvents_IsEmptyCollection()
     {
         var red = new Red { Nombre = "Test" };
@@ -51,21 +59,12 @@ public class RedEntityTests
     }
 
     [Test]
-    public void Red_DefaultUsuarios_IsEmptyCollection()
+    public void Red_DefaultParticipaciones_IsEmptyCollection()
     {
         var red = new Red { Nombre = "Test" };
 
-        red.Usuarios.ShouldNotBeNull();
-        red.Usuarios.ShouldBeEmpty();
-    }
-
-    [Test]
-    public void Red_DefaultRedesCoordinadas_IsEmptyCollection()
-    {
-        var red = new Red { Nombre = "Test" };
-
-        red.RedesCoordinadas.ShouldNotBeNull();
-        red.RedesCoordinadas.ShouldBeEmpty();
+        red.Participaciones.ShouldNotBeNull();
+        red.Participaciones.ShouldBeEmpty();
     }
 
     // ── Red: asignación de propiedades ───────────────────────────────────────
@@ -99,6 +98,7 @@ public class RedEntityTests
             Tipo = TipoRed.Nacional,
             CountryId = 5,
             CantidadProfesores = 42,
+            CoordinadorId = "user-001",
         };
 
         red.Id.ShouldBe("fixed-id");
@@ -106,39 +106,21 @@ public class RedEntityTests
         red.Tipo.ShouldBe(TipoRed.Nacional);
         red.CountryId.ShouldBe(5);
         red.CantidadProfesores.ShouldBe(42);
+        red.CoordinadorId.ShouldBe("user-001");
     }
 
-    // ── RedCoordinada: valores por defecto ───────────────────────────────────
+    // ── ParticipacionEnRed ───────────────────────────────────────────────────
 
     [Test]
-    public void RedCoordinada_DefaultId_IsValidGuid()
+    public void ParticipacionEnRed_CanAssignForeignKeys()
     {
-        var rc = new RedCoordinada { RedId = "r1", AreaId = "a1", CoordinadorId = "u1" };
-
-        Guid.TryParse(rc.Id, out _).ShouldBeTrue();
-    }
-
-    [Test]
-    public void RedCoordinada_EachInstance_GetsUniqueId()
-    {
-        var rc1 = new RedCoordinada { RedId = "r1", AreaId = "a1", CoordinadorId = "u1" };
-        var rc2 = new RedCoordinada { RedId = "r1", AreaId = "a2", CoordinadorId = "u1" };
-
-        rc1.Id.ShouldNotBe(rc2.Id);
-    }
-
-    [Test]
-    public void RedCoordinada_CanAssignAllForeignKeys()
-    {
-        var rc = new RedCoordinada
+        var p = new ParticipacionEnRed
         {
             RedId = "red-001",
-            AreaId = "area-001",
-            CoordinadorId = "user-001",
+            AuthorId = "author-001",
         };
 
-        rc.RedId.ShouldBe("red-001");
-        rc.AreaId.ShouldBe("area-001");
-        rc.CoordinadorId.ShouldBe("user-001");
+        p.RedId.ShouldBe("red-001");
+        p.AuthorId.ShouldBe("author-001");
     }
 }

@@ -87,18 +87,39 @@ public class ProyectoServiceCrudTests
         return inst.Id;
     }
 
+    /// <summary>Seeds a plain User suitable as participante and returns its Id.</summary>
+    private static string SeedParticipante(ApplicationDbContext db, string id, string nombre = "Participante")
+    {
+        var user = new User
+        {
+            Id = id,
+            UserName = nombre,
+            UserLastName1 = "Test",
+            Email = $"{id}@uh.cu",
+            PasswordHash = "hash",
+            IsActive = true,
+            BirthDate = DateTime.UtcNow,
+            CreatedAt = DateTimeOffset.UtcNow
+        };
+        db.Users.Add(user);
+        db.SaveChanges();
+        return user.Id;
+    }
+
     private static ProyectoEmpresarialUpsertRequest BuildEmpresarialRequest(
-        string clasificId, string areaId, string jefeId, IList<string>? empresasIds = null) => new()
+        string clasificId, string jefeId,
+        IList<string>? empresasIds = null,
+        IList<string>? participantesIds = null) => new()
     {
         Titulo = "Proyecto Empresarial Test",
         JefeId = jefeId,
         ClasificacionId = clasificId,
-        AreaId = areaId,
         NumeroMiembros = 5,
         CantidadMiembrosUH = 3,
         FechaInicio = DateOnly.FromDateTime(DateTime.Today),
         CodigoProyecto = "PE-001",
-        EmpresasIds = empresasIds ?? []
+        EmpresasIds = empresasIds ?? [],
+        ParticipantesIds = participantesIds ?? []
     };
 
     // ── CreateEmpresarialAsync ────────────────────────────────────────────────
@@ -107,11 +128,11 @@ public class ProyectoServiceCrudTests
     public async Task CreateEmpresarialAsync_Superuser_Succeeds()
     {
         await using var db = CreateDb();
-        var (areaId, clasificId, jefeId) = SeedBase(db);
+        var (_, clasificId, jefeId) = SeedBase(db);
         var instId = SeedInstitution(db);
 
         var service = BuildService(db, MakeSuperuser());
-        var request = BuildEmpresarialRequest(clasificId, areaId, jefeId, [instId]);
+        var request = BuildEmpresarialRequest(clasificId, jefeId, [instId]);
 
         var (result, id) = await service.CreateEmpresarialAsync(request);
 
@@ -129,22 +150,28 @@ public class ProyectoServiceCrudTests
     }
 
     [Test]
-    public async Task CreateEmpresarialAsync_JefeDeProyecto_UsesOwnArea()
+    public async Task CreateEmpresarialAsync_WithParticipantes_AssignsCorrectly()
     {
         await using var db = CreateDb();
-        var (areaId, clasificId, jefeId) = SeedBase(db);
-        db.Areas.Add(new Area { Id = "area-2", Nombre = "FIS", Descripcion = "d", UniversidadId = "uh" });
-        await db.SaveChangesAsync();
+        var (_, clasificId, jefeId) = SeedBase(db);
+        var instId = SeedInstitution(db);
+        var part1 = SeedParticipante(db, "part-1", "Ana");
+        var part2 = SeedParticipante(db, "part-2", "Luis");
 
-        var service = BuildService(db, MakeJefe(jefeId));
-        var request = BuildEmpresarialRequest(clasificId, "area-2", jefeId);
+        var service = BuildService(db, MakeSuperuser());
+        var request = BuildEmpresarialRequest(clasificId, jefeId, [instId], [part1, part2]);
 
         var (result, id) = await service.CreateEmpresarialAsync(request);
 
         result.Succeeded.ShouldBeTrue();
         var created = await db.Proyectos.OfType<ProyectoEmpresarial>()
+            .Include(p => p.Participantes)
             .FirstOrDefaultAsync(p => p.Id == id);
-        created!.AreaId.ShouldBe(areaId, "Jefe's project must use their own area");
+        created.ShouldNotBeNull();
+        created!.Participantes.Count.ShouldBe(3); // jefe + part1 + part2
+        created.Participantes.ShouldContain(u => u.Id == jefeId);
+        created.Participantes.ShouldContain(u => u.Id == part1);
+        created.Participantes.ShouldContain(u => u.Id == part2);
     }
 
     // ── UpdateEmpresarialAsync ────────────────────────────────────────────────
@@ -153,13 +180,13 @@ public class ProyectoServiceCrudTests
     public async Task UpdateEmpresarialAsync_JefeOwner_Succeeds()
     {
         await using var db = CreateDb();
-        var (areaId, clasificId, jefeId) = SeedBase(db);
+        var (_, clasificId, jefeId) = SeedBase(db);
         var instId1 = SeedInstitution(db, "Primera Empresa");
         var instId2 = SeedInstitution(db, "Nueva Empresa");
 
         var service = BuildService(db, MakeJefe(jefeId));
         var (createResult, id) = await service.CreateEmpresarialAsync(
-            BuildEmpresarialRequest(clasificId, areaId, jefeId, [instId1]));
+            BuildEmpresarialRequest(clasificId, jefeId, [instId1]));
         createResult.Succeeded.ShouldBeTrue();
 
         var updateRequest = new ProyectoEmpresarialUpsertRequest
@@ -167,7 +194,6 @@ public class ProyectoServiceCrudTests
             Titulo = "Titulo Actualizado",
             JefeId = jefeId,
             ClasificacionId = clasificId,
-            AreaId = areaId,
             NumeroMiembros = 7,
             CantidadMiembrosUH = 4,
             FechaInicio = DateOnly.FromDateTime(DateTime.Today),
@@ -184,6 +210,44 @@ public class ProyectoServiceCrudTests
         updated!.Titulo.ShouldBe("Titulo Actualizado");
         updated.Empresas.Count.ShouldBe(1);
         updated.Empresas.First().Id.ShouldBe(instId2);
+    }
+
+    [Test]
+    public async Task UpdateEmpresarialAsync_UpdatesParticipantes()
+    {
+        await using var db = CreateDb();
+        var (_, clasificId, jefeId) = SeedBase(db);
+        var instId = SeedInstitution(db);
+        var part1 = SeedParticipante(db, "part-1", "Ana");
+        var part2 = SeedParticipante(db, "part-2", "Luis");
+
+        var service = BuildService(db, MakeSuperuser());
+        var (_, id) = await service.CreateEmpresarialAsync(
+            BuildEmpresarialRequest(clasificId, jefeId, [instId], [part1]));
+
+        var updateRequest = new ProyectoEmpresarialUpsertRequest
+        {
+            Titulo = "Proyecto Empresarial Test",
+            JefeId = jefeId,
+            ClasificacionId = clasificId,
+            NumeroMiembros = 5,
+            CantidadMiembrosUH = 3,
+            FechaInicio = DateOnly.FromDateTime(DateTime.Today),
+            CodigoProyecto = "PE-001",
+            EmpresasIds = [instId],
+            ParticipantesIds = [part2]
+        };
+
+        var result = await service.UpdateEmpresarialAsync(id!, updateRequest);
+
+        result.Succeeded.ShouldBeTrue();
+        var updated = await db.Proyectos.OfType<ProyectoEmpresarial>()
+            .Include(p => p.Participantes)
+            .FirstOrDefaultAsync(p => p.Id == id);
+        updated!.Participantes.Count.ShouldBe(2); // jefe + part2
+        updated.Participantes.ShouldContain(u => u.Id == jefeId);
+        updated.Participantes.ShouldContain(u => u.Id == part2);
+        updated.Participantes.ShouldNotContain(u => u.Id == part1);
     }
 
     [Test]
@@ -211,10 +275,10 @@ public class ProyectoServiceCrudTests
         await db.SaveChangesAsync();
 
         var service1 = BuildService(db, MakeJefe(jefeId));
-        var (_, id) = await service1.CreateEmpresarialAsync(BuildEmpresarialRequest(clasificId, areaId, jefeId));
+        var (_, id) = await service1.CreateEmpresarialAsync(BuildEmpresarialRequest(clasificId, jefeId));
 
         var service2 = BuildService(db, MakeJefe("jefe-2"));
-        var result = await service2.UpdateEmpresarialAsync(id!, BuildEmpresarialRequest(clasificId, areaId, "jefe-2"));
+        var result = await service2.UpdateEmpresarialAsync(id!, BuildEmpresarialRequest(clasificId, "jefe-2"));
 
         result.Succeeded.ShouldBeFalse();
         result.Errors.ShouldContain(e => e.Contains("permiso"));
@@ -226,7 +290,7 @@ public class ProyectoServiceCrudTests
     public async Task UpdateEnRevisionAsync_Superuser_Succeeds()
     {
         await using var db = CreateDb();
-        var (areaId, clasificId, jefeId) = SeedBase(db);
+        var (_, clasificId, jefeId) = SeedBase(db);
         var situacion = new SituacionProyecto { Nombre = "En Revisión" };
         db.SituacionesProyecto.Add(situacion);
         await db.SaveChangesAsync();
@@ -236,7 +300,6 @@ public class ProyectoServiceCrudTests
             Id = "rev-1",
             Titulo = "Proyecto En Revisión",
             JefeId = jefeId,
-            AreaId = areaId,
             ClasificacionId = clasificId,
             NumeroMiembros = 2,
             Tipo = "PE"
@@ -250,7 +313,6 @@ public class ProyectoServiceCrudTests
             Titulo = "Revisión Actualizada",
             JefeId = jefeId,
             ClasificacionId = clasificId,
-            AreaId = areaId,
             NumeroMiembros = 4,
             CantidadMiembrosUH = 2,
             SituacionesIds = [situacion.Id],
@@ -273,7 +335,7 @@ public class ProyectoServiceCrudTests
     public async Task CreateApoyoProgramaAsync_Superuser_Succeeds()
     {
         await using var db = CreateDb();
-        var (areaId, clasificId, jefeId) = SeedBase(db);
+        var (_, clasificId, jefeId) = SeedBase(db);
         var programa = new Programa { Nombre = "Programa Nacional de IA" };
         db.Programas.Add(programa);
         await db.SaveChangesAsync();
@@ -284,7 +346,6 @@ public class ProyectoServiceCrudTests
             Titulo = "PAP Nacional",
             JefeId = jefeId,
             ClasificacionId = clasificId,
-            AreaId = areaId,
             NumeroMiembros = 3,
             CantidadMiembrosUH = 2,
             FechaInicio = DateOnly.FromDateTime(DateTime.Today),
@@ -311,7 +372,7 @@ public class ProyectoServiceCrudTests
     public async Task CreateDesarrolloLocalAsync_Superuser_Succeeds()
     {
         await using var db = CreateDb();
-        var (areaId, clasificId, jefeId) = SeedBase(db);
+        var (_, clasificId, jefeId) = SeedBase(db);
         var provincia = new Provincia { Nombre = "La Habana" };
         db.Provincias.Add(provincia);
         await db.SaveChangesAsync();
@@ -325,7 +386,6 @@ public class ProyectoServiceCrudTests
             Titulo = "Desarrollo Local Habana",
             JefeId = jefeId,
             ClasificacionId = clasificId,
-            AreaId = areaId,
             NumeroMiembros = 4,
             CantidadMiembrosUH = 3,
             FechaInicio = DateOnly.FromDateTime(DateTime.Today),
@@ -347,12 +407,12 @@ public class ProyectoServiceCrudTests
     public async Task GetEmpresarialByIdAsync_WithData_ReturnsDto()
     {
         await using var db = CreateDb();
-        var (areaId, clasificId, jefeId) = SeedBase(db);
+        var (_, clasificId, jefeId) = SeedBase(db);
         var instId = SeedInstitution(db, "Mi Empresa");
 
         var service = BuildService(db, MakeSuperuser());
         var (_, id) = await service.CreateEmpresarialAsync(
-            BuildEmpresarialRequest(clasificId, areaId, jefeId, [instId]));
+            BuildEmpresarialRequest(clasificId, jefeId, [instId]));
 
         var dto = await service.GetEmpresarialByIdAsync(id!);
 
@@ -361,13 +421,33 @@ public class ProyectoServiceCrudTests
         dto.Empresas.ShouldContain(e => e.Id == instId);
     }
 
+    [Test]
+    public async Task GetEmpresarialByIdAsync_WithParticipantes_ReturnsDtoWithParticipantes()
+    {
+        await using var db = CreateDb();
+        var (_, clasificId, jefeId) = SeedBase(db);
+        var instId = SeedInstitution(db);
+        var partId = SeedParticipante(db, "part-dto-1", "Carlos");
+
+        var service = BuildService(db, MakeSuperuser());
+        var (_, id) = await service.CreateEmpresarialAsync(
+            BuildEmpresarialRequest(clasificId, jefeId, [instId], [partId]));
+
+        var dto = await service.GetEmpresarialByIdAsync(id!);
+
+        dto.ShouldNotBeNull();
+        dto!.Participantes.Count.ShouldBe(2); // jefe + partId
+        dto.Participantes.ShouldContain(p => p.Id == jefeId);
+        dto.Participantes.ShouldContain(p => p.Id == partId);
+    }
+
     // ── GetEnRevisionByIdAsync with data ─────────────────────────────────────
 
     [Test]
     public async Task GetEnRevisionByIdAsync_WithData_ReturnsDto()
     {
         await using var db = CreateDb();
-        var (areaId, clasificId, jefeId) = SeedBase(db);
+        var (_, clasificId, jefeId) = SeedBase(db);
 
         var service = BuildService(db, MakeSuperuser());
         var proyecto = new ProyectoEnRevision
@@ -375,7 +455,6 @@ public class ProyectoServiceCrudTests
             Id = "rev-get-1",
             Titulo = "Proyecto Para Leer",
             JefeId = jefeId,
-            AreaId = areaId,
             ClasificacionId = clasificId,
             NumeroMiembros = 1,
             Tipo = "PE"
@@ -395,7 +474,7 @@ public class ProyectoServiceCrudTests
     public async Task GetAllAsync_WithMultipleTypes_ReturnsAll()
     {
         await using var db = CreateDb();
-        var (areaId, clasificId, jefeId) = SeedBase(db);
+        var (_, clasificId, jefeId) = SeedBase(db);
 
         var service = BuildService(db, MakeSuperuser());
 
@@ -404,12 +483,11 @@ public class ProyectoServiceCrudTests
             Titulo = "En Revisión",
             JefeId = jefeId,
             ClasificacionId = clasificId,
-            AreaId = areaId,
             NumeroMiembros = 1,
             CantidadMiembrosUH = 1,
             Tipo = "PE"
         });
-        await service.CreateEmpresarialAsync(BuildEmpresarialRequest(clasificId, areaId, jefeId));
+        await service.CreateEmpresarialAsync(BuildEmpresarialRequest(clasificId, jefeId));
 
         var result = await service.GetAllAsync();
         result.Count.ShouldBe(2);
@@ -421,10 +499,10 @@ public class ProyectoServiceCrudTests
     public async Task GetCatalogoAsync_WithData_ReturnsCatalogDtos()
     {
         await using var db = CreateDb();
-        var (areaId, clasificId, jefeId) = SeedBase(db);
+        var (_, clasificId, jefeId) = SeedBase(db);
 
         var service = BuildService(db, MakeSuperuser());
-        await service.CreateEmpresarialAsync(BuildEmpresarialRequest(clasificId, areaId, jefeId));
+        await service.CreateEmpresarialAsync(BuildEmpresarialRequest(clasificId, jefeId));
 
         var result = await service.GetCatalogoAsync();
 
@@ -438,10 +516,10 @@ public class ProyectoServiceCrudTests
     public async Task GetPublicacionesDelProyectoAsync_WithData_ReturnsPublicacionDtos()
     {
         await using var db = CreateDb();
-        var (areaId, clasificId, jefeId) = SeedBase(db);
+        var (_, clasificId, jefeId) = SeedBase(db);
 
         var service = BuildService(db, MakeSuperuser());
-        var (_, proyId) = await service.CreateEmpresarialAsync(BuildEmpresarialRequest(clasificId, areaId, jefeId));
+        var (_, proyId) = await service.CreateEmpresarialAsync(BuildEmpresarialRequest(clasificId, jefeId));
 
         var pub = new Publication
         {
@@ -468,7 +546,7 @@ public class ProyectoServiceCrudTests
     public async Task GetApoyoProgramaByIdAsync_WithData_ReturnsDto()
     {
         await using var db = CreateDb();
-        var (areaId, clasificId, jefeId) = SeedBase(db);
+        var (_, clasificId, jefeId) = SeedBase(db);
         var programa = new Programa { Nombre = "PN de Biotecnología" };
         db.Programas.Add(programa);
         await db.SaveChangesAsync();
@@ -479,7 +557,6 @@ public class ProyectoServiceCrudTests
             Titulo = "PAP Test",
             JefeId = jefeId,
             ClasificacionId = clasificId,
-            AreaId = areaId,
             NumeroMiembros = 2,
             CantidadMiembrosUH = 1,
             FechaInicio = DateOnly.FromDateTime(DateTime.Today),
@@ -501,7 +578,7 @@ public class ProyectoServiceCrudTests
     public async Task CreateNoEmpresarialAsync_Succeeds()
     {
         await using var db = CreateDb();
-        var (areaId, clasificId, jefeId) = SeedBase(db);
+        var (_, clasificId, jefeId) = SeedBase(db);
         var entidad = new Institution { Nombre = "Centro de Investigaciones" };
         db.Institutions.Add(entidad);
         await db.SaveChangesAsync();
@@ -512,7 +589,6 @@ public class ProyectoServiceCrudTests
             Titulo = "No Empresarial",
             JefeId = jefeId,
             ClasificacionId = clasificId,
-            AreaId = areaId,
             NumeroMiembros = 4,
             CantidadMiembrosUH = 3,
             FechaInicio = DateOnly.FromDateTime(DateTime.Today),
@@ -533,7 +609,7 @@ public class ProyectoServiceCrudTests
     public async Task CreateColabInternacionalAsync_Succeeds()
     {
         await using var db = CreateDb();
-        var (areaId, clasificId, jefeId) = SeedBase(db);
+        var (_, clasificId, jefeId) = SeedBase(db);
         var fuente = new FuenteFinanciacion { Nombre = "EU Horizon" };
         db.FuentesFinanciacion.Add(fuente);
         await db.SaveChangesAsync();
@@ -544,7 +620,6 @@ public class ProyectoServiceCrudTests
             Titulo = "Colab Internacional",
             JefeId = jefeId,
             ClasificacionId = clasificId,
-            AreaId = areaId,
             NumeroMiembros = 6,
             CantidadMiembrosUH = 4,
             FechaInicio = DateOnly.FromDateTime(DateTime.Today),
@@ -567,7 +642,7 @@ public class ProyectoServiceCrudTests
     public async Task CreatePNAPAsync_Succeeds()
     {
         await using var db = CreateDb();
-        var (areaId, clasificId, jefeId) = SeedBase(db);
+        var (_, clasificId, jefeId) = SeedBase(db);
         var fuente = new FuenteFinanciacion { Nombre = "Presupuesto UH" };
         db.FuentesFinanciacion.Add(fuente);
         await db.SaveChangesAsync();
@@ -578,7 +653,6 @@ public class ProyectoServiceCrudTests
             Titulo = "PNAP Test",
             JefeId = jefeId,
             ClasificacionId = clasificId,
-            AreaId = areaId,
             NumeroMiembros = 5,
             CantidadMiembrosUH = 3,
             FechaInicio = DateOnly.FromDateTime(DateTime.Today),

@@ -6,7 +6,6 @@ import {
   Input, FormGroup, Label,
   Modal, ModalHeader, ModalBody, ModalFooter,
 } from 'reactstrap';
-import DataTable from '../components/DataTable';
 import FilterableDataTable from '../components/FilterableDataTable';
 
 async function apiFetch(url, options = {}) {
@@ -174,6 +173,7 @@ export default function UsersPage() {
               },
             ]}
             emptyMessage="No hay usuarios registrados."
+            detailConfig
           />
         </CardBody>
       </Card>

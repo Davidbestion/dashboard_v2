@@ -666,6 +666,29 @@
         }
       }
     },
+    "/api/Awards/area": {
+      "get": {
+        "tags": [
+          "Awards"
+        ],
+        "operationId": "GetAreaAwards",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AwardWithGrantingsDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Awards/{id}": {
       "put": {
         "tags": [
@@ -1631,6 +1654,29 @@
         }
       }
     },
+    "/api/GruposDeInvestigacion/area": {
+      "get": {
+        "tags": [
+          "GruposDeInvestigacion"
+        ],
+        "operationId": "GetAreaGruposDeInvestigacion",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GrupoDeInvestigacionDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/GruposDeInvestigacion/{id}": {
       "put": {
         "tags": [
@@ -1824,6 +1870,29 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/GruposEstudiantiles/area": {
+      "get": {
+        "tags": [
+          "GruposEstudiantiles"
+        ],
+        "operationId": "GetAreaGruposEstudiantiles",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GrupoEstudiantilDto"
+                  }
                 }
               }
             }
@@ -3080,6 +3149,29 @@
         }
       }
     },
+    "/api/Presentations/area": {
+      "get": {
+        "tags": [
+          "Presentations"
+        ],
+        "operationId": "GetAreaPresentations",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PresentationDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Presentations/{id}": {
       "put": {
         "tags": [
@@ -3416,6 +3508,29 @@
         }
       }
     },
+    "/api/Proyectos/participacion": {
+      "get": {
+        "tags": [
+          "Proyectos"
+        ],
+        "operationId": "GetMisProyectosParticipacion",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProyectoResumenDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Proyectos/{id}/publicaciones": {
       "get": {
         "tags": [
@@ -3566,7 +3681,17 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProyectoPatenteResumenDto"
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -3602,6 +3727,16 @@
             "description": ""
           },
           "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
             "description": "",
             "content": {
               "application/json": {
@@ -3651,6 +3786,72 @@
         "responses": {
           "204": {
             "description": ""
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Proyectos/{id}/participantes": {
+      "put": {
+        "tags": [
+          "Proyectos"
+        ],
+        "operationId": "SetParticipantesProyecto",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetParticipantesRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
           },
           "404": {
             "description": "",
@@ -5255,7 +5456,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/RedConCoordinadoresDto"
+                    "$ref": "#/components/schemas/RedConCoordinadorDto"
                   }
                 }
               }
@@ -5264,12 +5465,12 @@
         }
       }
     },
-    "/api/Redes/{id}/coordinadores/{areaId}": {
+    "/api/Redes/{id}/coordinador": {
       "put": {
         "tags": [
           "Redes"
         ],
-        "operationId": "AsignarCoordinador",
+        "operationId": "SetCoordinador",
         "parameters": [
           {
             "name": "id",
@@ -5279,15 +5480,6 @@
               "type": "string"
             },
             "x-position": 1
-          },
-          {
-            "name": "areaId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "x-position": 2
           }
         ],
         "requestBody": {
@@ -5295,12 +5487,12 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/AsignarCoordinadorBody"
+                "$ref": "#/components/schemas/SetCoordinadorBody"
               }
             }
           },
           "required": true,
-          "x-position": 3
+          "x-position": 2
         },
         "responses": {
           "200": {
@@ -5315,6 +5507,144 @@
                 }
               }
             }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Redes/{id}/participantes": {
+      "get": {
+        "tags": [
+          "Redes"
+        ],
+        "operationId": "GetParticipantesRed",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ParticipanteRedDto"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Redes/{id}/participantes/{authorId}": {
+      "post": {
+        "tags": [
+          "Redes"
+        ],
+        "operationId": "AddParticipanteRed",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "authorId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 2
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Redes"
+        ],
+        "operationId": "RemoveParticipanteRed",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "authorId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 2
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
           },
           "404": {
             "description": "",
@@ -7569,11 +7899,11 @@
           "clasificacionNombre": {
             "type": "string"
           },
-          "areaId": {
-            "type": "string"
-          },
-          "areaNombre": {
-            "type": "string"
+          "participantes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserRefDto"
+            }
           },
           "tipo": {
             "type": "string"
@@ -7602,6 +7932,21 @@
           }
         }
       },
+      "UserRefDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "nombreCompleto": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          }
+        }
+      },
       "ProyectoCatalogoDto": {
         "type": "object",
         "additionalProperties": false,
@@ -7611,6 +7956,46 @@
           },
           "titulo": {
             "type": "string"
+          }
+        }
+      },
+      "ProyectoPatenteResumenDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "patenteId": {
+            "type": "string"
+          },
+          "titulo": {
+            "type": "string"
+          },
+          "numeroSolicitudConcesion": {
+            "type": "string"
+          },
+          "esNacional": {
+            "type": "boolean"
+          },
+          "creador": {
+            "type": "string",
+            "nullable": true
+          },
+          "creadores": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "SetParticipantesRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "participantesIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -7694,11 +8079,11 @@
           "clasificacionNombre": {
             "type": "string"
           },
-          "areaId": {
-            "type": "string"
-          },
-          "areaNombre": {
-            "type": "string"
+          "participantes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserRefDto"
+            }
           },
           "publicacionesDerivadas": {
             "type": "array",
@@ -7764,8 +8149,11 @@
           "clasificacionId": {
             "type": "string"
           },
-          "areaId": {
-            "type": "string"
+          "participantesIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -8637,7 +9025,7 @@
           }
         }
       },
-      "RedConCoordinadoresDto": {
+      "RedConCoordinadorDto": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
@@ -8659,41 +9047,45 @@
             "type": "integer",
             "format": "int32"
           },
-          "coordinadores": {
+          "coordinadorId": {
+            "type": "string",
+            "nullable": true
+          },
+          "coordinadorNombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "coordinadorEmail": {
+            "type": "string",
+            "nullable": true
+          },
+          "participantes": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/CoordinadorAreaDto"
+              "$ref": "#/components/schemas/ParticipanteRedDto"
             }
           }
         }
       },
-      "CoordinadorAreaDto": {
+      "ParticipanteRedDto": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "areaId": {
+          "authorId": {
             "type": "string"
           },
-          "areaNombre": {
-            "type": "string"
-          },
-          "coordinadorId": {
-            "type": "string"
-          },
-          "coordinadorNombre": {
-            "type": "string"
-          },
-          "coordinadorEmail": {
+          "authorNombre": {
             "type": "string"
           }
         }
       },
-      "AsignarCoordinadorBody": {
+      "SetCoordinadorBody": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
           "coordinadorId": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           }
         }
       },

@@ -8,6 +8,7 @@ namespace Dashboard_v2.Application.GruposEstudiantiles;
 public interface IGrupoEstudiantilService
 {
     Task<List<GrupoEstudiantilDto>> GetAllAsync(CancellationToken ct = default);
+    Task<List<GrupoEstudiantilDto>> GetAreaAsync(CancellationToken ct = default);
     Task<(Result Result, string? Id)> CreateAsync(CreateGrupoEstudiantilRequest command, CancellationToken ct = default);
     Task<Result> UpdateAsync(string id, UpdateGrupoEstudiantilRequest command, CancellationToken ct = default);
     Task<Result> DeleteAsync(string id, CancellationToken ct = default);

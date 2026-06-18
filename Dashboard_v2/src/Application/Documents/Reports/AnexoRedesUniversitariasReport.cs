@@ -2,6 +2,7 @@ using System.IO.Compression;
 using Dashboard_v2.Application.Common.Interfaces;
 using Dashboard_v2.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
+using RolesEnum = Dashboard_v2.Domain.Enums.Roles;
 
 namespace Dashboard_v2.Application.Documents.Reports;
 
@@ -16,13 +17,19 @@ public sealed class AnexoRedesUniversitariasReport : IZipDocumentReport
 
     public string ReportName => "anexo-redes-universitarias";
 
+    public IReadOnlyCollection<string> AllowedRoles =>
+        [nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Grupo_de_investigacion),
+         nameof(RolesEnum.Vicedecano_de_investigacion), nameof(RolesEnum.Jefe_de_Redes)];
+
     public async Task<byte[]> GenerateAsync(IDocumentRenderer renderer, CancellationToken ct = default)
     {
         var redes = await _context.Reds
             .AsNoTracking()
             .Where(r => r.Tipo == TipoRed.Universitaria)
-            .Include(r => r.RedesCoordinadas)
-                .ThenInclude(rc => rc.Area)
+            .Include(r => r.Participaciones)
+                .ThenInclude(p => p.Author)
+                    .ThenInclude(a => a.User)
+                        .ThenInclude(u => u!.Area)
             .Include(r => r.Events)
                 .ThenInclude(e => e.Organizadores)
                     .ThenInclude(o => o.User)
@@ -55,14 +62,14 @@ public sealed class AnexoRedesUniversitariasReport : IZipDocumentReport
 
     private static IReadOnlyDictionary<string, object> BuildVariables(Domain.Entities.Red red)
     {
-        var areasUH = red.RedesCoordinadas
-            .Select(rc => rc.Area?.Nombre ?? string.Empty)
+        var areasUH = red.Participaciones
+            .Select(p => p.Author.User?.Area?.Nombre ?? string.Empty)
+            .Where(n => !string.IsNullOrWhiteSpace(n))
             .Distinct()
             .OrderBy(a => a)
             .Select(a => new AnexoAreaParticipanteRowDto { AreaUH = a, AreaExterna = string.Empty })
             .ToList();
 
-        // Si no hay áreas pero sí coordinadas, garantizamos al menos una fila vacía para ClosedXML.Report
         if (areasUH.Count == 0)
             areasUH.Add(new AnexoAreaParticipanteRowDto());
 

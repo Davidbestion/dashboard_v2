@@ -9,6 +9,7 @@ public interface IEventService
 {
     Task<List<EventDto>> GetMyEventsAsync(CancellationToken ct = default);
     Task<List<EventDto>> GetAllEventsAsync(CancellationToken ct = default);
+    Task<List<EventDto>> GetAreaEventsAsync(CancellationToken ct = default);
     Task<List<CountryDto>> GetCountriesAsync(CancellationToken ct = default);
     Task<(Result Result, CountryDto? Country)> CreateCountryAsync(CreateCountryRequest request, CancellationToken ct = default);
     Task<List<EventTypeDto>> GetEventTypesAsync(CancellationToken ct = default);
@@ -18,6 +19,7 @@ public interface IEventService
 
     Task<List<PresentationDto>> GetMyPresentationsAsync(CancellationToken ct = default);
     Task<List<PresentationDto>> GetAllPresentationsAsync(CancellationToken ct = default);
+    Task<List<PresentationDto>> GetAreaPresentationsAsync(CancellationToken ct = default);
     Task<(Result Result, int? PresentationId)> CreatePresentationAsync(CreatePresentationRequest request, CancellationToken ct = default);
     Task<Result> UpdatePresentationAsync(int id, UpdatePresentationRequest request, CancellationToken ct = default);
     Task<Result> DeletePresentationAsync(int id, CancellationToken ct = default);

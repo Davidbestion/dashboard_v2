@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Table, Button, Spinner, Pagination, PaginationItem, PaginationLink } from 'reactstrap';
+import { Table, Button, Spinner, Pagination, PaginationItem, PaginationLink, Modal, ModalHeader, ModalBody } from 'reactstrap';
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -16,6 +16,143 @@ function SortIcon({ active, direction }) {
   return direction === 'asc'
     ? <i className="bi bi-sort-up ms-1" style={{ fontSize: '0.8rem' }} />
     : <i className="bi bi-sort-down ms-1" style={{ fontSize: '0.8rem' }} />;
+}
+
+// ─── Detail modal helpers ─────────────────────────────────────────────────────
+
+const LABEL_ES = {
+  name:                  'Nombre',
+  nombre:                'Nombre',
+  title:                 'Título',
+  titulo:                'Título',
+  description:           'Descripción',
+  descripcion:           'Descripción',
+  fecha:                 'Fecha',
+  date:                  'Fecha',
+  type:                  'Tipo',
+  tipo:                  'Tipo',
+  country:               'País',
+  countryName:           'País',
+  area:                  'Área',
+  areaNombre:            'Área',
+  email:                 'Correo electrónico',
+  user:                  'Usuario',
+  usuario:               'Usuario',
+  userDisplayName:       'Nombre completo',
+  // eventos / presentaciones
+  eventName:             'Evento',
+  eventTypeName:         'Tipo de evento',
+  eventType:             'Tipo de evento',
+  presentationType:      'Tipo de presentación',
+  // publicaciones
+  publishedDate:         'Fecha de publicación',
+  urlDoi:                'URL / DOI',
+  authors:               'Autores',
+  publicationData:       'Datos de publicación',
+  // premios
+  awardName:             'Premio',
+  awardTypeName:         'Tipo de premio',
+  awardedAt:             'Otorgado el',
+  recipient:             'Receptor',
+  // proyectos / grupos
+  jefe:                  'Jefe',
+  correoJefe:            'Correo del jefe',
+  numeroMiembros:        'Miembros',
+  participantes:         'Participantes',
+  // redes
+  cantidadProfesores:    'Profesores',
+  // registros / patentes / normas
+  esNacional:            'Nacional',
+  numeroSolicitudConcesion: 'Número solicitud',
+  tipoNormaNombre:       'Tipo de norma',
+  tipoProductoComercializadoNombre: 'Tipo de producto',
+  institutionNombre:     'Institución',
+  // usuarios
+  userName:              'Nombre de usuario',
+  userLastName1:         'Primer apellido',
+  userLastName2:         'Segundo apellido',
+  isTrained:             'Capacitado',
+  universidadNombre:     'Universidad',
+};
+
+function camelToLabel(key) {
+  if (LABEL_ES[key]) return LABEL_ES[key];
+  return key
+    .replace(/([A-Z])/g, ' $1')
+    .replace(/^./, s => s.toUpperCase())
+    .trim();
+}
+
+function isInternalKey(key) {
+  const lower = key.toLowerCase();
+  return lower === 'id' || lower.endsWith('id') || lower.endsWith('ids');
+}
+
+function objectToDisplay(obj) {
+  if (obj == null) return '—';
+  // User object
+  if (obj.userName != null) {
+    return [obj.userName, obj.userLastName1, obj.userLastName2].filter(Boolean).join(' ');
+  }
+  // Generic: prefer a label field
+  const label = obj.nombre ?? obj.name ?? obj.titulo ?? obj.title ?? obj.displayName;
+  if (label != null) return String(label);
+  // Last resort: show key=value pairs of primitive properties
+  const pairs = Object.entries(obj)
+    .filter(([, v]) => v != null && typeof v !== 'object')
+    .map(([k, v]) => `${camelToLabel(k)}: ${v}`)
+    .slice(0, 4);
+  return pairs.length ? pairs.join(' · ') : JSON.stringify(obj);
+}
+
+function formatValue(val) {
+  if (val == null || val === '') return '—';
+  if (typeof val === 'boolean') return val ? 'Sí' : 'No';
+  if (Array.isArray(val)) {
+    if (val.length === 0) return '—';
+    if (typeof val[0] === 'object') return val.map(objectToDisplay).join(', ');
+    return val.join(', ');
+  }
+  if (typeof val === 'object') return objectToDisplay(val);
+  if (typeof val === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(val)) {
+    return new Date(val).toLocaleString('es-CU');
+  }
+  return String(val);
+}
+
+function EntityDetailModal({ item, config, isOpen, toggle }) {
+  if (!item) return null;
+
+  const title = config?.title
+    ? config.title(item)
+    : (item.nombre ?? item.titulo ?? item.name ?? item.awardName ?? `#${item.id ?? ''}`);
+
+  const fields = config?.fields
+    ? config.fields
+    : Object.keys(item)
+        .filter(k => !isInternalKey(k))
+        .map(k => ({ key: k, label: camelToLabel(k) }));
+
+  return (
+    <Modal isOpen={isOpen} toggle={toggle} size="lg" scrollable>
+      <ModalHeader toggle={toggle}>{title}</ModalHeader>
+      <ModalBody>
+        <dl className="row mb-0">
+          {fields.map(({ key, label, render }) => {
+            const val = getValue(item, key);
+            return (
+              <React.Fragment key={key}>
+                <dt className="col-sm-4 text-muted fw-normal small">{label}</dt>
+                <dd className="col-sm-8 mb-2">
+                  {render ? render(val, item) : formatValue(val)}
+                </dd>
+              </React.Fragment>
+            );
+          })}
+        </dl>
+      </ModalBody>
+    </Modal>
+  );
 }
 
 // ─── DataTable ────────────────────────────────────────────────────────────────
@@ -36,6 +173,11 @@ function SortIcon({ active, direction }) {
  * className?   string        Clase CSS extra para el elemento <table>.
  * actionsLabel? string       Cabecera de la columna de acciones (default: "Acciones").
  * pageSize?    number        Filas por página (default: 10).
+ * detailConfig? object|true  Si se proporciona, añade botón "Ver" por fila que abre un
+ *                            modal con todos los campos del ítem. Puede ser `true` para
+ *                            auto-generar todo, u objeto con:
+ *                              title?: (item) => string
+ *                              fields?: { key, label, render? }[]
  *
  * ColumnDef
  * ─────────
@@ -72,10 +214,12 @@ export default function DataTable({
   className = '',
   actionsLabel = 'Acciones',
   pageSize = 10,
+  detailConfig,
 }) {
   const [sortKey, setSortKey] = useState(null);
   const [sortDir, setSortDir] = useState('asc');
   const [page, setPage] = useState(1);
+  const [detailItem, setDetailItem] = useState(null);
 
   // Vuelve a la primera página cuando cambian los datos o el orden
   useEffect(() => { setPage(1); }, [data, sortKey]);
@@ -119,7 +263,9 @@ export default function DataTable({
     return sortedData.slice(from, from + pageSize);
   }, [sortedData, page, pageSize]);
 
-  const hasActions = actions.length > 0;
+  const hasDetail = Boolean(detailConfig);
+  const detailCfg = detailConfig === true ? {} : detailConfig;
+  const hasActions = actions.length > 0 || hasDetail;
   const colSpan = columns.length + (hasActions ? 1 : 0);
 
   if (loading) {
@@ -181,6 +327,17 @@ export default function DataTable({
               })}
               {hasActions && (
                 <td className="align-middle text-end" style={{ whiteSpace: 'nowrap' }}>
+                  {hasDetail && (
+                    <Button
+                      size="sm"
+                      color="outline-info"
+                      className="ms-1"
+                      aria-label="Ver detalles"
+                      onClick={() => setDetailItem(item)}
+                    >
+                      <i className="bi bi-eye" />
+                    </Button>
+                  )}
                   {actions.map(action => {
                     if (action.show && !action.show(item)) return null;
 
@@ -213,6 +370,12 @@ export default function DataTable({
         })}
       </tbody>
     </Table>
+    <EntityDetailModal
+      item={detailItem}
+      config={detailCfg}
+      isOpen={Boolean(detailItem)}
+      toggle={() => setDetailItem(null)}
+    />
     <div className="d-flex align-items-center justify-content-between flex-wrap gap-2 px-3 py-2 border-top bg-light">
       <small className="text-muted">
         {sortedData.length === 0

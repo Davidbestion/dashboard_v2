@@ -13,7 +13,7 @@ public interface IProyectoUpsertRequest
     int CantidadEstudiantesContratados { get; }
     bool TributaFormacionDoctoral { get; }
     string ClasificacionId { get; }
-    string AreaId { get; }
+    IList<string> ParticipantesIds { get; }
 }
 
 /// <summary>Contrato común para proyectos en ejecución.</summary>
@@ -41,7 +41,7 @@ public abstract record ProyectoUpsertRequestBase : IProyectoUpsertRequest
     public int CantidadEstudiantesContratados { get; init; }
     public bool TributaFormacionDoctoral { get; init; }
     public string ClasificacionId { get; init; } = default!;
-    public string AreaId { get; init; } = default!;
+    public IList<string> ParticipantesIds { get; init; } = [];
 }
 
 /// <summary>Base reusable para requests de proyectos en ejecución.</summary>
@@ -103,3 +103,6 @@ public sealed record ProyectoPNAPUpsertRequest : ProyectoEnEjecucionUpsertReques
 {
     public IList<int> FuentesFinanciacionIds { get; init; } = [];
 }
+
+/// <summary>Request para asignar el conjunto de participantes de un proyecto.</summary>
+public sealed record SetParticipantesRequest(IList<string> ParticipantesIds);

@@ -109,6 +109,50 @@ public sealed class AwardService : IAwardService
         return grouped;
     }
 
+    public async Task<List<AwardWithGrantingsDto>> GetAreaAwardsAsync(CancellationToken ct = default)
+    {
+        var areaId = await _context.GetUserAreaIdAsync(_currentUser.Id, ct) ?? string.Empty;
+
+        var userAwardeds = await _context.UserAwardeds
+            .AsNoTracking()
+            .Include(ua => ua.Award)
+                .ThenInclude(a => a.AwardType)
+            .Include(ua => ua.User)
+            .Where(ua => ua.User != null && ua.User.AreaId == areaId)
+            .ToListAsync(ct);
+
+        var grouped = userAwardeds
+            .GroupBy(ua => new { ua.AwardId, ua.Award.Name, ua.Award.AwardTypeId, AwardTypeName = ua.Award.AwardType.Name })
+            .Select(g => new AwardWithGrantingsDto
+            {
+                AwardId = g.Key.AwardId,
+                AwardName = g.Key.Name,
+                AwardTypeId = g.Key.AwardTypeId,
+                AwardTypeName = g.Key.AwardTypeName,
+                Grantings = g
+                    .GroupBy(ua => ua.AwardedAt.Date)
+                    .Select(gg => new GrantingDto
+                    {
+                        AwardedAt = gg.First().AwardedAt,
+                        Recipients = gg
+                            .Select(r => new RecipientDto
+                            {
+                                Id = r.Id,
+                                UserId = r.UserId,
+                                UserDisplayName = r.User.UserName + " " + r.User.UserLastName1 + (r.User.UserLastName2 ?? ""),
+                                EvidenceFileId = r.EvidenceFileId,
+                            })
+                            .OrderBy(x => x.UserDisplayName)
+                            .ToList()
+                    })
+                    .OrderByDescending(gr => gr.AwardedAt)
+                    .ToList()
+            })
+            .ToList();
+
+        return grouped;
+    }
+
     public async Task<List<AwardCatalogDto>> GetCatalogAsync(CancellationToken ct = default)
     {
         var awards = await _context.Awards

@@ -863,4 +863,207 @@ public class EventServiceTests
         result.Succeeded.ShouldBeTrue();
         (await _db.Presentations.FindAsync(500)).ShouldBeNull();
     }
+
+    // ─── GetAreaEventsAsync ───────────────────────────────────────────────────
+
+    [Test]
+    public async Task GetAreaEventsAsync_NoEvents_ReturnsEmpty()
+    {
+        var area = new Domain.Entities.Area { Id = "area-1", Nombre = "MATCOM", Descripcion = "d", UniversidadId = "uh" };
+        _db.Areas.Add(area);
+        var viceUser = MakeUser("vice-1");
+        viceUser.AreaId = "area-1";
+        _db.Users.Add(viceUser);
+        await _db.SaveChangesAsync();
+
+        _currentUser.Setup(u => u.Id).Returns("vice-1");
+
+        var result = await _sut.GetAreaEventsAsync();
+        result.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task GetAreaEventsAsync_ReturnsEventsWhereOrganizadorIsInArea()
+    {
+        await SeedBaseDataAsync();
+        var area = new Domain.Entities.Area { Id = "area-ev-1", Nombre = "FMat", Descripcion = "d", UniversidadId = "uh" };
+        _db.Areas.Add(area);
+
+        var viceUser = MakeUser("vice-ev-1");
+        viceUser.AreaId = "area-ev-1";
+        var organizer = MakeUser("org-ev-1");
+        organizer.AreaId = "area-ev-1";
+        _db.Users.Add(viceUser);
+        _db.Users.Add(organizer);
+        _db.Events.Add(MakeEvent(801, "Evento del Área"));
+        await _db.SaveChangesAsync();
+
+        _db.EventOrganizadores.Add(new EventOrganizador { EventId = 801, UserId = "org-ev-1" });
+        await _db.SaveChangesAsync();
+
+        _currentUser.Setup(u => u.Id).Returns("vice-ev-1");
+        var result = await _sut.GetAreaEventsAsync();
+
+        result.Count.ShouldBe(1);
+        result[0].Name.ShouldBe("Evento del Área");
+    }
+
+    [Test]
+    public async Task GetAreaEventsAsync_ReturnsEventsWhereParticipanteIsInArea()
+    {
+        await SeedBaseDataAsync();
+        var area = new Domain.Entities.Area { Id = "area-ev-2", Nombre = "FMat2", Descripcion = "d", UniversidadId = "uh" };
+        _db.Areas.Add(area);
+
+        var viceUser = MakeUser("vice-ev-2");
+        viceUser.AreaId = "area-ev-2";
+        var participant = MakeUser("part-ev-2");
+        participant.AreaId = "area-ev-2";
+        _db.Users.Add(viceUser);
+        _db.Users.Add(participant);
+        _db.Events.Add(MakeEvent(802, "Evento Participante"));
+        await _db.SaveChangesAsync();
+
+        _db.ParticipacionesEnEventos.Add(new ParticipacionEnEvento
+        {
+            EventId = 802,
+            UserId = "part-ev-2",
+            Fecha = DateOnly.FromDateTime(DateTime.UtcNow)
+        });
+        await _db.SaveChangesAsync();
+
+        _currentUser.Setup(u => u.Id).Returns("vice-ev-2");
+        var result = await _sut.GetAreaEventsAsync();
+
+        result.Count.ShouldBe(1);
+        result[0].Name.ShouldBe("Evento Participante");
+    }
+
+    [Test]
+    public async Task GetAreaEventsAsync_ExcludesEventsFromOtherAreas()
+    {
+        await SeedBaseDataAsync();
+        var myArea = new Domain.Entities.Area { Id = "area-ev-3", Nombre = "MyArea", Descripcion = "d", UniversidadId = "uh" };
+        var otherArea = new Domain.Entities.Area { Id = "area-ev-other", Nombre = "OtherArea", Descripcion = "d", UniversidadId = "uh" };
+        _db.Areas.Add(myArea);
+        _db.Areas.Add(otherArea);
+
+        var viceUser = MakeUser("vice-ev-3");
+        viceUser.AreaId = "area-ev-3";
+        var otherOrg = MakeUser("org-other");
+        otherOrg.AreaId = "area-ev-other";
+        _db.Users.Add(viceUser);
+        _db.Users.Add(otherOrg);
+        _db.Events.Add(MakeEvent(803, "Evento de Otra Área"));
+        await _db.SaveChangesAsync();
+
+        _db.EventOrganizadores.Add(new EventOrganizador { EventId = 803, UserId = "org-other" });
+        await _db.SaveChangesAsync();
+
+        _currentUser.Setup(u => u.Id).Returns("vice-ev-3");
+        var result = await _sut.GetAreaEventsAsync();
+
+        result.ShouldBeEmpty();
+    }
+
+    // ─── GetAreaPresentationsAsync ────────────────────────────────────────────
+
+    [Test]
+    public async Task GetAreaPresentationsAsync_NoEvents_ReturnsEmpty()
+    {
+        var area = new Domain.Entities.Area { Id = "ap-area-1", Nombre = "MATCOM", Descripcion = "d", UniversidadId = "uh" };
+        _db.Areas.Add(area);
+        var vice = MakeUser("ap-vice-1");
+        vice.AreaId = "ap-area-1";
+        _db.Users.Add(vice);
+        await _db.SaveChangesAsync();
+
+        _currentUser.Setup(u => u.Id).Returns("ap-vice-1");
+        var result = await _sut.GetAreaPresentationsAsync();
+        result.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task GetAreaPresentationsAsync_ReturnsPresForEventsWithOrganizerInArea()
+    {
+        await SeedBaseDataAsync();
+        var area = new Domain.Entities.Area { Id = "ap-area-2", Nombre = "FMat", Descripcion = "d", UniversidadId = "uh" };
+        _db.Areas.Add(area);
+
+        var vice = MakeUser("ap-vice-2");
+        vice.AreaId = "ap-area-2";
+        var org = MakeUser("ap-org-2");
+        org.AreaId = "ap-area-2";
+        var presenter = MakeUser("ap-pres-2");
+        _db.Users.AddRange(vice, org, presenter);
+        _db.Events.Add(MakeEvent(900, "Evento Org"));
+        await _db.SaveChangesAsync();
+
+        _db.EventOrganizadores.Add(new EventOrganizador { EventId = 900, UserId = "ap-org-2" });
+        await _db.SaveChangesAsync();
+        _db.Presentations.Add(new Presentation { Name = "Ponencia A", EventId = 900, UserId = "ap-pres-2", Fecha = DateOnly.FromDateTime(DateTime.UtcNow) });
+        await _db.SaveChangesAsync();
+
+        _currentUser.Setup(u => u.Id).Returns("ap-vice-2");
+        var result = await _sut.GetAreaPresentationsAsync();
+
+        result.Count.ShouldBe(1);
+        result[0].Name.ShouldBe("Ponencia A");
+    }
+
+    [Test]
+    public async Task GetAreaPresentationsAsync_ReturnsPresForEventsWithParticipanteInArea()
+    {
+        await SeedBaseDataAsync();
+        var area = new Domain.Entities.Area { Id = "ap-area-3", Nombre = "FMat3", Descripcion = "d", UniversidadId = "uh" };
+        _db.Areas.Add(area);
+
+        var vice = MakeUser("ap-vice-3");
+        vice.AreaId = "ap-area-3";
+        var participant = MakeUser("ap-part-3");
+        participant.AreaId = "ap-area-3";
+        var presenter = MakeUser("ap-pres-3");
+        _db.Users.AddRange(vice, participant, presenter);
+        _db.Events.Add(MakeEvent(901, "Evento Part"));
+        await _db.SaveChangesAsync();
+
+        _db.ParticipacionesEnEventos.Add(new ParticipacionEnEvento { EventId = 901, UserId = "ap-part-3", Fecha = DateOnly.FromDateTime(DateTime.UtcNow) });
+        await _db.SaveChangesAsync();
+        _db.Presentations.Add(new Presentation { Name = "Ponencia B", EventId = 901, UserId = "ap-pres-3", Fecha = DateOnly.FromDateTime(DateTime.UtcNow) });
+        await _db.SaveChangesAsync();
+
+        _currentUser.Setup(u => u.Id).Returns("ap-vice-3");
+        var result = await _sut.GetAreaPresentationsAsync();
+
+        result.Count.ShouldBe(1);
+        result[0].Name.ShouldBe("Ponencia B");
+    }
+
+    [Test]
+    public async Task GetAreaPresentationsAsync_ExcludesPresentationsFromOtherAreas()
+    {
+        await SeedBaseDataAsync();
+        var myArea    = new Domain.Entities.Area { Id = "ap-area-4",     Nombre = "MyArea",    Descripcion = "d", UniversidadId = "uh" };
+        var otherArea = new Domain.Entities.Area { Id = "ap-area-other", Nombre = "OtherArea", Descripcion = "d", UniversidadId = "uh" };
+        _db.Areas.AddRange(myArea, otherArea);
+
+        var vice      = MakeUser("ap-vice-4");
+        vice.AreaId   = "ap-area-4";
+        var otherOrg  = MakeUser("ap-org-other");
+        otherOrg.AreaId = "ap-area-other";
+        var presenter = MakeUser("ap-pres-4");
+        _db.Users.AddRange(vice, otherOrg, presenter);
+        _db.Events.Add(MakeEvent(902, "Evento Otra Área"));
+        await _db.SaveChangesAsync();
+
+        _db.EventOrganizadores.Add(new EventOrganizador { EventId = 902, UserId = "ap-org-other" });
+        await _db.SaveChangesAsync();
+        _db.Presentations.Add(new Presentation { Name = "Ponencia Otra", EventId = 902, UserId = "ap-pres-4", Fecha = DateOnly.FromDateTime(DateTime.UtcNow) });
+        await _db.SaveChangesAsync();
+
+        _currentUser.Setup(u => u.Id).Returns("ap-vice-4");
+        var result = await _sut.GetAreaPresentationsAsync();
+
+        result.ShouldBeEmpty();
+    }
 }

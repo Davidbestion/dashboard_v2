@@ -120,6 +120,7 @@ export default function MisGruposDeInvestigacionPage() {
             data={items}
             keyExtractor={item => item.id}
             emptyMessage="No perteneces a ningún grupo de investigación."
+            detailConfig
           />
         </CardBody>
       </Card>

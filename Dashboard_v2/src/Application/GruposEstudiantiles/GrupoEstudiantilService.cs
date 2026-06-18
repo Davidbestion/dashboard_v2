@@ -35,6 +35,23 @@ public sealed class GrupoEstudiantilService : IGrupoEstudiantilService
             .ToListAsync(ct);
     }
 
+    public async Task<List<GrupoEstudiantilDto>> GetAreaAsync(CancellationToken ct = default)
+    {
+        var areaId = await _context.GetUserAreaIdAsync(_currentUser.Id, ct) ?? string.Empty;
+        return await _context.GruposEstudiantiles
+            .Where(g => g.AreaId == areaId)
+            .OrderBy(g => g.Nombre)
+            .Select(g => new GrupoEstudiantilDto
+            {
+                Id = g.Id,
+                Nombre = g.Nombre,
+                AreaId = g.AreaId,
+                AreaNombre = g.Area.Nombre,
+                LineasDeInvestigacionIds = g.LineasDeInvestigacion.Select(l => l.Id).ToList()
+            })
+            .ToListAsync(ct);
+    }
+
     public async Task<(Result Result, string? Id)> CreateAsync(CreateGrupoEstudiantilRequest request, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(request.Nombre))

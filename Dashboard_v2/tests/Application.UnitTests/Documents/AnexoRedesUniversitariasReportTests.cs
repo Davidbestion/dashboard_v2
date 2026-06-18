@@ -150,24 +150,27 @@ public class AnexoRedesUniversitariasReportTests
     }
 
     [Test]
-    public async Task GenerateAsync_WithRedesCoordinadas_PopulatesAreasParticipantes()
+    public async Task GenerateAsync_WithParticipaciones_PopulatesAreasParticipantes()
     {
         var red = new Red { Nombre = "Red Con Áreas", Tipo = TipoRed.Universitaria };
         _db.Reds.Add(red);
         var area = new Domain.Entities.Area { Id = "area-rc-1", Nombre = "Facultad de Matemáticas" };
         _db.Areas.Add(area);
-        var coordinador = new Domain.Entities.User
+        var user = new Domain.Entities.User
         {
-            Id = "coord-1", UserName = "coord", UserLastName1 = "C", Email = "c@test.cu"
+            Id = "user-p-1", UserName = "prof", UserLastName1 = "P", Email = "p@test.cu",
+            AreaId = area.Id
         };
-        _db.Users.Add(coordinador);
+        _db.Users.Add(user);
+        var author = Dashboard_v2.Domain.Entities.Author.Create("Participante");
+        author.UserId = user.Id;
+        _db.Authors.Add(author);
         await _db.SaveChangesAsync();
 
-        _db.Set<Domain.Entities.RedCoordinada>().Add(new Domain.Entities.RedCoordinada
+        _db.ParticipacionesEnRed.Add(new Domain.Entities.ParticipacionEnRed
         {
             RedId = red.Id,
-            AreaId = area.Id,
-            CoordinadorId = coordinador.Id
+            AuthorId = author.Id
         });
         await _db.SaveChangesAsync();
 

@@ -94,8 +94,7 @@ public class ProyectoHelperTests
             cantEst: 2,
             cantEstCont: 1,
             tributaFormacion: true,
-            clasificId: "clasif-1",
-            areaId: "area-1");
+            clasificId: "clasif-1");
 
         p.Titulo.ShouldBe("Mi Proyecto");
         p.JefeId.ShouldBe("jefe-1");
@@ -105,14 +104,13 @@ public class ProyectoHelperTests
         p.CantidadEstudiantesContratados.ShouldBe(1);
         p.TributaFormacionDoctoral.ShouldBeTrue();
         p.ClasificacionId.ShouldBe("clasif-1");
-        p.AreaId.ShouldBe("area-1");
     }
 
     [Test]
     public void SetBase_TrimsTitleWhitespace()
     {
         var p = new ProyectoEnRevision();
-        ProyectoHelper.SetBase(p, "   Espacios   ", "jefe", 1, 1, 0, 0, false, "c1", "a1");
+        ProyectoHelper.SetBase(p, "   Espacios   ", "jefe", 1, 1, 0, 0, false, "c1");
         p.Titulo.ShouldBe("Espacios");
     }
 

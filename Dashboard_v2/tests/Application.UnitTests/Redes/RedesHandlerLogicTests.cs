@@ -128,6 +128,182 @@ public class RedesHandlerLogicTests
         item.CountryName.ShouldBeNull();
     }
 
+    // ── GetRedes – Vicedecano area filter ────────────────────────────────────
+
+    [Test]
+    public async Task GetRedes_VicedecanoFilter_ReturnsRedsWhereCoordinadorIsInArea()
+    {
+        await using var db = CreateDb();
+        var area = new Area { Id = "area-1", Nombre = "MATCOM", Descripcion = "d", UniversidadId = "uh" };
+        db.Areas.Add(area);
+        var coordinator = new User { Id = "coord-1", UserName = "coord", UserLastName1 = "C", Email = "c@uh.cu", AreaId = "area-1" };
+        db.Users.Add(coordinator);
+        db.SaveChanges();
+
+        var red = new Red { Nombre = "Red del Área", Tipo = TipoRed.Universitaria, CoordinadorId = "coord-1" };
+        db.Reds.Add(red);
+        db.SaveChanges();
+
+        var list = await db.Reds.AsNoTracking()
+            .Where(r =>
+                (r.CoordinadorId != null && r.Coordinador!.AreaId == "area-1") ||
+                r.Participaciones.Any(p => p.Author.User != null && p.Author.User.AreaId == "area-1"))
+            .ToListAsync();
+
+        list.Count.ShouldBe(1);
+        list[0].Nombre.ShouldBe("Red del Área");
+    }
+
+    [Test]
+    public async Task GetRedes_VicedecanoFilter_ReturnsRedsWhereParticipanteIsInArea()
+    {
+        await using var db = CreateDb();
+        var area = new Area { Id = "area-2", Nombre = "FMat", Descripcion = "d", UniversidadId = "uh" };
+        db.Areas.Add(area);
+        var user = new User { Id = "user-part-1", UserName = "up1", UserLastName1 = "P", Email = "p@uh.cu", AreaId = "area-2" };
+        db.Users.Add(user);
+        var red = new Red { Nombre = "Red con Participante", Tipo = TipoRed.Nacional };
+        db.Reds.Add(red);
+        db.SaveChanges();
+
+        var author = Author.Create("Participante");
+        author.UserId = "user-part-1";
+        db.Authors.Add(author);
+        db.SaveChanges();
+
+        db.ParticipacionesEnRed.Add(new ParticipacionEnRed { RedId = red.Id, AuthorId = author.Id });
+        db.SaveChanges();
+
+        var list = await db.Reds.AsNoTracking()
+            .Where(r =>
+                (r.CoordinadorId != null && r.Coordinador!.AreaId == "area-2") ||
+                r.Participaciones.Any(p => p.Author.User != null && p.Author.User.AreaId == "area-2"))
+            .ToListAsync();
+
+        list.Count.ShouldBe(1);
+        list[0].Nombre.ShouldBe("Red con Participante");
+    }
+
+    [Test]
+    public async Task GetRedes_VicedecanoFilter_ExcludesRedsFromOtherAreas()
+    {
+        await using var db = CreateDb();
+        var otherCoord = new User { Id = "other-coord", UserName = "oc", UserLastName1 = "C", Email = "oc@uh.cu", AreaId = "other-area" };
+        db.Users.Add(otherCoord);
+        db.SaveChanges();
+
+        var red = new Red { Nombre = "Red de Otra Área", Tipo = TipoRed.Nacional, CoordinadorId = "other-coord" };
+        db.Reds.Add(red);
+        db.SaveChanges();
+
+        var list = await db.Reds.AsNoTracking()
+            .Where(r =>
+                (r.CoordinadorId != null && r.Coordinador!.AreaId == "area-1") ||
+                r.Participaciones.Any(p => p.Author.User != null && p.Author.User.AreaId == "area-1"))
+            .ToListAsync();
+
+        list.ShouldBeEmpty();
+    }
+
+    // ── GetMisRedes – Profesor includes participated reds ─────────────────────
+
+    [Test]
+    public async Task GetMisRedes_Profesor_ReturnsCoordinatedReds()
+    {
+        await using var db = CreateDb();
+        var user = new User { Id = "prof-1", UserName = "prof", UserLastName1 = "P", Email = "p@uh.cu" };
+        db.Users.Add(user);
+        db.SaveChanges();
+
+        var red = new Red { Nombre = "Red Coordinada", Tipo = TipoRed.Universitaria, CoordinadorId = "prof-1" };
+        db.Reds.Add(red);
+        db.SaveChanges();
+
+        var list = await db.Reds.AsNoTracking()
+            .Where(r =>
+                r.CoordinadorId == "prof-1" ||
+                r.Participaciones.Any(p => p.Author.UserId == "prof-1"))
+            .ToListAsync();
+
+        list.Count.ShouldBe(1);
+        list[0].Nombre.ShouldBe("Red Coordinada");
+    }
+
+    [Test]
+    public async Task GetMisRedes_Profesor_ReturnsParticipatedReds()
+    {
+        await using var db = CreateDb();
+        var user = new User { Id = "prof-2", UserName = "prof2", UserLastName1 = "P", Email = "p2@uh.cu" };
+        db.Users.Add(user);
+        var red = new Red { Nombre = "Red Participada", Tipo = TipoRed.Nacional };
+        db.Reds.Add(red);
+        db.SaveChanges();
+
+        var author = Author.Create("Profesor Participante");
+        author.UserId = "prof-2";
+        db.Authors.Add(author);
+        db.SaveChanges();
+
+        db.ParticipacionesEnRed.Add(new ParticipacionEnRed { RedId = red.Id, AuthorId = author.Id });
+        db.SaveChanges();
+
+        var list = await db.Reds.AsNoTracking()
+            .Where(r =>
+                r.CoordinadorId == "prof-2" ||
+                r.Participaciones.Any(p => p.Author.UserId == "prof-2"))
+            .ToListAsync();
+
+        list.Count.ShouldBe(1);
+        list[0].Nombre.ShouldBe("Red Participada");
+    }
+
+    [Test]
+    public async Task GetMisRedes_Profesor_ReturnsBothCoordinatedAndParticipatedReds()
+    {
+        await using var db = CreateDb();
+        var user = new User { Id = "prof-3", UserName = "prof3", UserLastName1 = "P", Email = "p3@uh.cu" };
+        db.Users.Add(user);
+        var coordRed = new Red { Nombre = "Red Coordinada", Tipo = TipoRed.Universitaria, CoordinadorId = "prof-3" };
+        var partRed = new Red { Nombre = "Red Participada", Tipo = TipoRed.Nacional };
+        db.Reds.Add(coordRed);
+        db.Reds.Add(partRed);
+        db.SaveChanges();
+
+        var author = Author.Create("Profesor 3");
+        author.UserId = "prof-3";
+        db.Authors.Add(author);
+        db.SaveChanges();
+
+        db.ParticipacionesEnRed.Add(new ParticipacionEnRed { RedId = partRed.Id, AuthorId = author.Id });
+        db.SaveChanges();
+
+        var list = await db.Reds.AsNoTracking()
+            .Where(r =>
+                r.CoordinadorId == "prof-3" ||
+                r.Participaciones.Any(p => p.Author.UserId == "prof-3"))
+            .ToListAsync();
+
+        list.Count.ShouldBe(2);
+    }
+
+    [Test]
+    public async Task GetMisRedes_Profesor_ExcludesUnrelatedReds()
+    {
+        await using var db = CreateDb();
+        var user = new User { Id = "prof-4", UserName = "prof4", UserLastName1 = "P", Email = "p4@uh.cu" };
+        db.Users.Add(user);
+        SeedRed(db, "Red Ajena");
+        db.SaveChanges();
+
+        var list = await db.Reds.AsNoTracking()
+            .Where(r =>
+                r.CoordinadorId == "prof-4" ||
+                r.Participaciones.Any(p => p.Author.UserId == "prof-4"))
+            .ToListAsync();
+
+        list.ShouldBeEmpty();
+    }
+
     // ── CreateRed ────────────────────────────────────────────────────────────
 
     [TestCase(0)]   // Universitaria

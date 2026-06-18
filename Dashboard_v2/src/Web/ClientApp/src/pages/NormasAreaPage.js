@@ -56,6 +56,7 @@ export default function NormasAreaPage() {
             data={items}
             keyExtractor={i => i.id}
             emptyMessage="No hay normas."
+            detailConfig
           />
         </CardBody>
       </Card>

@@ -10,7 +10,6 @@ import {
   Dropdown, DropdownToggle, DropdownMenu,
 } from 'reactstrap';
 import { useAuth } from '../contexts/AuthContext';
-import DataTable from '../components/DataTable';
 import FilterableDataTable from '../components/FilterableDataTable';
 import { CertificateViewButton } from '../components/CertificateUpload';
 
@@ -288,6 +287,7 @@ export default function PublicacionesConsultaPage({ apiUrl = '/api/Publications/
                               render: pub => <CertificateViewButton fileId={pub.evidenceFileId} /> },
                           ]}
                           emptyMessage={`No hay publicaciones en el Grupo ${group}.`}
+                          detailConfig
                         />
                       </TabPane>
                     );
@@ -333,6 +333,7 @@ export default function PublicacionesConsultaPage({ apiUrl = '/api/Publications/
                           render: pub => <CertificateViewButton fileId={pub.evidenceFileId} /> },
                       ]}
                       emptyMessage="No hay publicaciones de este tipo."
+                      detailConfig
                     />
                   </TabPane>
                 );

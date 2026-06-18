@@ -6,7 +6,6 @@ import {
   Form, FormGroup, Label, Input,
 } from 'reactstrap';
 import { useAuth } from '../contexts/AuthContext';
-import DataTable from '../components/DataTable';
 import FilterableDataTable from '../components/FilterableDataTable';
 
 async function apiFetch(url, options = {}) {
@@ -132,6 +131,7 @@ export default function PatentesPage() {
               { key: 'delete', label: 'Eliminar', icon: 'bi-trash',  color: 'outline-danger',    onClick: i => handleDelete(i.id) },
             ]}
             emptyMessage="No hay patentes."
+            detailConfig
           />
         </CardBody>
       </Card>

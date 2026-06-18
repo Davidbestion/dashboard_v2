@@ -27,7 +27,6 @@ public class User
 
     // Navegación
     public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
-    public ICollection<Resource> OwnedResources { get; set; } = new List<Resource>();
 
     // Si el usuario es también un autor académico registrado, este es su perfil.
     public Author? AuthorProfile { get; set; }
@@ -35,14 +34,14 @@ public class User
     // Grupos de investigación a los que pertenece este usuario
     public ICollection<GrupoDeInvestigacion> GruposDeInvestigacion { get; set; } = new List<GrupoDeInvestigacion>();
 
-    // Redes a las que pertenece este usuario
-    public ICollection<Red> Redes { get; set; } = new List<Red>();
-
-    // Redes que este usuario coordina (a través de RedCoordinada)
-    public ICollection<RedCoordinada> RedesCoordinadas { get; set; } = new List<RedCoordinada>();
+    // Redes que este usuario coordina
+    public ICollection<Red> RedesCoordinadas { get; set; } = new List<Red>();
 
     /// <summary>Proyectos de los que este usuario es jefe. Solo aplicable a usuarios con rol Jefe_de_Proyecto.</summary>
     public ICollection<Proyecto> ProyectosComoJefe { get; set; } = new List<Proyecto>();
+
+    /// <summary>Proyectos en los que este usuario participa (M:N, tabla ProyectoParticipantes).</summary>
+    public ICollection<Proyecto> ProyectosParticipante { get; set; } = new List<Proyecto>();
 
     /// <summary>Eventos que este usuario organiza.</summary>
     public ICollection<EventOrganizador> EventosOrganizados { get; set; } = new List<EventOrganizador>();

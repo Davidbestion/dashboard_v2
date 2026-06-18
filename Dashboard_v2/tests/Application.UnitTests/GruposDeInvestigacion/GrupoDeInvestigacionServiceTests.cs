@@ -388,4 +388,52 @@ public class GrupoDeInvestigacionServiceTests
         var grupo = await _db.GruposDeInvestigacion.FindAsync(id);
         grupo!.Nombre.ShouldBe("Grupo Actualizado");
     }
+
+    // ── GetAreaAsync ─────────────────────────────────────────────────────────
+
+    [Test]
+    public async Task GetAreaAsync_EmptyDb_ReturnsEmpty()
+    {
+        _db.Areas.Add(new Area { Id = "area-1", Nombre = "Ciencias" });
+        _db.Users.Add(new User { Id = "vd-1", UserName = "vd", Email = "vd@t.com", UserLastName1 = "VD", AreaId = "area-1" });
+        await _db.SaveChangesAsync();
+        _userMock.Setup(u => u.Id).Returns("vd-1");
+
+        var result = await _sut.GetAreaAsync();
+        result.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task GetAreaAsync_ReturnsOnlyGruposForVicedecanoArea()
+    {
+        _db.Areas.AddRange(
+            new Area { Id = "area-1", Nombre = "Ciencias" },
+            new Area { Id = "area-2", Nombre = "Letras" });
+        _db.Users.Add(new User { Id = "vd-1", UserName = "vd", Email = "vd@t.com", UserLastName1 = "VD", AreaId = "area-1" });
+        _db.GruposDeInvestigacion.AddRange(
+            new GrupoDeInvestigacion { Id = "g-1", Nombre = "Grupo A", AreaId = "area-1" },
+            new GrupoDeInvestigacion { Id = "g-2", Nombre = "Grupo B", AreaId = "area-2" });
+        await _db.SaveChangesAsync();
+        _userMock.Setup(u => u.Id).Returns("vd-1");
+
+        var result = await _sut.GetAreaAsync();
+
+        result.ShouldHaveSingleItem();
+        result[0].Nombre.ShouldBe("Grupo A");
+    }
+
+    [Test]
+    public async Task GetAreaAsync_ExcludesGruposFromOtherAreas()
+    {
+        _db.Areas.AddRange(
+            new Area { Id = "area-1", Nombre = "Ciencias" },
+            new Area { Id = "area-2", Nombre = "Letras" });
+        _db.Users.Add(new User { Id = "vd-1", UserName = "vd", Email = "vd@t.com", UserLastName1 = "VD", AreaId = "area-1" });
+        _db.GruposDeInvestigacion.Add(new GrupoDeInvestigacion { Id = "g-3", Nombre = "Grupo C", AreaId = "area-2" });
+        await _db.SaveChangesAsync();
+        _userMock.Setup(u => u.Id).Returns("vd-1");
+
+        var result = await _sut.GetAreaAsync();
+        result.ShouldBeEmpty();
+    }
 }

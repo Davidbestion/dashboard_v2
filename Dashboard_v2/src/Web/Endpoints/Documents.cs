@@ -1,12 +1,13 @@
 using Dashboard_v2.Application.Documents;
 using Dashboard_v2.Web.Infrastructure;
-using RolesEnum = Dashboard_v2.Domain.Enums.Roles;
 
 namespace Dashboard_v2.Web.Endpoints;
 
 /// <summary>
 /// Endpoints para la generación y descarga de documentos Excel.
-/// Todos requieren rol Superuser o Jefe_de_Grupo_de_investigacion.
+/// Cada reporte declara sus propios roles autorizados vía <see cref="IDocumentReport.AllowedRoles"/>
+/// (o <see cref="IZipDocumentReport.AllowedRoles"/>); este endpoint solo exige autenticación
+/// y delega la decisión de autorización al reporte resuelto por nombre.
 ///
 /// URL genérica: GET /api/Documents/{reportName}
 /// El valor de {reportName} debe coincidir con <see cref="IDocumentReport.ReportName"/>
@@ -23,11 +24,7 @@ public class Documents : EndpointGroupBase
     public override void Map(RouteGroupBuilder groupBuilder)
     {
         groupBuilder.MapGet("{reportName}", GetDocument)
-            .RequireAuthorization(p => p.RequireRole(
-                nameof(RolesEnum.Superuser),
-                nameof(RolesEnum.Jefe_de_Grupo_de_investigacion),
-                nameof(RolesEnum.Vicedecano_de_investigacion),
-                nameof(RolesEnum.Jefe_de_Redes)))
+            .RequireAuthorization()
             .WithName("GetDocument")
             .Produces(200)
             .ProducesProblem(401)
@@ -42,33 +39,12 @@ public class Documents : EndpointGroupBase
         [Microsoft.AspNetCore.Mvc.FromQuery] string? from = null,
         [Microsoft.AspNetCore.Mvc.FromQuery] string? to = null)
     {
-        if (reportName.Equals("anexo-publicaciones", StringComparison.OrdinalIgnoreCase) &&
-            !httpContext.User.IsInRole(nameof(RolesEnum.Superuser)) &&
-            !httpContext.User.IsInRole(nameof(RolesEnum.Vicedecano_de_investigacion)))
-        {
-            return Results.Forbid();
-        }
+        var allowedRoles = documentService.GetAllowedRoles(reportName);
+        if (allowedRoles is null)
+            return Results.NotFound(new { error = $"No existe un reporte registrado con el nombre '{reportName}'." });
 
-        if (reportName.Equals("anexo-premios", StringComparison.OrdinalIgnoreCase) &&
-            !httpContext.User.IsInRole(nameof(RolesEnum.Superuser)))
-        {
+        if (!allowedRoles.Any(httpContext.User.IsInRole))
             return Results.Forbid();
-        }
-
-        if (reportName.Equals("anexo-eventos", StringComparison.OrdinalIgnoreCase) &&
-            !httpContext.User.IsInRole(nameof(RolesEnum.Superuser)) &&
-            !httpContext.User.IsInRole(nameof(RolesEnum.Vicedecano_de_investigacion)))
-        {
-            return Results.Forbid();
-        }
-
-        // Jefe_de_Redes solo puede acceder a los reportes de redes.
-        if (httpContext.User.IsInRole(nameof(RolesEnum.Jefe_de_Redes)) &&
-            !httpContext.User.IsInRole(nameof(RolesEnum.Superuser)) &&
-            !reportName.StartsWith("anexo-redes-", StringComparison.OrdinalIgnoreCase))
-        {
-            return Results.Forbid();
-        }
 
         Dictionary<string, string>? parameters = null;
         if (!string.IsNullOrWhiteSpace(from) || !string.IsNullOrWhiteSpace(to))

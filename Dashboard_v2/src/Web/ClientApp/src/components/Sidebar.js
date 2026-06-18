@@ -30,7 +30,8 @@ const investigacionGroups = [
   {
     heading: 'Investigación',
     items: [
-      { to: '/mis-grupos', icon: 'bi-people-fill', label: 'Mis Grupos de Investigación' },
+      { to: '/mis-grupos',     icon: 'bi-people-fill', label: 'Mis Grupos de Investigación' },
+      { to: '/mis-proyectos',  icon: 'bi-kanban',      label: 'Mis Proyectos' },
     ],
   },
 ];
@@ -39,6 +40,7 @@ const coordinadorGroups = [
   {
     heading: 'Coordinación de Redes',
     items: [
+      { to: '/mis-redes',               icon: 'bi-globe',        label: 'Mis Redes' },
       { to: '/mis-redes-publicaciones', icon: 'bi-journal-text', label: 'Publicaciones de Redes' },
     ],
   },
@@ -77,12 +79,17 @@ const vicedecanoGroups = [
   {
     heading: 'Actividad del Área',
     items: [
-      { to: '/publicaciones-area', icon: 'bi-journal-text', label: 'Publicaciones del Área' },
-      { to: '/patentes-area',       icon: 'bi-lightbulb',         label: 'Patentes del Área' },
-      { to: '/registros-area',      icon: 'bi-clipboard-check',   label: 'Registros del Área' },
-      { to: '/normas-area',         icon: 'bi-file-earmark-text', label: 'Normas del Área' },
-      { to: '/productos-area',      icon: 'bi-box-seam',          label: 'Productos del Área' },
-      { to: '/events', icon: 'bi-mic', label: 'Eventos' },
+      { to: '/publicaciones-area',          icon: 'bi-journal-text',       label: 'Publicaciones del Área' },
+      { to: '/patentes-area',               icon: 'bi-lightbulb',          label: 'Patentes del Área' },
+      { to: '/registros-area',              icon: 'bi-clipboard-check',    label: 'Registros del Área' },
+      { to: '/normas-area',                 icon: 'bi-file-earmark-text',  label: 'Normas del Área' },
+      { to: '/productos-area',              icon: 'bi-box-seam',           label: 'Productos del Área' },
+      { to: '/proyectos-area',              icon: 'bi-kanban',             label: 'Proyectos del Área' },
+      { to: '/premios-area',                icon: 'bi-trophy',             label: 'Premios del Área' },
+      { to: '/grupos-investigacion-area',   icon: 'bi-people-fill',        label: 'Grupos de Inv. del Área' },
+      { to: '/grupos-estudiantiles-area',   icon: 'bi-people',             label: 'Grupos Estud. del Área' },
+      { to: '/redes-area',                  icon: 'bi-globe',              label: 'Redes del Área' },
+      { to: '/events',                      icon: 'bi-mic',                label: 'Eventos del Área' },
     ],
   },
 ];

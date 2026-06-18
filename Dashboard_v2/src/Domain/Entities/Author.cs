@@ -41,6 +41,7 @@ public class Author
     public ICollection<AuthorRegistro> AuthorRegistros { get; set; } = new List<AuthorRegistro>();
     public ICollection<AuthorNorma> AuthorNormas { get; set; } = new List<AuthorNorma>();
     public ICollection<AuthorProductoComercializado> AuthorProductosComercializados { get; set; } = new List<AuthorProductoComercializado>();
+    public ICollection<ParticipacionEnRed> ParticipacionesEnRedes { get; set; } = new List<ParticipacionEnRed>();
 
     /// <summary>
     /// Crea un autor a partir de apellidos y nombres de pila.

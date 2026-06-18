@@ -7,7 +7,6 @@ import {
 } from 'reactstrap';
 import Select from 'react-select';
 import UserCard from '../components/UserCard';
-import DataTable from '../components/DataTable';
 import FilterableDataTable from '../components/FilterableDataTable';
 
 async function apiFetch(url, options = {}) {
@@ -253,6 +252,7 @@ export default function GruposDeInvestigacionPage() {
               { key: 'delete',  label: 'Eliminar', icon: 'bi-trash',  color: 'outline-danger',    onClick: item => handleDelete(item.id) },
             ]}
             emptyMessage="No hay grupos de investigación registrados."
+            detailConfig
           />
         </CardBody>
       </Card>

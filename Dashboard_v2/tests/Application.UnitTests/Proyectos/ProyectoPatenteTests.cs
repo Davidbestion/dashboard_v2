@@ -55,13 +55,12 @@ public class ProyectoPatenteTests
         return ("area-1", "clasif-1", "jefe-1");
     }
 
-    private static ProyectoEnRevision MakeProyecto(string id, string areaId, string clasificId, string jefeId) =>
+    private static ProyectoEnRevision MakeProyecto(string id, string clasificId, string jefeId) =>
         new()
         {
             Id = id,
             Titulo = $"Proyecto {id}",
             JefeId = jefeId,
-            AreaId = areaId,
             ClasificacionId = clasificId,
             NumeroMiembros = 2,
             CantidadMiembrosUH = 1,
@@ -86,7 +85,7 @@ public class ProyectoPatenteTests
     {
         await using var db = CreateDb();
         var (areaId, clasificId, jefeId) = SeedPrerequisites(db);
-        db.Proyectos.Add(MakeProyecto("proy-1", areaId, clasificId, jefeId));
+        db.Proyectos.Add(MakeProyecto("proy-1", clasificId, jefeId));
         db.Patentes.Add(MakePatente("pat-1"));
         await db.SaveChangesAsync();
 
@@ -104,7 +103,7 @@ public class ProyectoPatenteTests
     {
         await using var db = CreateDb();
         var (areaId, clasificId, jefeId) = SeedPrerequisites(db);
-        db.Proyectos.Add(MakeProyecto("proy-1", areaId, clasificId, jefeId));
+        db.Proyectos.Add(MakeProyecto("proy-1", clasificId, jefeId));
         db.Patentes.Add(MakePatente("pat-1"));
         await db.SaveChangesAsync();
 
@@ -125,7 +124,7 @@ public class ProyectoPatenteTests
     {
         await using var db = CreateDb();
         var (areaId, clasificId, jefeId) = SeedPrerequisites(db);
-        db.Proyectos.Add(MakeProyecto("proy-1", areaId, clasificId, jefeId));
+        db.Proyectos.Add(MakeProyecto("proy-1", clasificId, jefeId));
         db.Patentes.Add(MakePatente("pat-1"));
         await db.SaveChangesAsync();
 
@@ -146,7 +145,7 @@ public class ProyectoPatenteTests
     {
         await using var db = CreateDb();
         var (areaId, clasificId, jefeId) = SeedPrerequisites(db);
-        db.Proyectos.Add(MakeProyecto("proy-1", areaId, clasificId, jefeId));
+        db.Proyectos.Add(MakeProyecto("proy-1", clasificId, jefeId));
         db.Patentes.Add(MakePatente("pat-1"));
         db.Patentes.Add(MakePatente("pat-2"));
         await db.SaveChangesAsync();
@@ -166,8 +165,8 @@ public class ProyectoPatenteTests
     {
         await using var db = CreateDb();
         var (areaId, clasificId, jefeId) = SeedPrerequisites(db);
-        db.Proyectos.Add(MakeProyecto("proy-1", areaId, clasificId, jefeId));
-        db.Proyectos.Add(MakeProyecto("proy-2", areaId, clasificId, jefeId));
+        db.Proyectos.Add(MakeProyecto("proy-1", clasificId, jefeId));
+        db.Proyectos.Add(MakeProyecto("proy-2", clasificId, jefeId));
         db.Patentes.Add(MakePatente("pat-1"));
         await db.SaveChangesAsync();
 
@@ -186,7 +185,7 @@ public class ProyectoPatenteTests
     {
         await using var db = CreateDb();
         var (areaId, clasificId, jefeId) = SeedPrerequisites(db);
-        db.Proyectos.Add(MakeProyecto("proy-1", areaId, clasificId, jefeId));
+        db.Proyectos.Add(MakeProyecto("proy-1", clasificId, jefeId));
         db.Patentes.Add(MakePatente("pat-1"));
         await db.SaveChangesAsync();
 
@@ -200,7 +199,7 @@ public class ProyectoPatenteTests
     {
         await using var db = CreateDb();
         var (areaId, clasificId, jefeId) = SeedPrerequisites(db);
-        db.Proyectos.Add(MakeProyecto("proy-1", areaId, clasificId, jefeId));
+        db.Proyectos.Add(MakeProyecto("proy-1", clasificId, jefeId));
         db.Patentes.Add(MakePatente("pat-1"));
         await db.SaveChangesAsync();
 
@@ -218,7 +217,7 @@ public class ProyectoPatenteTests
     {
         await using var db = CreateDb();
         var (areaId, clasificId, jefeId) = SeedPrerequisites(db);
-        db.Proyectos.Add(MakeProyecto("proy-1", areaId, clasificId, jefeId));
+        db.Proyectos.Add(MakeProyecto("proy-1", clasificId, jefeId));
         db.Patentes.Add(MakePatente("pat-1"));
         await db.SaveChangesAsync();
 
@@ -236,7 +235,7 @@ public class ProyectoPatenteTests
     {
         await using var db = CreateDb();
         var (areaId, clasificId, jefeId) = SeedPrerequisites(db);
-        db.Proyectos.Add(MakeProyecto("proy-1", areaId, clasificId, jefeId));
+        db.Proyectos.Add(MakeProyecto("proy-1", clasificId, jefeId));
         db.Patentes.Add(MakePatente("pat-1"));
         await db.SaveChangesAsync();
 

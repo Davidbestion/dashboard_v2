@@ -2,25 +2,17 @@ using Dashboard_v2.Application.Proyectos;
 using Dashboard_v2.Domain.Entities;
 using Dashboard_v2.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-using Moq;
 using NUnit.Framework;
 using Shouldly;
 
 namespace Dashboard_v2.Application.UnitTests.Proyectos;
 
 /// <summary>
-/// Tests that cover the Proyecto → Area 1:N relationship introduced in AddAreaToProyecto migration:
-///
-///  1. ProyectoHelper.SetBase correctly assigns AreaId.
-///  2. ProyectoBaseValidator rejects empty / non-existent AreaId and accepts a valid one.
-///  3. EF model has the FK with Restrict delete-behavior.
-///  4. ProyectoService.GetAllAsync projects AreaId / AreaNombre.
-///  5. ProyectoService.GetProyectoAsync includes the Area navigation.
+/// Tests for the User ↔ Proyecto M:N participantes relationship introduced
+/// when the old Area → Proyecto FK was replaced with a join table.
 /// </summary>
-public class ProyectoAreaTests
+public class ProyectoParticipantesTests
 {
-    // ── Helpers ───────────────────────────────────────────────────────────────
-
     private static ApplicationDbContext CreateDb()
     {
         var opts = new DbContextOptionsBuilder<ApplicationDbContext>()
@@ -29,16 +21,8 @@ public class ProyectoAreaTests
         return new ApplicationDbContext(opts);
     }
 
-    /// <summary>Seeds one Area, one Clasificacion and one User, and returns the Area.Id.</summary>
-    private static (string areaId, string clasificId, string userId) SeedPrerequisites(ApplicationDbContext db)
+    private static (string clasificId, string userId) SeedPrerequisites(ApplicationDbContext db)
     {
-        var area = new Area
-        {
-            Id = "area-matcom",
-            Nombre = "MATCOM",
-            Descripcion = "Área de MATCOM",
-            UniversidadId = "uh"
-        };
         var clasif = new Clasificacion { Id = "clasif-basica", Nombre = "Básica" };
         var user = new User
         {
@@ -51,17 +35,27 @@ public class ProyectoAreaTests
             BirthDate = DateTime.UtcNow,
             CreatedAt = DateTimeOffset.UtcNow
         };
-
-        db.Areas.Add(area);
         db.Clasificaciones.Add(clasif);
         db.Users.Add(user);
         db.SaveChanges();
-
-        return (area.Id, clasif.Id, user.Id);
+        return (clasif.Id, user.Id);
     }
 
+    private static User SeedUser(ApplicationDbContext db, string id, string nombre = "Participante") =>
+        db.Users.Add(new User
+        {
+            Id = id,
+            UserName = nombre,
+            UserLastName1 = "Test",
+            Email = $"{id}@uh.cu",
+            PasswordHash = "hash",
+            IsActive = true,
+            BirthDate = DateTime.UtcNow,
+            CreatedAt = DateTimeOffset.UtcNow
+        }).Entity;
+
     private static ProyectoEnRevision SeedProyecto(
-        ApplicationDbContext db, string areaId, string clasificId, string userId)
+        ApplicationDbContext db, string clasificId, string userId)
     {
         var p = new ProyectoEnRevision
         {
@@ -69,163 +63,179 @@ public class ProyectoAreaTests
             Titulo = "Proyecto de prueba",
             JefeId = userId,
             NumeroMiembros = 3,
-            CantidadMiembrosUH = 2,
-            CantidadEstudiantes = 1,
-            CantidadEstudiantesContratados = 0,
-            TributaFormacionDoctoral = false,
             ClasificacionId = clasificId,
-            AreaId = areaId,
-            Tipo = "en-revision"
+            Tipo = "PE"
         };
         db.Proyectos.Add(p);
         db.SaveChanges();
         return p;
     }
 
-    // ══════════════════════════════════════════════════════════════════════════
-    // 1. Proyecto entity – AreaId property
-    // ══════════════════════════════════════════════════════════════════════════
+    // ── 1. Entity defaults ─────────────────────────────────────────────────────
 
     [Test]
-    public void ProyectoEntity_AreaId_CanBeSetAndRead()
-    {
-        var p = new ProyectoEnRevision { AreaId = "area-matcom" };
-        p.AreaId.ShouldBe("area-matcom");
-    }
-
-    [Test]
-    public void ProyectoEntity_AreaNavigation_IsDefaultNull()
+    public void ProyectoEntity_Participantes_IsEmptyByDefault()
     {
         var p = new ProyectoEnRevision();
-        // Navigation property is reference-initialized as default! → null before loading
-        p.Area.ShouldBeNull();
+        p.Participantes.ShouldNotBeNull();
+        p.Participantes.ShouldBeEmpty();
     }
 
-    // ══════════════════════════════════════════════════════════════════════════
-    // 2. ProyectoBaseValidator – AreaId rules
-    // ══════════════════════════════════════════════════════════════════════════
-
     [Test]
-    public async Task Validator_EmptyAreaId_FailsValidation()
+    public void UserEntity_ProyectosParticipante_IsEmptyByDefault()
     {
-        await using var db = CreateDb();
-        SeedPrerequisites(db);
-
-        var validator = new ProyectoEnRevisionUpsertRequestValidator(db);
-        var request = new ProyectoEnRevisionUpsertRequest
-        {
-            Titulo = "Titulo",
-            JefeId = "user-jefe-1",
-            ClasificacionId = "clasif-basica",
-            AreaId = "",         // empty → must fail
-            Tipo = "en-revision"
-        };
-
-        var result = await validator.ValidateAsync(request);
-
-        result.IsValid.ShouldBeFalse();
-        result.Errors.ShouldContain(e => e.PropertyName == nameof(request.AreaId));
+        var u = new User();
+        u.ProyectosParticipante.ShouldNotBeNull();
+        u.ProyectosParticipante.ShouldBeEmpty();
     }
 
     [Test]
-    public async Task Validator_NonExistentAreaId_FailsWithMessage()
+    public void ProyectoEntity_DoesNotHaveAreaIdProperty()
     {
-        await using var db = CreateDb();
-        SeedPrerequisites(db);
-
-        var validator = new ProyectoEnRevisionUpsertRequestValidator(db);
-        var request = new ProyectoEnRevisionUpsertRequest
-        {
-            Titulo = "Titulo",
-            JefeId = "user-jefe-1",
-            ClasificacionId = "clasif-basica",
-            AreaId = "area-que-no-existe",
-            Tipo = "en-revision"
-        };
-
-        var result = await validator.ValidateAsync(request);
-
-        result.IsValid.ShouldBeFalse();
-        result.Errors.ShouldContain(e =>
-            e.PropertyName == nameof(request.AreaId) &&
-            e.ErrorMessage.Contains("área indicada no existe"));
+        var prop = typeof(Proyecto).GetProperty("AreaId");
+        prop.ShouldBeNull("AreaId was removed from Proyecto when the Area→Proyecto FK was eliminated");
     }
 
     [Test]
-    public async Task Validator_ValidAreaId_PassesAreaValidation()
+    public void AreaEntity_DoesNotHaveProyectosNavigation()
     {
-        await using var db = CreateDb();
-        var (areaId, clasificId, _) = SeedPrerequisites(db);
-
-        var validator = new ProyectoEnRevisionUpsertRequestValidator(db);
-        var request = new ProyectoEnRevisionUpsertRequest
-        {
-            Titulo = "Titulo",
-            JefeId = "cualquier-jefe",
-            ClasificacionId = clasificId,
-            AreaId = areaId,
-            Tipo = "en-revision"
-        };
-
-        var result = await validator.ValidateAsync(request);
-
-        // AreaId errors specifically must be absent (other fields might fail)
-        result.Errors.ShouldNotContain(e => e.PropertyName == nameof(request.AreaId));
+        var prop = typeof(Area).GetProperty("Proyectos");
+        prop.ShouldBeNull("Area.Proyectos navigation was removed — area membership is now implicit");
     }
 
-    // ══════════════════════════════════════════════════════════════════════════
-    // 3. EF model – FK Proyecto → Area
-    // ══════════════════════════════════════════════════════════════════════════
+    // ── 2. EF model – join table ───────────────────────────────────────────────
 
     [Test]
-    public void EfModel_ProyectoHasAreaIdForeignKey()
+    public void EfModel_ProyectoParticipantes_JoinTableExists()
     {
         using var db = CreateDb();
         var model = db.Model;
 
-        var proyectoType = model.FindEntityType(typeof(ProyectoEnRevision));
+        var joinEntity = model.GetEntityTypes()
+            .FirstOrDefault(t => t.GetTableName() == "ProyectoParticipantes");
+
+        joinEntity.ShouldNotBeNull("ProyectoParticipantes join table must be registered in the EF model");
+    }
+
+    [Test]
+    public void EfModel_ProyectoHasParticipantesNavigation()
+    {
+        using var db = CreateDb();
+        var model = db.Model;
+
+        var proyectoType = model.FindEntityType(typeof(Proyecto));
         proyectoType.ShouldNotBeNull();
 
-        // The FK is declared on the base Proyecto type
-        var baseType = proyectoType.BaseType;
-        baseType.ShouldNotBeNull("Proyecto must have a base type (TPT hierarchy)");
+        var nav = proyectoType!.GetSkipNavigations()
+            .FirstOrDefault(n => n.Name == "Participantes");
 
-        var fk = baseType.GetForeignKeys()
-            .FirstOrDefault(fk => fk.Properties.Any(p => p.Name == "AreaId"));
-
-        fk.ShouldNotBeNull("Expected FK on Proyecto.AreaId");
-        fk!.DeleteBehavior.ShouldBe(Microsoft.EntityFrameworkCore.DeleteBehavior.Restrict);
-        fk.PrincipalEntityType.ClrType.ShouldBe(typeof(Area));
-    }
-
-    [Test]
-    public void EfModel_AreaHasProyectosInverseNavigation()
-    {
-        using var db = CreateDb();
-        var model = db.Model;
-
-        var areaType = model.FindEntityType(typeof(Area));
-        areaType.ShouldNotBeNull();
-
-        var nav = areaType.GetNavigations()
-            .FirstOrDefault(n => n.Name == "Proyectos");
-
-        nav.ShouldNotBeNull("Area must have a Proyectos collection navigation");
+        nav.ShouldNotBeNull("Proyecto must have a Participantes skip navigation");
         nav!.IsCollection.ShouldBeTrue();
     }
 
-    // ══════════════════════════════════════════════════════════════════════════
-    // 4. GetAllAsync projects AreaId and AreaNombre
-    // ══════════════════════════════════════════════════════════════════════════
+    [Test]
+    public void EfModel_UserHasProyectosParticipanteNavigation()
+    {
+        using var db = CreateDb();
+        var model = db.Model;
+
+        var userType = model.FindEntityType(typeof(User));
+        userType.ShouldNotBeNull();
+
+        var nav = userType!.GetSkipNavigations()
+            .FirstOrDefault(n => n.Name == "ProyectosParticipante");
+
+        nav.ShouldNotBeNull("User must have a ProyectosParticipante skip navigation");
+        nav!.IsCollection.ShouldBeTrue();
+    }
+
+    // ── 3. Persistence ────────────────────────────────────────────────────────
 
     [Test]
-    public async Task GetAllAsync_IncludesAreaIdAndAreaNombreInResumen()
+    public async Task Proyecto_AddParticipante_PersistedCorrectly()
     {
         await using var db = CreateDb();
-        var (areaId, clasificId, userId) = SeedPrerequisites(db);
-        SeedProyecto(db, areaId, clasificId, userId);
+        var (clasificId, jefeId) = SeedPrerequisites(db);
+        var participante = SeedUser(db, "part-1");
+        db.SaveChanges();
 
-        // Replicate the GetAllAsync LINQ projection for ProyectoEnRevision
+        var proyecto = SeedProyecto(db, clasificId, jefeId);
+
+        proyecto.Participantes.Add(participante);
+        await db.SaveChangesAsync();
+
+        var loaded = await db.Proyectos.OfType<ProyectoEnRevision>()
+            .Include(p => p.Participantes)
+            .FirstOrDefaultAsync(p => p.Id == proyecto.Id);
+
+        loaded.ShouldNotBeNull();
+        loaded!.Participantes.ShouldHaveSingleItem();
+        loaded.Participantes.First().Id.ShouldBe("part-1");
+    }
+
+    [Test]
+    public async Task Proyecto_RemoveParticipante_PersistedCorrectly()
+    {
+        await using var db = CreateDb();
+        var (clasificId, jefeId) = SeedPrerequisites(db);
+        var part1 = SeedUser(db, "part-a");
+        var part2 = SeedUser(db, "part-b");
+        db.SaveChanges();
+
+        var proyecto = SeedProyecto(db, clasificId, jefeId);
+        proyecto.Participantes.Add(part1);
+        proyecto.Participantes.Add(part2);
+        await db.SaveChangesAsync();
+
+        var loaded = await db.Proyectos.OfType<ProyectoEnRevision>()
+            .Include(p => p.Participantes)
+            .FirstOrDefaultAsync(p => p.Id == proyecto.Id);
+        loaded!.Participantes.Remove(loaded.Participantes.First(u => u.Id == "part-a"));
+        await db.SaveChangesAsync();
+
+        var reloaded = await db.Proyectos.OfType<ProyectoEnRevision>()
+            .Include(p => p.Participantes)
+            .FirstOrDefaultAsync(p => p.Id == proyecto.Id);
+
+        reloaded!.Participantes.ShouldHaveSingleItem();
+        reloaded.Participantes.First().Id.ShouldBe("part-b");
+    }
+
+    [Test]
+    public async Task User_ProyectosParticipante_ReflectsInverseNavigation()
+    {
+        await using var db = CreateDb();
+        var (clasificId, jefeId) = SeedPrerequisites(db);
+        var part = SeedUser(db, "part-inv");
+        db.SaveChanges();
+
+        var proyecto = SeedProyecto(db, clasificId, jefeId);
+        proyecto.Participantes.Add(part);
+        await db.SaveChangesAsync();
+
+        var loadedUser = await db.Users
+            .Include(u => u.ProyectosParticipante)
+            .FirstOrDefaultAsync(u => u.Id == "part-inv");
+
+        loadedUser.ShouldNotBeNull();
+        loadedUser!.ProyectosParticipante.ShouldHaveSingleItem();
+        loadedUser.ProyectosParticipante.First().Id.ShouldBe(proyecto.Id);
+    }
+
+    // ── 4. GetAllAsync projects Participantes ─────────────────────────────────
+
+    [Test]
+    public async Task GetAllAsync_ProjectionIncludesParticipantes()
+    {
+        await using var db = CreateDb();
+        var (clasificId, userId) = SeedPrerequisites(db);
+        var part = SeedUser(db, "part-all");
+        db.SaveChanges();
+
+        var proyecto = SeedProyecto(db, clasificId, userId);
+        proyecto.Participantes.Add(part);
+        await db.SaveChangesAsync();
+
         var result = await db.Proyectos.OfType<ProyectoEnRevision>()
             .Select(p => new ProyectoResumenDto
             {
@@ -237,61 +247,42 @@ public class ProyectoAreaTests
                 NumeroMiembros = p.NumeroMiembros,
                 ClasificacionId = p.ClasificacionId,
                 ClasificacionNombre = p.Clasificacion.Nombre,
-                AreaId = p.AreaId,
-                AreaNombre = p.Area.Nombre,
+                Participantes = p.Participantes.Select(u => new UserRefDto(
+                    u.Id,
+                    u.UserName + " " + u.UserLastName1,
+                    u.Email)).ToList(),
                 Tipo = "en-revision"
             })
             .ToListAsync();
 
         result.ShouldHaveSingleItem();
-        result[0].AreaId.ShouldBe(areaId);
-        result[0].AreaNombre.ShouldBe("MATCOM");
+        result[0].Participantes.ShouldHaveSingleItem();
+        result[0].Participantes[0].Id.ShouldBe("part-all");
     }
 
-    // ══════════════════════════════════════════════════════════════════════════
-    // 5. GetProyectoAsync loads Area via Include
-    // ══════════════════════════════════════════════════════════════════════════
+    // ── 5. GetProyectoAsync loads Participantes navigation ────────────────────
 
     [Test]
-    public async Task GetProyectoAsync_AreaNavigationIsLoaded()
+    public async Task GetProyectoAsync_ParticipantesNavigationIsLoaded()
     {
         await using var db = CreateDb();
-        var (areaId, clasificId, userId) = SeedPrerequisites(db);
-        var proyecto = SeedProyecto(db, areaId, clasificId, userId);
+        var (clasificId, userId) = SeedPrerequisites(db);
+        var part = SeedUser(db, "part-load");
+        db.SaveChanges();
+
+        var proyecto = SeedProyecto(db, clasificId, userId);
+        proyecto.Participantes.Add(part);
+        await db.SaveChangesAsync();
 
         var loaded = await db.Proyectos.OfType<ProyectoEnRevision>()
             .Include(x => x.Clasificacion)
-            .Include(x => x.Area)
+            .Include(x => x.Participantes)
             .Include(x => x.JefeUsuario)
             .Include(x => x.PublicacionesDerivadas)
             .FirstOrDefaultAsync(x => x.Id == proyecto.Id);
 
         loaded.ShouldNotBeNull();
-        loaded!.Area.ShouldNotBeNull();
-        loaded.Area.Id.ShouldBe(areaId);
-        loaded.Area.Nombre.ShouldBe("MATCOM");
-    }
-
-    // ══════════════════════════════════════════════════════════════════════════
-    // 6. Proyecto entity – navigation defaults
-    // ══════════════════════════════════════════════════════════════════════════
-
-    [Test]
-    public void ProyectoEntity_HasAreaIdProperty()
-    {
-        var p = new ProyectoEnRevision();
-        // AreaId is a non-nullable string (default! is null until assigned)
-        var propInfo = typeof(ProyectoEnRevision).BaseType!
-            .GetProperty("AreaId");
-        propInfo.ShouldNotBeNull();
-        propInfo!.PropertyType.ShouldBe(typeof(string));
-    }
-
-    [Test]
-    public void AreaEntity_HasProyectosCollection()
-    {
-        var area = new Area();
-        area.Proyectos.ShouldNotBeNull();
-        area.Proyectos.ShouldBeEmpty();
+        loaded!.Participantes.ShouldHaveSingleItem();
+        loaded.Participantes.First().Id.ShouldBe("part-load");
     }
 }

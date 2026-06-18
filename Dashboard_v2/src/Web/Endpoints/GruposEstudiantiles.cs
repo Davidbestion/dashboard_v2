@@ -19,6 +19,11 @@ public class GruposEstudiantiles : EndpointGroupBase
             .WithName("GetGruposEstudiantiles")
             .Produces<List<GrupoEstudiantilDto>>(200);
 
+        groupBuilder.MapGet("area", GetAreaGruposEstudiantiles)
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Vicedecano_de_investigacion)))
+            .WithName("GetAreaGruposEstudiantiles")
+            .Produces<List<GrupoEstudiantilDto>>(200);
+
         groupBuilder.MapPost("", CreateGrupoEstudiantil)
             .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser)))
             .WithName("CreateGrupoEstudiantil")
@@ -42,6 +47,12 @@ public class GruposEstudiantiles : EndpointGroupBase
     private async Task<IResult> GetGruposEstudiantiles(IGrupoEstudiantilService svc)
     {
         var list = await svc.GetAllAsync();
+        return Results.Ok(list);
+    }
+
+    private async Task<IResult> GetAreaGruposEstudiantiles(IGrupoEstudiantilService svc)
+    {
+        var list = await svc.GetAreaAsync();
         return Results.Ok(list);
     }
 

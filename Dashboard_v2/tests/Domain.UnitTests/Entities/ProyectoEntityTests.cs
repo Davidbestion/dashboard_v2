@@ -16,7 +16,7 @@ public class ProyectoEntityTests
     [Test]
     public void ProyectoEnRevision_DefaultId_IsValidGuid()
     {
-        var proy = new ProyectoEnRevision { Titulo = "Proyecto Test", JefeId = "j-1", ClasificacionId = "c-1", AreaId = "a-1", Tipo = "Tesis" };
+        var proy = new ProyectoEnRevision { Titulo = "Proyecto Test", JefeId = "j-1", ClasificacionId = "c-1", Tipo = "Tesis" };
 
         Guid.TryParse(proy.Id, out _).ShouldBeTrue();
     }
@@ -24,8 +24,8 @@ public class ProyectoEntityTests
     [Test]
     public void ProyectoEnRevision_EachInstance_GetsUniqueId()
     {
-        var p1 = new ProyectoEnRevision { Titulo = "A", JefeId = "j", ClasificacionId = "c", AreaId = "a", Tipo = "PE" };
-        var p2 = new ProyectoEnRevision { Titulo = "B", JefeId = "j", ClasificacionId = "c", AreaId = "a", Tipo = "PE" };
+        var p1 = new ProyectoEnRevision { Titulo = "A", JefeId = "j", ClasificacionId = "c", Tipo = "PE" };
+        var p2 = new ProyectoEnRevision { Titulo = "B", JefeId = "j", ClasificacionId = "c", Tipo = "PE" };
 
         p1.Id.ShouldNotBe(p2.Id);
     }
@@ -33,7 +33,7 @@ public class ProyectoEntityTests
     [Test]
     public void ProyectoEnRevision_DefaultCounters_AreZero()
     {
-        var proy = new ProyectoEnRevision { Titulo = "T", JefeId = "j", ClasificacionId = "c", AreaId = "a", Tipo = "Tesis" };
+        var proy = new ProyectoEnRevision { Titulo = "T", JefeId = "j", ClasificacionId = "c", Tipo = "Tesis" };
 
         proy.NumeroMiembros.ShouldBe(0);
         proy.CantidadMiembrosUH.ShouldBe(0);
@@ -44,7 +44,7 @@ public class ProyectoEntityTests
     [Test]
     public void ProyectoEnRevision_DefaultTributaFormacionDoctoral_IsFalse()
     {
-        var proy = new ProyectoEnRevision { Titulo = "T", JefeId = "j", ClasificacionId = "c", AreaId = "a", Tipo = "PE" };
+        var proy = new ProyectoEnRevision { Titulo = "T", JefeId = "j", ClasificacionId = "c", Tipo = "PE" };
 
         proy.TributaFormacionDoctoral.ShouldBeFalse();
     }
@@ -52,7 +52,7 @@ public class ProyectoEntityTests
     [Test]
     public void ProyectoEnRevision_DefaultCollections_AreEmptyNotNull()
     {
-        var proy = new ProyectoEnRevision { Titulo = "T", JefeId = "j", ClasificacionId = "c", AreaId = "a", Tipo = "PE" };
+        var proy = new ProyectoEnRevision { Titulo = "T", JefeId = "j", ClasificacionId = "c", Tipo = "PE" };
 
         proy.PublicacionesDerivadas.ShouldNotBeNull();
         proy.PublicacionesDerivadas.ShouldBeEmpty();
@@ -80,7 +80,6 @@ public class ProyectoEntityTests
             CantidadEstudiantesContratados = 1,
             TributaFormacionDoctoral = true,
             ClasificacionId = "clasif-1",
-            AreaId = "area-1",
             Tipo = "Tesis",
         };
 
@@ -93,7 +92,6 @@ public class ProyectoEntityTests
         proy.CantidadEstudiantesContratados.ShouldBe(1);
         proy.TributaFormacionDoctoral.ShouldBeTrue();
         proy.ClasificacionId.ShouldBe("clasif-1");
-        proy.AreaId.ShouldBe("area-1");
         proy.Tipo.ShouldBe("Tesis");
     }
 
@@ -105,7 +103,6 @@ public class ProyectoEntityTests
             Titulo = "T",
             JefeId = "j",
             ClasificacionId = "c",
-            AreaId = "a",
             Tipo = "PE",
             TributaFormacionDoctoral = false
         };

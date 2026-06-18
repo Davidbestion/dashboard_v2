@@ -186,6 +186,7 @@ export default function MisPatentesPage() {
               { key: 'delete',    label: 'Eliminar',  icon: 'bi-trash',     color: 'outline-danger',  onClick: i => openDelete(i) },
             ]}
             emptyMessage="No tienes patentes registradas."
+            detailConfig
           />
         </CardBody>
       </Card>

@@ -9,7 +9,7 @@ namespace Dashboard_v2.Application.Proyectos;
 internal static class ProyectoHelper
 {
     internal static void SetBase(Proyecto p, string titulo, string jefeId,
-        int numMiembros, int cantUH, int cantEst, int cantEstCont, bool tributaFormacion, string clasificId, string areaId)
+        int numMiembros, int cantUH, int cantEst, int cantEstCont, bool tributaFormacion, string clasificId)
     {
         p.Titulo = titulo.Trim();
         p.JefeId = jefeId;
@@ -19,7 +19,6 @@ internal static class ProyectoHelper
         p.CantidadEstudiantesContratados = cantEstCont;
         p.TributaFormacionDoctoral = tributaFormacion;
         p.ClasificacionId = clasificId;
-        p.AreaId = areaId;
     }
 
     internal static void SetEjecucion(ProyectoEnEjecucion pe,

@@ -20,12 +20,14 @@ public class DocumentServiceTests
         _reportMock = new Mock<IDocumentReport>();
         _reportMock.Setup(r => r.ReportName).Returns("test-report");
         _reportMock.Setup(r => r.TemplateName).Returns("TestTemplate");
+        _reportMock.Setup(r => r.AllowedRoles).Returns(["Superuser"]);
         _reportMock
             .Setup(r => r.GatherVariablesAsync(It.IsAny<IReadOnlyDictionary<string, string>?>(), default))
             .ReturnsAsync(new Dictionary<string, object> { ["key"] = "value" });
 
         _zipReportMock = new Mock<IZipDocumentReport>();
         _zipReportMock.Setup(r => r.ReportName).Returns("zip-report");
+        _zipReportMock.Setup(r => r.AllowedRoles).Returns(["Superuser", "Jefe_de_Redes"]);
         _zipReportMock
             .Setup(r => r.GenerateAsync(It.IsAny<IDocumentRenderer>(), default))
             .ReturnsAsync(new byte[] { 1, 2, 3 });
@@ -96,5 +98,37 @@ public class DocumentServiceTests
         await _sut.GenerateAsync("test-report", parameters);
         _reportMock.Verify(r => r.GatherVariablesAsync(
             It.Is<IReadOnlyDictionary<string, string>>(p => p["year"] == "2024"), default), Times.Once);
+    }
+
+    // ── GetAllowedRoles ──────────────────────────────────────────────────────
+
+    [Test]
+    public void GetAllowedRoles_RegularReport_ReturnsItsAllowedRoles()
+    {
+        var roles = _sut.GetAllowedRoles("test-report");
+
+        roles.ShouldNotBeNull();
+        roles.ShouldBe(["Superuser"]);
+    }
+
+    [Test]
+    public void GetAllowedRoles_ZipReport_ReturnsItsAllowedRoles()
+    {
+        var roles = _sut.GetAllowedRoles("zip-report");
+
+        roles.ShouldNotBeNull();
+        roles.ShouldBe(["Superuser", "Jefe_de_Redes"]);
+    }
+
+    [Test]
+    public void GetAllowedRoles_UnknownReport_ReturnsNull()
+    {
+        _sut.GetAllowedRoles("does-not-exist").ShouldBeNull();
+    }
+
+    [Test]
+    public void GetAllowedRoles_CaseInsensitiveReportName_Succeeds()
+    {
+        _sut.GetAllowedRoles("TEST-REPORT").ShouldBe(["Superuser"]);
     }
 }

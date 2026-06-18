@@ -34,12 +34,11 @@ public static class DependencyInjection
         Guard.Against.Null(connectionString, message: "Connection string 'Dashboard_v2Db' not found.");
 
         builder.Services.AddScoped<ISaveChangesInterceptor, AuditableEntityInterceptor>();
-        builder.Services.AddScoped<ISaveChangesInterceptor, DispatchDomainEventsInterceptor>();
 
         builder.Services.AddDbContext<ApplicationDbContext>((sp, options) =>
         {
             options.AddInterceptors(sp.GetServices<ISaveChangesInterceptor>());
-            options.UseNpgsql(connectionString);
+            options.UseNpgsql(connectionString, o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery));
             options.ConfigureWarnings(warnings => warnings.Ignore(RelationalEventId.PendingModelChangesWarning));
         });
 
@@ -57,7 +56,6 @@ public static class DependencyInjection
             builder.Services.AddTransient<IIdentityService, LocalAuthService>();
 
         builder.Services.AddSingleton<IJwtService, JwtService>();
-        builder.Services.AddScoped<IPermissionService, PermissionService>();
         builder.Services.AddScoped<IAuthorCleanupService, AuthorCleanupService>();
         builder.Services.AddScoped<Dashboard_v2.Application.Common.Interfaces.IAuthorResolutionService, Dashboard_v2.Application.Common.AuthorResolutionService>();
         builder.Services.AddScoped<Dashboard_v2.Application.Common.Interfaces.IProductionCreatorService, Dashboard_v2.Application.Common.ProductionCreatorService>();
@@ -144,7 +142,15 @@ public static class DependencyInjection
         builder.Services.AddScoped<Dashboard_v2.Application.Users.IUserService, Dashboard_v2.Application.Users.UserService>();
         builder.Services.AddScoped<Dashboard_v2.Application.Authors.IAuthorService, Dashboard_v2.Application.Authors.AuthorService>();
         builder.Services.AddScoped<Dashboard_v2.Application.Roles.IRoleService, Dashboard_v2.Application.Roles.RoleService>();
-        builder.Services.AddScoped<IProyectoService, ProyectoService>();
+        builder.Services.AddScoped<ProyectoService>();
+        builder.Services.AddScoped<IProyectoService>(sp => sp.GetRequiredService<ProyectoService>());
+        builder.Services.AddScoped<Dashboard_v2.Application.Proyectos.IProyectoQueryService>(sp => sp.GetRequiredService<ProyectoService>());
+        builder.Services.AddScoped<Dashboard_v2.Application.Proyectos.IProyectoCommandService>(sp => sp.GetRequiredService<ProyectoService>());
+        builder.Services.AddScoped<Dashboard_v2.Application.Redes.IRedService, Dashboard_v2.Application.Redes.RedService>();
+        builder.Services.AddScoped<Dashboard_v2.Application.Patentes.IPatenteService, Dashboard_v2.Application.Patentes.PatenteService>();
+        builder.Services.AddScoped<Dashboard_v2.Application.Normas.INormaService, Dashboard_v2.Application.Normas.NormaService>();
+        builder.Services.AddScoped<Dashboard_v2.Application.Registros.IRegistroService, Dashboard_v2.Application.Registros.RegistroService>();
+        builder.Services.AddScoped<Dashboard_v2.Application.ProductosComercializados.IProductoComercializadoService, Dashboard_v2.Application.ProductosComercializados.ProductoComercializadoService>();
         builder.Services.AddScoped<IAuthService, AuthService>();
         builder.Services.AddScoped<Dashboard_v2.Application.Documents.IDocumentService, Dashboard_v2.Application.Documents.DocumentService>();
         // Para agregar un nuevo reporte, agrega otra línea aquí:

@@ -6,7 +6,6 @@ import {
   Form, FormGroup, Label, Input,
 } from 'reactstrap';
 import Select from 'react-select';
-import DataTable from '../components/DataTable';
 import FilterableDataTable from '../components/FilterableDataTable';
 
 async function apiFetch(url, options = {}) {
@@ -151,6 +150,7 @@ export default function AreasDelConocimientoPage() {
               { key: 'delete', label: 'Eliminar', icon: 'bi-trash',  color: 'outline-danger',    onClick: item => handleDelete(item.id) },
             ]}
             emptyMessage="No hay áreas del conocimiento registradas."
+            detailConfig
           />
         </CardBody>
       </Card>

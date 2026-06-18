@@ -1,6 +1,4 @@
-using Dashboard_v2.Application.Common.Interfaces;
-using Dashboard_v2.Domain.Entities;
-using Microsoft.EntityFrameworkCore;
+using Dashboard_v2.Application.Patentes;
 using RolesEnum = Dashboard_v2.Domain.Enums.Roles;
 
 namespace Dashboard_v2.Web.Endpoints;
@@ -41,13 +39,13 @@ public class Patentes : EndpointGroupBase
             .ProducesProblem(404);
 
         groupBuilder.MapPost("", CreatePatente)
-            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Jefe_de_Proyecto), nameof(RolesEnum.Superuser)))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Superuser)))
             .WithName("CreatePatente")
             .Produces(201)
             .ProducesProblem(400);
 
         groupBuilder.MapPut("{id}", UpdatePatente)
-            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Jefe_de_Proyecto), nameof(RolesEnum.Superuser)))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Superuser)))
             .WithName("UpdatePatente")
             .Produces(200)
             .ProducesProblem(400)
@@ -55,231 +53,85 @@ public class Patentes : EndpointGroupBase
             .ProducesProblem(404);
 
         groupBuilder.MapDelete("{id}", DeletePatente)
-            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Jefe_de_Proyecto), nameof(RolesEnum.Superuser)))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Superuser)))
             .WithName("DeletePatente")
             .Produces(200)
             .ProducesProblem(403)
             .ProducesProblem(404);
     }
 
-    private static async Task<IResult> GetPatentes(IApplicationDbContext db)
-    {
-        var list = await db.Patentes
-            .Include(p => p.Creadores).ThenInclude(c => c.Author)
-            .Select(p => new PatenteDto(
-                p.Id,
-                p.Titulo,
-                p.NumeroSolicitudConcesion,
-                p.EsNacional,
-                p.Creadores.Select(c => c.Author.Name).ToList(),
-                p.Creadores.Select(c => new CreatorDto(c.Author.Id, c.Author.Name, c.Author.UserId)).ToList()))
-            .ToListAsync();
-        return Results.Ok(list);
-    }
+    private static async Task<IResult> GetPatentes(IPatenteService service, CancellationToken ct)
+        => Results.Ok(await service.GetAllAsync(ct));
 
-    private static async Task<IResult> GetMisPatentes(IApplicationDbContext db, IUser currentUser, IAuthorResolutionService authorResolution)
-    {
-        var currentAuthor = await authorResolution.GetOrCreateForUserAsync(currentUser.Id!, CancellationToken.None);
-        if (currentAuthor == null)
-            return Results.Ok(new List<PatenteDto>());
+    private static async Task<IResult> GetMisPatentes(IPatenteService service, CancellationToken ct)
+        => Results.Ok(await service.GetMisAsync(ct));
 
-        var list = await db.AuthorPatentes
-            .Where(ap => ap.AuthorId == currentAuthor.Id)
-            .Include(ap => ap.Patente).ThenInclude(p => p.Creadores).ThenInclude(c => c.Author)
-            .Select(ap => new PatenteDto(
-                ap.Patente.Id,
-                ap.Patente.Titulo,
-                ap.Patente.NumeroSolicitudConcesion,
-                ap.Patente.EsNacional,
-                ap.Patente.Creadores.Select(c => c.Author.Name).ToList(),
-                ap.Patente.Creadores.Select(c => new CreatorDto(c.Author.Id, c.Author.Name, c.Author.UserId)).ToList()))
-            .ToListAsync();
-        return Results.Ok(list);
-    }
-
-    private static async Task<IResult> GetProyectosDePatente(IApplicationDbContext db, string id)
+    private static async Task<IResult> GetProyectosDePatente(IPatenteService service, string id, CancellationToken ct)
     {
-        if (!await db.Patentes.AnyAsync(p => p.Id == id))
+        var (found, proyectos) = await service.GetProyectosDeAsync(id, ct);
+        if (!found)
             return Results.NotFound(new { errors = new[] { "Patente no encontrada." } });
 
-        var list = await db.ProyectoPatentes
-            .Where(pp => pp.PatenteId == id)
-            .Include(pp => pp.Proyecto)
-            .Select(pp => new ProyectoPatenteDto(pp.ProyectoId, pp.Proyecto.Titulo))
-            .ToListAsync();
-        return Results.Ok(list);
+        return Results.Ok(proyectos);
     }
 
-    private static async Task<IResult> LinkProyectoAPatente(
-        IApplicationDbContext db, IUser currentUser, IAuthorResolutionService authorResolution, string id, string proyectoId)
+    private static async Task<IResult> LinkProyectoAPatente(IPatenteService service, string id, string proyectoId, CancellationToken ct)
     {
-        if (!await db.Patentes.AnyAsync(p => p.Id == id))
-            return Results.NotFound(new { errors = new[] { "Patente no encontrada." } });
-        if (!await db.Proyectos.AnyAsync(p => p.Id == proyectoId))
-            return Results.NotFound(new { errors = new[] { "Proyecto no encontrado." } });
-        if (await db.ProyectoPatentes.AnyAsync(pp => pp.PatenteId == id && pp.ProyectoId == proyectoId))
-            return Results.BadRequest(new { errors = new[] { "El vinculo ya existe." } });
-
-        var roles = currentUser.Roles ?? [];
-        if (!roles.Contains(nameof(RolesEnum.Superuser)) && !roles.Contains(nameof(RolesEnum.Jefe_de_Proyecto)))
-        {
-            var currentAuthor = await authorResolution.GetOrCreateForUserAsync(currentUser.Id!, CancellationToken.None);
-            if (currentAuthor == null)
-                return Results.BadRequest(new { errors = new[] { "Usuario actual no valido." } });
-
-            var esCreador = await db.AuthorPatentes.AnyAsync(
-                ap => ap.PatenteId == id && ap.AuthorId == currentAuthor.Id);
-            if (!esCreador)
-                return Results.Forbid();
-        }
-
-        db.ProyectoPatentes.Add(new ProyectoPatente
-        {
-            ProyectoId = proyectoId,
-            PatenteId = id
-        });
-        await db.SaveChangesAsync(CancellationToken.None);
-        return Results.NoContent();
+        var result = await service.LinkProyectoAsync(id, proyectoId, ct);
+        return ToLinkResult(result);
     }
 
-    private static async Task<IResult> UnlinkProyectoDePatente(
-        IApplicationDbContext db, IUser currentUser, IAuthorResolutionService authorResolution, string id, string proyectoId)
+    private static async Task<IResult> UnlinkProyectoDePatente(IPatenteService service, string id, string proyectoId, CancellationToken ct)
     {
-        var link = await db.ProyectoPatentes
-            .FirstOrDefaultAsync(pp => pp.PatenteId == id && pp.ProyectoId == proyectoId);
-        if (link == null)
-            return Results.NotFound(new { errors = new[] { "Vinculo no encontrado." } });
-
-        var roles = currentUser.Roles ?? [];
-        if (!roles.Contains(nameof(RolesEnum.Superuser)) && !roles.Contains(nameof(RolesEnum.Jefe_de_Proyecto)))
-        {
-            var currentAuthor = await authorResolution.GetOrCreateForUserAsync(currentUser.Id!, CancellationToken.None);
-            if (currentAuthor == null)
-                return Results.BadRequest(new { errors = new[] { "Usuario actual no valido." } });
-
-            var esCreador = await db.AuthorPatentes.AnyAsync(
-                ap => ap.PatenteId == id && ap.AuthorId == currentAuthor.Id);
-            if (!esCreador)
-                return Results.Forbid();
-        }
-
-        db.ProyectoPatentes.Remove(link);
-        await db.SaveChangesAsync(CancellationToken.None);
-        return Results.NoContent();
+        var result = await service.UnlinkProyectoAsync(id, proyectoId, ct);
+        return ToLinkResult(result, noContentOnSuccess: true);
     }
 
-    private static async Task<IResult> CreatePatente(
-        IApplicationDbContext db,
-        IUser currentUser,
-        IAuthorResolutionService authorResolution,
-        IProductionCreatorService creatorService,
-        CreatePatenteBody body)
+    private static async Task<IResult> CreatePatente(IPatenteService service, CreatePatenteBody body, CancellationToken ct)
     {
-        var currentAuthor = await authorResolution.GetOrCreateForUserAsync(currentUser.Id!, CancellationToken.None);
-        if (currentAuthor == null)
-            return Results.BadRequest(new { errors = new[] { "Usuario actual no valido." } });
+        var (result, id) = await service.CreateAsync(body, ct);
+        if (!result.Succeeded)
+            return Results.BadRequest(new { errors = result.Errors });
 
-        var p = new Patente
-        {
-            Titulo = body.Titulo,
-            NumeroSolicitudConcesion = body.NumeroSolicitudConcesion,
-            EsNacional = body.EsNacional
-        };
-        db.Patentes.Add(p);
-
-        p.Creadores.Add(new AuthorPatente { AuthorId = currentAuthor.Id, PatenteId = p.Id });
-        await creatorService.AddAdditionalCreatorsAsync(
-            p.Creadores, currentAuthor.Id,
-            authorId => new AuthorPatente { AuthorId = authorId, PatenteId = p.Id },
-            c => c.AuthorId,
-            body.AdditionalAuthorIds, body.AdditionalAuthorNames, body.AdditionalUserIds);
-
-        await db.SaveChangesAsync(CancellationToken.None);
-        return Results.Created($"/api/Patentes/{p.Id}", new { id = p.Id });
+        return Results.Created($"/api/Patentes/{id}", new { id });
     }
 
-    private static async Task<IResult> UpdatePatente(
-        IApplicationDbContext db,
-        IUser currentUser,
-        IAuthorResolutionService authorResolution,
-        IProductionCreatorService creatorService,
-        string id,
-        UpdatePatenteBody body)
+    private static async Task<IResult> UpdatePatente(IPatenteService service, string id, UpdatePatenteBody body, CancellationToken ct)
     {
-        var p = await db.Patentes
-            .Include(x => x.Creadores)
-            .FirstOrDefaultAsync(x => x.Id == id, CancellationToken.None);
-        if (p == null)
-            return Results.NotFound(new { errors = new[] { "Patente no encontrada." } });
-
-        var currentAuthor = await authorResolution.GetOrCreateForUserAsync(currentUser.Id!, CancellationToken.None);
-        if (currentAuthor == null)
-            return Results.BadRequest(new { errors = new[] { "Usuario actual no valido." } });
-
-        var roles = currentUser.Roles ?? [];
-        if (!roles.Contains(nameof(RolesEnum.Superuser)) && !roles.Contains(nameof(RolesEnum.Jefe_de_Proyecto)))
-        {
-            var esCreador = await db.AuthorPatentes.AnyAsync(ap => ap.PatenteId == id && ap.AuthorId == currentAuthor.Id);
-            if (!esCreador)
-                return Results.Forbid();
-        }
-
-        p.Titulo = body.Titulo;
-        p.NumeroSolicitudConcesion = body.NumeroSolicitudConcesion;
-        p.EsNacional = body.EsNacional;
-
-        var toRemove = p.Creadores.Where(c => c.AuthorId != currentAuthor.Id).ToList();
-        foreach (var creator in toRemove)
-            p.Creadores.Remove(creator);
-
-        await creatorService.AddAdditionalCreatorsAsync(
-            p.Creadores, currentAuthor.Id,
-            authorId => new AuthorPatente { AuthorId = authorId, PatenteId = p.Id },
-            c => c.AuthorId,
-            body.AdditionalAuthorIds, body.AdditionalAuthorNames, body.AdditionalUserIds);
-
-        await db.SaveChangesAsync(CancellationToken.None);
-        return Results.Ok(new { message = "Patente actualizada." });
+        var result = await service.UpdateAsync(id, body, ct);
+        return ToUpdateOrDeleteResult(result, "Patente actualizada.");
     }
 
-    private static async Task<IResult> DeletePatente(IApplicationDbContext db, IUser currentUser, IAuthorResolutionService authorResolution, string id)
+    private static async Task<IResult> DeletePatente(IPatenteService service, string id, CancellationToken ct)
     {
-        var p = await db.Patentes.FindAsync(new object[] { id }, CancellationToken.None);
-        if (p == null)
-            return Results.NotFound(new { errors = new[] { "Patente no encontrada." } });
-
-        var currentAuthor = await authorResolution.GetOrCreateForUserAsync(currentUser.Id!, CancellationToken.None);
-        if (currentAuthor == null)
-            return Results.BadRequest(new { errors = new[] { "Usuario actual no valido." } });
-
-        var roles = currentUser.Roles ?? [];
-        if (!roles.Contains(nameof(RolesEnum.Superuser)) && !roles.Contains(nameof(RolesEnum.Jefe_de_Proyecto)))
-        {
-            var esCreador = await db.AuthorPatentes.AnyAsync(ap => ap.PatenteId == id && ap.AuthorId == currentAuthor.Id);
-            if (!esCreador)
-                return Results.Forbid();
-        }
-
-        db.Patentes.Remove(p);
-        await db.SaveChangesAsync(CancellationToken.None);
-        return Results.Ok(new { message = "Patente eliminada." });
+        var result = await service.DeleteAsync(id, ct);
+        return ToUpdateOrDeleteResult(result, "Patente eliminada.");
     }
+
+    private static IResult ToLinkResult(Dashboard_v2.Application.Common.Models.Result result, bool noContentOnSuccess = true)
+    {
+        if (result.Succeeded)
+            return Results.NoContent();
+        if (HasError(result, "Patente no encontrada.") || HasError(result, "Proyecto no encontrado.") || HasError(result, "Vinculo no encontrado."))
+            return Results.NotFound(new { errors = result.Errors });
+        if (HasError(result, "No tiene permisos sobre esta patente."))
+            return Results.Forbid();
+
+        return Results.BadRequest(new { errors = result.Errors });
+    }
+
+    private static IResult ToUpdateOrDeleteResult(Dashboard_v2.Application.Common.Models.Result result, string successMessage)
+    {
+        if (result.Succeeded)
+            return Results.Ok(new { message = successMessage });
+        if (HasError(result, "Patente no encontrada."))
+            return Results.NotFound(new { errors = result.Errors });
+        if (HasError(result, "No tiene permisos sobre esta patente."))
+            return Results.Forbid();
+
+        return Results.BadRequest(new { errors = result.Errors });
+    }
+
+    private static bool HasError(Dashboard_v2.Application.Common.Models.Result result, string error)
+        => result.Errors.Contains(error, StringComparer.Ordinal);
 }
-
-public record PatenteDto(string Id, string Titulo, string NumeroSolicitudConcesion, bool EsNacional, List<string> Creadores, List<CreatorDto> CreadoresDetalle);
-public record ProyectoPatenteDto(string ProyectoId, string ProyectoTitulo);
-public record CreatePatenteBody(
-    string Titulo,
-    string NumeroSolicitudConcesion,
-    bool EsNacional,
-    List<string>? AdditionalAuthorIds = null,
-    List<string>? AdditionalAuthorNames = null,
-    List<string>? AdditionalUserIds = null);
-public record UpdatePatenteBody(
-    string Titulo,
-    string NumeroSolicitudConcesion,
-    bool EsNacional,
-    List<string>? AdditionalAuthorIds = null,
-    List<string>? AdditionalAuthorNames = null,
-    List<string>? AdditionalUserIds = null);
-public record CreatorDto(string Id, string Name, string? UserId);

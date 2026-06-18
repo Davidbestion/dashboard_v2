@@ -915,7 +915,7 @@ public class PublicationServiceTests
     [Test]
     public async Task GetMyRedPublicationsAsync_Coordinador_WithReds_ReturnsFiltered()
     {
-        _db.RedesCoordinadas.Add(new Dashboard_v2.Domain.Entities.RedCoordinada { CoordinadorId = "user-1", RedId = "red-2", AreaId = "area-1" });
+        _db.Reds.Add(new Dashboard_v2.Domain.Entities.Red { Id = "red-2", Nombre = "Red 2", CoordinadorId = "user-1" });
         _db.Publications.Add(new Publication { Id = "p-red-2", Title = "Red2 Pub", NormalizedTitle = "red2 pub", PublishedDate = "2024", PublicationData = "{}", RedId = "red-2", AuthorPublications = new List<AuthorPublication>() });
         _db.Publications.Add(new Publication { Id = "p-red-3", Title = "Red3 Pub", NormalizedTitle = "red3 pub", PublishedDate = "2024", PublicationData = "{}", RedId = "red-3", AuthorPublications = new List<AuthorPublication>() });
         await _db.SaveChangesAsync();

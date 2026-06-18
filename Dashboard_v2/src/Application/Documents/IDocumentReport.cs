@@ -26,6 +26,8 @@ namespace Dashboard_v2.Application.Documents;
 ///     {
 ///         public string ReportName   => "mi-nuevo-reporte";   // URL: GET /api/Documents/mi-nuevo-reporte
 ///         public string TemplateName => "NombrePlantilla";    // sin extensión .xlsx
+///         public IReadOnlyCollection&lt;string&gt; AllowedRoles =>
+///             [nameof(RolesEnum.Superuser), nameof(RolesEnum.Vicedecano_de_investigacion)];
 ///
 ///         public async Task&lt;IReadOnlyDictionary&lt;string, object&gt;&gt; GatherVariablesAsync(CancellationToken ct)
 ///         {
@@ -60,6 +62,13 @@ public interface IDocumentReport
     /// Ej. "AnexoGrupos" → Infrastructure/Templates/AnexoGrupos.xlsx
     /// </summary>
     string TemplateName { get; }
+
+    /// <summary>
+    /// Roles autorizados a generar y descargar este reporte.
+    /// El endpoint genérico de Documents la consulta en vez de codificar
+    /// reglas de autorización por nombre de reporte.
+    /// </summary>
+    IReadOnlyCollection<string> AllowedRoles { get; }
 
     /// <summary>
     /// Consulta la base de datos y devuelve las variables que se inyectarán en la plantilla.

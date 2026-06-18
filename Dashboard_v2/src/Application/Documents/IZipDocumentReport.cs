@@ -16,6 +16,11 @@ public interface IZipDocumentReport
     string ReportName { get; }
 
     /// <summary>
+    /// Roles autorizados a generar y descargar este reporte.
+    /// </summary>
+    IReadOnlyCollection<string> AllowedRoles { get; }
+
+    /// <summary>
     /// Genera el ZIP con todos los archivos Excel y lo devuelve como bytes.
     /// </summary>
     Task<byte[]> GenerateAsync(IDocumentRenderer renderer, CancellationToken ct = default);

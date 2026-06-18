@@ -14,7 +14,6 @@ import { useAuth } from '../contexts/AuthContext';
 import CoauthorPicker from '../components/CoauthorPicker';
 import UserPicker from '../components/UserPicker';
 import AuthorResolutionModal from '../components/AuthorResolutionModal';
-import DataTable from '../components/DataTable';
 import FilterableDataTable from '../components/FilterableDataTable';
 import CertificateUpload, { CertificateViewButton } from '../components/CertificateUpload';
 
@@ -510,17 +509,6 @@ export default function PublicationsPage() {
     </span>
   ));
 
-  const actionBtns = (pub) => (
-    <>
-      <Button color="outline-primary" size="sm" className="me-1" onClick={() => openEdit(pub)}>
-        <i className="bi bi-pencil"></i>
-      </Button>
-      <Button color="outline-danger" size="sm" onClick={() => openDelete(pub)}>
-        <i className="bi bi-trash"></i>
-      </Button>
-    </>
-  );
-
   const pubActions = [
     { key: 'edit',   label: 'Editar',   icon: 'bi-pencil', color: 'outline-primary', onClick: (pub) => openEdit(pub) },
     { key: 'delete', label: 'Eliminar', icon: 'bi-trash',  color: 'outline-danger',  onClick: (pub) => openDelete(pub) },
@@ -898,6 +886,7 @@ export default function PublicationsPage() {
                             keyExtractor={pub => pub.id}
                             actions={pubActions}
                             emptyMessage={`No hay publicaciones en el Grupo ${g}.`}
+                            detailConfig
                           />
                         </TabPane>
                       );
@@ -942,6 +931,7 @@ export default function PublicationsPage() {
                         keyExtractor={pub => pub.id}
                         actions={pubActions}
                         emptyMessage="No hay publicaciones de este tipo."
+                        detailConfig
                       />
                     </TabPane>
                   );

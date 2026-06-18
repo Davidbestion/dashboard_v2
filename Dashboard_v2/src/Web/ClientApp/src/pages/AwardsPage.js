@@ -7,7 +7,6 @@ import {
   Form, FormGroup, Label, Input,
 } from 'reactstrap';
 import { useAuth } from '../contexts/AuthContext';
-import DataTable from '../components/DataTable';
 import FilterableDataTable from '../components/FilterableDataTable';
 import CertificateUpload, { CertificateViewButton } from '../components/CertificateUpload';
 import UserPicker from '../components/UserPicker';
@@ -464,6 +463,7 @@ export default function AwardsPage() {
                 },
               ]}
               emptyMessage={isSuperuser ? 'No hay premios registrados.' : 'No tienes premios registrados.'}
+              detailConfig
             />
           )}
         </CardBody>

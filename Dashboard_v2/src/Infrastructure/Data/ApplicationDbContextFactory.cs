@@ -23,7 +23,7 @@ public class ApplicationDbContextFactory : IDesignTimeDbContextFactory<Applicati
             ?? "Server=127.0.0.1;Port=5432;Database=Dashboard_v2Db;Username=admin;Password=password;";
 
         var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
-        optionsBuilder.UseNpgsql(connectionString);
+        optionsBuilder.UseNpgsql(connectionString, o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery));
 
         return new ApplicationDbContext(optionsBuilder.Options);
     }

@@ -14,41 +14,21 @@ public class RedConfiguration : IEntityTypeConfiguration<Red>
         builder.Property(r => r.Id).HasMaxLength(450);
         builder.Property(r => r.Nombre).IsRequired().HasMaxLength(500);
         builder.Property(r => r.CantidadProfesores);
+        builder.Property(r => r.CoordinadorId).HasMaxLength(450);
 
-        // País (FK nullable)
-        builder.Property(r => r.CountryId);
         builder.HasOne(r => r.Country)
             .WithMany(c => c.Reds)
             .HasForeignKey(r => r.CountryId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // Eventos coordinados por la red
+        builder.HasOne(r => r.Coordinador)
+            .WithMany(u => u.RedesCoordinadas)
+            .HasForeignKey(r => r.CoordinadorId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         builder.HasMany(r => r.Events)
             .WithOne(e => e.Red)
             .HasForeignKey(e => e.RedId)
             .OnDelete(DeleteBehavior.SetNull);
-
-        // Miembros: Red ↔ User (N:N)
-        builder.HasMany(r => r.Usuarios)
-            .WithMany(u => u.Redes)
-            .UsingEntity<Dictionary<string, object>>(
-                "RedUsuario",
-                right => right
-                    .HasOne<User>()
-                    .WithMany()
-                    .HasForeignKey("UsuarioId")
-                    .HasPrincipalKey(u => u.Id)
-                    .OnDelete(DeleteBehavior.Cascade),
-                left => left
-                    .HasOne<Red>()
-                    .WithMany()
-                    .HasForeignKey("RedId")
-                    .HasPrincipalKey(r => r.Id)
-                    .OnDelete(DeleteBehavior.Cascade),
-                join =>
-                {
-                    join.ToTable("RedsUsuarios");
-                    join.HasKey("RedId", "UsuarioId");
-                });
     }
 }

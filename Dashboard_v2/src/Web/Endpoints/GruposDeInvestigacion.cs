@@ -24,6 +24,11 @@ public class GruposDeInvestigacion : EndpointGroupBase
             .WithName("GetMisGruposDeInvestigacion")
             .Produces<List<GrupoDeInvestigacionDto>>(200);
 
+        groupBuilder.MapGet("area", GetAreaGruposDeInvestigacion)
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Vicedecano_de_investigacion)))
+            .WithName("GetAreaGruposDeInvestigacion")
+            .Produces<List<GrupoDeInvestigacionDto>>(200);
+
         groupBuilder.MapPost("", CreateGrupoDeInvestigacion)
             .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Grupo_de_investigacion)))
             .WithName("CreateGrupoDeInvestigacion")
@@ -60,6 +65,12 @@ public class GruposDeInvestigacion : EndpointGroupBase
     private async Task<IResult> GetMisGruposDeInvestigacion(IGrupoDeInvestigacionService svc)
     {
         var list = await svc.GetMineAsync();
+        return Results.Ok(list);
+    }
+
+    private async Task<IResult> GetAreaGruposDeInvestigacion(IGrupoDeInvestigacionService svc)
+    {
+        var list = await svc.GetAreaAsync();
         return Results.Ok(list);
     }
 

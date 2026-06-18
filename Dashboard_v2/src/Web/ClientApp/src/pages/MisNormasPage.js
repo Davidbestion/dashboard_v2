@@ -191,6 +191,7 @@ export default function MisNormasPage() {
               { key: 'delete', label: 'Eliminar', icon: 'bi-trash',  color: 'outline-danger',    onClick: i => openDelete(i) },
             ]}
             emptyMessage="No tienes normas registradas."
+            detailConfig
           />
         </CardBody>
       </Card>

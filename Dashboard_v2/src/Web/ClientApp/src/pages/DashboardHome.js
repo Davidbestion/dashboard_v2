@@ -120,6 +120,84 @@ function ProfesorHome() {
   );
 }
 
+// ─── Vicedecano de Investigación ──────────────────────────────────────────────
+function VicedecanoHome() {
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    async function load() {
+      const [pubs, pres, events, awards, proyectos, grupos] = await Promise.all([
+        silentFetch('/api/Publications/area'),
+        silentFetch('/api/Presentations/area'),
+        silentFetch('/api/Events'),
+        silentFetch('/api/Awards/area'),
+        silentFetch('/api/Proyectos'),
+        silentFetch('/api/GruposDeInvestigacion/area'),
+      ]);
+      setData({
+        publications:  pubs?.length      ?? 0,
+        presentations: pres?.length      ?? 0,
+        events:        events?.length    ?? 0,
+        awards:        awards?.flatMap(a => a.grantings ?? []).flatMap(g => g.recipients ?? []).length ?? 0,
+        proyectos:     proyectos?.length ?? 0,
+        grupos:        grupos?.length    ?? 0,
+      });
+    }
+    load();
+  }, []);
+
+  if (!data) return <LoadingHome />;
+
+  return (
+    <>
+      <div className="stats-grid">
+        <StatCard
+          icon="bi-file-earmark-text-fill"
+          label="Publicaciones del Área"
+          value={data.publications}
+          color="stat-blue"
+          link="/publicaciones-area"
+        />
+        <StatCard
+          icon="bi-mic-fill"
+          label="Ponencias del Área"
+          value={data.presentations}
+          color="stat-green"
+          link="/events"
+        />
+        <StatCard
+          icon="bi-calendar-event-fill"
+          label="Eventos del Área"
+          value={data.events}
+          color="stat-orange"
+          link="/events"
+        />
+        <StatCard
+          icon="bi-trophy-fill"
+          label="Premios del Área"
+          value={data.awards}
+          color="stat-purple"
+          link="/premios-area"
+        />
+        <StatCard
+          icon="bi-kanban-fill"
+          label="Proyectos del Área"
+          value={data.proyectos}
+          color="stat-teal"
+          link="/proyectos-area"
+        />
+        <StatCard
+          icon="bi-people-fill"
+          label="Grupos de Investigación"
+          value={data.grupos}
+          color="stat-blue"
+          link="/grupos-investigacion-area"
+        />
+      </div>
+    </>
+  );
+}
+
 // ─── Jefe de Proyecto / Jefe de Macroproyecto ─────────────────────────────────
 function JefeProyectoHome() {
   const [data, setData] = useState(null);
@@ -331,8 +409,8 @@ export default function DashboardHome() {
 
   function renderContent() {
     if (role === 'Superuser')                      return <AdminHome />;
-    if (role === 'Profesor'
-      || role === 'Vicedecano_de_investigacion')   return <ProfesorHome />;
+    if (role === 'Profesor')                        return <ProfesorHome />;
+    if (role === 'Vicedecano_de_investigacion')    return <VicedecanoHome />;
     if (role === 'Jefe_de_Proyecto'
       || role === 'Jefe_de_Macroproyecto')         return <JefeProyectoHome />;
     if (role === 'Jefe_de_Grupo_de_investigacion') return <JefeGrupoHome />;

@@ -23,8 +23,15 @@ import ProductosAreaPage from "./pages/ProductosAreaPage";
 import ProductosComercializadosPage from "./pages/ProductosComercializadosPage";
 import RedesPage from "./pages/RedesPage";
 import RedesPublicacionesPage from "./pages/RedesPublicacionesPage";
+import MisRedesPage from "./pages/MisRedesPage";
+import ProyectosAreaPage from "./pages/ProyectosAreaPage";
+import RedesAreaPage from "./pages/RedesAreaPage";
+import PremiosAreaPage from "./pages/PremiosAreaPage";
+import GruposDeInvestigacionAreaPage from "./pages/GruposDeInvestigacionAreaPage";
+import GruposEstudiantilesAreaPage from "./pages/GruposEstudiantilesAreaPage";
 import LineasDeInvestigacionPage from "./pages/LineasDeInvestigacionPage";
 import ProyectosPage from "./pages/ProyectosPage";
+import MisProyectosPage from "./pages/MisProyectosPage";
 import ClasificacionesPage from "./pages/ClasificacionesPage";
 import PublicacionesConsultaPage from "./pages/PublicacionesConsultaPage";
 
@@ -115,6 +122,12 @@ const AppRoutes = [
     element: <ProyectosPage />,
     pageTitle: 'Proyectos',
     jefeDeProyectoOrAdminOnly: true,
+  },
+  {
+    path: '/mis-proyectos',
+    element: <MisProyectosPage />,
+    pageTitle: 'Mis Proyectos',
+    profesorOnly: true,
   },
   {
     path: '/publicaciones',
@@ -219,6 +232,43 @@ const AppRoutes = [
     element: <RedesPublicacionesPage />,
     pageTitle: 'Publicaciones de mis Redes',
     jefeRedesOrProfesorOnly: true,
+  },
+  {
+    path: '/mis-redes',
+    element: <MisRedesPage />,
+    pageTitle: 'Mis Redes',
+    profesorOnly: true,
+  },
+  // Vicedecano — actividad del área
+  {
+    path: '/proyectos-area',
+    element: <ProyectosAreaPage />,
+    pageTitle: 'Proyectos del Área',
+    vicedecanoOnly: true,
+  },
+  {
+    path: '/redes-area',
+    element: <RedesAreaPage />,
+    pageTitle: 'Redes del Área',
+    vicedecanoOnly: true,
+  },
+  {
+    path: '/premios-area',
+    element: <PremiosAreaPage />,
+    pageTitle: 'Premios del Área',
+    vicedecanoOnly: true,
+  },
+  {
+    path: '/grupos-investigacion-area',
+    element: <GruposDeInvestigacionAreaPage />,
+    pageTitle: 'Grupos de Investigación del Área',
+    vicedecanoOnly: true,
+  },
+  {
+    path: '/grupos-estudiantiles-area',
+    element: <GruposEstudiantilesAreaPage />,
+    pageTitle: 'Grupos Estudiantiles del Área',
+    vicedecanoOnly: true,
   },
 ];
 

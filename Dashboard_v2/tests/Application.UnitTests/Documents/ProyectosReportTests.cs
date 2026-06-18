@@ -55,7 +55,6 @@ public class ProyectosReportTests
         p.Titulo = typeof(T).Name;
         p.JefeId = JefeId;
         p.ClasificacionId = ClasifId;
-        p.AreaId = AreaId;
         p.NumeroMiembros = 3;
         p.CantidadMiembrosUH = 2;
         p.FechaInicio = DateOnly.FromDateTime(DateTime.Today);
@@ -279,7 +278,6 @@ public class ProyectosReportTests
             Titulo = "En Revisión Test",
             JefeId = JefeId,
             ClasificacionId = ClasifId,
-            AreaId = AreaId,
             NumeroMiembros = 2,
             CantidadMiembrosUH = 1,
             Tipo = "PE"

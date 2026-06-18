@@ -56,6 +56,25 @@ public sealed class GrupoDeInvestigacionService : IGrupoDeInvestigacionService
             .ToListAsync(ct);
     }
 
+    public async Task<List<GrupoDeInvestigacionDto>> GetAreaAsync(CancellationToken ct = default)
+    {
+        var areaId = await _context.GetUserAreaIdAsync(_currentUser.Id, ct) ?? string.Empty;
+        return await _context.GruposDeInvestigacion
+            .Where(g => g.AreaId == areaId)
+            .OrderBy(g => g.Nombre)
+            .Select(g => new GrupoDeInvestigacionDto
+            {
+                Id = g.Id,
+                Nombre = g.Nombre,
+                AreaId = g.AreaId,
+                AreaNombre = g.Area.Nombre,
+                LineasDeInvestigacionIds = g.LineasDeInvestigacion.Select(l => l.Id).ToList(),
+                UsuariosIds = g.Usuarios.Select(u => u.Id).ToList(),
+                CreadorId = g.CreadorId
+            })
+            .ToListAsync(ct);
+    }
+
     public async Task<(Result Result, string? Id)> CreateAsync(CreateGrupoDeInvestigacionRequest request, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(request.Nombre))
@@ -101,6 +120,8 @@ public sealed class GrupoDeInvestigacionService : IGrupoDeInvestigacionService
         var isJefe = _currentUser.Roles?.Contains("Jefe_de_Grupo_de_investigacion") == true;
         if (!isSuperuser && !isJefe)
             return Result.Failure(new[] { "No tienes permisos para editar este grupo." });
+        if (isJefe && !isSuperuser && grupo.CreadorId != _currentUser.Id)
+            return Result.Failure(new[] { "Solo puedes editar tus propios grupos de investigación." });
 
         if (!await _context.Areas.AnyAsync(a => a.Id == request.AreaId, ct))
             return Result.Failure(new[] { "El área indicada no existe." });
@@ -131,6 +152,8 @@ public sealed class GrupoDeInvestigacionService : IGrupoDeInvestigacionService
         var isJefe = _currentUser.Roles?.Contains("Jefe_de_Grupo_de_investigacion") == true;
         if (!isSuperuser && !isJefe)
             return Result.Failure(new[] { "No tienes permisos para eliminar este grupo." });
+        if (isJefe && !isSuperuser && grupo.CreadorId != _currentUser.Id)
+            return Result.Failure(new[] { "Solo puedes eliminar tus propios grupos de investigación." });
 
         _context.GruposDeInvestigacion.Remove(grupo);
         await _context.SaveChangesAsync(ct);
@@ -151,6 +174,8 @@ public sealed class GrupoDeInvestigacionService : IGrupoDeInvestigacionService
         var isJefe = _currentUser.Roles?.Contains("Jefe_de_Grupo_de_investigacion") == true;
         if (!isSuperuser && !isJefe)
             return Result.Failure(new[] { "No tienes permisos para gestionar los miembros de este grupo." });
+        if (isJefe && !isSuperuser && grupo.CreadorId != _currentUser.Id)
+            return Result.Failure(new[] { "Solo puedes gestionar los miembros de tus propios grupos de investigación." });
 
         var newUsuarios = await _context.Users
             .Where(u => request.UsuariosIds.Contains(u.Id))

@@ -1,6 +1,7 @@
 using Dashboard_v2.Application.Common.Interfaces;
 using Dashboard_v2.Domain.Entities;
 using Dashboard_v2.Domain.Enums;
+using RolesEnum = Dashboard_v2.Domain.Enums.Roles;
 
 namespace Dashboard_v2.Application.Documents.Reports;
 
@@ -39,6 +40,9 @@ public sealed class AnexoPublicacionesReport : IDocumentReport
     /// </summary>
     public string TemplateName => "AnexoPublicaciones";
 
+    public IReadOnlyCollection<string> AllowedRoles =>
+        [nameof(RolesEnum.Superuser), nameof(RolesEnum.Vicedecano_de_investigacion)];
+
     /// <summary>
     /// Reúne y clasifica todas las publicaciones necesarias para el anexo.
     /// </summary>
@@ -63,11 +67,7 @@ public sealed class AnexoPublicacionesReport : IDocumentReport
         var from = string.IsNullOrWhiteSpace(fromRaw) ? null : fromRaw[..Math.Min(fromRaw.Length, 7)];
         var to   = string.IsNullOrWhiteSpace(toRaw)   ? null : toRaw[..Math.Min(toRaw.Length, 7)];
 
-        var requestingAreaId = await _context.Users
-            .AsNoTracking()
-            .Where(u => u.Id == _currentUser.Id)
-            .Select(u => u.AreaId)
-            .FirstOrDefaultAsync(ct);
+        var requestingAreaId = await _context.GetUserAreaIdAsync(_currentUser.Id, ct);
 
         var publications = await _context.Publications
             .AsNoTracking()

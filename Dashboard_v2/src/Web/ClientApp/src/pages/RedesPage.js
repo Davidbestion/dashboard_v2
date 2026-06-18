@@ -6,7 +6,6 @@ import {
   Form, FormGroup, Label, Input,
   Table,
 } from 'reactstrap';
-import DataTable from '../components/DataTable';
 import FilterableDataTable from '../components/FilterableDataTable';
 import UserCard from '../components/UserCard';
 
@@ -35,7 +34,6 @@ const emptyForm = { nombre: '', countryId: '', cantidadProfesores: 0, tipo: 0 };
 export default function RedesPage() {
   const [items, setItems] = useState([]);
   const [countries, setCountries] = useState([]);
-  const [areas, setAreas] = useState([]);
   const [misRedes, setMisRedes] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -54,7 +52,6 @@ export default function RedesPage() {
   const [newCountryError, setNewCountryError] = useState('');
 
   // Coordinador de red universitaria
-  const [coordAreaId, setCoordAreaId] = useState('');
   const [coordUserId, setCoordUserId] = useState('');
   const [coordUserSearch, setCoordUserSearch] = useState('');
   const [eventsModal, setEventsModal] = useState(false);
@@ -72,16 +69,14 @@ export default function RedesPage() {
   const load = useCallback(async () => {
     setLoading(true); setError('');
     try {
-      const [reds, cs, areasList, misRedesList, usersList] = await Promise.all([
+      const [reds, cs, misRedesList, usersList] = await Promise.all([
         apiFetch('/api/Redes').catch(() => []),
         apiFetch('/api/Events/countries').catch(() => []),
-        apiFetch('/api/Areas').catch(() => []),
         apiFetch('/api/Redes/mis-redes').catch(() => []),
         apiFetch('/api/Users').catch(() => []),
       ]);
       setItems(reds);
       setCountries(cs);
-      setAreas(areasList);
       setMisRedes(misRedesList);
       setAllUsers(Array.isArray(usersList) ? usersList : []);
     } catch (e) { setError(e.message); } finally { setLoading(false); }
@@ -90,7 +85,7 @@ export default function RedesPage() {
   useEffect(() => { load(); }, [load]);
 
   function resetCoord() {
-    setCoordAreaId(''); setCoordUserId(''); setCoordUserSearch('');
+    setCoordUserId(''); setCoordUserSearch('');
   }
 
   function openCreate() {
@@ -107,10 +102,8 @@ export default function RedesPage() {
     // Pre-rellenar coordinador si es universitaria
     const redId = it.id ?? it.Id;
     const redInfo = misRedes.find(r => r.id === redId);
-    const firstCoord = redInfo?.coordinadores?.[0];
-    if (firstCoord) {
-      setCoordAreaId(firstCoord.areaId ?? '');
-      setCoordUserId(firstCoord.coordinadorId ?? '');
+    if (redInfo?.coordinadorId) {
+      setCoordUserId(redInfo.coordinadorId);
       setCoordUserSearch('');
     } else {
       resetCoord();
@@ -205,14 +198,7 @@ export default function RedesPage() {
       }
       // Asignar coordinador si es universitaria y hay usuario seleccionado
       if (parseInt(form.tipo, 10) === 0 && coordUserId) {
-        const coordUser = allUsers.find(u => u.id === coordUserId);
-        const effectiveAreaId = coordAreaId || coordUser?.areaId;
-        if (!effectiveAreaId) {
-          setFormError('El coordinador seleccionado no tiene área asignada. Selecciona un área en el formulario.');
-          setSaving(false);
-          return;
-        }
-        await apiFetch(`/api/Redes/${redId}/coordinadores/${effectiveAreaId}`, {
+        await apiFetch(`/api/Redes/${redId}/coordinador`, {
           method: 'PUT',
           body: JSON.stringify({ coordinadorId: coordUserId }),
         });
@@ -310,6 +296,7 @@ export default function RedesPage() {
               { key: 'delete', label: 'Eliminar',        color: 'outline-danger',    onClick: i => handleDelete(i.id) },
             ]}
             emptyMessage="No hay redes."
+            detailConfig
           />
         </CardBody>
       </Card>
@@ -381,13 +368,6 @@ export default function RedesPage() {
             {String(form.tipo) === '0' && (
               <>
                 <FormGroup>
-                  <Label>Área coordinadora <span className="text-muted small">(se usa la del coordinador si no se selecciona)</span></Label>
-                  <Input type="select" value={coordAreaId} onChange={e => setCoordAreaId(e.target.value)}>
-                    <option value="">— Usar área del coordinador —</option>
-                    {areas.map(a => <option key={a.id} value={a.id}>{a.nombre}</option>)}
-                  </Input>
-                </FormGroup>
-                <FormGroup>
                   <Label>Coordinador</Label>
                   {selectedCoordUser ? (
                     <div>
@@ -399,11 +379,6 @@ export default function RedesPage() {
                         onClick={() => { setCoordUserId(''); setCoordUserSearch(''); }}
                         clickTitle="Clic para cambiar coordinador"
                       />
-                      {!coordAreaId && !selectedCoordUser.areaId && (
-                        <Alert color="warning" className="mt-2 mb-0 py-2">
-                          Este usuario no tiene área asignada en su perfil. Selecciona un área coordinadora en el campo de arriba.
-                        </Alert>
-                      )}
                     </div>
                   ) : (
                     <>
@@ -425,10 +400,7 @@ export default function RedesPage() {
                                 user={u}
                                 isSelected={false}
                                 isOriginal={false}
-                                onClick={() => {
-                                  setCoordUserId(u.id);
-                                  if (!coordAreaId && u.areaId) setCoordAreaId(u.areaId);
-                                }}
+                                onClick={() => setCoordUserId(u.id)}
                                 clickTitle="Clic para seleccionar como coordinador"
                               />
                             ))}
@@ -464,7 +436,6 @@ export default function RedesPage() {
                   {availableEvents.map(ev => {
                     const id = ev.id ?? ev.Id;
                     const name = ev.name ?? ev.Name;
-                    const assigned = ev.assigned ?? ev.Assigned;
                     return (
                       <tr key={id}>
                         <td>

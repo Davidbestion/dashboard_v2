@@ -1,6 +1,7 @@
 using Dashboard_v2.Application.Common.Interfaces;
 using Dashboard_v2.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using RolesEnum = Dashboard_v2.Domain.Enums.Roles;
 
 namespace Dashboard_v2.Application.Documents.Reports;
 
@@ -39,13 +40,12 @@ public sealed class AnexoEventosReport : IDocumentReport
 
     public string TemplateName => "AnexoEventosCientificos";
 
+    public IReadOnlyCollection<string> AllowedRoles =>
+        [nameof(RolesEnum.Superuser), nameof(RolesEnum.Vicedecano_de_investigacion)];
+
     public async Task<IReadOnlyDictionary<string, object>> GatherVariablesAsync(IReadOnlyDictionary<string, string>? parameters, CancellationToken ct)
     {
-        var userAreaId = await _context.Users
-            .AsNoTracking()
-            .Where(u => u.Id == _currentUser.Id)
-            .Select(u => u.AreaId)
-            .FirstOrDefaultAsync(ct);
+        var userAreaId = await _context.GetUserAreaIdAsync(_currentUser.Id, ct);
 
         var events = await _context.Events
             .AsNoTracking()

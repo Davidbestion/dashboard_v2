@@ -663,10 +663,10 @@ public sealed partial class PublicationService : IPublicationService
         }
 
         // El coordinador (Profesor) ve solo las publicaciones de sus redes
-        var myRedIds = await _context.RedesCoordinadas
+        var myRedIds = await _context.Reds
             .AsNoTracking()
-            .Where(rc => rc.CoordinadorId == _currentUser.Id)
-            .Select(rc => rc.RedId)
+            .Where(r => r.CoordinadorId == _currentUser.Id)
+            .Select(r => r.Id)
             .ToListAsync(ct);
 
         if (myRedIds.Count == 0)

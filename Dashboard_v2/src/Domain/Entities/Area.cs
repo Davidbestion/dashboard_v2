@@ -19,9 +19,4 @@ public class Area
     // Investiga sobre: un Área investiga 1 o muchas Áreas del Conocimiento
     public ICollection<AreaDelConocimiento> AreasDelConocimiento { get; set; } = new List<AreaDelConocimiento>();
 
-    // Redes coordinadas por este área
-    public ICollection<RedCoordinada> RedesCoordinadas { get; set; } = new List<RedCoordinada>();
-
-    // Proyectos que pertenecen a este Área (0,*)
-    public ICollection<Proyecto> Proyectos { get; set; } = new List<Proyecto>();
 }

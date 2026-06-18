@@ -18,6 +18,11 @@ public class Presentations : EndpointGroupBase
             .WithName("GetAllPresentations")
             .Produces<List<PresentationDto>>(200);
 
+        groupBuilder.MapGet("area", GetAreaPresentations)
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Vicedecano_de_investigacion)))
+            .WithName("GetAreaPresentations")
+            .Produces<List<PresentationDto>>(200);
+
         groupBuilder.MapPost("", CreatePresentation)
             .RequireAuthorization(p => p.RequireRole("Profesor", "Superuser"))
             .WithName("CreatePresentation")
@@ -41,6 +46,9 @@ public class Presentations : EndpointGroupBase
 
     private async Task<IResult> GetAllPresentations(IEventService service)
         => Results.Ok(await service.GetAllPresentationsAsync());
+
+    private async Task<IResult> GetAreaPresentations(IEventService service)
+        => Results.Ok(await service.GetAreaPresentationsAsync());
 
     private async Task<IResult> CreatePresentation(IEventService service, CreatePresentationRequest body)
     {

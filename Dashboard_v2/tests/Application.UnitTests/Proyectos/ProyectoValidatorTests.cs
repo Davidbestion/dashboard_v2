@@ -22,14 +22,12 @@ public class ProyectoValidatorTests
         return new ApplicationDbContext(opts);
     }
 
-    private static (string areaId, string clasificId) SeedMinimum(ApplicationDbContext db)
+    private static string SeedMinimum(ApplicationDbContext db)
     {
-        var area = new Area { Id = "area-1", Nombre = "MATCOM", Descripcion = "d", UniversidadId = "uh" };
         var clasif = new Clasificacion { Id = "clasif-1", Nombre = "Básica" };
-        db.Areas.Add(area);
         db.Clasificaciones.Add(clasif);
         db.SaveChanges();
-        return (area.Id, clasif.Id);
+        return clasif.Id;
     }
 
     // ── ProyectoBaseValidator – shared rules ──────────────────────────────────
@@ -38,7 +36,7 @@ public class ProyectoValidatorTests
     public async Task BaseValidator_EmptyTitulo_FailsWithMessage()
     {
         await using var db = CreateDb();
-        var (areaId, clasificId) = SeedMinimum(db);
+        var clasificId = SeedMinimum(db);
         var validator = new ProyectoEnRevisionUpsertRequestValidator(db);
 
         var result = await validator.ValidateAsync(new ProyectoEnRevisionUpsertRequest
@@ -46,7 +44,6 @@ public class ProyectoValidatorTests
             Titulo = "",
             JefeId = "j1",
             ClasificacionId = clasificId,
-            AreaId = areaId,
             Tipo = "PE"
         });
 
@@ -60,7 +57,7 @@ public class ProyectoValidatorTests
     public async Task BaseValidator_EmptyClasificacionId_FailsWithMessage()
     {
         await using var db = CreateDb();
-        var (areaId, _) = SeedMinimum(db);
+        SeedMinimum(db);
         var validator = new ProyectoEnRevisionUpsertRequestValidator(db);
 
         var result = await validator.ValidateAsync(new ProyectoEnRevisionUpsertRequest
@@ -68,7 +65,6 @@ public class ProyectoValidatorTests
             Titulo = "Título",
             JefeId = "j1",
             ClasificacionId = "",
-            AreaId = areaId,
             Tipo = "PE"
         });
 
@@ -80,7 +76,7 @@ public class ProyectoValidatorTests
     public async Task BaseValidator_NonExistentClasificacionId_FailsWithMessage()
     {
         await using var db = CreateDb();
-        var (areaId, _) = SeedMinimum(db);
+        SeedMinimum(db);
         var validator = new ProyectoEnRevisionUpsertRequestValidator(db);
 
         var result = await validator.ValidateAsync(new ProyectoEnRevisionUpsertRequest
@@ -88,7 +84,6 @@ public class ProyectoValidatorTests
             Titulo = "Título",
             JefeId = "j1",
             ClasificacionId = "no-existe",
-            AreaId = areaId,
             Tipo = "PE"
         });
 
@@ -104,7 +99,7 @@ public class ProyectoValidatorTests
     public async Task EnRevisionValidator_EmptyTipo_FailsWithMessage()
     {
         await using var db = CreateDb();
-        var (areaId, clasificId) = SeedMinimum(db);
+        var clasificId = SeedMinimum(db);
         var validator = new ProyectoEnRevisionUpsertRequestValidator(db);
 
         var result = await validator.ValidateAsync(new ProyectoEnRevisionUpsertRequest
@@ -112,7 +107,6 @@ public class ProyectoValidatorTests
             Titulo = "Título",
             JefeId = "j1",
             ClasificacionId = clasificId,
-            AreaId = areaId,
             Tipo = ""
         });
 
@@ -126,7 +120,7 @@ public class ProyectoValidatorTests
     public async Task EnRevisionValidator_InvalidTipo_FailsWithMessage()
     {
         await using var db = CreateDb();
-        var (areaId, clasificId) = SeedMinimum(db);
+        var clasificId = SeedMinimum(db);
         var validator = new ProyectoEnRevisionUpsertRequestValidator(db);
 
         var result = await validator.ValidateAsync(new ProyectoEnRevisionUpsertRequest
@@ -134,7 +128,6 @@ public class ProyectoValidatorTests
             Titulo = "Título",
             JefeId = "j1",
             ClasificacionId = clasificId,
-            AreaId = areaId,
             Tipo = "INVALIDO"
         });
 
@@ -153,7 +146,7 @@ public class ProyectoValidatorTests
     public async Task EnRevisionValidator_ValidTipo_NoTipoError(string tipo)
     {
         await using var db = CreateDb();
-        var (areaId, clasificId) = SeedMinimum(db);
+        var clasificId = SeedMinimum(db);
         var validator = new ProyectoEnRevisionUpsertRequestValidator(db);
 
         var result = await validator.ValidateAsync(new ProyectoEnRevisionUpsertRequest
@@ -161,7 +154,6 @@ public class ProyectoValidatorTests
             Titulo = "Título",
             JefeId = "j1",
             ClasificacionId = clasificId,
-            AreaId = areaId,
             Tipo = tipo
         });
 
@@ -187,10 +179,10 @@ public class ProyectoValidatorTests
     public async Task EmpresarialValidator_EmptyEmpresasIds_FailsWithMessage()
     {
         await using var db = CreateDb();
-        var (areaId, clasificId) = SeedMinimum(db);
+        var clasificId = SeedMinimum(db);
         var validator = new ProyectoEmpresarialUpsertRequestValidator(db);
 
-        var result = await validator.ValidateAsync(BuildEmpresarial(areaId, clasificId, empresasIds: []));
+        var result = await validator.ValidateAsync(BuildEmpresarial(clasificId, empresasIds: []));
 
         result.IsValid.ShouldBeFalse();
         result.Errors.ShouldContain(e =>
@@ -202,10 +194,10 @@ public class ProyectoValidatorTests
     public async Task EmpresarialValidator_WithEmpresasIds_NoEmpresasError()
     {
         await using var db = CreateDb();
-        var (areaId, clasificId) = SeedMinimum(db);
+        var clasificId = SeedMinimum(db);
         var validator = new ProyectoEmpresarialUpsertRequestValidator(db);
 
-        var result = await validator.ValidateAsync(BuildEmpresarial(areaId, clasificId, empresasIds: ["inst-1"]));
+        var result = await validator.ValidateAsync(BuildEmpresarial(clasificId, empresasIds: ["inst-1"]));
 
         result.Errors.ShouldNotContain(e => e.PropertyName == nameof(ProyectoEmpresarialUpsertRequest.EmpresasIds));
     }
@@ -216,10 +208,10 @@ public class ProyectoValidatorTests
     public async Task ApoyoProgramaValidator_EmptyProgramasIds_FailsWithMessage()
     {
         await using var db = CreateDb();
-        var (areaId, clasificId) = SeedMinimum(db);
+        var clasificId = SeedMinimum(db);
         var validator = new ProyectoApoyoProgramaUpsertRequestValidator(db);
 
-        var result = await validator.ValidateAsync(BuildApoyoPrograma(areaId, clasificId, programasIds: []));
+        var result = await validator.ValidateAsync(BuildApoyoPrograma(clasificId, programasIds: []));
 
         result.IsValid.ShouldBeFalse();
         result.Errors.ShouldContain(e =>
@@ -233,10 +225,10 @@ public class ProyectoValidatorTests
     public async Task DesarrolloLocalValidator_ZeroMunicipioId_FailsWithMessage()
     {
         await using var db = CreateDb();
-        var (areaId, clasificId) = SeedMinimum(db);
+        var clasificId = SeedMinimum(db);
         var validator = new ProyectoDesarrolloLocalUpsertRequestValidator(db);
 
-        var result = await validator.ValidateAsync(BuildDesarrolloLocal(areaId, clasificId, municipioId: 0));
+        var result = await validator.ValidateAsync(BuildDesarrolloLocal(clasificId, municipioId: 0));
 
         result.IsValid.ShouldBeFalse();
         result.Errors.ShouldContain(e =>
@@ -248,10 +240,10 @@ public class ProyectoValidatorTests
     public async Task DesarrolloLocalValidator_ValidMunicipioId_NoMunicipioError()
     {
         await using var db = CreateDb();
-        var (areaId, clasificId) = SeedMinimum(db);
+        var clasificId = SeedMinimum(db);
         var validator = new ProyectoDesarrolloLocalUpsertRequestValidator(db);
 
-        var result = await validator.ValidateAsync(BuildDesarrolloLocal(areaId, clasificId, municipioId: 1));
+        var result = await validator.ValidateAsync(BuildDesarrolloLocal(clasificId, municipioId: 1));
 
         result.Errors.ShouldNotContain(e => e.PropertyName == nameof(ProyectoDesarrolloLocalUpsertRequest.MunicipioId));
     }
@@ -262,10 +254,10 @@ public class ProyectoValidatorTests
     public async Task NoEmpresarialValidator_EmptyEntidadesIds_FailsWithMessage()
     {
         await using var db = CreateDb();
-        var (areaId, clasificId) = SeedMinimum(db);
+        var clasificId = SeedMinimum(db);
         var validator = new ProyectoNoEmpresarialUpsertRequestValidator(db);
 
-        var result = await validator.ValidateAsync(BuildNoEmpresarial(areaId, clasificId, entidadesIds: []));
+        var result = await validator.ValidateAsync(BuildNoEmpresarial(clasificId, entidadesIds: []));
 
         result.IsValid.ShouldBeFalse();
         result.Errors.ShouldContain(e =>
@@ -279,11 +271,11 @@ public class ProyectoValidatorTests
     public async Task ColabInternacionalValidator_EmptyFuentesIds_FailsWithMessage()
     {
         await using var db = CreateDb();
-        var (areaId, clasificId) = SeedMinimum(db);
+        var clasificId = SeedMinimum(db);
         var validator = new ProyectoColabInternacionalUpsertRequestValidator(db);
 
         var result = await validator.ValidateAsync(BuildColabInternacional(
-            areaId, clasificId, fuentesIds: [], terminos: "TDR válidos"));
+            clasificId, fuentesIds: [], terminos: "TDR válidos"));
 
         result.IsValid.ShouldBeFalse();
         result.Errors.ShouldContain(e =>
@@ -295,11 +287,11 @@ public class ProyectoValidatorTests
     public async Task ColabInternacionalValidator_EmptyTerminosReferencia_FailsWithMessage()
     {
         await using var db = CreateDb();
-        var (areaId, clasificId) = SeedMinimum(db);
+        var clasificId = SeedMinimum(db);
         var validator = new ProyectoColabInternacionalUpsertRequestValidator(db);
 
         var result = await validator.ValidateAsync(BuildColabInternacional(
-            areaId, clasificId, fuentesIds: [1], terminos: ""));
+            clasificId, fuentesIds: [1], terminos: ""));
 
         result.IsValid.ShouldBeFalse();
         result.Errors.ShouldContain(e =>
@@ -311,11 +303,11 @@ public class ProyectoValidatorTests
     public async Task ColabInternacionalValidator_BothFieldsProvided_NoSpecificErrors()
     {
         await using var db = CreateDb();
-        var (areaId, clasificId) = SeedMinimum(db);
+        var clasificId = SeedMinimum(db);
         var validator = new ProyectoColabInternacionalUpsertRequestValidator(db);
 
         var result = await validator.ValidateAsync(BuildColabInternacional(
-            areaId, clasificId, fuentesIds: [1], terminos: "TOR 2025"));
+            clasificId, fuentesIds: [1], terminos: "TOR 2025"));
 
         result.Errors.ShouldNotContain(e =>
             e.PropertyName == nameof(ProyectoColabInternacionalUpsertRequest.FuentesFinanciacionIds));
@@ -329,10 +321,10 @@ public class ProyectoValidatorTests
     public async Task PNAPValidator_EmptyFuentesIds_FailsWithMessage()
     {
         await using var db = CreateDb();
-        var (areaId, clasificId) = SeedMinimum(db);
+        var clasificId = SeedMinimum(db);
         var validator = new ProyectoPNAPUpsertRequestValidator(db);
 
-        var result = await validator.ValidateAsync(BuildPNAP(areaId, clasificId, fuentesIds: []));
+        var result = await validator.ValidateAsync(BuildPNAP(clasificId, fuentesIds: []));
 
         result.IsValid.ShouldBeFalse();
         result.Errors.ShouldContain(e =>
@@ -343,24 +335,22 @@ public class ProyectoValidatorTests
     // ── Private request builders ──────────────────────────────────────────────
 
     private static ProyectoEmpresarialUpsertRequest BuildEmpresarial(
-        string areaId, string clasificId, IList<string> empresasIds) => new()
+        string clasificId, IList<string> empresasIds) => new()
     {
         Titulo = "Título",
         JefeId = "j1",
         ClasificacionId = clasificId,
-        AreaId = areaId,
         FechaInicio = new DateOnly(2025, 1, 1),
         CodigoProyecto = "P-001",
         EmpresasIds = empresasIds
     };
 
     private static ProyectoApoyoProgramaUpsertRequest BuildApoyoPrograma(
-        string areaId, string clasificId, IList<int> programasIds) => new()
+        string clasificId, IList<int> programasIds) => new()
     {
         Titulo = "Título",
         JefeId = "j1",
         ClasificacionId = clasificId,
-        AreaId = areaId,
         FechaInicio = new DateOnly(2025, 1, 1),
         CodigoProyecto = "P-001",
         ProgramasIds = programasIds,
@@ -368,36 +358,33 @@ public class ProyectoValidatorTests
     };
 
     private static ProyectoDesarrolloLocalUpsertRequest BuildDesarrolloLocal(
-        string areaId, string clasificId, int municipioId) => new()
+        string clasificId, int municipioId) => new()
     {
         Titulo = "Título",
         JefeId = "j1",
         ClasificacionId = clasificId,
-        AreaId = areaId,
         FechaInicio = new DateOnly(2025, 1, 1),
         CodigoProyecto = "P-001",
         MunicipioId = municipioId
     };
 
     private static ProyectoNoEmpresarialUpsertRequest BuildNoEmpresarial(
-        string areaId, string clasificId, IList<string> entidadesIds) => new()
+        string clasificId, IList<string> entidadesIds) => new()
     {
         Titulo = "Título",
         JefeId = "j1",
         ClasificacionId = clasificId,
-        AreaId = areaId,
         FechaInicio = new DateOnly(2025, 1, 1),
         CodigoProyecto = "P-001",
         EntidadesIds = entidadesIds
     };
 
     private static ProyectoColabInternacionalUpsertRequest BuildColabInternacional(
-        string areaId, string clasificId, IList<int> fuentesIds, string terminos) => new()
+        string clasificId, IList<int> fuentesIds, string terminos) => new()
     {
         Titulo = "Título",
         JefeId = "j1",
         ClasificacionId = clasificId,
-        AreaId = areaId,
         FechaInicio = new DateOnly(2025, 1, 1),
         CodigoProyecto = "P-001",
         FuentesFinanciacionIds = fuentesIds,
@@ -405,12 +392,11 @@ public class ProyectoValidatorTests
     };
 
     private static ProyectoPNAPUpsertRequest BuildPNAP(
-        string areaId, string clasificId, IList<int> fuentesIds) => new()
+        string clasificId, IList<int> fuentesIds) => new()
     {
         Titulo = "Título",
         JefeId = "j1",
         ClasificacionId = clasificId,
-        AreaId = areaId,
         FechaInicio = new DateOnly(2025, 1, 1),
         CodigoProyecto = "P-001",
         FuentesFinanciacionIds = fuentesIds

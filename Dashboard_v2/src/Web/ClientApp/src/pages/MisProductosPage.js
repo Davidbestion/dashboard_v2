@@ -193,6 +193,7 @@ export default function MisProductosPage() {
               { key: 'delete', label: 'Eliminar', icon: 'bi-trash',  color: 'outline-danger',    onClick: i => openDelete(i) },
             ]}
             emptyMessage="No tienes productos comercializados registrados."
+            detailConfig
           />
         </CardBody>
       </Card>

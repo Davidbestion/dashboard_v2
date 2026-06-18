@@ -26,6 +26,15 @@ public sealed class DocumentService : IDocumentService
     public bool IsZipReport(string reportName) =>
         _zipReports.ContainsKey(reportName);
 
+    public IReadOnlyCollection<string>? GetAllowedRoles(string reportName)
+    {
+        if (_zipReports.TryGetValue(reportName, out var zipReport))
+            return zipReport.AllowedRoles;
+        if (_reports.TryGetValue(reportName, out var report))
+            return report.AllowedRoles;
+        return null;
+    }
+
     public async Task<byte[]> GenerateAsync(
         string reportName,
         IReadOnlyDictionary<string, string>? parameters = null,

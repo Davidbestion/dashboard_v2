@@ -6,7 +6,6 @@ import {
   Form, FormGroup, Label, Input,
 } from 'reactstrap';
 import Select from 'react-select';
-import DataTable from '../components/DataTable';
 import FilterableDataTable from '../components/FilterableDataTable';
 
 async function apiFetch(url, options = {}) {
@@ -157,6 +156,7 @@ export default function LineasDeInvestigacionPage() {
               { key: 'delete', label: 'Eliminar', icon: 'bi-trash',  color: 'outline-danger',    onClick: item => handleDelete(item.id) },
             ]}
             emptyMessage="No hay líneas de investigación registradas."
+            detailConfig
           />
         </CardBody>
       </Card>

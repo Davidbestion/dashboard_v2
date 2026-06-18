@@ -5,7 +5,6 @@ import {
   Modal, ModalHeader, ModalBody, ModalFooter,
   Form, FormGroup, Label, Input,
 } from 'reactstrap';
-import DataTable from '../components/DataTable';
 import FilterableDataTable from '../components/FilterableDataTable';
 
 async function apiFetch(url, options = {}) {
@@ -133,6 +132,7 @@ export default function UniversidadesPage() {
               { key: 'delete', label: 'Eliminar', icon: 'bi-trash',  color: 'outline-danger',    onClick: item => handleDelete(item.id) },
             ]}
             emptyMessage="No hay universidades registradas."
+            detailConfig
           />
         </CardBody>
       </Card>

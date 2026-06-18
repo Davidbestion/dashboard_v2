@@ -56,6 +56,7 @@ export default function PatentesAreaPage() {
             data={items}
             keyExtractor={i => i.id}
             emptyMessage="No hay patentes."
+            detailConfig
           />
         </CardBody>
       </Card>

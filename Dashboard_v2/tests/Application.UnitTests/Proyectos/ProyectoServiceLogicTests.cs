@@ -12,7 +12,6 @@ namespace Dashboard_v2.Application.UnitTests.Proyectos;
 
 /// <summary>
 /// Tests for <see cref="ProyectoService"/> business logic:
-///   - ResolveAreaIdAsync: Jefe uses own area, Superuser uses request area, Jefe without area fails.
 ///   - Owner-filter enforcement on Delete and Update.
 ///   - LinkPublicacionAsync / UnlinkPublicacionAsync edge-cases.
 /// </summary>
@@ -90,106 +89,15 @@ public class ProyectoServiceLogicTests
     }
 
     private static ProyectoEnRevisionUpsertRequest BuildRevisionRequest(
-        string clasificId, string areaId, string jefeId = "jefe-1") => new()
+        string clasificId, string jefeId = "jefe-1") => new()
     {
         Titulo = "Proyecto Test",
         JefeId = jefeId,
         ClasificacionId = clasificId,
-        AreaId = areaId,
         NumeroMiembros = 3,
         CantidadMiembrosUH = 2,
         Tipo = "PE"
     };
-
-    // ══════════════════════════════════════════════════════════════════════════
-    // ResolveAreaIdAsync – Superuser uses the request AreaId
-    // ══════════════════════════════════════════════════════════════════════════
-
-    [Test]
-    public async Task Create_Superuser_UsesRequestAreaId()
-    {
-        await using var db = CreateDb();
-        var (area1Id, area2Id, clasificId, jefeId) = SeedBase(db);
-
-        var superuser = MakeSuperuser();
-        var service = BuildService(db, superuser);
-
-        // Superuser explicitly selects area2
-        var request = BuildRevisionRequest(clasificId, areaId: area2Id, jefeId: jefeId);
-        var (result, id) = await service.CreateEnRevisionAsync(request);
-
-        result.Succeeded.ShouldBeTrue();
-        var created = await db.Proyectos.OfType<ProyectoEnRevision>()
-            .FirstOrDefaultAsync(p => p.Id == id);
-        created.ShouldNotBeNull();
-        created!.AreaId.ShouldBe(area2Id);
-    }
-
-    // ══════════════════════════════════════════════════════════════════════════
-    // ResolveAreaIdAsync – Jefe always gets their own area (ignoring request)
-    // ══════════════════════════════════════════════════════════════════════════
-
-    [Test]
-    public async Task Create_JefeDeProyecto_IgnoresRequestAreaId_UsesOwnArea()
-    {
-        await using var db = CreateDb();
-        var (area1Id, area2Id, clasificId, jefeId) = SeedBase(db);
-
-        var jefe = MakeJefe(jefeId);   // jefe-1 has AreaId = area1Id
-        var service = BuildService(db, jefe);
-
-        // Jefe tries to set area2 in the request — should be silently overridden
-        var request = BuildRevisionRequest(clasificId, areaId: area2Id, jefeId: jefeId);
-        var (result, id) = await service.CreateEnRevisionAsync(request);
-
-        result.Succeeded.ShouldBeTrue();
-        var created = await db.Proyectos.OfType<ProyectoEnRevision>()
-            .FirstOrDefaultAsync(p => p.Id == id);
-        created.ShouldNotBeNull();
-        created!.AreaId.ShouldBe(area1Id,
-            "Jefe's project must always belong to the jefe's own area, not the requested one");
-    }
-
-    // ══════════════════════════════════════════════════════════════════════════
-    // ResolveAreaIdAsync – Jefe without assigned area gets a failure
-    // ══════════════════════════════════════════════════════════════════════════
-
-    [Test]
-    public async Task Create_JefeWithoutArea_ReturnsFailure()
-    {
-        await using var db = CreateDb();
-        var (_, _, clasificId, _) = SeedBase(db);
-
-        // Seed a separate jefe user with NO area
-        var jefeNoArea = new User
-        {
-            Id = "jefe-sin-area",
-            UserName = "jefe2",
-            UserLastName1 = "B",
-            Email = "jefe2@uh.cu",
-            PasswordHash = "x",
-            IsActive = true,
-            BirthDate = DateTime.UtcNow,
-            CreatedAt = DateTimeOffset.UtcNow,
-            AreaId = null,   // <-- no area
-            UserRoles = new List<UserRole>
-            {
-                new() { UserId = "jefe-sin-area", Role = RolesEnum.Jefe_de_Proyecto }
-            }
-        };
-        db.Users.Add(jefeNoArea);
-        await db.SaveChangesAsync();
-
-        var jefe = MakeJefe("jefe-sin-area");
-        var service = BuildService(db, jefe);
-
-        var request = BuildRevisionRequest(clasificId, areaId: "area-1", jefeId: "jefe-sin-area");
-        var (result, id) = await service.CreateEnRevisionAsync(request);
-
-        result.Succeeded.ShouldBeFalse();
-        id.ShouldBeNull();
-        result.Errors.ShouldContain(e => e.Contains("no tiene un área asignada"));
-    }
 
     // ══════════════════════════════════════════════════════════════════════════
     // Owner filter – Jefe cannot delete another jefe's project
@@ -226,7 +134,6 @@ public class ProyectoServiceLogicTests
             Id = "proj-a",
             Titulo = "Proyecto A",
             JefeId = jefeId,          // owned by jefe-1
-            AreaId = area1Id,
             ClasificacionId = clasificId,
             NumeroMiembros = 1,
             Tipo = "PE"
@@ -253,7 +160,6 @@ public class ProyectoServiceLogicTests
             Id = "proj-b",
             Titulo = "Proyecto B",
             JefeId = jefeId,
-            AreaId = area1Id,
             ClasificacionId = clasificId,
             NumeroMiembros = 1,
             Tipo = "PE"
@@ -279,7 +185,6 @@ public class ProyectoServiceLogicTests
             Id = "proj-c",
             Titulo = "Proyecto C",
             JefeId = jefeId,
-            AreaId = area1Id,
             ClasificacionId = clasificId,
             NumeroMiembros = 1,
             Tipo = "PE"

@@ -404,4 +404,63 @@ public class AwardServiceTests
         result.Succeeded.ShouldBeTrue();
         (await _db.UserAwardeds.FindAsync(11)).ShouldBeNull();
     }
+
+    // ─── GetAreaAwardsAsync ───────────────────────────────────────────────────
+
+    [Test]
+    public async Task GetAreaAwardsAsync_EmptyDb_ReturnsEmpty()
+    {
+        _currentUser.Setup(u => u.Id).Returns("vd-1");
+        _db.Users.Add(new User { Id = "vd-1", UserName = "vd", Email = "vd@test.com", UserLastName1 = "VD", AreaId = "area-1" });
+        _db.Areas.Add(new Area { Id = "area-1", Nombre = "Ciencias" });
+        await _db.SaveChangesAsync();
+
+        var result = await _sut.GetAreaAwardsAsync();
+        result.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task GetAreaAwardsAsync_ReturnsOnlyAwardsForUsersInVicedecanoArea()
+    {
+        _currentUser.Setup(u => u.Id).Returns("vd-1");
+        _db.Areas.AddRange(
+            new Area { Id = "area-1", Nombre = "Ciencias" },
+            new Area { Id = "area-2", Nombre = "Letras" });
+        _db.Users.AddRange(
+            new User { Id = "vd-1",  UserName = "vd",   Email = "vd@t.com",  UserLastName1 = "VD", AreaId = "area-1" },
+            new User { Id = "u-1",   UserName = "alice", Email = "a@t.com",   UserLastName1 = "A",  AreaId = "area-1" },
+            new User { Id = "u-2",   UserName = "bob",   Email = "b@t.com",   UserLastName1 = "B",  AreaId = "area-2" });
+        _db.AwardTypes.Add(new AwardType { Id = 1, Name = "Nacional" });
+        _db.Awards.Add(new Award { Id = 1, Name = "Premio X", AwardTypeId = 1 });
+        _db.UserAwardeds.AddRange(
+            new UserAwarded { Id = 20, UserId = "u-1", AwardId = 1, AwardedAt = DateTime.Today },
+            new UserAwarded { Id = 21, UserId = "u-2", AwardId = 1, AwardedAt = DateTime.Today });
+        await _db.SaveChangesAsync();
+
+        var result = await _sut.GetAreaAwardsAsync();
+
+        result.ShouldHaveSingleItem();
+        result[0].AwardName.ShouldBe("Premio X");
+        result[0].Grantings.SelectMany(g => g.Recipients).ShouldHaveSingleItem();
+        result[0].Grantings[0].Recipients[0].UserId.ShouldBe("u-1");
+    }
+
+    [Test]
+    public async Task GetAreaAwardsAsync_ExcludesAwardsFromOtherAreas()
+    {
+        _currentUser.Setup(u => u.Id).Returns("vd-1");
+        _db.Areas.AddRange(
+            new Area { Id = "area-1", Nombre = "Ciencias" },
+            new Area { Id = "area-2", Nombre = "Letras" });
+        _db.Users.AddRange(
+            new User { Id = "vd-1", UserName = "vd",  Email = "vd@t.com", UserLastName1 = "VD", AreaId = "area-1" },
+            new User { Id = "u-2",  UserName = "bob", Email = "b@t.com",  UserLastName1 = "B",  AreaId = "area-2" });
+        _db.AwardTypes.Add(new AwardType { Id = 1, Name = "Nacional" });
+        _db.Awards.Add(new Award { Id = 1, Name = "Premio X", AwardTypeId = 1 });
+        _db.UserAwardeds.Add(new UserAwarded { Id = 22, UserId = "u-2", AwardId = 1, AwardedAt = DateTime.Today });
+        await _db.SaveChangesAsync();
+
+        var result = await _sut.GetAreaAwardsAsync();
+        result.ShouldBeEmpty();
+    }
 }

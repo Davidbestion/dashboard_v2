@@ -56,6 +56,7 @@ export default function ProductosAreaPage() {
             data={items}
             keyExtractor={i => i.id}
             emptyMessage="No hay productos comercializados."
+            detailConfig
           />
         </CardBody>
       </Card>

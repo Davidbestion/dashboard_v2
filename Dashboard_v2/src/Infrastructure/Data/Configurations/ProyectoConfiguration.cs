@@ -18,8 +18,6 @@ public class ProyectoConfiguration : IEntityTypeConfiguration<Proyecto>
         builder.Property(p => p.Titulo).IsRequired().HasMaxLength(500);
         builder.Property(p => p.JefeId).IsRequired().HasMaxLength(450);
         builder.Property(p => p.ClasificacionId).IsRequired().HasMaxLength(450);
-        builder.Property(p => p.AreaId).IsRequired().HasMaxLength(450);
-
         builder.HasOne(p => p.JefeUsuario)
             .WithMany(u => u.ProyectosComoJefe)
             .HasForeignKey(p => p.JefeId)
@@ -30,10 +28,9 @@ public class ProyectoConfiguration : IEntityTypeConfiguration<Proyecto>
             .HasForeignKey(p => p.ClasificacionId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne(p => p.Area)
-            .WithMany(a => a.Proyectos)
-            .HasForeignKey(p => p.AreaId)
-            .OnDelete(DeleteBehavior.Restrict);
+        builder.HasMany(p => p.Participantes)
+            .WithMany(u => u.ProyectosParticipante)
+            .UsingEntity(j => j.ToTable("ProyectoParticipantes"));
     }
 }
 

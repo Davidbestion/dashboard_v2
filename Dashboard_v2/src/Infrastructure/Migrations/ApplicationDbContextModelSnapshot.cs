@@ -683,6 +683,23 @@ namespace Dashboard_v2.Infrastructure.Migrations
                     b.UseTptMappingStrategy();
                 });
 
+            modelBuilder.Entity("Dashboard_v2.Domain.Entities.ParticipacionEnRed", b =>
+                {
+                    b.Property<string>("RedId")
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)");
+
+                    b.Property<string>("AuthorId")
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)");
+
+                    b.HasKey("RedId", "AuthorId");
+
+                    b.HasIndex("AuthorId");
+
+                    b.ToTable("ParticipacionesEnRed", (string)null);
+                });
+
             modelBuilder.Entity("Dashboard_v2.Domain.Entities.Patente", b =>
                 {
                     b.Property<string>("Id")
@@ -777,11 +794,6 @@ namespace Dashboard_v2.Infrastructure.Migrations
                         .HasMaxLength(450)
                         .HasColumnType("character varying(450)");
 
-                    b.Property<string>("AreaId")
-                        .IsRequired()
-                        .HasMaxLength(450)
-                        .HasColumnType("character varying(450)");
-
                     b.Property<int>("CantidadEstudiantes")
                         .HasColumnType("integer");
 
@@ -813,8 +825,6 @@ namespace Dashboard_v2.Infrastructure.Migrations
                         .HasColumnType("boolean");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("AreaId");
 
                     b.HasIndex("ClasificacionId");
 
@@ -909,6 +919,10 @@ namespace Dashboard_v2.Infrastructure.Migrations
                     b.Property<int>("CantidadProfesores")
                         .HasColumnType("integer");
 
+                    b.Property<string>("CoordinadorId")
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)");
+
                     b.Property<int?>("CountryId")
                         .HasColumnType("integer");
 
@@ -922,42 +936,11 @@ namespace Dashboard_v2.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CoordinadorId");
+
                     b.HasIndex("CountryId");
 
                     b.ToTable("Reds", (string)null);
-                });
-
-            modelBuilder.Entity("Dashboard_v2.Domain.Entities.RedCoordinada", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasMaxLength(450)
-                        .HasColumnType("character varying(450)");
-
-                    b.Property<string>("AreaId")
-                        .IsRequired()
-                        .HasMaxLength(450)
-                        .HasColumnType("character varying(450)");
-
-                    b.Property<string>("CoordinadorId")
-                        .IsRequired()
-                        .HasMaxLength(450)
-                        .HasColumnType("character varying(450)");
-
-                    b.Property<string>("RedId")
-                        .IsRequired()
-                        .HasMaxLength(450)
-                        .HasColumnType("character varying(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AreaId");
-
-                    b.HasIndex("CoordinadorId");
-
-                    b.HasIndex("RedId", "AreaId")
-                        .IsUnique();
-
-                    b.ToTable("RedesCoordinadas", (string)null);
                 });
 
             modelBuilder.Entity("Dashboard_v2.Domain.Entities.Registro", b =>
@@ -1000,55 +983,6 @@ namespace Dashboard_v2.Infrastructure.Migrations
                     b.HasIndex("InstitutionId");
 
                     b.ToTable("Registros", (string)null);
-                });
-
-            modelBuilder.Entity("Dashboard_v2.Domain.Entities.Resource", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTimeOffset>("Created")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("text");
-
-                    b.Property<DateTimeOffset>("LastModified")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("LastModifiedBy")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Metadata")
-                        .HasColumnType("jsonb");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<string>("OwnerId")
-                        .IsRequired()
-                        .HasMaxLength(450)
-                        .HasColumnType("character varying(450)");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("OwnerId");
-
-                    b.HasIndex("Type");
-
-                    b.HasIndex("Type", "OwnerId");
-
-                    b.ToTable("Resources");
                 });
 
             modelBuilder.Entity("Dashboard_v2.Domain.Entities.SectorEstrategico", b =>
@@ -1523,19 +1457,19 @@ namespace Dashboard_v2.Infrastructure.Migrations
                     b.ToTable("ProyectoRevisionSituaciones", (string)null);
                 });
 
-            modelBuilder.Entity("RedUsuario", b =>
+            modelBuilder.Entity("ProyectoUser", b =>
                 {
-                    b.Property<string>("RedId")
+                    b.Property<string>("ParticipantesId")
                         .HasColumnType("character varying(450)");
 
-                    b.Property<string>("UsuarioId")
+                    b.Property<string>("ProyectosParticipanteId")
                         .HasColumnType("character varying(450)");
 
-                    b.HasKey("RedId", "UsuarioId");
+                    b.HasKey("ParticipantesId", "ProyectosParticipanteId");
 
-                    b.HasIndex("UsuarioId");
+                    b.HasIndex("ProyectosParticipanteId");
 
-                    b.ToTable("RedsUsuarios", (string)null);
+                    b.ToTable("ProyectoParticipantes", (string)null);
                 });
 
             modelBuilder.Entity("Dashboard_v2.Domain.Entities.Presentation", b =>
@@ -1982,6 +1916,25 @@ namespace Dashboard_v2.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Dashboard_v2.Domain.Entities.ParticipacionEnRed", b =>
+                {
+                    b.HasOne("Dashboard_v2.Domain.Entities.Author", "Author")
+                        .WithMany("ParticipacionesEnRedes")
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Dashboard_v2.Domain.Entities.Red", "Red")
+                        .WithMany("Participaciones")
+                        .HasForeignKey("RedId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Author");
+
+                    b.Navigation("Red");
+                });
+
             modelBuilder.Entity("Dashboard_v2.Domain.Entities.ProductoComercializado", b =>
                 {
                     b.HasOne("Dashboard_v2.Domain.Entities.Institution", "Institution")
@@ -2003,12 +1956,6 @@ namespace Dashboard_v2.Infrastructure.Migrations
 
             modelBuilder.Entity("Dashboard_v2.Domain.Entities.Proyecto", b =>
                 {
-                    b.HasOne("Dashboard_v2.Domain.Entities.Area", "Area")
-                        .WithMany("Proyectos")
-                        .HasForeignKey("AreaId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("Dashboard_v2.Domain.Entities.Clasificacion", "Clasificacion")
                         .WithMany("Proyectos")
                         .HasForeignKey("ClasificacionId")
@@ -2020,8 +1967,6 @@ namespace Dashboard_v2.Infrastructure.Migrations
                         .HasForeignKey("JefeId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.Navigation("Area");
 
                     b.Navigation("Clasificacion");
 
@@ -2073,39 +2018,19 @@ namespace Dashboard_v2.Infrastructure.Migrations
 
             modelBuilder.Entity("Dashboard_v2.Domain.Entities.Red", b =>
                 {
+                    b.HasOne("Dashboard_v2.Domain.Entities.User", "Coordinador")
+                        .WithMany("RedesCoordinadas")
+                        .HasForeignKey("CoordinadorId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("Dashboard_v2.Domain.Entities.Country", "Country")
                         .WithMany("Reds")
                         .HasForeignKey("CountryId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.Navigation("Country");
-                });
-
-            modelBuilder.Entity("Dashboard_v2.Domain.Entities.RedCoordinada", b =>
-                {
-                    b.HasOne("Dashboard_v2.Domain.Entities.Area", "Area")
-                        .WithMany("RedesCoordinadas")
-                        .HasForeignKey("AreaId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Dashboard_v2.Domain.Entities.User", "Coordinador")
-                        .WithMany("RedesCoordinadas")
-                        .HasForeignKey("CoordinadorId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Dashboard_v2.Domain.Entities.Red", "Red")
-                        .WithMany("RedesCoordinadas")
-                        .HasForeignKey("RedId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Area");
-
                     b.Navigation("Coordinador");
 
-                    b.Navigation("Red");
+                    b.Navigation("Country");
                 });
 
             modelBuilder.Entity("Dashboard_v2.Domain.Entities.Registro", b =>
@@ -2132,17 +2057,6 @@ namespace Dashboard_v2.Infrastructure.Migrations
                     b.Navigation("EvidenceFile");
 
                     b.Navigation("Institution");
-                });
-
-            modelBuilder.Entity("Dashboard_v2.Domain.Entities.Resource", b =>
-                {
-                    b.HasOne("Dashboard_v2.Domain.Entities.User", "Owner")
-                        .WithMany("OwnedResources")
-                        .HasForeignKey("OwnerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Owner");
                 });
 
             modelBuilder.Entity("Dashboard_v2.Domain.Entities.StoredFile", b =>
@@ -2413,17 +2327,17 @@ namespace Dashboard_v2.Infrastructure.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("RedUsuario", b =>
+            modelBuilder.Entity("ProyectoUser", b =>
                 {
-                    b.HasOne("Dashboard_v2.Domain.Entities.Red", null)
+                    b.HasOne("Dashboard_v2.Domain.Entities.User", null)
                         .WithMany()
-                        .HasForeignKey("RedId")
+                        .HasForeignKey("ParticipantesId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Dashboard_v2.Domain.Entities.User", null)
+                    b.HasOne("Dashboard_v2.Domain.Entities.Proyecto", null)
                         .WithMany()
-                        .HasForeignKey("UsuarioId")
+                        .HasForeignKey("ProyectosParticipanteId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -2521,10 +2435,6 @@ namespace Dashboard_v2.Infrastructure.Migrations
                 {
                     b.Navigation("GruposDeInvestigacion");
 
-                    b.Navigation("Proyectos");
-
-                    b.Navigation("RedesCoordinadas");
-
                     b.Navigation("Users");
                 });
 
@@ -2539,6 +2449,8 @@ namespace Dashboard_v2.Infrastructure.Migrations
                     b.Navigation("AuthorPublications");
 
                     b.Navigation("AuthorRegistros");
+
+                    b.Navigation("ParticipacionesEnRedes");
                 });
 
             modelBuilder.Entity("Dashboard_v2.Domain.Entities.Award", b =>
@@ -2633,9 +2545,9 @@ namespace Dashboard_v2.Infrastructure.Migrations
                 {
                     b.Navigation("Events");
 
-                    b.Navigation("Publications");
+                    b.Navigation("Participaciones");
 
-                    b.Navigation("RedesCoordinadas");
+                    b.Navigation("Publications");
                 });
 
             modelBuilder.Entity("Dashboard_v2.Domain.Entities.Registro", b =>
@@ -2658,8 +2570,6 @@ namespace Dashboard_v2.Infrastructure.Migrations
                     b.Navigation("AuthorProfile");
 
                     b.Navigation("EventosOrganizados");
-
-                    b.Navigation("OwnedResources");
 
                     b.Navigation("ParticipacionesEnEventos");
 

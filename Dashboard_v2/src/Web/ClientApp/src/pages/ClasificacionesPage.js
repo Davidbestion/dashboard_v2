@@ -5,7 +5,6 @@ import {
   Modal, ModalHeader, ModalBody, ModalFooter,
   Form, FormGroup, Label, Input,
 } from 'reactstrap';
-import DataTable from '../components/DataTable';
 import FilterableDataTable from '../components/FilterableDataTable';
 
 async function apiFetch(url, options = {}) {
@@ -120,6 +119,7 @@ export default function ClasificacionesPage() {
                 { key: 'delete', label: 'Eliminar', icon: 'bi-trash',  color: 'outline-danger',    onClick: item => setDeleteTarget(item) },
               ]}
               emptyMessage="No hay clasificaciones registradas."
+              detailConfig
             />
           )}
         </CardBody>

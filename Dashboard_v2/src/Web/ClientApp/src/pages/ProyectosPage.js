@@ -8,6 +8,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import DataTable from '../components/DataTable';
 import FilterableDataTable from '../components/FilterableDataTable';
+import UserCard from '../components/UserCard';
 
 async function apiFetch(url, options = {}) {
   const response = await fetch(url, {
@@ -52,7 +53,6 @@ const isEjecucion = (tipo) => tipo !== 'en-revision'; // all except EnRevision
 const emptyForm = {
   tipo: 'en-revision',
   titulo: '', jefeId: '',
-  areaId: '',
   numeroMiembros: 0, cantidadMiembrosUH: 0,
   cantidadEstudiantes: 0, cantidadEstudiantesContratados: 0,
   tributaFormacionDoctoral: false,
@@ -186,8 +186,15 @@ export default function ProyectosPage() {
   const [items, setItems] = useState([]);
   const [clasificaciones, setClasificaciones] = useState([]);
   const [jefes, setJefes] = useState([]);
-  const [areas, setAreas] = useState([]);
+  const [usuarios, setUsuarios] = useState([]);
   const [tiposEjecucion, setTiposEjecucion] = useState([]);
+  const [participantesModal, setParticipantesModal] = useState(false);
+  const [participantesTarget, setParticipantesTarget] = useState(null);
+  const [participantesSelectedIds, setParticipantesSelectedIds] = useState(new Set());
+  const [participantesOriginalIds, setParticipantesOriginalIds] = useState(new Set());
+  const [participantesFilter, setParticipantesFilter] = useState('');
+  const [savingParticipantes, setSavingParticipantes] = useState(false);
+  const [participantesError, setParticipantesError] = useState('');
   const [institutions, setInstitutions] = useState([]);
   const [nomencladores, setNomencladores] = useState({
     estados: [], situaciones: [], sectores: [], ejes: [],
@@ -250,6 +257,16 @@ export default function ProyectosPage() {
     };
   }
 
+  const filteredParticipantes = useMemo(() => {
+    const q = participantesFilter.trim().toLowerCase();
+    if (!q) return usuarios;
+    return usuarios.filter(u =>
+      `${u.userName} ${u.userLastName1 ?? ''} ${u.userLastName2 ?? ''} ${u.email} ${u.areaNombre ?? ''}`
+        .toLowerCase()
+        .includes(q)
+    );
+  }, [usuarios, participantesFilter]);
+
   const filteredPatentes = useMemo(() => {
     const q = patentesSearch.trim().toLowerCase();
     if (!q) return patentesList;
@@ -266,7 +283,7 @@ export default function ProyectosPage() {
     setError('');
     try {
       const [
-        proyData, clasData, jefesData, tiposData, areasData, instData,
+        proyData, clasData, jefesData, tiposData, usersData, instData,
         estadosData, situacionesData, sectoresData, ejesData,
         fuentesData, programasData, provinciasData, municipiosData,
       ] = await Promise.all([
@@ -274,7 +291,7 @@ export default function ProyectosPage() {
         apiFetch('/api/Clasificaciones'),
         apiFetch('/api/Users/jefes-de-proyecto'),
         apiFetch('/api/Proyectos/tipos-ejecucion'),
-        apiFetch('/api/Areas'),
+        apiFetch('/api/Users'),
         apiFetch('/api/Institutions').catch(() => []),
         apiFetch('/api/Nomencladores/estados').catch(() => []),
         apiFetch('/api/Nomencladores/situaciones').catch(() => []),
@@ -289,7 +306,7 @@ export default function ProyectosPage() {
       setClasificaciones(clasData);
       setJefes(jefesData);
       setTiposEjecucion(tiposData);
-      setAreas(areasData);
+      setUsuarios(usersData);
       setInstitutions(instData);
       setNomencladores({
         estados: estadosData,
@@ -316,9 +333,6 @@ export default function ProyectosPage() {
     setForm({
       ...emptyForm,
       clasificacionId: clasificaciones[0]?.id ?? '',
-      // For Jefe_de_Proyecto: pre-fill with their own area
-      areaId: isJefeDeProyecto ? (user?.areaId ?? '') : '',
-      // For Jefe_de_Proyecto the server will override jefeId, but pre-fill for clarity
       jefeId: isJefeDeProyecto ? (user?.id ?? '') : '',
     });
     setFormError('');
@@ -336,7 +350,6 @@ export default function ProyectosPage() {
         tipo: item.tipo,
         titulo: full.titulo ?? '',
         jefeId: full.jefeId ?? '',
-        areaId: full.areaId ?? '',
         numeroMiembros: full.numeroMiembros ?? 0,
         cantidadMiembrosUH: full.cantidadMiembrosUH ?? 0,
         cantidadEstudiantes: full.cantidadEstudiantes ?? 0,
@@ -382,7 +395,6 @@ export default function ProyectosPage() {
     const base = {
       titulo: form.titulo,
       jefeId: form.jefeId,
-      areaId: form.areaId,
       numeroMiembros: form.numeroMiembros,
       cantidadMiembrosUH: form.cantidadMiembrosUH,
       cantidadEstudiantes: form.cantidadEstudiantes,
@@ -596,6 +608,34 @@ export default function ProyectosPage() {
     }
   }
 
+  function openParticipantes(item) {
+    setParticipantesTarget(item);
+    const initial = new Set((item.participantes ?? []).map(p => p.id));
+    if (item.jefeId) initial.add(item.jefeId); // jefe always participates
+    setParticipantesSelectedIds(new Set(initial));
+    setParticipantesOriginalIds(new Set(initial));
+    setParticipantesFilter('');
+    setParticipantesError('');
+    setParticipantesModal(true);
+  }
+
+  async function handleSaveParticipantes() {
+    setSavingParticipantes(true);
+    setParticipantesError('');
+    try {
+      await apiFetch(`/api/Proyectos/${participantesTarget.id}/participantes`, {
+        method: 'PUT',
+        body: JSON.stringify({ participantesIds: [...participantesSelectedIds] }),
+      });
+      setParticipantesModal(false);
+      await load();
+    } catch (e) {
+      setParticipantesError(e.message);
+    } finally {
+      setSavingParticipantes(false);
+    }
+  }
+
   return (
     <>
       <Card>
@@ -662,11 +702,13 @@ export default function ProyectosPage() {
               data={items}
               keyExtractor={item => item.id}
               actions={[
+                { key: 'participantes', label: 'Participantes', icon: 'bi-people', color: 'outline-primary', onClick: item => openParticipantes(item) },
                 { key: 'patentes', label: 'Patentes', icon: 'bi-lightbulb', color: 'outline-info', onClick: item => openPatentesManager(item) },
                 { key: 'edit',   label: 'Editar',   icon: 'bi-pencil', color: 'outline-secondary', onClick: item => openEdit(item),        disabled: () => loadingEdit },
                 { key: 'delete', label: 'Eliminar', icon: 'bi-trash',  color: 'outline-danger',    onClick: item => setDeleteTarget(item) },
               ]}
               emptyMessage="No hay proyectos registrados."
+              detailConfig
             />
           )}
         </CardBody>
@@ -757,18 +799,6 @@ export default function ProyectosPage() {
                 <option value="">-- Seleccionar --</option>
                 {clasificaciones.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
               </Input>
-            </FormGroup>
-
-            <FormGroup>
-              <Label>Área de pertenencia *</Label>
-              {isJefeDeProyecto ? (
-                <Input plaintext readOnly value={user?.areaNombre ?? 'Sin área asignada'} />
-              ) : (
-                <Input type="select" value={form.areaId} onChange={set('areaId')}>
-                  <option value="">-- Seleccionar área --</option>
-                  {areas.map(a => <option key={a.id} value={a.id}>{a.nombre}</option>)}
-                </Input>
-              )}
             </FormGroup>
 
             <hr />
@@ -995,6 +1025,64 @@ export default function ProyectosPage() {
             {deleting ? <Spinner size="sm" /> : 'Eliminar'}
           </Button>
           <Button color="secondary" onClick={() => setDeleteTarget(null)}>Cancelar</Button>
+        </ModalFooter>
+      </Modal>
+
+      {/* Participantes modal */}
+      <Modal isOpen={participantesModal} toggle={() => setParticipantesModal(false)} size="xl" scrollable>
+        <ModalHeader toggle={() => setParticipantesModal(false)}>
+          Participantes de «{participantesTarget?.titulo}»
+          {participantesSelectedIds.size > 0 && (
+            <Badge color="primary" pill className="ms-2">
+              {participantesSelectedIds.size} seleccionado{participantesSelectedIds.size !== 1 ? 's' : ''}
+            </Badge>
+          )}
+        </ModalHeader>
+        <ModalBody>
+          {participantesError && <Alert color="danger">{participantesError}</Alert>}
+          <p className="text-muted small mb-3">
+            Haz clic en una ficha para agregar o quitar participantes.
+            <span style={{ color: '#198754', fontWeight: 600 }}> Verde</span> = ya es participante,
+            <span style={{ color: '#0d6efd', fontWeight: 600 }}> Azul</span> = recién agregado,
+            <span style={{ color: '#dc3545', fontWeight: 600 }}> Rojo</span> = se eliminará.
+          </p>
+          <Input
+            placeholder="Filtrar por nombre, apellido o correo..."
+            value={participantesFilter}
+            onChange={e => setParticipantesFilter(e.target.value)}
+            className="mb-3"
+          />
+          {filteredParticipantes.length === 0
+            ? <p className="text-muted text-center py-3">No hay usuarios que coincidan.</p>
+            : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: '0.75rem' }}>
+                {filteredParticipantes.map(u => (
+                  <UserCard
+                    key={u.id}
+                    user={u}
+                    isSelected={participantesSelectedIds.has(u.id)}
+                    isOriginal={participantesOriginalIds.has(u.id)}
+                    isCreator={u.id === participantesTarget?.jefeId}
+                    onClick={id => {
+                      if (id === participantesTarget?.jefeId) return; // jefe cannot be removed
+                      setParticipantesSelectedIds(prev => {
+                        const next = new Set(prev);
+                        if (next.has(id)) next.delete(id);
+                        else next.add(id);
+                        return next;
+                      });
+                    }}
+                  />
+                ))}
+              </div>
+            )
+          }
+        </ModalBody>
+        <ModalFooter>
+          <Button color="primary" onClick={handleSaveParticipantes} disabled={savingParticipantes}>
+            {savingParticipantes ? <Spinner size="sm" /> : 'Guardar participantes'}
+          </Button>
+          <Button color="secondary" onClick={() => setParticipantesModal(false)}>Cancelar</Button>
         </ModalFooter>
       </Modal>
 

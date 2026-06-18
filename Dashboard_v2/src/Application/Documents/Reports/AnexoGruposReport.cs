@@ -1,5 +1,6 @@
 using Dashboard_v2.Application.Common.Interfaces;
 using Dashboard_v2.Domain.Entities;
+using RolesEnum = Dashboard_v2.Domain.Enums.Roles;
 
 namespace Dashboard_v2.Application.Documents.Reports;
 
@@ -31,6 +32,9 @@ public sealed class AnexoGruposReport : IDocumentReport
 
     public string ReportName   => "anexo-grupos";
     public string TemplateName => "AnexoGrupos";
+
+    public IReadOnlyCollection<string> AllowedRoles =>
+        [nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Grupo_de_investigacion), nameof(RolesEnum.Vicedecano_de_investigacion)];
 
     public async Task<IReadOnlyDictionary<string, object>> GatherVariablesAsync(IReadOnlyDictionary<string, string>? parameters, CancellationToken ct)
     {

@@ -45,15 +45,19 @@ public class Red
     public ICollection<Event> Events { get; set; } = new List<Event>();
 
     /// <summary>
-    /// Usuarios que participan en esta red (miembros).
-    /// Relación N:N con User.
+    /// Identificador del usuario que coordina esta red.
     /// </summary>
-    public ICollection<User> Usuarios { get; set; } = new List<User>();
+    public string? CoordinadorId { get; set; }
 
     /// <summary>
-    /// Áreas que coordinan esta red (relación agregada RedCoordinada)
+    /// Usuario coordinador de esta red (N:1 — un usuario puede coordinar muchas redes).
     /// </summary>
-    public ICollection<RedCoordinada> RedesCoordinadas { get; set; } = new List<RedCoordinada>();
+    public User? Coordinador { get; set; }
+
+    /// <summary>
+    /// Autores que participan en esta red (M:N explícito).
+    /// </summary>
+    public ICollection<ParticipacionEnRed> Participaciones { get; set; } = new List<ParticipacionEnRed>();
 
     /// <summary>
     /// Publicaciones generadas por esta red.

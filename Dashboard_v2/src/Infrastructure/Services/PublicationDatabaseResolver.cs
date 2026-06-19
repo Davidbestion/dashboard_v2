@@ -27,7 +27,7 @@ public class PublicationDatabaseResolver : IPublicationDatabaseResolver
     }
 
     /// <inheritdoc/>
-    public async Task<PublicationDatabaseMatchDto?> ResolveByIssnsAsync(IEnumerable<string> issns, CancellationToken ct = default)
+    public async Task<PublicationDatabaseMatchDto?> ResolveByIssnsAsync(IEnumerable<string> issns, DateOnly? publishedDate = null, CancellationToken ct = default)
     {
         var issnList = issns?
             .Where(i => !string.IsNullOrWhiteSpace(i))
@@ -43,7 +43,7 @@ public class PublicationDatabaseResolver : IPublicationDatabaseResolver
         {
             try
             {
-                var result = await provider.TryResolveAsync(issnList, ct);
+                var result = await provider.TryResolveAsync(issnList, publishedDate, ct);
                 if (result != null)
                 {
                     _logger.LogDebug("Provider {Provider} resolved ISSNs {Issns} → {Database} (group {Group})",

@@ -6866,7 +6866,7 @@ export class PublicationsClient {
         return Promise.resolve<PublicationCrossRefDto[]>(null as any);
     }
 
-    resolvePublicationDatabaseFromCrossRef(doi: string | null | undefined, title: string | null | undefined, issns: string | null | undefined): Promise<PublicationDatabaseMatchDto> {
+    resolvePublicationDatabaseFromCrossRef(doi: string | null | undefined, title: string | null | undefined, issns: string | null | undefined, publishedDate: string | null | undefined): Promise<PublicationDatabaseMatchDto> {
         let url_ = this.baseUrl + "/api/Publications/resolve-database?";
         if (doi !== undefined && doi !== null)
             url_ += "doi=" + encodeURIComponent("" + doi) + "&";
@@ -6874,6 +6874,8 @@ export class PublicationsClient {
             url_ += "title=" + encodeURIComponent("" + title) + "&";
         if (issns !== undefined && issns !== null)
             url_ += "issns=" + encodeURIComponent("" + issns) + "&";
+        if (publishedDate !== undefined && publishedDate !== null)
+            url_ += "publishedDate=" + encodeURIComponent("" + publishedDate) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -13636,6 +13638,7 @@ export class PublicationDatabaseMatchDto implements IPublicationDatabaseMatchDto
     source?: string | undefined;
     confidence?: number;
     ambiguousGroup?: boolean;
+    promotionDate?: Date | undefined;
     message?: string | undefined;
 
     constructor(data?: IPublicationDatabaseMatchDto) {
@@ -13660,6 +13663,7 @@ export class PublicationDatabaseMatchDto implements IPublicationDatabaseMatchDto
             this.source = _data["source"];
             this.confidence = _data["confidence"];
             this.ambiguousGroup = _data["ambiguousGroup"];
+            this.promotionDate = _data["promotionDate"] ? new Date(_data["promotionDate"].toString()) : undefined as any;
             this.message = _data["message"];
         }
     }
@@ -13684,6 +13688,7 @@ export class PublicationDatabaseMatchDto implements IPublicationDatabaseMatchDto
         data["source"] = this.source;
         data["confidence"] = this.confidence;
         data["ambiguousGroup"] = this.ambiguousGroup;
+        data["promotionDate"] = this.promotionDate ? formatDate(this.promotionDate) : undefined as any;
         data["message"] = this.message;
         return data;
     }
@@ -13697,6 +13702,7 @@ export interface IPublicationDatabaseMatchDto {
     source?: string | undefined;
     confidence?: number;
     ambiguousGroup?: boolean;
+    promotionDate?: Date | undefined;
     message?: string | undefined;
 }
 

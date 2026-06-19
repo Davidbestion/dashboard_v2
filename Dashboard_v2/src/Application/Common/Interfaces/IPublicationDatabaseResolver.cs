@@ -17,5 +17,6 @@ public interface IPublicationDatabaseResolver
     /// bibliographic database and corresponding local group/cuartil.
     /// </summary>
     /// <param name="issns">ISSNs (normalized) to look up.</param>
-    Task<PublicationDatabaseMatchDto?> ResolveByIssnsAsync(IEnumerable<string> issns, CancellationToken ct = default);
+    /// <param name="publishedDate">Publication date, forwarded to date-aware providers for ambiguity resolution.</param>
+    Task<PublicationDatabaseMatchDto?> ResolveByIssnsAsync(IEnumerable<string> issns, DateOnly? publishedDate = null, CancellationToken ct = default);
 }

@@ -211,6 +211,8 @@ export default function PublicationsPage() {
   // Pestañas
   const [activeType, setActiveType] = useState(0);
   const [activeGroup, setActiveGroup] = useState(1);
+  // Grupo ambiguo: objeto con el resultado completo cuando ambiguousGroup=true, null si no
+  const [ambiguousInfo, setAmbiguousInfo] = useState(null);
   // Tag-picker de coautores
   const [coauthorTags, setCoauthorTags] = useState([]); // [{id?, name}]
   const loadData = useCallback(async () => {
@@ -266,6 +268,7 @@ export default function PublicationsPage() {
     setFormError('');
     setResolveError('');
     setResolveSuccess('');
+    setAmbiguousInfo(null);
     setResolvedIssns([]);
     setCoauthorTags([]);
     setAuthorNotInCrossRef(false);
@@ -305,6 +308,7 @@ export default function PublicationsPage() {
     setFormError('');
     setResolveError('');
     setResolveSuccess('');
+    setAmbiguousInfo(null);
     setResolvedIssns([]);
     setAuthorNotInCrossRef(false);
     // Pre-cargar coautores (todos excepto el usuario actual)
@@ -594,20 +598,23 @@ export default function PublicationsPage() {
   async function resolveDatabaseNow() {
     setResolveError('');
     setResolveSuccess('');
+    setAmbiguousInfo(null);
     setResolveLoading(true);
     try {
-      // If we already have ISSNs from a previous metadata search, send them
-      // directly to avoid a redundant CrossRef call.
+      // Always append the publication date so the backend can auto-resolve
+      // ambiguous WoS group assignments without user intervention.
+      const dateParam = form.publishedDate ? `&publishedDate=${encodeURIComponent(form.publishedDate)}` : '';
+
       let url;
       if (resolvedIssns.length > 0) {
-        url = `/api/Publications/resolve-database?issns=${encodeURIComponent(resolvedIssns.join(','))}`;
+        url = `/api/Publications/resolve-database?issns=${encodeURIComponent(resolvedIssns.join(','))}${dateParam}`;
       } else {
         if (!canSearchCrossRef()) {
           setResolveError('Escribe al menos un título o un DOI antes de resolver.');
           setResolveLoading(false);
           return;
         }
-        url = `/api/Publications/resolve-database?doi=${encodeURIComponent(form.urlDoi || '')}&title=${encodeURIComponent(form.title || '')}`;
+        url = `/api/Publications/resolve-database?doi=${encodeURIComponent(form.urlDoi || '')}&title=${encodeURIComponent(form.title || '')}${dateParam}`;
       }
       const res = await apiFetch(url);
       if (res) {
@@ -615,10 +622,13 @@ export default function PublicationsPage() {
         setForm(f => ({
           ...f,
           dataBase: res.databaseName ?? f.dataBase,
-          group: res.group != null ? String(res.group) : (res.databaseName ? inferGroupFromDatabase(res.databaseName) : f.group),
-          cuartil: res.cuartil ?? f.cuartil,
+          // When ambiguous, preserve the current group — user must choose manually.
+          group: res.ambiguousGroup ? f.group : (res.group != null ? String(res.group) : (res.databaseName ? inferGroupFromDatabase(res.databaseName) : f.group)),
+          cuartil: res.ambiguousGroup ? f.cuartil : (res.cuartil ?? f.cuartil),
         }));
-        if (resolved) {
+        if (res.ambiguousGroup) {
+          setAmbiguousInfo({ ...res, publishedDate: form.publishedDate });
+        } else if (resolved) {
           setResolveSuccess(`Base de datos resuelta: ${res.databaseName} (Grupo ${res.group}${res.cuartil ? ', ' + res.cuartil : ''})`);
         } else {
           const issnText = res.issns?.length > 0
@@ -1074,6 +1084,28 @@ export default function PublicationsPage() {
             {crossrefError && <div className="text-danger small mb-2">{crossrefError}</div>}
             {resolveSuccess && <div className="text-success small mb-2">✓ {resolveSuccess}</div>}
             {resolveError && <Alert color="warning" className="small mb-2 py-2">{resolveError}</Alert>}
+            {ambiguousInfo && (
+              <Alert color="warning" className="small mb-2 py-2">
+                <strong>No fue posible determinar el grupo ni el cuartil automáticamente.</strong>
+                {' '}La revista aparece en ESCI y en SCIE/SSCI/AHCI; el grupo correcto depende de
+                cuándo fue promovida respecto a la fecha de publicación del artículo.
+                {ambiguousInfo.issns?.length > 0 && (
+                  <> ISSN(s): <strong>{ambiguousInfo.issns.join(', ')}</strong>.</>
+                )}
+                {ambiguousInfo.source && (
+                  <> Índices detectados: <strong>{ambiguousInfo.source.replace(/^WoS Excel:\s*/i, '')}</strong>.</>
+                )}
+                {ambiguousInfo.promotionDate && (
+                  <> Promoción aproximada:{' '}
+                    <strong>
+                      {new Date(ambiguousInfo.promotionDate + 'T00:00:00')
+                        .toLocaleDateString('es-ES', { year: 'numeric', month: 'long' })}
+                    </strong>.
+                  </>
+                )}
+                {' '}Complete el grupo manualmente.
+              </Alert>
+            )}
 
             <FormGroup>
               <Label for="publicationData">Datos de la publicación</Label>
@@ -1418,6 +1450,7 @@ export default function PublicationsPage() {
           </Button>
         </ModalFooter>
       </Modal>
+
     </>
   );
 }

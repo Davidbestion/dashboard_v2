@@ -49,6 +49,14 @@ public class PublicationDatabaseMatchDto
     public bool AmbiguousGroup { get; set; } = false;
 
     /// <summary>
+    /// Approximate date when the journal first gained a main WoS index (promotion date),
+    /// derived from the name of the change file where the transition was detected.
+    /// Null when the promotion date could not be determined from the available files.
+    /// Only populated when <see cref="AmbiguousGroup"/> is true.
+    /// </summary>
+    public DateOnly? PromotionDate { get; set; }
+
+    /// <summary>
     /// Optional human-readable message explaining why the resolution was partial or
     /// unsuccessful (e.g. no ISSNs found for a proceedings article).
     /// </summary>

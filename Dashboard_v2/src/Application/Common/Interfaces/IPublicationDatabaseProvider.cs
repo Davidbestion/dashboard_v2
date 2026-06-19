@@ -19,5 +19,7 @@ public interface IPublicationDatabaseProvider
     /// Try to resolve database/group information from the supplied ISSNs.
     /// Returns null if this provider cannot determine a match.
     /// </summary>
-    Task<PublicationDatabaseMatchDto?> TryResolveAsync(IEnumerable<string> issns, CancellationToken ct = default);
+    /// <param name="issns">Normalized ISSNs to look up.</param>
+    /// <param name="publishedDate">Publication date, used by date-aware providers to auto-resolve ambiguous group assignments.</param>
+    Task<PublicationDatabaseMatchDto?> TryResolveAsync(IEnumerable<string> issns, DateOnly? publishedDate = null, CancellationToken ct = default);
 }

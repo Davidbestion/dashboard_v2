@@ -31,7 +31,7 @@ internal sealed class SciELOPublicationDatabaseProvider : IPublicationDatabasePr
     }
 
     /// <inheritdoc/>
-    public async Task<PublicationDatabaseMatchDto?> TryResolveAsync(IEnumerable<string> issns, CancellationToken ct = default)
+    public async Task<PublicationDatabaseMatchDto?> TryResolveAsync(IEnumerable<string> issns, DateOnly? publishedDate = null, CancellationToken ct = default)
     {
         var issnList = issns?.Where(i => !string.IsNullOrWhiteSpace(i)).ToList() ?? [];
         if (issnList.Count == 0) return null;

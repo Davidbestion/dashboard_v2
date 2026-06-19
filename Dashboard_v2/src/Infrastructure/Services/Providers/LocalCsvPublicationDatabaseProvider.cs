@@ -159,7 +159,7 @@ internal sealed class LocalCsvPublicationDatabaseProvider : IPublicationDatabase
         (char.IsDigit(issn[7]) || issn[7] == 'X');
 
     /// <inheritdoc/>
-    public Task<PublicationDatabaseMatchDto?> TryResolveAsync(IEnumerable<string> issns, CancellationToken ct = default)
+    public Task<PublicationDatabaseMatchDto?> TryResolveAsync(IEnumerable<string> issns, DateOnly? publishedDate = null, CancellationToken ct = default)
     {
         foreach (var issn in issns)
         {

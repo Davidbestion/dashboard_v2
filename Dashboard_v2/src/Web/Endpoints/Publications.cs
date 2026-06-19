@@ -190,7 +190,7 @@ public class Publications : EndpointGroupBase
         return Results.Ok(items);
     }
 
-    private async Task<IResult> ResolveDatabaseFromCrossRef(ICrossRefClient crossRefClient, Application.Common.Interfaces.IPublicationDatabaseResolver resolver, string? doi, string? title, string? issns)
+    private async Task<IResult> ResolveDatabaseFromCrossRef(ICrossRefClient crossRefClient, Application.Common.Interfaces.IPublicationDatabaseResolver resolver, string? doi, string? title, string? issns, string? publishedDate)
     {
         List<string> issnList;
 
@@ -229,8 +229,19 @@ public class Publications : EndpointGroupBase
             issnList = cr.Issns.ToList();
         }
 
+        // Parse the optional publication date for ambiguity resolution.
+        DateOnly? pubDate = null;
+        if (!string.IsNullOrWhiteSpace(publishedDate))
+        {
+            // Accept yyyy, yyyy-MM, or yyyy-MM-dd
+            if (DateOnly.TryParseExact(publishedDate, ["yyyy-MM-dd", "yyyy-MM", "yyyy"],
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    System.Globalization.DateTimeStyles.None, out var parsed))
+                pubDate = parsed;
+        }
+
         // Try to resolve the database name from the ISSNs.
-        var match = await resolver.ResolveByIssnsAsync(issnList) ?? new Dashboard_v2.Application.Publications.PublicationDatabaseMatchDto();
+        var match = await resolver.ResolveByIssnsAsync(issnList, pubDate) ?? new Dashboard_v2.Application.Publications.PublicationDatabaseMatchDto();
 
         // Always include the ISSNs so the client can display them.
         match.Issns = issnList;

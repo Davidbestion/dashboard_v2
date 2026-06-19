@@ -64,24 +64,29 @@ internal sealed class WosExcelPublicationDatabaseProvider : IPublicationDatabase
 
     // ISSN (8 chars, no hyphen, uppercase) → set of current WoS index abbreviations
     private readonly IReadOnlyDictionary<string, HashSet<string>> _map;
+    // ISSN → approximate date when the journal first gained a main WoS index (promotion date)
+    private readonly IReadOnlyDictionary<string, DateOnly> _promotionDates;
 
     public string ProviderName => "WosExcel";
 
     public WosExcelPublicationDatabaseProvider(string? directory, ILogger<WosExcelPublicationDatabaseProvider> logger)
     {
-        _map = BuildMap(directory, logger);
-        logger.LogInformation("WosExcel: loaded {Count} journal entries from {Dir}", _map.Count, directory ?? "(none)");
+        (_map, _promotionDates) = BuildMap(directory, logger);
+        logger.LogInformation("WosExcel: loaded {Count} journal entries ({Promoted} with promotion date) from {Dir}",
+            _map.Count, _promotionDates.Count, directory ?? "(none)");
     }
 
     // ── Public interface ──────────────────────────────────────────────────────
 
     public Task<PublicationDatabaseMatchDto?> TryResolveAsync(
         IEnumerable<string> issns,
+        DateOnly? publishedDate = null,
         CancellationToken ct = default)
     {
         // Accumulate indexes from any matching ISSN variant
+        var issnList = issns.ToList();
         var indexes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        foreach (var issn in issns)
+        foreach (var issn in issnList)
         {
             var normalized = NormalizeIssn(issn);
             if (normalized is null) continue;
@@ -103,11 +108,27 @@ internal sealed class WosExcelPublicationDatabaseProvider : IPublicationDatabase
             _              => null
         };
 
-        // True when the journal appears in BOTH ESCI and a main index — this can
-        // happen because the journal is still in the ESCI change list from an
-        // earlier file AND was later added to SCIE/SSCI/AHCI in a newer file
-        // without an explicit ESCI de-listing entry.
+        // True when the journal appears in BOTH ESCI and a main index — the journal
+        // was promoted at some point; which group applies depends on whether the
+        // article was published before or after that promotion.
         var ambiguous = hasMain && hasEsci;
+
+        // Try to auto-resolve using the recorded promotion date and the publication date.
+        if (ambiguous && publishedDate.HasValue)
+        {
+            var promotionDate = FindPromotionDate(issnList);
+            if (promotionDate.HasValue)
+            {
+                var pub  = publishedDate.Value;
+                var prom = promotionDate.Value;
+                // Same month → genuinely undecidable at month-level precision; leave ambiguous.
+                if (!(pub.Year == prom.Year && pub.Month == prom.Month))
+                {
+                    ambiguous = false;
+                    group     = pub < prom ? 2 : 1;
+                }
+            }
+        }
 
         var indexNames = string.Join(", ", indexes.OrderBy(x => x));
 
@@ -115,45 +136,63 @@ internal sealed class WosExcelPublicationDatabaseProvider : IPublicationDatabase
         {
             DatabaseName   = "Web de la Ciencia",
             Group          = group,
-            Cuartil        = null,          // WoS change files don't include JIF quartile
+            Cuartil        = null,
             Source         = $"WoS Excel: {indexNames}",
             Confidence     = 1.0,
             AmbiguousGroup = ambiguous,
+            PromotionDate  = ambiguous ? FindPromotionDate(issnList) : null,
         });
+    }
+
+    private DateOnly? FindPromotionDate(IEnumerable<string> issns)
+    {
+        foreach (var issn in issns)
+        {
+            var normalized = NormalizeIssn(issn);
+            if (normalized != null && _promotionDates.TryGetValue(normalized, out var date))
+                return date;
+        }
+        return null;
     }
 
     // ── Map construction ──────────────────────────────────────────────────────
 
-    private static IReadOnlyDictionary<string, HashSet<string>> BuildMap(
+    private static (IReadOnlyDictionary<string, HashSet<string>> map, IReadOnlyDictionary<string, DateOnly> promotionDates) BuildMap(
         string? directory,
         ILogger logger)
     {
-        var map = new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase);
+        var map            = new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase);
+        var promotionDates = new Dictionary<string, DateOnly>(StringComparer.OrdinalIgnoreCase);
 
         if (string.IsNullOrWhiteSpace(directory))
-            return map;
+            return (map, promotionDates);
 
         if (!Directory.Exists(directory))
         {
             logger.LogWarning("WoS directory not found: {Dir}", directory);
-            return map;
+            return (map, promotionDates);
         }
 
         var files = Directory.GetFiles(directory, "*.xlsx")
-            .OrderBy(GetSortKey)   // chronological: annual files first, then monthly
+            .OrderBy(GetSortKey)
             .ToList();
 
         if (files.Count == 0)
         {
             logger.LogWarning("WoS directory contains no .xlsx files: {Dir}", directory);
-            return map;
+            return (map, promotionDates);
         }
 
         foreach (var file in files)
         {
             try
             {
-                ProcessFile(file, map, logger);
+                var (year, month) = GetSortKey(file);
+                // Use month=1 for annual files (sort month=0 → January approximation)
+                var fileDate = year < 9999
+                    ? new DateOnly(year, Math.Max(1, month), 1)
+                    : DateOnly.FromDateTime(DateTime.Today);
+                ProcessFile(file, fileDate, map, promotionDates, logger);
             }
             catch (Exception ex)
             {
@@ -161,12 +200,14 @@ internal sealed class WosExcelPublicationDatabaseProvider : IPublicationDatabase
             }
         }
 
-        return map;
+        return (map, promotionDates);
     }
 
     private static void ProcessFile(
         string path,
+        DateOnly fileDate,
         Dictionary<string, HashSet<string>> map,
+        Dictionary<string, DateOnly> promotionDates,
         ILogger logger)
     {
         using var wb = new XLWorkbook(path);
@@ -241,6 +282,9 @@ internal sealed class WosExcelPublicationDatabaseProvider : IPublicationDatabase
                     if (!map.ContainsKey(id))
                         map[id] = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
+                    var hadEsci       = map[id].Contains(ESCI);
+                    var hasMainInFile = indexes.Any(i => i is SCIE or SSCI or AHCI);
+
                     // "Moved to SCIE, SSCI, or AHCI": journal graduated from ESCI;
                     // remove ESCI status so it doesn't create false ambiguity.
                     if (string.Equals(changeType, "Moved to SCIE, SSCI, or AHCI",
@@ -248,6 +292,12 @@ internal sealed class WosExcelPublicationDatabaseProvider : IPublicationDatabase
                         map[id].Remove(ESCI);
 
                     foreach (var idx in indexes) map[id].Add(idx);
+
+                    // Record promotion date the first time we see a main index
+                    // added to a journal that previously only had ESCI.
+                    if (hadEsci && hasMainInFile && !promotionDates.ContainsKey(id))
+                        promotionDates[id] = fileDate;
+
                     loaded++;
                 }
             }

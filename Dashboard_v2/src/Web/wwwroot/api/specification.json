@@ -5316,6 +5316,15 @@
               "nullable": true
             },
             "x-position": 3
+          },
+          {
+            "name": "publishedDate",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 4
           }
         ],
         "responses": {
@@ -8914,6 +8923,11 @@
           },
           "ambiguousGroup": {
             "type": "boolean"
+          },
+          "promotionDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
           },
           "message": {
             "type": "string",

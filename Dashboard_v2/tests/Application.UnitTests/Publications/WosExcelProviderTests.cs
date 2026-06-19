@@ -334,6 +334,105 @@ public class WosExcelProviderTests
         finally { Directory.Delete(dir, recursive: true); }
     }
 
+    // ── Date-based auto-resolution of ambiguous group ────────────────────────
+
+    [Test]
+    public async Task AmbiguousJournal_PublishedBeforePromotion_AutoResolvesToGroup2()
+    {
+        var dir = MakeTempDir();
+        try
+        {
+            CreateWosFile(dir, "JOURNAL_CHANGE_YEAR_2022.xlsx",
+            [
+                ("Promoted Journal", "1010-2020", "", "Emerging Sources Citation Index", "Accepted")
+            ]);
+            CreateWosFile(dir, "JOURNAL_CHANGE_YEAR_2024.xlsx",
+            [
+                ("Promoted Journal", "1010-2020", "", "Science Citation Index Expanded", "Accepted")
+            ]);
+
+            // Article published June 2023 — before the 2024 promotion file
+            var result = await Build(dir).TryResolveAsync(["1010-2020"], new DateOnly(2023, 6, 1));
+
+            result.ShouldNotBeNull();
+            result!.Group.ShouldBe(2);
+            result.AmbiguousGroup.ShouldBeFalse();
+        }
+        finally { Directory.Delete(dir, recursive: true); }
+    }
+
+    [Test]
+    public async Task AmbiguousJournal_PublishedAfterPromotion_AutoResolvesToGroup1()
+    {
+        var dir = MakeTempDir();
+        try
+        {
+            CreateWosFile(dir, "JOURNAL_CHANGE_YEAR_2022.xlsx",
+            [
+                ("Promoted Journal", "1010-2020", "", "Emerging Sources Citation Index", "Accepted")
+            ]);
+            CreateWosFile(dir, "JOURNAL_CHANGE_YEAR_2024.xlsx",
+            [
+                ("Promoted Journal", "1010-2020", "", "Science Citation Index Expanded", "Accepted")
+            ]);
+
+            // Article published June 2024 — clearly after the promotion (different month)
+            var result = await Build(dir).TryResolveAsync(["1010-2020"], new DateOnly(2024, 6, 1));
+
+            result.ShouldNotBeNull();
+            result!.Group.ShouldBe(1);
+            result.AmbiguousGroup.ShouldBeFalse();
+        }
+        finally { Directory.Delete(dir, recursive: true); }
+    }
+
+    [Test]
+    public async Task AmbiguousJournal_PublishedSameMonthAsPromotion_RemainsAmbiguous()
+    {
+        var dir = MakeTempDir();
+        try
+        {
+            CreateWosFile(dir, "JOURNAL_CHANGE_YEAR_2022.xlsx",
+            [
+                ("Promoted Journal", "1010-2020", "", "Emerging Sources Citation Index", "Accepted")
+            ]);
+            CreateWosFile(dir, "JOURNAL_CHANGE_YEAR_2024.xlsx",
+            [
+                ("Promoted Journal", "1010-2020", "", "Science Citation Index Expanded", "Accepted")
+            ]);
+
+            // Annual file → promotion date = 2024-01-01; article also published January 2024
+            var result = await Build(dir).TryResolveAsync(["1010-2020"], new DateOnly(2024, 1, 15));
+
+            result.ShouldNotBeNull();
+            result!.AmbiguousGroup.ShouldBeTrue();
+        }
+        finally { Directory.Delete(dir, recursive: true); }
+    }
+
+    [Test]
+    public async Task AmbiguousJournal_NoPublishedDate_RemainsAmbiguous()
+    {
+        var dir = MakeTempDir();
+        try
+        {
+            CreateWosFile(dir, "JOURNAL_CHANGE_YEAR_2022.xlsx",
+            [
+                ("Promoted Journal", "1010-2020", "", "Emerging Sources Citation Index", "Accepted")
+            ]);
+            CreateWosFile(dir, "JOURNAL_CHANGE_YEAR_2024.xlsx",
+            [
+                ("Promoted Journal", "1010-2020", "", "Science Citation Index Expanded", "Accepted")
+            ]);
+
+            var result = await Build(dir).TryResolveAsync(["1010-2020"]);
+
+            result.ShouldNotBeNull();
+            result!.AmbiguousGroup.ShouldBeTrue();
+        }
+        finally { Directory.Delete(dir, recursive: true); }
+    }
+
     // ── Chronological ordering: monthly file overrides year file ─────────────
 
     [Test]

@@ -153,6 +153,7 @@ public static class DependencyInjection
         builder.Services.AddScoped<Dashboard_v2.Application.ProductosComercializados.IProductoComercializadoService, Dashboard_v2.Application.ProductosComercializados.ProductoComercializadoService>();
         builder.Services.AddScoped<IAuthService, AuthService>();
         builder.Services.AddScoped<Dashboard_v2.Application.Documents.IDocumentService, Dashboard_v2.Application.Documents.DocumentService>();
+        builder.Services.AddScoped<Dashboard_v2.Application.Dashboard.IDashboardService, Dashboard_v2.Infrastructure.Services.DashboardService>();
         // Para agregar un nuevo reporte, agrega otra línea aquí:
         builder.Services.AddScoped<IDocumentReport, AnexoGruposReport>();
         builder.Services.AddScoped<IDocumentReport, AnexoGruposEstudiantilesReport>();

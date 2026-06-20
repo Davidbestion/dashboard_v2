@@ -943,6 +943,26 @@
         }
       }
     },
+    "/api/Dashboard/vicedecano": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "operationId": "GetVicedecanoDashboard",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VicedecanoDashboardDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Documents/{reportName}": {
       "get": {
         "tags": [
@@ -7017,6 +7037,111 @@
         "properties": {
           "nombre": {
             "type": "string"
+          }
+        }
+      },
+      "VicedecanoDashboardDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "totalPremios": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalPublicaciones": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalProyectos": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalEventos": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalPonencias": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalRedes": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalGrupos": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalPatentes": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalRegistros": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalNormas": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalProductos": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "premiosPorTipo": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DashboardSerieItemDto"
+            }
+          },
+          "publicacionesPorGrupo": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DashboardSerieItemDto"
+            }
+          },
+          "publicacionesPorAno": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DashboardSerieItemDto"
+            }
+          },
+          "proyectosPorEstado": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DashboardSerieItemDto"
+            }
+          },
+          "redesPorTipo": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DashboardSerieItemDto"
+            }
+          },
+          "eventosPorTipo": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DashboardSerieItemDto"
+            }
+          },
+          "patentesPorOrigen": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DashboardSerieItemDto"
+            }
+          }
+        }
+      },
+      "DashboardSerieItemDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "cantidad": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },

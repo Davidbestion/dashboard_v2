@@ -1211,3 +1211,102 @@ a:hover { color: var(--primary-hover); }
   }
 }
 
+
+/* ===================================================
+   VICEDECANO DASHBOARD
+=================================================== */
+.vd-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.vd-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+.vd-grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1.25rem;
+}
+
+.vd-section {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e8ecf4;
+  padding: 1.1rem 1.25rem 1.25rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,.05);
+}
+
+.vd-section__title {
+  font-size: .85rem;
+  font-weight: 600;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  margin-bottom: .9rem;
+  padding-bottom: .5rem;
+  border-bottom: 1px solid #f0f2f8;
+}
+
+.vd-empty {
+  color: #94a3b8;
+  font-size: .85rem;
+  text-align: center;
+  padding: 1rem 0;
+}
+
+.vd-stat-big {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  text-align: center;
+  margin: .5rem 0;
+}
+
+.vd-note {
+  font-size: .78rem;
+  color: #94a3b8;
+  text-align: center;
+  margin-top: .25rem;
+}
+
+.vd-mini-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .85rem;
+}
+
+.vd-mini-table th {
+  background: #f8fafc;
+  color: #64748b;
+  font-weight: 600;
+  padding: .35rem .6rem;
+  border-bottom: 1px solid #e2e8f0;
+  text-align: left;
+}
+
+.vd-mini-table th:last-child,
+.vd-mini-table td:last-child {
+  text-align: right;
+}
+
+.vd-mini-table td {
+  padding: .35rem .6rem;
+  border-bottom: 1px solid #f1f5f9;
+  color: #1e293b;
+}
+
+.vd-mini-table tr:last-child td {
+  border-bottom: none;
+}
+
+@media (max-width: 900px) {
+  .vd-grid-2,
+  .vd-grid-3 {
+    grid-template-columns: 1fr;
+  }
+}

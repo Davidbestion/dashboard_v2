@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Card, CardBody, CardHeader,
-  Table, Button, Spinner, Alert, Badge,
+  Button, Spinner, Alert, Badge,
   Modal, ModalHeader, ModalBody, ModalFooter,
   Form, FormGroup, Label, Input,
 } from 'reactstrap';
 import Select from 'react-select';
+import FilterableDataTable from '../components/FilterableDataTable';
 
 async function apiFetch(url, options = {}) {
   const response = await fetch(url, {
@@ -126,47 +127,37 @@ export default function LineasDeInvestigacionPage() {
           <small className="text-muted ms-2">({items.length})</small>
         </CardHeader>
         <CardBody className="p-0">
-          <Table responsive hover className="mb-0">
-            <thead className="table-light">
-              <tr>
-                <th>Nombre</th>
-                <th>Descripción</th>
-                <th>Áreas del conocimiento</th>
-                <th className="text-end">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.length === 0 && (
-                <tr>
-                  <td colSpan={4} className="text-center text-muted py-4">
-                    No hay líneas de investigación registradas.
-                  </td>
-                </tr>
-              )}
-              {items.map(item => (
-                <tr key={item.id}>
-                  <td className="align-middle fw-semibold">{item.nombre}</td>
-                  <td className="align-middle text-muted small">{item.descripcion ?? '—'}</td>
-                  <td className="align-middle">
-                    {item.areasDelConocimientoNombres && item.areasDelConocimientoNombres.length > 0
-                      ? item.areasDelConocimientoNombres.map(n => (
-                          <Badge color="secondary" pill className="me-1" key={n}>{n}</Badge>
-                        ))
-                      : <span className="text-muted small">Sin área asignada</span>
-                    }
-                  </td>
-                  <td className="align-middle text-end">
-                    <Button size="sm" color="outline-secondary" className="me-2" onClick={() => openEdit(item)}>
-                      Editar
-                    </Button>
-                    <Button size="sm" color="outline-danger" onClick={() => handleDelete(item.id)}>
-                      Eliminar
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
+          <FilterableDataTable
+            filterConfig={{
+              search: { fields: ['nombre', 'descripcion'], placeholder: 'Buscar línea...' },
+              filters: [
+                { key: 'areasDelConocimientoIds', label: 'Área del conocimiento',
+                  options: areasDelConocimiento.map(a => ({ value: String(a.id), label: a.nombre })),
+                  match: (item, val) => (item.areasDelConocimientoIds ?? []).map(String).includes(val) },
+              ],
+            }}
+            columns={[
+              { key: 'nombre',      label: 'Nombre',      sortable: true, className: 'fw-semibold' },
+              { key: 'descripcion', label: 'Descripción', render: v => <span className="text-muted small">{v ?? '—'}</span> },
+              {
+                key: 'areasDelConocimientoIds',
+                label: 'Áreas del conocimiento',
+                render: ids => ids && ids.length > 0
+                  ? areasDelConocimiento
+                      .filter(a => ids.includes(a.id))
+                      .map(a => <Badge color="secondary" pill className="me-1" key={a.id}>{a.nombre}</Badge>)
+                  : <span className="text-muted small">Sin área asignada</span>,
+              },
+            ]}
+            data={items}
+            keyExtractor={item => item.id}
+            actions={[
+              { key: 'edit',   label: 'Editar',   icon: 'bi-pencil', color: 'outline-secondary', onClick: item => openEdit(item) },
+              { key: 'delete', label: 'Eliminar', icon: 'bi-trash',  color: 'outline-danger',    onClick: item => handleDelete(item.id) },
+            ]}
+            emptyMessage="No hay líneas de investigación registradas."
+            detailConfig
+          />
         </CardBody>
       </Card>
 

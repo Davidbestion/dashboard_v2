@@ -3,7 +3,7 @@ namespace Dashboard_v2.Domain.Entities;
 /// <summary>
 /// Entidad principal del sistema. Representa a un usuario registrado.
 /// Almacena su perfil completo (nombre, email, contraseña hasheada, fechas y categorías académicas)
-/// y sus referencias de navegación hacia los roles asignados y recursos que posee.
+/// y sus referencias de navegación hacia los roles asignados, recursos que posee y área institucional.
 /// </summary>
 public class User
 {
@@ -27,11 +27,39 @@ public class User
 
     // Navegación
     public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
-    public ICollection<Resource> OwnedResources { get; set; } = new List<Resource>();
 
     // Si el usuario es también un autor académico registrado, este es su perfil.
     public Author? AuthorProfile { get; set; }
 
     // Grupos de investigación a los que pertenece este usuario
     public ICollection<GrupoDeInvestigacion> GruposDeInvestigacion { get; set; } = new List<GrupoDeInvestigacion>();
+
+    // Redes que este usuario coordina
+    public ICollection<Red> RedesCoordinadas { get; set; } = new List<Red>();
+
+    /// <summary>Proyectos de los que este usuario es jefe. Solo aplicable a usuarios con rol Jefe_de_Proyecto.</summary>
+    public ICollection<Proyecto> ProyectosComoJefe { get; set; } = new List<Proyecto>();
+
+    /// <summary>Proyectos en los que este usuario participa (M:N, tabla ProyectoParticipantes).</summary>
+    public ICollection<Proyecto> ProyectosParticipante { get; set; } = new List<Proyecto>();
+
+    /// <summary>Eventos que este usuario organiza.</summary>
+    public ICollection<EventOrganizador> EventosOrganizados { get; set; } = new List<EventOrganizador>();
+
+    /// <summary>Participaciones de este usuario en eventos (incluye ponencias).</summary>
+    public ICollection<ParticipacionEnEvento> ParticipacionesEnEventos { get; set; } = new List<ParticipacionEnEvento>();
+
+    /// <summary>
+    /// Identificador del área institucional del usuario.
+    /// Puede permanecer nulo temporalmente mientras el usuario completa su primer inicio de sesión
+    /// y selecciona el área a la que pertenece.
+    /// </summary>
+    public string? AreaId { get; set; }
+
+    /// <summary>
+    /// Área a la que pertenece el usuario.
+    /// La navegación se materializa cuando <see cref="AreaId"/> ya fue definido.
+    /// </summary>
+    public Area? Area { get; set; }
+
 }

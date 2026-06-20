@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Card, CardBody, CardHeader,
-  Table, Button, Spinner, Alert,
+  Button, Spinner, Alert,
   Modal, ModalHeader, ModalBody, ModalFooter,
   Form, FormGroup, Label, Input,
 } from 'reactstrap';
+import FilterableDataTable from '../components/FilterableDataTable';
 
 async function apiFetch(url, options = {}) {
   const response = await fetch(url, {
@@ -119,36 +120,20 @@ export default function UniversidadesPage() {
           <small className="text-muted ms-2">({items.length})</small>
         </CardHeader>
         <CardBody className="p-0">
-          <Table responsive hover className="mb-0">
-            <thead className="table-light">
-              <tr>
-                <th>Nombre</th>
-                <th className="text-end">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.length === 0 && (
-                <tr>
-                  <td colSpan={2} className="text-center text-muted py-4">
-                    No hay universidades registradas.
-                  </td>
-                </tr>
-              )}
-              {items.map(item => (
-                <tr key={item.id}>
-                  <td className="align-middle">{item.nombre}</td>
-                  <td className="align-middle text-end">
-                    <Button size="sm" color="outline-secondary" className="me-2" onClick={() => openEdit(item)}>
-                      Editar
-                    </Button>
-                    <Button size="sm" color="outline-danger" onClick={() => handleDelete(item.id)}>
-                      Eliminar
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
+          <FilterableDataTable
+            filterConfig={{ search: { fields: ['nombre'], placeholder: 'Buscar universidad...' } }}
+            columns={[
+              { key: 'nombre', label: 'Nombre', sortable: true },
+            ]}
+            data={items}
+            keyExtractor={item => item.id}
+            actions={[
+              { key: 'edit',   label: 'Editar',   icon: 'bi-pencil', color: 'outline-secondary', onClick: item => openEdit(item) },
+              { key: 'delete', label: 'Eliminar', icon: 'bi-trash',  color: 'outline-danger',    onClick: item => handleDelete(item.id) },
+            ]}
+            emptyMessage="No hay universidades registradas."
+            detailConfig
+          />
         </CardBody>
       </Card>
 

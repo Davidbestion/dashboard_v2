@@ -8,13 +8,9 @@ public class PresentationConfiguration : IEntityTypeConfiguration<Presentation>
 {
     public void Configure(EntityTypeBuilder<Presentation> builder)
     {
+        // TPT: tabla propia solo con las columnas específicas de Presentation.
+        // La PK (Id) y las columnas comunes (UserId, EventId, Fecha) viven en ParticipacionesEnEvento.
         builder.ToTable("Presentations");
-        builder.HasKey(p => p.Id);
         builder.Property(p => p.Name).IsRequired().HasMaxLength(500);
-
-        builder.HasOne(p => p.Event)
-            .WithMany(e => e.Presentations)
-            .HasForeignKey(p => p.EventId)
-            .OnDelete(DeleteBehavior.Cascade);
     }
 }

@@ -4,8 +4,10 @@ objectClass: organizationalUnit
 ou: people
 
 # ── Usuarios de prueba ───────────────────────────────────────────────────────
+# Los roles de aplicación se asignan en el panel de administración tras el
+# primer inicio de sesión. Las entradas LDAP solo proveen autenticación.
 
-# Superusuario (equivale al superuser sembrado en la BD)
+# Superusuario
 dn: uid=superuser,ou=people,dc=matcom,dc=uh,dc=cu
 objectClass: inetOrgPerson
 uid: superuser
@@ -14,7 +16,7 @@ sn: User
 mail: superuser@localhost
 userPassword: Superuser1!
 
-# Profesor de prueba
+# Profesor
 dn: uid=jperez,ou=people,dc=matcom,dc=uh,dc=cu
 objectClass: inetOrgPerson
 uid: jperez
@@ -23,11 +25,47 @@ sn: Perez
 mail: jperez@matcom.uh.cu
 userPassword: Profesor1!
 
-# Investigador de prueba
+# Vicedecano de investigación
+dn: uid=lrodriguez,ou=people,dc=matcom,dc=uh,dc=cu
+objectClass: inetOrgPerson
+uid: lrodriguez
+cn: Laura Rodriguez
+sn: Rodriguez
+mail: lrodriguez@matcom.uh.cu
+userPassword: Vicedecano1!
+
+# Jefe de Proyecto
+dn: uid=cmartinez,ou=people,dc=matcom,dc=uh,dc=cu
+objectClass: inetOrgPerson
+uid: cmartinez
+cn: Carlos Martinez
+sn: Martinez
+mail: cmartinez@matcom.uh.cu
+userPassword: JefeProyecto1!
+
+# Jefe de Grupo de investigación
 dn: uid=mgarcia,ou=people,dc=matcom,dc=uh,dc=cu
 objectClass: inetOrgPerson
 uid: mgarcia
 cn: Maria Garcia
 sn: Garcia
 mail: mgarcia@matcom.uh.cu
-userPassword: Investigador1!
+userPassword: JefeGrupo1!
+
+# Jefe de Macroproyecto
+dn: uid=afortes,ou=people,dc=matcom,dc=uh,dc=cu
+objectClass: inetOrgPerson
+uid: afortes
+cn: Alejandro Fortes
+sn: Fortes
+mail: afortes@matcom.uh.cu
+userPassword: JefeMacro1!
+
+# Jefe de Redes
+dn: uid=ylopez,ou=people,dc=matcom,dc=uh,dc=cu
+objectClass: inetOrgPerson
+uid: ylopez
+cn: Yanela Lopez
+sn: Lopez
+mail: ylopez@matcom.uh.cu
+userPassword: JefeRedes1!

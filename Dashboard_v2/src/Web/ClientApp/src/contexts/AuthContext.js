@@ -12,15 +12,22 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  /**
+   * Refresca el usuario autenticado a partir de la cookie HttpOnly actual.
+   * Además de actualizar el estado global, devuelve el payload recibido para evitar
+   * decisiones basadas en un estado React todavía no sincronizado en el mismo tick.
+   */
   const fetchCurrentUser = useCallback(async () => {
+    let currentUser = null;
+
     try {
       // credentials: 'include' asegura que el browser envíe la cookie HttpOnly al servidor
       const response = await fetch('/api/Auth/me', {
         credentials: 'include',
       });
       if (response.ok) {
-        const data = await response.json();
-        setUser(data);
+        currentUser = await response.json();
+        setUser(currentUser);
       } else {
         setUser(null);
       }
@@ -29,16 +36,18 @@ export function AuthProvider({ children }) {
     } finally {
       setLoading(false);
     }
+
+    return currentUser;
   }, []);
 
   useEffect(() => {
     fetchCurrentUser();
   }, [fetchCurrentUser]);
 
-  const login = async (email, password, selectedRole = null) => {
-    const body = selectedRole
-      ? { email, password, selectedRole }
-      : { email, password };
+  const login = async (email, password, selectedRole = null, selectedAreaId = null) => {
+    const body = { email, password };
+    if (selectedRole) body.selectedRole = selectedRole;
+    if (selectedAreaId) body.selectedAreaId = selectedAreaId;
 
     const response = await fetch('/api/Auth/login', {
       method: 'POST',
@@ -55,9 +64,9 @@ export function AuthProvider({ children }) {
 
     const data = await response.json();
 
-    // El servidor pide que el usuario elija un rol antes de completar el login.
-    // Devolvemos el objeto para que la UI muestre el selector.
-    if (data.requiresRoleSelection) {
+    // El servidor puede pedir que el usuario elija un rol o un área antes de completar el login.
+    // Devolvemos el objeto para que la UI muestre el selector correspondiente.
+    if (data.requiresRoleSelection || data.requiresAreaSelection) {
       return data;
     }
 

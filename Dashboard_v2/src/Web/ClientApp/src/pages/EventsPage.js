@@ -1,13 +1,17 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Card, CardBody, CardHeader,
   Nav, NavItem, NavLink as RNavLink,
   TabContent, TabPane,
-  Table, Button, Badge,
+  Button, Badge,
   Spinner, Alert,
   Modal, ModalHeader, ModalBody, ModalFooter,
   Form, FormGroup, Label, Input, InputGroup,
 } from 'reactstrap';
+import { useAuth } from '../contexts/AuthContext';
+import FilterableDataTable from '../components/FilterableDataTable';
+import CertificateUpload, { CertificateViewButton } from '../components/CertificateUpload';
+import UserPicker from '../components/UserPicker';
 
 async function apiFetch(url, options = {}) {
   const response = await fetch(url, {
@@ -27,18 +31,37 @@ async function apiFetch(url, options = {}) {
 
 // ─── Shared helpers ────────────────────────────────────────────────────────────
 
-const EMPTY_PRES = { name: '', eventId: '' };
-const EMPTY_EVENT = { name: '', countryId: '', eventType: '', institutions: [] };
+function isoToDDMM(v) {
+  const m = v && v.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : '';
+}
+function ddmmToISO(v) {
+  const m = v && v.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (!m) return '';
+  return `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`;
+}
+
+const EMPTY_PRES = { name: '', eventId: '', fecha: '', targetUserId: '' };
+const EMPTY_EVENT = { name: '', countryId: '', eventType: '', institutions: [], redId: '', organizadorIds: [], evidenceFileId: null };
 
 const EVENT_TYPE_LABELS = { 0: 'Internacional', 1: 'Nacional', 2: 'De área', 3: 'Local' };
 
 export default function EventsPage() {
-  const [activeTab, setActiveTab] = useState('presentations');
+  const { user } = useAuth();
+  const isSuperuser = user?.role === 'Superuser';
+  const isVicedecano = user?.role === 'Vicedecano_de_investigacion';
+  const isManager = isSuperuser || isVicedecano;  // puede ver todos los eventos
+  const [activeTab, setActiveTab] = useState(isVicedecano ? 'events' : 'presentations');
+  const [generatingAnexo, setGeneratingAnexo] = useState(false);
+  const [anexoError, setAnexoError] = useState('');
 
   // Lookups
   const [countries, setCountries] = useState([]);
   const [eventTypes, setEventTypes] = useState([]);
   const [allEvents, setAllEvents] = useState([]);  // para el select del form de presentaciones
+  const [allInstitutions, setAllInstitutions] = useState([]);
+  const [allUsers, setAllUsers] = useState([]);
+  const [reds, setReds] = useState([]);
 
   // PRESENTATIONS state
   const [presentations, setPresentations] = useState([]);
@@ -54,13 +77,6 @@ export default function EventsPage() {
   const [presDeleteLoading, setPresDeleteLoading] = useState(false);
   const [presDeleteError, setPresDeleteError] = useState('');
 
-  // Coauthor tag-picker
-  const [coauthorTags, setCoauthorTags] = useState([]);
-  const [coauthorInput, setCoauthorInput] = useState('');
-  const [coauthorSuggestions, setCoauthorSuggestions] = useState([]);
-  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
-  const coauthorDebounce = useRef(null);
-
   // EVENTS state
   const [events, setEvents] = useState([]);
   const [evLoading, setEvLoading] = useState(true);
@@ -75,7 +91,14 @@ export default function EventsPage() {
   const [evDeleteLoading, setEvDeleteLoading] = useState(false);
   const [evDeleteError, setEvDeleteError] = useState('');
   // Institution input
-  const [instInput, setInstInput] = useState('');
+  const [selectedInstId, setSelectedInstId] = useState('');
+  // Organizador input
+  const [selectedOrganizadorId, setSelectedOrganizadorId] = useState('');
+  // Inline new-institution
+  const [showNewInstitution, setShowNewInstitution] = useState(false);
+  const [newInstitutionInput, setNewInstitutionInput] = useState('');
+  const [newInstitutionLoading, setNewInstitutionLoading] = useState(false);
+  const [newInstitutionError, setNewInstitutionError] = useState('');
   // Inline new-country
   const [newCountryInput, setNewCountryInput] = useState('');
   const [showNewCountry, setShowNewCountry] = useState(false);
@@ -93,31 +116,42 @@ export default function EventsPage() {
     setCountries(c);
     setEventTypes(et);
     setAllEvents(ae);
+    // Institutions for event form dropdown
+    try { setAllInstitutions(await apiFetch('/api/Institutions')); } catch { setAllInstitutions([]); }
+    // Users for organizador picker
+    try { setAllUsers(await apiFetch('/api/Users')); } catch { setAllUsers([]); }
+    // Reds for event selection (optional)
+    try { setReds(await apiFetch('/api/Redes')); } catch { setReds([]); }
   }, []);
 
   const loadPresentations = useCallback(async () => {
     setPresLoading(true);
     setPresError('');
     try {
-      setPresentations(await apiFetch('/api/Presentations'));
+      const url = isSuperuser
+        ? '/api/Presentations/all'
+        : isVicedecano
+          ? '/api/Presentations/area'
+          : '/api/Presentations';
+      setPresentations(await apiFetch(url));
     } catch (e) {
       setPresError(e.message);
     } finally {
       setPresLoading(false);
     }
-  }, []);
+  }, [isSuperuser, isVicedecano]);
 
   const loadEvents = useCallback(async () => {
     setEvLoading(true);
     setEvError('');
     try {
-      setEvents(await apiFetch('/api/Events'));
+      setEvents(await apiFetch(isManager ? '/api/Events/all' : '/api/Events'));
     } catch (e) {
       setEvError(e.message);
     } finally {
       setEvLoading(false);
     }
-  }, []);
+  }, [isManager]);
 
   useEffect(() => {
     loadLookups();
@@ -125,83 +159,69 @@ export default function EventsPage() {
     loadEvents();
   }, [loadLookups, loadPresentations, loadEvents]);
 
-  // ── Coauthor tag-picker ────────────────────────────────────────────────────
+  async function handleGenerateAnexo() {
+    setGeneratingAnexo(true);
+    setAnexoError('');
+    try {
+      const response = await fetch('/api/Documents/anexo-eventos', { credentials: 'include' });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        const message = data?.error ?? data?.title ?? 'No se pudo generar el anexo.';
+        throw new Error(message);
+      }
 
-  function handleCoauthorInput(e) {
-    const val = e.target.value;
-    setCoauthorInput(val);
-    clearTimeout(coauthorDebounce.current);
-    if (val.trim().length < 2) { setCoauthorSuggestions([]); setSuggestionsOpen(false); return; }
-    coauthorDebounce.current = setTimeout(async () => {
-      try {
-        const data = await apiFetch(`/api/Authors/search-coauthors?q=${encodeURIComponent(val.trim())}`);
-        setCoauthorSuggestions(data);
-        setSuggestionsOpen(data.length > 0);
-      } catch { setSuggestionsOpen(false); }
-    }, 300);
-  }
-
-  function addCoauthorFromSuggestion(s) {
-    setCoauthorTags(prev => prev.some(t => t.id === s.id && t.type === s.type) ? prev : [...prev, s]);
-    setCoauthorInput('');
-    setSuggestionsOpen(false);
-  }
-
-  function addCoauthorFreeText() {
-    const val = coauthorInput.trim();
-    if (!val) return;
-    setCoauthorTags(prev => [...prev, { id: null, name: val, type: 'new' }]);
-    setCoauthorInput('');
-    setSuggestionsOpen(false);
-  }
-
-  function removeCoauthor(idx) {
-    setCoauthorTags(prev => prev.filter((_, i) => i !== idx));
-  }
-
-  function tagColor(type) {
-    if (type === 'author') return 'primary';
-    if (type === 'user') return 'success';
-    return 'secondary';
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'anexo-eventos.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (e) {
+      setAnexoError(e.message);
+    } finally {
+      setGeneratingAnexo(false);
+    }
   }
 
   // ── Presentations CRUD ─────────────────────────────────────────────────────
 
   function openCreatePres() {
     setPresEditing(null);
-    setPresForm(EMPTY_PRES);
-    setCoauthorTags([]);
-    setCoauthorInput('');
+    const d = new Date();
+    const todayDDMM = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+    setPresForm({ ...EMPTY_PRES, fecha: todayDDMM });
     setPresFormError('');
     setPresModal(true);
   }
 
   function openEditPres(pres) {
     setPresEditing(pres);
-    setPresForm({ name: pres.name, eventId: pres.eventId.toString() });
-    setCoauthorTags(
-      pres.authors.map(name => ({ id: null, name, type: 'new' }))
-    );
-    setCoauthorInput('');
+    setPresForm({
+      name: pres.name,
+      eventId: pres.eventId.toString(),
+      fecha: isoToDDMM(pres.fecha ? pres.fecha.substring(0, 10) : ''),
+    });
     setPresFormError('');
     setPresModal(true);
   }
 
   async function handlePresSubmit(e) {
     e.preventDefault();
+    if (isSuperuser && !presEditing && !presForm.targetUserId) {
+      setPresFormError('Debes seleccionar el usuario presentador.');
+      return;
+    }
     setPresFormLoading(true);
     setPresFormError('');
-
-    const coauthorIds = coauthorTags.filter(t => t.type === 'author').map(t => t.id);
-    const coauthorNames = coauthorTags
-      .filter(t => t.type === 'new' || t.type === 'user')
-      .map(t => t.name);
 
     const body = {
       name: presForm.name.trim(),
       eventId: parseInt(presForm.eventId, 10),
-      coauthorIds,
-      coauthorNames,
+      fecha: ddmmToISO(presForm.fecha) || new Date().toISOString().substring(0, 10),
+      ...(isSuperuser && !presEditing ? { targetUserId: presForm.targetUserId } : {}),
     };
 
     try {
@@ -248,9 +268,13 @@ export default function EventsPage() {
   function openCreateEv() {
     setEvEditing(null);
     setEvForm(EMPTY_EVENT);
-    setInstInput('');
+    setSelectedInstId('');
+    setSelectedOrganizadorId('');
     setEvFormError('');
     resetNewCountry();
+    setShowNewInstitution(false);
+    setNewInstitutionInput('');
+    setNewInstitutionError('');
     setEvModal(true);
   }
 
@@ -258,13 +282,20 @@ export default function EventsPage() {
     setEvEditing(ev);
     setEvForm({
       name: ev.name,
-      countryId: ev.countryId.toString(),
-      eventType: ev.eventType.toString(),
+      countryId: ev.countryId?.toString(),
+      eventType: String(ev.eventTypeId ?? ev.eventType ?? ''),
       institutions: [...ev.institutions],
+      redId: ev.redId ?? ev.RedId ?? '',
+      organizadorIds: [...(ev.organizadorIds ?? [])],
+      evidenceFileId: ev.evidenceFileId ?? null,
     });
-    setInstInput('');
+    setSelectedInstId('');
+    setSelectedOrganizadorId('');
     setEvFormError('');
     resetNewCountry();
+    setShowNewInstitution(false);
+    setNewInstitutionInput('');
+    setNewInstitutionError('');
     setEvModal(true);
   }
 
@@ -288,15 +319,46 @@ export default function EventsPage() {
     }
   }
 
-  function addInstitution() {
-    const val = instInput.trim();
-    if (!val) return;
-    setEvForm(f => ({ ...f, institutions: [...f.institutions, val] }));
-    setInstInput('');
+  async function handleCreateInstitution() {
+    const name = newInstitutionInput.trim();
+    if (!name) return;
+    setNewInstitutionLoading(true);
+    setNewInstitutionError('');
+    try {
+      const created = await apiFetch('/api/Institutions', { method: 'POST', body: JSON.stringify({ nombre: name }) });
+      setAllInstitutions(prev => [...prev, created].sort((a, b) => a.nombre.localeCompare(b.nombre)));
+      setEvForm(f => ({ ...f, institutions: [...f.institutions, created.nombre] }));
+      setNewInstitutionInput('');
+      setShowNewInstitution(false);
+    } catch (e) {
+      setNewInstitutionError(e.message);
+    } finally {
+      setNewInstitutionLoading(false);
+    }
+  }
+
+  function addSelectedInstitution() {
+    if (!selectedInstId) return;
+    const inst = allInstitutions.find(i => i.id === selectedInstId);
+    if (!inst) return;
+    if (evForm.institutions.includes(inst.nombre)) return;
+    setEvForm(f => ({ ...f, institutions: [...f.institutions, inst.nombre] }));
+    setSelectedInstId('');
   }
 
   function removeInstitution(idx) {
     setEvForm(f => ({ ...f, institutions: f.institutions.filter((_, i) => i !== idx) }));
+  }
+
+  function addSelectedOrganizador() {
+    if (!selectedOrganizadorId) return;
+    if (evForm.organizadorIds.includes(selectedOrganizadorId)) return;
+    setEvForm(f => ({ ...f, organizadorIds: [...f.organizadorIds, selectedOrganizadorId] }));
+    setSelectedOrganizadorId('');
+  }
+
+  function removeOrganizador(id) {
+    setEvForm(f => ({ ...f, organizadorIds: f.organizadorIds.filter(x => x !== id) }));
   }
 
   async function handleEvSubmit(e) {
@@ -309,6 +371,9 @@ export default function EventsPage() {
       countryId: parseInt(evForm.countryId, 10),
       eventType: parseInt(evForm.eventType, 10),
       institutions: evForm.institutions,
+      redId: evForm.redId && evForm.redId.length > 0 ? evForm.redId : null,
+      organizadorIds: evForm.organizadorIds,
+      evidenceFileId: evForm.evidenceFileId ?? null,
     };
 
     try {
@@ -358,7 +423,11 @@ export default function EventsPage() {
                 style={{ cursor: 'pointer' }}
               >
                 <i className="bi bi-mic me-1" />
-                Mis presentaciones
+                {isSuperuser
+                  ? 'Presentaciones registradas'
+                  : isVicedecano
+                    ? 'Presentaciones del Área'
+                    : 'Mis presentaciones'}
               </RNavLink>
             </NavItem>
             <NavItem>
@@ -368,118 +437,131 @@ export default function EventsPage() {
                 style={{ cursor: 'pointer' }}
               >
                 <i className="bi bi-calendar-event me-1" />
-                Mis eventos
+                {isManager ? 'Eventos registrados' : 'Mis eventos'}
               </RNavLink>
             </NavItem>
           </Nav>
         </CardHeader>
 
         <CardBody>
+          {(isSuperuser || isVicedecano) && (
+            <div className="d-flex justify-content-end mb-3">
+              <Button color="success" size="sm" onClick={handleGenerateAnexo} disabled={generatingAnexo}>
+                {generatingAnexo ? <Spinner size="sm" /> : '⬇ Generar Anexo 3'}
+              </Button>
+            </div>
+          )}
+          {anexoError && <Alert color="danger">{anexoError}</Alert>}
+
           <TabContent activeTab={activeTab}>
 
             {/* ── PRESENTATIONS TAB ── */}
             <TabPane tabId="presentations">
-              <div className="d-flex justify-content-end mb-3">
-                <Button color="primary" size="sm" onClick={openCreatePres}>
-                  <i className="bi bi-plus-lg me-1" />
-                  Nueva presentación
-                </Button>
-              </div>
+              {!isVicedecano && (
+                <div className="d-flex justify-content-end mb-3">
+                  <Button color="primary" size="sm" onClick={openCreatePres}>
+                    <i className="bi bi-plus-lg me-1" />
+                    Nueva presentación
+                  </Button>
+                </div>
+              )}
 
               {presLoading && <div className="text-center py-4"><Spinner color="primary" /></div>}
               {!presLoading && presError && <Alert color="danger">{presError}</Alert>}
-              {!presLoading && !presError && presentations.length === 0 && (
-                <p className="text-muted text-center py-3">No tienes presentaciones registradas.</p>
-              )}
-              {!presLoading && !presError && presentations.length > 0 && (
-                <Table responsive hover>
-                  <thead>
-                    <tr>
-                      <th>Nombre</th>
-                      <th>Evento</th>
-                      <th>Autores</th>
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {presentations.map(p => (
-                      <tr key={p.id}>
-                        <td>{p.name}</td>
-                        <td>{p.eventName}</td>
-                        <td>
-                          {p.authors.map((a, i) => (
-                            <Badge key={i} color="secondary" pill className="me-1">{a}</Badge>
-                          ))}
-                        </td>
-                        <td className="text-end">
-                          <Button color="outline-secondary" size="sm" className="me-2"
-                            onClick={() => openEditPres(p)}>
-                            <i className="bi bi-pencil" />
-                          </Button>
-                          <Button color="outline-danger" size="sm"
-                            onClick={() => { setPresToDelete(p); setPresDeleteError(''); setPresDeleteModal(true); }}>
-                            <i className="bi bi-trash" />
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </Table>
+              {!presLoading && !presError && (
+                <FilterableDataTable
+                  filterConfig={{
+                    search: { fields: ['name', 'eventName'], placeholder: 'Buscar presentación...' },
+                  }}
+                  loading={presLoading}
+                  columns={[
+                    { key: 'name',      label: 'Nombre', sortable: true },
+                    { key: 'eventName', label: 'Evento', sortable: true },
+                    {
+                      key: 'fecha',
+                      label: 'Fecha',
+                      sortable: true,
+                      render: v => {
+                        if (!v) return '—';
+                        const [y, m, d] = String(v).substring(0, 10).split('-');
+                        return `${d}/${m}/${y}`;
+                      },
+                    },
+                    {
+                      key: 'user',
+                      label: 'Presentador',
+                      render: u => u ? `${u.userName ?? ''} ${u.userLastName1 ?? ''}`.trim() : '—',
+                    },
+                  ]}
+                  data={presentations}
+                  keyExtractor={p => p.id}
+                  actions={isVicedecano ? [] : [
+                    { key: 'edit',   label: 'Editar',   icon: 'bi-pencil', color: 'outline-secondary', onClick: p => openEditPres(p) },
+                    { key: 'delete', label: 'Eliminar', icon: 'bi-trash',  color: 'outline-danger',    onClick: p => { setPresToDelete(p); setPresDeleteError(''); setPresDeleteModal(true); } },
+                  ]}
+                  emptyMessage={
+                    isSuperuser ? 'No hay presentaciones registradas.'
+                    : isVicedecano ? 'No hay presentaciones registradas en el área.'
+                    : 'No tienes presentaciones registradas.'
+                  }
+                  detailConfig
+                />
               )}
             </TabPane>
 
             {/* ── EVENTS TAB ── */}
             <TabPane tabId="events">
-              <div className="d-flex justify-content-end mb-3">
-                <Button color="primary" size="sm" onClick={openCreateEv}>
-                  <i className="bi bi-plus-lg me-1" />
-                  Nuevo evento
-                </Button>
-              </div>
+              {!isVicedecano && (
+                <div className="d-flex justify-content-end mb-3">
+                  <Button color="primary" size="sm" onClick={openCreateEv}>
+                    <i className="bi bi-plus-lg me-1" />
+                    Nuevo evento
+                  </Button>
+                </div>
+              )}
 
               {evLoading && <div className="text-center py-4"><Spinner color="primary" /></div>}
               {!evLoading && evError && <Alert color="danger">{evError}</Alert>}
-              {!evLoading && !evError && events.length === 0 && (
-                <p className="text-muted text-center py-3">No participas en ningún evento aún.</p>
-              )}
-              {!evLoading && !evError && events.length > 0 && (
-                <Table responsive hover>
-                  <thead>
-                    <tr>
-                      <th>Nombre</th>
-                      <th>País</th>
-                      <th>Tipo</th>
-                      <th>Instituciones</th>
-                      <th>Presentaciones</th>
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {events.map(ev => (
-                      <tr key={ev.id}>
-                        <td>{ev.name}</td>
-                        <td>{ev.countryName}</td>
-                        <td><Badge color="info" pill>{EVENT_TYPE_LABELS[ev.eventType] ?? ev.eventType}</Badge></td>
-                        <td>
-                          {ev.institutions.map((inst, i) => (
-                            <Badge key={i} color="secondary" pill className="me-1">{inst}</Badge>
-                          ))}
-                        </td>
-                        <td className="text-center">{ev.presentationCount}</td>
-                        <td className="text-end">
-                          <Button color="outline-secondary" size="sm" className="me-2"
-                            onClick={() => openEditEv(ev)}>
-                            <i className="bi bi-pencil" />
-                          </Button>
-                          <Button color="outline-danger" size="sm"
-                            onClick={() => { setEvToDelete(ev); setEvDeleteError(''); setEvDeleteModal(true); }}>
-                            <i className="bi bi-trash" />
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </Table>
+              {!evLoading && !evError && (
+                <FilterableDataTable
+                  filterConfig={{
+                    search: { fields: ['name', 'countryName'], placeholder: 'Buscar evento...' },
+                    filters: [
+                      { key: 'eventTypeId', label: 'Tipo',
+                        options: Object.entries(EVENT_TYPE_LABELS).map(([k, v]) => ({ value: k, label: v })),
+                        match: (item, val) => String(item.eventTypeId) === val },
+                    ],
+                  }}
+                  loading={evLoading}
+                  columns={[
+                    { key: 'name',        label: 'Nombre', sortable: true },
+                    { key: 'countryName', label: 'País',  sortable: true },
+                    {
+                      key: 'eventTypeId',
+                      label: 'Tipo',
+                      render: (v, ev) => <Badge color="info" pill>{EVENT_TYPE_LABELS[v] ?? ev.eventTypeName ?? ev.eventType}</Badge>,
+                    },
+                    {
+                      key: 'institutions',
+                      label: 'Instituciones',
+                      render: insts => (insts || []).map((inst, i) => (
+                        <Badge key={i} color="secondary" pill className="me-1">{inst}</Badge>
+                      )),
+                    },
+                    { key: 'redName',          label: 'Red' },
+                    { key: 'presentationCount', label: 'Presentaciones' },
+                  ]}
+                  data={events}
+                  keyExtractor={ev => ev.id}
+                  actions={[
+                    { key: 'edit',   label: 'Editar',   icon: 'bi-pencil', color: 'outline-secondary', show: () => !isVicedecano, onClick: ev => openEditEv(ev) },
+                    { key: 'delete', label: 'Eliminar', icon: 'bi-trash',  color: 'outline-danger',    show: () => !isVicedecano, onClick: ev => { setEvToDelete(ev); setEvDeleteError(''); setEvDeleteModal(true); } },
+                    { key: 'certificate', label: 'Certificado', show: ev => ev.evidenceFileId != null,
+                      render: ev => <CertificateViewButton fileId={ev.evidenceFileId} /> },
+                  ]}
+                  emptyMessage={isManager ? 'No hay eventos registrados.' : 'No participas en ningún evento aún.'}
+                  detailConfig
+                />
               )}
             </TabPane>
           </TabContent>
@@ -494,6 +576,17 @@ export default function EventsPage() {
           </ModalHeader>
           <ModalBody>
             {presFormError && <Alert color="danger">{presFormError}</Alert>}
+
+            {isSuperuser && !presEditing && (
+              <FormGroup>
+                <Label>Usuario presentador <span className="text-danger">*</span></Label>
+                <UserPicker
+                  users={allUsers}
+                  value={presForm.targetUserId}
+                  onChange={id => setPresForm(f => ({ ...f, targetUserId: id }))}
+                />
+              </FormGroup>
+            )}
 
             <FormGroup>
               <Label for="presName">Nombre *</Label>
@@ -517,45 +610,10 @@ export default function EventsPage() {
             </FormGroup>
 
             <FormGroup>
-              <Label>Coautores</Label>
-              <div className="d-flex flex-wrap gap-1 mb-2">
-                {coauthorTags.map((t, i) => (
-                  <Badge key={i} color={tagColor(t.type)} className="d-flex align-items-center gap-1 py-1 px-2">
-                    {t.type === 'author' && <i className="bi bi-person-check" />}
-                    {t.type === 'user' && <i className="bi bi-person" />}
-                    {t.type === 'new' && <i className="bi bi-person-plus" />}
-                    {t.name}
-                    <i className="bi bi-x" style={{ cursor: 'pointer' }} onClick={() => removeCoauthor(i)} />
-                  </Badge>
-                ))}
-              </div>
-              <div className="position-relative">
-                <InputGroup>
-                  <Input
-                    placeholder="Buscar autor o escribir nombre nuevo..."
-                    value={coauthorInput}
-                    onChange={handleCoauthorInput}
-                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCoauthorFreeText(); } }}
-                  />
-                  <Button type="button" color="secondary" outline onClick={addCoauthorFreeText}>
-                    <i className="bi bi-plus" />
-                  </Button>
-                </InputGroup>
-                {suggestionsOpen && (
-                  <div className="position-absolute w-100 border rounded bg-white shadow-sm"
-                    style={{ zIndex: 1050, top: '100%' }}>
-                    {coauthorSuggestions.map(s => (
-                      <div key={`${s.type}-${s.id}`}
-                        className="px-3 py-2 hover-bg-light"
-                        style={{ cursor: 'pointer' }}
-                        onMouseDown={() => addCoauthorFromSuggestion(s)}>
-                        <i className={`bi ${s.type === 'author' ? 'bi-person-check text-primary' : 'bi-person text-success'} me-2`} />
-                        {s.name}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <Label for="presFecha">Fecha *</Label>
+              <Input type="text" id="presFecha" value={presForm.fecha}
+                onChange={e => setPresForm(f => ({ ...f, fecha: e.target.value }))}
+                placeholder="DD/MM/AAAA" maxLength={10} />
             </FormGroup>
           </ModalBody>
           <ModalFooter>
@@ -636,7 +694,7 @@ export default function EventsPage() {
               <Input type="select" id="evType" value={evForm.eventType} required
                 onChange={e => setEvForm(f => ({ ...f, eventType: e.target.value }))}>
                 <option value="">-- seleccionar --</option>
-                {eventTypes.map(et => <option key={et.value} value={et.value}>{EVENT_TYPE_LABELS[et.value] ?? et.name}</option>)}
+                {eventTypes.map(et => <option key={et.id} value={et.id}>{EVENT_TYPE_LABELS[et.id] ?? et.name}</option>)}
               </Input>
             </FormGroup>
 
@@ -650,17 +708,92 @@ export default function EventsPage() {
                   </Badge>
                 ))}
               </div>
-              <InputGroup>
-                <Input
-                  placeholder="Nombre de institución..."
-                  value={instInput}
-                  onChange={e => setInstInput(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addInstitution(); } }}
-                />
-                <Button type="button" color="secondary" outline onClick={addInstitution}>
-                  <i className="bi bi-plus" />
+              <div className="d-flex gap-2 align-items-center">
+                <Input type="select" id="evInstitution" value={selectedInstId}
+                  onChange={e => setSelectedInstId(e.target.value)}>
+                  <option value="">— Selecciona una institución —</option>
+                  {allInstitutions
+                    .filter(i => !evForm.institutions.includes(i.nombre))
+                    .map(i => <option key={i.id} value={i.id}>{i.nombre}</option>)}
+                </Input>
+                <Button type="button" color="secondary" outline size="sm" style={{ whiteSpace: 'nowrap' }}
+                  onClick={addSelectedInstitution} disabled={!selectedInstId}>
+                  <i className="bi bi-plus" /> Agregar
                 </Button>
-              </InputGroup>
+                <Button type="button" color="secondary" outline size="sm" style={{ whiteSpace: 'nowrap' }}
+                  onClick={() => { setShowNewInstitution(v => !v); setNewInstitutionError(''); }}>
+                  <i className="bi bi-plus" /> Nuevo
+                </Button>
+              </div>
+              {showNewInstitution && (
+                <div className="mt-2">
+                  {newInstitutionError && <Alert color="danger" className="py-1 px-2 small mb-1">{newInstitutionError}</Alert>}
+                  <InputGroup size="sm">
+                    <Input
+                      placeholder="Nombre de la institución..."
+                      value={newInstitutionInput}
+                      onChange={e => setNewInstitutionInput(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleCreateInstitution(); } }}
+                      autoFocus
+                    />
+                    <Button type="button" color="primary" onClick={handleCreateInstitution} disabled={newInstitutionLoading}>
+                      {newInstitutionLoading ? <Spinner size="sm" /> : 'Crear'}
+                    </Button>
+                    <Button type="button" color="secondary" outline onClick={() => setShowNewInstitution(false)}>✕</Button>
+                  </InputGroup>
+                </div>
+              )}
+            </FormGroup>
+
+            <FormGroup>
+              <Label>Organizadores</Label>
+              <div className="d-flex flex-wrap gap-1 mb-2">
+                {evForm.organizadorIds.map(uid => {
+                  const u = allUsers.find(x => x.id === uid);
+                  return (
+                    <Badge key={uid} color="primary" className="d-flex align-items-center gap-1 py-1 px-2">
+                      {u ? `${u.nombreCompleto} (${u.email})` : uid}
+                      <i className="bi bi-x" style={{ cursor: 'pointer' }} onClick={() => removeOrganizador(uid)} />
+                    </Badge>
+                  );
+                })}
+              </div>
+              <div className="d-flex gap-2 align-items-center">
+                <Input type="select" value={selectedOrganizadorId}
+                  onChange={e => setSelectedOrganizadorId(e.target.value)}>
+                  <option value="">— Selecciona un organizador —</option>
+                  {allUsers
+                    .filter(u => !evForm.organizadorIds.includes(u.id))
+                    .map(u => <option key={u.id} value={u.id}>{u.nombreCompleto} ({u.email})</option>)}
+                </Input>
+                <Button type="button" color="secondary" outline size="sm" style={{ whiteSpace: 'nowrap' }}
+                  onClick={addSelectedOrganizador} disabled={!selectedOrganizadorId}>
+                  <i className="bi bi-plus" /> Agregar
+                </Button>
+              </div>
+            </FormGroup>
+
+            <FormGroup>
+              <Label for="evRed">Red coordinadora (opcional)</Label>
+              <Input type="select" id="evRed" value={evForm.redId ?? ''}
+                onChange={e => setEvForm(f => ({ ...f, redId: e.target.value }))}>
+                <option value="">— Ninguna —</option>
+                {reds.map(r => (
+                  <option key={r.id ?? r.Id} value={r.id ?? r.Id}>{r.nombre ?? r.Nombre}</option>
+                ))}
+              </Input>
+              <small className="text-muted">Selecciona una red coordinadora si aplica.</small>
+            </FormGroup>
+
+            <FormGroup>
+              <Label>Certificado / Evidencia</Label>
+              <CertificateUpload
+                fileId={evForm.evidenceFileId}
+                onFileIdChange={id => setEvForm(f => ({ ...f, evidenceFileId: id }))}
+                canManage
+                canView
+                disabled={evFormLoading}
+              />
             </FormGroup>
           </ModalBody>
           <ModalFooter>

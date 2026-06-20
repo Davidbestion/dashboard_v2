@@ -37,7 +37,7 @@ else
 ## Consecuencias
 
 **Positivas:**
-- Los handlers de MediatR y los endpoints no saben qué implementación está activa; solo dependen de `IIdentityService`.
+- Los servicios de aplicación y los endpoints no saben qué implementación está activa; solo dependen de `IIdentityService`.
 - Cambiar de proveedor es un cambio de configuración, no de código.
 - Permite desarrollar y probar ambos flujos en la misma base de código.
 

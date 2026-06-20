@@ -12,3 +12,6 @@ Cada archivo documenta una decisión técnica relevante: el contexto que la moti
 | [0003](0003-proveedor-auth-configurable.md) | Proveedor de autenticación configurable (Local/LDAP) | Accepted |
 | [0004](0004-ldap-search-then-bind.md) | Patrón "search then bind" en LDAP | Accepted |
 | [0005](0005-auto-provisioning-ldap.md) | Auto-provisioning de usuarios LDAP en PostgreSQL | Accepted |
+| [0006](0006-proyectos-tpt-solid.md) | Proyectos: TPT + Commands/Queries por tipo (SOLID) | Superseded |
+| [0007](0007-generacion-documentos-excel.md) | Generación de documentos Excel: Strategy + ClosedXML.Report + plantillas embebidas | Accepted |
+| [0008](0008-proyectos-auth-servicios-crud.md) | Proyectos/Auth: capa de servicios CRUD y validación explícita | Accepted |

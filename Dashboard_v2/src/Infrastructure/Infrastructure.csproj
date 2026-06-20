@@ -6,6 +6,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="Dashboard_v2.Application.UnitTests" />
+    <InternalsVisibleTo Include="Dashboard_v2.Application.FunctionalTests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" />
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
@@ -17,10 +22,23 @@
     <PackageReference Include="Novell.Directory.Ldap.NETStandard" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+    <PackageReference Include="ClosedXML" />
+    <PackageReference Include="ClosedXML.Report" />
+    <PackageReference Include="Minio" />
+    <!-- Forzar versiones seguras de dependencias transitivas de ClosedXML -->
+    <PackageReference Include="System.Security.Cryptography.Xml" />
+    <PackageReference Include="System.IO.Packaging" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Application\Application.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Las plantillas Excel viajan con el binario como recursos embebidos.
+         Para modificar el diseño, edita TemplateGen/Program.cs y ejecuta dotnet run
+         desde la carpeta TemplateGen, luego haz rebuild de la solución. -->
+    <EmbeddedResource Include="Templates\*.xlsx" />
   </ItemGroup>
 
 </Project>

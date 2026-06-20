@@ -4,9 +4,9 @@ public static class TestDatabaseFactory
 {
     public static async Task<ITestDatabase> CreateAsync()
     {
-        // Testcontainers requires Docker. To use a local PostgreSQL database instead,
-        // switch to `PostgreSQLTestDatabase` and update appsettings.json.
-        var database = new PostgreSQLTestcontainersTestDatabase();
+        // Using local PostgreSQL instead of Testcontainers (requires Docker).
+        // Connection string configured in appsettings.json.
+        var database = new PostgreSQLTestDatabase();
 
         await database.InitialiseAsync();
 

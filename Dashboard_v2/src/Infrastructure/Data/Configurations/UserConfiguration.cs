@@ -23,5 +23,12 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.HasIndex(u => u.UserName).IsUnique().HasDatabaseName("UserNameIndex");
         builder.HasIndex(u => u.Email).IsUnique().HasDatabaseName("EmailIndex");
+
+        // Relación: User -> Area (0,1 mientras completa su primer login)  Area -> Users (0,N)
+        builder.Property(u => u.AreaId).HasMaxLength(450);
+        builder.HasOne(u => u.Area)
+            .WithMany(a => a.Users)
+            .HasForeignKey(u => u.AreaId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

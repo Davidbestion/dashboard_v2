@@ -1,8 +1,4 @@
 using Dashboard_v2.Application.Areas;
-using Dashboard_v2.Application.Areas.Commands.CreateArea;
-using Dashboard_v2.Application.Areas.Commands.DeleteArea;
-using Dashboard_v2.Application.Areas.Commands.UpdateArea;
-using Dashboard_v2.Application.Areas.Queries.GetAreas;
 using Dashboard_v2.Web.Infrastructure;
 
 namespace Dashboard_v2.Web.Endpoints;
@@ -41,21 +37,15 @@ public class Areas : EndpointGroupBase
             .ProducesProblem(404);
     }
 
-    private async Task<IResult> GetAreas(ISender sender)
+    private async Task<IResult> GetAreas(IAreaService svc)
     {
-        var list = await sender.Send(new GetAreasQuery());
+        var list = await svc.GetAllAsync();
         return Results.Ok(list);
     }
 
-    private async Task<IResult> CreateArea(ISender sender, CreateAreaBody body)
+    private async Task<IResult> CreateArea(IAreaService svc, CreateAreaRequest body)
     {
-        var (result, id) = await sender.Send(new CreateAreaCommand
-        {
-            Nombre = body.Nombre,
-            Descripcion = body.Descripcion,
-            UniversidadId = body.UniversidadId,
-            AreasDelConocimientoIds = body.AreasDelConocimientoIds ?? []
-        });
+        var (result, id) = await svc.CreateAsync(body);
 
         if (!result.Succeeded)
             return Results.BadRequest(new { errors = result.Errors });
@@ -63,16 +53,9 @@ public class Areas : EndpointGroupBase
         return Results.Created($"/api/Areas/{id}", new { id });
     }
 
-    private async Task<IResult> UpdateArea(ISender sender, string id, UpdateAreaBody body)
+    private async Task<IResult> UpdateArea(IAreaService svc, string id, UpdateAreaRequest body)
     {
-        var result = await sender.Send(new UpdateAreaCommand
-        {
-            Id = id,
-            Nombre = body.Nombre,
-            Descripcion = body.Descripcion,
-            UniversidadId = body.UniversidadId,
-            AreasDelConocimientoIds = body.AreasDelConocimientoIds ?? []
-        });
+        var result = await svc.UpdateAsync(id, body);
 
         if (!result.Succeeded)
             return result.Errors.Contains("Área no encontrada.")
@@ -82,9 +65,9 @@ public class Areas : EndpointGroupBase
         return Results.Ok(new { message = "Área actualizada." });
     }
 
-    private async Task<IResult> DeleteArea(ISender sender, string id)
+    private async Task<IResult> DeleteArea(IAreaService svc, string id)
     {
-        var result = await sender.Send(new DeleteAreaCommand(id));
+        var result = await svc.DeleteAsync(id);
 
         if (!result.Succeeded)
             return Results.NotFound(new { errors = result.Errors });
@@ -93,5 +76,4 @@ public class Areas : EndpointGroupBase
     }
 }
 
-public record CreateAreaBody(string Nombre, string? Descripcion, string? UniversidadId, IList<string>? AreasDelConocimientoIds);
-public record UpdateAreaBody(string Nombre, string? Descripcion, string? UniversidadId, IList<string>? AreasDelConocimientoIds);
+// Request DTOs for create/update are defined in Application/Areas/AreaRequests.cs

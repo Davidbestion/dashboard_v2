@@ -7,7 +7,7 @@ namespace Dashboard_v2.Domain.Entities;
 public class IndexedPublication
 {
     public string PublicationId { get; set; } = default!;
-    public string Index { get; set; } = default!;
+    public int? Index { get; set; }
 
     public Publication Publication { get; set; } = default!;
 }

@@ -21,5 +21,11 @@ public class UserAwardedConfiguration : IEntityTypeConfiguration<UserAwarded>
             .WithMany(a => a.UserAwardeds)
             .HasForeignKey(ua => ua.AwardId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasOne(ua => ua.EvidenceFile)
+            .WithMany()
+            .HasForeignKey(ua => ua.EvidenceFileId)
+            .OnDelete(DeleteBehavior.SetNull)
+            .IsRequired(false);
     }
 }

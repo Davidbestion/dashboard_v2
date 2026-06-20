@@ -1,4 +1,4 @@
-using Dashboard_v2.Application.Roles.Queries.GetRoles;
+using Dashboard_v2.Application.Roles;
 using Dashboard_v2.Web.Infrastructure;
 
 namespace Dashboard_v2.Web.Endpoints;
@@ -13,9 +13,9 @@ public class Roles : EndpointGroupBase
             .Produces<List<RoleDto>>(200);
     }
 
-    private async Task<IResult> GetRoles(ISender sender)
+    private async Task<IResult> GetRoles(IRoleService service)
     {
-        var roles = await sender.Send(new GetRolesQuery());
+        var roles = await service.GetAssignableRolesAsync();
         return Results.Ok(roles);
     }
 }

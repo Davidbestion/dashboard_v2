@@ -6,4 +6,6 @@ public class Country
     public string Name { get; set; } = default!;
 
     public ICollection<Event> Events { get; set; } = new List<Event>();
+    public ICollection<Registro> Registros { get; set; } = new List<Registro>();
+    public ICollection<Red> Reds { get; set; } = new List<Red>();
 }

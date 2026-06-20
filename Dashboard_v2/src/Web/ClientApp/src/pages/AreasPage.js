@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Card, CardBody, CardHeader,
-  Table, Button, Spinner, Alert, Badge,
+  Button, Spinner, Alert, Badge,
   Modal, ModalHeader, ModalBody, ModalFooter,
   Form, FormGroup, Label, Input, FormText,
 } from 'reactstrap';
+import FilterableDataTable from '../components/FilterableDataTable';
 
 async function apiFetch(url, options = {}) {
   const response = await fetch(url, {
@@ -132,44 +133,30 @@ export default function AreasPage() {
           <small className="text-muted ms-2">({items.length})</small>
         </CardHeader>
         <CardBody className="p-0">
-          <Table responsive hover className="mb-0">
-            <thead className="table-light">
-              <tr>
-                <th>Nombre</th>
-                <th>Descripción</th>
-                <th>Universidad</th>
-                <th className="text-end">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.length === 0 && (
-                <tr>
-                  <td colSpan={4} className="text-center text-muted py-4">
-                    No hay áreas registradas.
-                  </td>
-                </tr>
-              )}
-              {items.map(item => (
-                <tr key={item.id}>
-                  <td className="align-middle fw-semibold">{item.nombre}</td>
-                  <td className="align-middle text-muted small">{item.descripcion ?? '—'}</td>
-                  <td className="align-middle">
-                    {item.universidadNombre
-                      ? <Badge color="info" pill>{item.universidadNombre}</Badge>
-                      : <span className="text-muted small">Sin universidad</span>}
-                  </td>
-                  <td className="align-middle text-end">
-                    <Button size="sm" color="outline-secondary" className="me-2" onClick={() => openEdit(item)}>
-                      Editar
-                    </Button>
-                    <Button size="sm" color="outline-danger" onClick={() => handleDelete(item.id)}>
-                      Eliminar
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
+          <FilterableDataTable
+            filterConfig={{
+              search: { fields: ['nombre', 'descripcion'], placeholder: 'Buscar área...' },
+              filters: [
+                { key: 'universidadNombre', label: 'Universidad',
+                  options: universidades.map(u => ({ value: u.nombre, label: u.nombre })) },
+              ],
+            }}
+            columns={[
+              { key: 'nombre',           label: 'Nombre',      sortable: true, className: 'fw-semibold' },
+              { key: 'descripcion',      label: 'Descripción', render: v => <span className="text-muted small">{v ?? '—'}</span> },
+              { key: 'universidadNombre',label: 'Universidad',  render: v => v
+                  ? <Badge color="info" pill>{v}</Badge>
+                  : <span className="text-muted small">Sin universidad</span> },
+            ]}
+            data={items}
+            keyExtractor={item => item.id}
+            actions={[
+              { key: 'edit',   label: 'Editar',   icon: 'bi-pencil', color: 'outline-secondary', onClick: item => openEdit(item) },
+              { key: 'delete', label: 'Eliminar', icon: 'bi-trash',  color: 'outline-danger',    onClick: item => handleDelete(item.id) },
+            ]}
+            emptyMessage="No hay áreas registradas."
+            detailConfig
+          />
         </CardBody>
       </Card>
 

@@ -1,11 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Card, CardBody, CardHeader,
-  Table, Button, Badge,
+  Button, Badge,
   Spinner, Alert,
   Modal, ModalHeader, ModalBody, ModalFooter,
   Form, FormGroup, Label, Input,
 } from 'reactstrap';
+import { useAuth } from '../contexts/AuthContext';
+import FilterableDataTable from '../components/FilterableDataTable';
+import CertificateUpload, { CertificateViewButton } from '../components/CertificateUpload';
+import UserPicker from '../components/UserPicker';
 
 async function apiFetch(url, options = {}) {
   const response = await fetch(url, {
@@ -46,17 +50,56 @@ function awardTypeLabel(value) {
   return AWARD_TYPES.find(t => t.value === value)?.label ?? 'Desconocido';
 }
 
+function isoToDDMM(v) {
+  const m = v && v.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : '';
+}
+function ddmmToISO(v) {
+  const m = v && v.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (!m) return '';
+  return `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`;
+}
+
+const _now = new Date();
+const _todayDDMM = `${String(_now.getDate()).padStart(2, '0')}/${String(_now.getMonth() + 1).padStart(2, '0')}/${_now.getFullYear()}`;
+
 const EMPTY_FORM = {
-  awardName: '',
+  awardId: '',
+  createNewAward: false,
+  newAwardName: '',
   awardType: '0',
-  year: new Date().getFullYear().toString(),
-  awardedAt: new Date().toISOString().slice(0, 10),
+  awardedAt: _todayDDMM,
+  evidenceFileId: null,
+  targetUserId: '',
 };
 
+function buildEmptyForm(awardCatalog) {
+  return {
+    ...EMPTY_FORM,
+    awardId: awardCatalog[0]?.id != null ? String(awardCatalog[0].id) : '',
+    createNewAward: awardCatalog.length === 0,
+  };
+}
+
+function groupAwardsByType(awardCatalog) {
+  return AWARD_TYPES
+    .map(type => ({
+      ...type,
+      awards: awardCatalog.filter(award => award.awardTypeId === type.value),
+    }))
+    .filter(type => type.awards.length > 0);
+}
+
 export default function AwardsPage() {
+  const { user } = useAuth();
+  const isSuperuser = user?.role === 'Superuser';
   const [awards, setAwards] = useState([]);
+  const [awardCatalog, setAwardCatalog] = useState([]);
+  const [allUsers, setAllUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [generatingAnexo, setGeneratingAnexo] = useState(false);
+  const [anexoError, setAnexoError] = useState('');
 
   const [modal, setModal] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -69,36 +112,133 @@ export default function AwardsPage() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState('');
 
+  const groupedAwards = groupAwardsByType(awardCatalog);
+
   const loadAwards = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
-      const data = await apiFetch('/api/Awards');
-      setAwards(data);
+      const url = isSuperuser ? '/api/Awards/todas' : '/api/Awards';
+      const data = await apiFetch(url);
+
+      let rows;
+      if (isSuperuser) {
+        // One row per recipient so each row has its own actionable UserAwarded.Id
+        rows = (data ?? []).flatMap(a => (a.grantings ?? []).flatMap(g =>
+          (g.recipients ?? []).map(r => ({
+            id: r.id,
+            awardId: a.awardId,
+            awardName: a.awardName,
+            awardTypeId: a.awardTypeId,
+            awardTypeName: a.awardTypeName,
+            awardedAt: g.awardedAt,
+            year: g.awardedAt ? parseInt(g.awardedAt.substring(0, 4), 10) : new Date().getFullYear(),
+            recipientUserId: r.userId,
+            recipientDisplayName: r.userDisplayName,
+            evidenceFileId: r.evidenceFileId,
+          }))
+        ));
+      } else {
+        rows = (data ?? []).flatMap(a => (a.grantings ?? []).map(g => {
+          const recipients = g.recipients ?? [];
+          const owner = recipients.find(r => r.userId === user?.id);
+          return {
+            awardId: a.awardId,
+            awardName: a.awardName,
+            awardTypeId: a.awardTypeId,
+            awardTypeName: a.awardTypeName,
+            awardedAt: g.awardedAt,
+            year: g.awardedAt ? parseInt(g.awardedAt.substring(0, 4), 10) : new Date().getFullYear(),
+            recipients: recipients,
+            ownerRecipientId: owner ? owner.id : null,
+            ownerEvidenceFileId: owner?.evidenceFileId ?? null,
+            isMine: !!owner,
+          };
+        }));
+      }
+
+      setAwards(rows);
     } catch (e) {
       setError(e.message);
     } finally {
       setLoading(false);
     }
+  }, [isSuperuser, user?.id]);
+
+  const loadAwardCatalog = useCallback(async () => {
+    try {
+      const data = await apiFetch('/api/Awards/catalogo');
+      setAwardCatalog(data);
+    } catch (e) {
+      setError(prev => prev || e.message);
+    }
   }, []);
 
   useEffect(() => { loadAwards(); }, [loadAwards]);
+  useEffect(() => { loadAwardCatalog(); }, [loadAwardCatalog]);
+  useEffect(() => {
+    if (!isSuperuser) return;
+    apiFetch('/api/Users').then(setAllUsers).catch(() => {});
+  }, [isSuperuser]);
+
+  async function handleGenerateAnexo() {
+    setGeneratingAnexo(true);
+    setAnexoError('');
+    try {
+      const response = await fetch('/api/Documents/anexo-premios', { credentials: 'include' });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        const message = data?.error ?? data?.title ?? 'No se pudo generar el anexo.';
+        throw new Error(message);
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'anexo-premios.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (e) {
+      setAnexoError(e.message);
+    } finally {
+      setGeneratingAnexo(false);
+    }
+  }
 
   function openCreate() {
     setEditing(null);
-    setForm(EMPTY_FORM);
+    setForm(buildEmptyForm(awardCatalog));
     setFormError('');
     setModal(true);
   }
 
   function openEdit(award) {
     setEditing(award);
-    setForm({
-      awardName: award.awardName,
-      awardType: award.awardType.toString(),
-      year: award.year.toString(),
-      awardedAt: award.awardedAt.slice(0, 10),
-    });
+    const matchingCatalogEntry = awardCatalog.find(entry => entry.id === award.awardId);
+
+    if (matchingCatalogEntry) {
+      setForm({
+        awardId: String(matchingCatalogEntry.id),
+        createNewAward: false,
+        newAwardName: '',
+        awardType: String(matchingCatalogEntry.awardTypeId),
+        awardedAt: isoToDDMM((award.awardedAt ?? '').slice(0, 10)),
+        evidenceFileId: award.evidenceFileId ?? null,
+      });
+    } else {
+      setForm({
+        awardId: '',
+        createNewAward: true,
+        newAwardName: award.awardName,
+        awardType: String(award.awardTypeId ?? award.awardType ?? '0'),
+        awardedAt: isoToDDMM((award.awardedAt ?? '').slice(0, 10)),
+        evidenceFileId: award.evidenceFileId ?? null,
+      });
+    }
+
     setFormError('');
     setModal(true);
   }
@@ -113,15 +253,44 @@ export default function AwardsPage() {
     setForm(f => ({ ...f, [name]: value }));
   }
 
+  function handleAwardModeChange(createNewAward) {
+    setFormError('');
+    setForm(currentForm => {
+      const nextForm = {
+        ...currentForm,
+        createNewAward,
+      };
+
+      if (createNewAward) {
+        const selectedAward = awardCatalog.find(award => String(award.id) === currentForm.awardId);
+        return {
+          ...nextForm,
+          awardType: selectedAward ? String(selectedAward.awardTypeId) : currentForm.awardType,
+        };
+      }
+
+      return {
+        ...nextForm,
+        awardId: currentForm.awardId || (awardCatalog[0]?.id != null ? String(awardCatalog[0].id) : ''),
+      };
+    });
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
+    if (isSuperuser && !editing && !form.targetUserId) {
+      setFormError('Debes seleccionar un usuario destinatario.');
+      return;
+    }
     setFormLoading(true);
     setFormError('');
     const body = {
-      awardName: form.awardName.trim(),
-      awardType: parseInt(form.awardType, 10),
-      year: parseInt(form.year, 10),
-      awardedAt: new Date(form.awardedAt).toISOString(),
+      awardId: form.createNewAward ? null : parseInt(form.awardId, 10),
+      newAwardName: form.createNewAward ? form.newAwardName.trim() : null,
+      awardTypeId: form.createNewAward ? parseInt(form.awardType, 10) : null,
+      awardedAt: (ddmmToISO(form.awardedAt) || form.awardedAt) + 'T00:00:00Z',
+      evidenceFileId: form.evidenceFileId ?? null,
+      ...(isSuperuser && !editing ? { targetUserId: form.targetUserId } : {}),
     };
     try {
       if (editing) {
@@ -136,7 +305,7 @@ export default function AwardsPage() {
         });
       }
       closeModal();
-      loadAwards();
+      await Promise.all([loadAwards(), loadAwardCatalog()]);
     } catch (e) {
       setFormError(e.message);
     } finally {
@@ -170,14 +339,23 @@ export default function AwardsPage() {
     <>
       <Card>
         <CardHeader className="d-flex justify-content-between align-items-center">
-          <span className="fw-semibold">Mis premios</span>
-          <Button color="primary" size="sm" onClick={openCreate}>
-            <i className="bi bi-plus-lg me-1" />
-            Nuevo premio
-          </Button>
+          <span className="fw-semibold">{isSuperuser ? 'Premios' : 'Mis premios'}</span>
+          <div className="d-flex gap-2">
+            <Button color="primary" size="sm" onClick={openCreate}>
+              <i className="bi bi-plus-lg me-1" />
+              Nuevo premio
+            </Button>
+            {isSuperuser && (
+              <Button color="success" size="sm" onClick={handleGenerateAnexo} disabled={generatingAnexo}>
+                {generatingAnexo ? <Spinner size="sm" /> : '⬇ Generar Anexo 5'}
+              </Button>
+            )}
+          </div>
         </CardHeader>
 
         <CardBody>
+          {anexoError && <Alert color="danger">{anexoError}</Alert>}
+
           {loading && (
             <div className="text-center py-4">
               <Spinner color="primary" />
@@ -186,57 +364,113 @@ export default function AwardsPage() {
 
           {!loading && error && <Alert color="danger">{error}</Alert>}
 
-          {!loading && !error && awards.length === 0 && (
-            <p className="text-muted text-center py-3">No tienes premios registrados.</p>
-          )}
-
-          {!loading && !error && awards.length > 0 && (
-            <Table responsive hover>
-              <thead>
-                <tr>
-                  <th>Nombre</th>
-                  <th>Tipo</th>
-                  <th>Año</th>
-                  <th>Fecha de otorgamiento</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {awards.map(a => (
-                  <tr key={a.id}>
-                    <td>{a.awardName}</td>
-                    <td>
-                      <Badge color="info" pill>{awardTypeLabel(a.awardType)}</Badge>
-                    </td>
-                    <td>{a.year}</td>
-                    <td>{new Date(a.awardedAt).toLocaleDateString('es-CU')}</td>
-                    <td className="text-end">
-                      <Button
-                        color="outline-secondary"
-                        size="sm"
-                        className="me-2"
-                        onClick={() => openEdit(a)}
-                      >
-                        <i className="bi bi-pencil" />
-                      </Button>
-                      <Button
-                        color="outline-danger"
-                        size="sm"
-                        onClick={() => openDelete(a)}
-                      >
-                        <i className="bi bi-trash" />
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
+          {!loading && !error && (
+            <FilterableDataTable
+              filterConfig={{
+                search: {
+                  fields: isSuperuser ? ['awardName', 'recipientDisplayName'] : ['awardName'],
+                  placeholder: 'Buscar premio...',
+                },
+                filters: [
+                  { key: 'awardTypeId', label: 'Tipo',
+                    options: AWARD_TYPES.map(t => ({ value: String(t.value), label: t.label })),
+                    match: (item, val) => String(item.awardTypeId) === val },
+                  ...(!isSuperuser ? [{
+                    key: 'recipient', label: 'Usuario',
+                    options: [...new Map(
+                      awards.flatMap(a => a.recipients ?? []).map(r => [r.id, r])
+                    ).values()]
+                      .sort((a, b) => a.userDisplayName.localeCompare(b.userDisplayName))
+                      .map(r => ({ value: String(r.id), label: r.userDisplayName })),
+                    match: (item, val) => (item.recipients ?? []).some(r => String(r.id) === val),
+                  }] : []),
+                ],
+              }}
+              loading={loading}
+              columns={isSuperuser ? [
+                { key: 'awardName', label: 'Nombre', sortable: true },
+                {
+                  key: 'awardTypeId',
+                  label: 'Tipo',
+                  render: (v, a) => <Badge color="info" pill>{v != null ? awardTypeLabel(v) : (a.awardTypeName ?? 'Desconocido')}</Badge>,
+                },
+                {
+                  key: 'awardedAt',
+                  label: 'Fecha',
+                  sortable: true,
+                  render: v => new Date(v).toLocaleDateString('es-CU', { timeZone: 'UTC' }),
+                },
+                {
+                  key: 'recipientDisplayName',
+                  label: 'Receptor',
+                  render: (v, a) => (
+                    <span>
+                      {v ?? '—'}
+                      {a.evidenceFileId && <CertificateViewButton fileId={a.evidenceFileId} />}
+                    </span>
+                  ),
+                },
+              ] : [
+                { key: 'awardName', label: 'Nombre', sortable: true },
+                {
+                  key: 'awardTypeId',
+                  label: 'Tipo',
+                  render: (v, a) => <Badge color="info" pill>{v != null ? awardTypeLabel(v) : (a.awardTypeName ?? 'Desconocido')}</Badge>,
+                },
+                {
+                  key: 'awardedAt',
+                  label: 'Fecha de otorgamiento',
+                  sortable: true,
+                  render: v => new Date(v).toLocaleDateString('es-CU', { timeZone: 'UTC' }),
+                },
+                {
+                  key: 'recipients',
+                  label: 'Usuarios',
+                  render: recipients => (recipients || []).map(r => (
+                    <span key={r.id} className="d-inline-block me-3 align-middle">
+                      <small>{r.userDisplayName}</small>
+                      {r.evidenceFileId && <CertificateViewButton fileId={r.evidenceFileId} />}
+                    </span>
+                  )),
+                },
+              ]}
+              data={awards}
+              keyExtractor={a => a.id ?? `${a.awardId}-${a.awardedAt}`}
+              actions={[
+                {
+                  key: 'edit',
+                  label: 'Editar',
+                  icon: 'bi-pencil',
+                  color: 'outline-secondary',
+                  show: a => isSuperuser || a.isMine,
+                  onClick: a => openEdit(
+                    isSuperuser
+                      ? { id: a.id, awardName: a.awardName, awardTypeId: a.awardTypeId, awardedAt: a.awardedAt, evidenceFileId: a.evidenceFileId }
+                      : { id: a.ownerRecipientId, awardName: a.awardName, awardTypeId: a.awardTypeId, awardedAt: a.awardedAt, evidenceFileId: a.ownerEvidenceFileId }
+                  ),
+                },
+                {
+                  key: 'delete',
+                  label: 'Eliminar',
+                  icon: 'bi-trash',
+                  color: 'outline-danger',
+                  show: a => isSuperuser || a.isMine,
+                  onClick: a => openDelete(
+                    isSuperuser
+                      ? { id: a.id, awardName: a.awardName }
+                      : { id: a.ownerRecipientId, awardName: a.awardName }
+                  ),
+                },
+              ]}
+              emptyMessage={isSuperuser ? 'No hay premios registrados.' : 'No tienes premios registrados.'}
+              detailConfig
+            />
           )}
         </CardBody>
       </Card>
 
       {/* Modal crear / editar */}
-      <Modal isOpen={modal} toggle={closeModal}>
+      <Modal isOpen={modal} toggle={closeModal} size="lg">
         <Form onSubmit={handleSubmit}>
           <ModalHeader toggle={closeModal}>
             {editing ? 'Editar premio' : 'Registrar nuevo premio'}
@@ -245,56 +479,109 @@ export default function AwardsPage() {
           <ModalBody>
             {formError && <Alert color="danger">{formError}</Alert>}
 
-            <FormGroup>
-              <Label for="awardName">Nombre del premio *</Label>
-              <Input
-                id="awardName"
-                name="awardName"
-                value={form.awardName}
-                onChange={handleChange}
-                required
-                placeholder="Nombre oficial del premio"
-              />
-            </FormGroup>
+            {isSuperuser && !editing && (
+              <FormGroup>
+                <Label>Usuario destinatario <span className="text-danger">*</span></Label>
+                <UserPicker
+                  users={allUsers}
+                  value={form.targetUserId}
+                  onChange={id => setForm(f => ({ ...f, targetUserId: id }))}
+                />
+              </FormGroup>
+            )}
 
             <FormGroup>
-              <Label for="awardType">Tipo de premio *</Label>
-              <Input
-                type="select"
-                id="awardType"
-                name="awardType"
-                value={form.awardType}
-                onChange={handleChange}
-              >
-                {AWARD_TYPES.map(t => (
-                  <option key={t.value} value={t.value}>{t.label}</option>
-                ))}
-              </Input>
+              <Label>Premio *</Label>
+              <div className="d-flex gap-2 mb-2">
+                <Button
+                  type="button"
+                  color={form.createNewAward ? 'outline-secondary' : 'primary'}
+                  onClick={() => handleAwardModeChange(false)}
+                  disabled={formLoading || awardCatalog.length === 0}
+                >
+                  Seleccionar existente
+                </Button>
+                <Button
+                  type="button"
+                  color={form.createNewAward ? 'primary' : 'outline-secondary'}
+                  onClick={() => handleAwardModeChange(true)}
+                  disabled={formLoading}
+                >
+                  Crear nuevo
+                </Button>
+              </div>
+
+              {!form.createNewAward && (
+                <Input
+                  type="select"
+                  id="awardId"
+                  name="awardId"
+                  value={form.awardId}
+                  onChange={handleChange}
+                  required
+                  disabled={awardCatalog.length === 0}
+                >
+                  {awardCatalog.length === 0 && <option value="">No hay premios cargados</option>}
+                  {groupedAwards.map(type => (
+                    <optgroup key={type.value} label={type.label}>
+                      {type.awards.map(award => (
+                        <option key={award.id} value={award.id}>{award.awardName}</option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </Input>
+              )}
+
+              {form.createNewAward && (
+                <>
+                  <Input
+                    className="mb-2"
+                    id="newAwardName"
+                    name="newAwardName"
+                    value={form.newAwardName}
+                    onChange={handleChange}
+                    required
+                    placeholder="Nombre oficial del premio"
+                  />
+                  <Input
+                    type="select"
+                    id="awardType"
+                    name="awardType"
+                    value={form.awardType}
+                    onChange={handleChange}
+                  >
+                    {AWARD_TYPES.map(t => (
+                      <option key={t.value} value={t.value}>{t.label}</option>
+                    ))}
+                  </Input>
+                </>
+              )}
             </FormGroup>
 
-            <FormGroup>
-              <Label for="year">Año *</Label>
-              <Input
-                type="number"
-                id="year"
-                name="year"
-                value={form.year}
-                onChange={handleChange}
-                min="1900"
-                max={new Date().getFullYear() + 1}
-                required
-              />
-            </FormGroup>
+            {/* Year is derived from `awardedAt` and is no longer a separate input */}
 
             <FormGroup>
               <Label for="awardedAt">Fecha de otorgamiento *</Label>
               <Input
-                type="date"
+                type="text"
                 id="awardedAt"
                 name="awardedAt"
                 value={form.awardedAt}
                 onChange={handleChange}
+                placeholder="DD/MM/AAAA"
+                maxLength={10}
                 required
+              />
+            </FormGroup>
+
+            <FormGroup>
+              <Label>Certificado / Evidencia</Label>
+              <CertificateUpload
+                fileId={form.evidenceFileId}
+                onFileIdChange={id => setForm(f => ({ ...f, evidenceFileId: id }))}
+                canManage
+                canView
+                disabled={formLoading}
               />
             </FormGroup>
           </ModalBody>

@@ -29,7 +29,7 @@ public interface IIdentityService
     /// devuelve los roles disponibles para que el cliente elija. Con un único rol o rol ya seleccionado,
     /// genera el JWT directamente.
     /// </summary>
-    Task<(Result Result, LoginResponse? Response)> LoginAsync(string email, string password, string? selectedRole = null);
+    Task<(Result Result, LoginResponse? Response)> LoginAsync(string email, string password, string? selectedRole = null, string? selectedAreaId = null);
 
     Task<(string? UserId, string? UserName, string? Email)> GetUserDetailsAsync(string userId);
 

@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Card, CardBody, CardHeader,
-  Table, Spinner, Alert, Badge,
+  Badge, Button,
+  Spinner, Alert,
 } from 'reactstrap';
+import DataTable from '../components/DataTable';
+import FilterableDataTable from '../components/FilterableDataTable';
 
 async function apiFetch(url, options = {}) {
   const response = await fetch(url, {
@@ -23,6 +26,7 @@ export default function MisGruposDeInvestigacionPage() {
   const [lineasDeInvestigacion, setLineasDeInvestigacion] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [generatingAnexo, setGeneratingAnexo] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -43,6 +47,30 @@ export default function MisGruposDeInvestigacionPage() {
 
   useEffect(() => { load(); }, [load]);
 
+  async function handleGenerarAnexo() {
+    setGeneratingAnexo(true);
+    setError('');
+    try {
+      const response = await fetch('/api/Documents/anexo-grupos', { credentials: 'include' });
+      if (!response.ok) {
+        const data = await response.json().catch(() => null);
+        throw new Error(data?.error ?? 'Error al generar el Anexo 10.');
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const now = new Date();
+      a.download = `Anexo_10_Grupos_Investigacion_${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}.xlsx`;
+      a.href = url;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setGeneratingAnexo(false);
+    }
+  }
+
   if (loading) {
     return (
       <div className="d-flex justify-content-center mt-5">
@@ -53,7 +81,12 @@ export default function MisGruposDeInvestigacionPage() {
 
   return (
     <>
-      <h2 className="mb-4">Mis Grupos de Investigación</h2>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h2 className="mb-0">Mis Grupos de Investigación</h2>
+        <Button color="outline-success" onClick={handleGenerarAnexo} disabled={generatingAnexo}>
+          {generatingAnexo ? <Spinner size="sm" /> : '⬇ Generar Anexo 10'}
+        </Button>
+      </div>
 
       {error && <Alert color="danger" toggle={() => setError('')}>{error}</Alert>}
 
@@ -63,40 +96,32 @@ export default function MisGruposDeInvestigacionPage() {
           <small className="text-muted ms-2">({items.length})</small>
         </CardHeader>
         <CardBody className="p-0">
-          <Table responsive hover className="mb-0">
-            <thead className="table-light">
-              <tr>
-                <th>Nombre</th>
-                <th>Área</th>
-                <th>Líneas de investigación</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.length === 0 && (
-                <tr>
-                  <td colSpan={3} className="text-center text-muted py-4">
-                    No perteneces a ningún grupo de investigación.
-                  </td>
-                </tr>
-              )}
-              {items.map(item => (
-                <tr key={item.id}>
-                  <td className="align-middle fw-semibold">{item.nombre}</td>
-                  <td className="align-middle">
-                    <Badge color="secondary" pill>{item.areaNombre}</Badge>
-                  </td>
-                  <td className="align-middle">
-                    {item.lineasDeInvestigacionIds && item.lineasDeInvestigacionIds.length > 0
-                      ? lineasDeInvestigacion
-                          .filter(l => item.lineasDeInvestigacionIds.includes(l.id))
-                          .map(l => <Badge color="info" pill className="me-1" key={l.id}>{l.nombre}</Badge>)
-                      : <span className="text-muted small">Sin líneas asignadas</span>
-                    }
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
+          <FilterableDataTable
+            filterConfig={{
+              search: { fields: ['nombre'], placeholder: 'Buscar grupo...' },
+              filters: [
+                { key: 'areaNombre', label: 'Área',
+                  options: [...new Set(items.map(i => i.areaNombre).filter(Boolean))].sort().map(v => ({ value: v, label: v })) },
+              ],
+            }}
+            columns={[
+              { key: 'nombre',   label: 'Nombre', sortable: true, className: 'fw-semibold' },
+              { key: 'areaNombre', label: 'Área', render: v => <Badge color="secondary" pill>{v}</Badge> },
+              {
+                key: 'lineasDeInvestigacionIds',
+                label: 'Líneas de investigación',
+                render: (ids, item) => ids && ids.length > 0
+                  ? lineasDeInvestigacion
+                      .filter(l => ids.includes(l.id))
+                      .map(l => <Badge key={l.id} color="info" pill className="me-1">{l.nombre}</Badge>)
+                  : <span className="text-muted small">Sin líneas asignadas</span>,
+              },
+            ]}
+            data={items}
+            keyExtractor={item => item.id}
+            emptyMessage="No perteneces a ningún grupo de investigación."
+            detailConfig
+          />
         </CardBody>
       </Card>
     </>

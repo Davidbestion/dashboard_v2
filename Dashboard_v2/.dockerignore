@@ -1,0 +1,31 @@
+# Artefactos de build y tests
+artifacts/
+TestResults*/
+coveragereport*/
+coverageFinal*/
+coverageDomain*/
+
+# Binaries
+**/bin/
+**/obj/
+
+# Node modules (se restauran durante el build)
+**/node_modules/
+
+# Archivos de IDE y sistema operativo
+.vs/
+.vscode/
+*.user
+.DS_Store
+
+# Logs y archivos temporales
+*.log
+build_output.txt
+
+# Infra y docs (no necesarios para el build de la app)
+infra/
+docs/
+ldap/
+
+# Archivos de solución de herramientas locales
+TemplateGen/

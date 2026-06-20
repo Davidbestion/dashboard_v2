@@ -355,6 +355,7 @@ ASALocalRun/
 
 # MSBuild Binary and Structured Log
 *.binlog
+*.lscache
 
 # NVidia Nsight GPU debugger configuration file
 *.nvuser
@@ -480,3 +481,18 @@ $RECYCLE.BIN/
 # Vim temporary swap files
 *.swp
 .azure
+
+# CODEX files
+*.codex
+
+# Publication database mapping files (third-party data, downloaded separately by admins)
+# Place Scimago/WoS CSV files here at runtime; see src/Web/data/.gitkeep for instructions.
+src/Web/data/scimago/*.csv
+src/Web/data/wos/*.xlsx
+
+# Code coverage reports (generated locally by ReportGenerator)
+coveragereport/
+coveragereport*/
+
+# Secrets — nunca subir al repositorio
+.env

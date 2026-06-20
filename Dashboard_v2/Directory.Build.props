@@ -5,8 +5,32 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <!-- Suppress NU1608 until Npgsql.EntityFrameworkCore.PostgreSQL 10.0.0 is released -->
     <WarningsNotAsErrors>NU1608</WarningsNotAsErrors>
+    <RestoreWarningsNotAsErrors>NU1608</RestoreWarningsNotAsErrors>
     <ArtifactsPath>$(MSBuildThisFileDirectory)artifacts</ArtifactsPath>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!--
+      Suppresión de advisories de dependencias transitivas de ClosedXML.
+      System.Security.Cryptography.Xml: los advisories GHSA-37gx-xxp4-5rgx y GHSA-w3x6-4m5h-cxqf
+      afectan al procesamiento de firmas XML (XMLDSIG). Nuestro uso de ClosedXML es exclusivamente
+      para generación de archivos .xlsx; nunca verificamos ni creamos firmas XML. El fix real está
+      en el runtime .NET 10, no en el paquete NuGet.
+      System.IO.Packaging: GHSA-f32c-w444-8ppv y GHSA-qj66-m88j-hmgj (path traversal en ZipPackage)
+      solo son explotables al abrir paquetes ZIP de origen externo no confiable. En este proyecto
+      los .xlsx son generados internamente, nunca leídos desde input externo.
+    -->
+    <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-37gx-xxp4-5rgx" />
+    <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-w3x6-4m5h-cxqf" />
+    <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-f32c-w444-8ppv" />
+    <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-qj66-m88j-hmgj" />
+    <!--
+      System.Drawing.Common GHSA-rxg9-xrhp-64gj: RCE via malicious image files.
+      Dependencia transitiva de Testcontainers; en este proyecto nunca se procesan
+      imágenes externas no confiables. Solo afecta a tests.
+    -->
+    <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-rxg9-xrhp-64gj" />
+  </ItemGroup>
 </Project>

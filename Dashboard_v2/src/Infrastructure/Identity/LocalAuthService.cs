@@ -17,11 +17,19 @@ public class LocalAuthService : IIdentityService
 {
     private readonly IApplicationDbContext _context;
     private readonly IJwtService _jwtService;
+    private readonly UserAreaResolutionService _userAreaResolutionService;
 
-    public LocalAuthService(IApplicationDbContext context, IJwtService jwtService)
+    /// <summary>
+    /// Inicializa el servicio de autenticación local con acceso a persistencia, JWT y resolución del área del usuario.
+    /// </summary>
+    public LocalAuthService(
+        IApplicationDbContext context,
+        IJwtService jwtService,
+        UserAreaResolutionService userAreaResolutionService)
     {
         _context = context;
         _jwtService = jwtService;
+        _userAreaResolutionService = userAreaResolutionService;
     }
 
     /// <summary>Devuelve el nombre de usuario dado su ID, o <c>null</c> si no existe.</summary>
@@ -123,7 +131,7 @@ public class LocalAuthService : IIdentityService
     /// 6. Si se pasó <paramref name="selectedRole"/> → valida que sea suyo y genera JWT con ese rol.<br/>
     /// El JWT NO se almacena en el servidor; el endpoint lo guarda en una cookie HttpOnly.
     /// </summary>
-    public async Task<(Result Result, LoginResponse? Response)> LoginAsync(string email, string password, string? selectedRole = null)
+    public async Task<(Result Result, LoginResponse? Response)> LoginAsync(string email, string password, string? selectedRole = null, string? selectedAreaId = null)
     {
         var user = await _context.Users
             .AsNoTracking()
@@ -164,6 +172,16 @@ public class LocalAuthService : IIdentityService
                 RequiresRoleSelection = true,
                 AvailableRoles = roles
             });
+        }
+
+        var areaResolution = await _userAreaResolutionService.EnsureAreaAssignedAsync(
+            user.Id,
+            selectedAreaId,
+            CancellationToken.None);
+
+        if (!areaResolution.Result.Succeeded || areaResolution.Response?.RequiresAreaSelection == true)
+        {
+            return areaResolution;
         }
 
         var token = _jwtService.GenerateToken(user.Id, user.UserName, user.Email, [roleToUse]);

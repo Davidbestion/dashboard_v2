@@ -12,8 +12,14 @@ public class JournalPublicationConfiguration : IEntityTypeConfiguration<JournalP
 
         builder.HasKey(jp => jp.PublicationId);
         builder.Property(jp => jp.PublicationId).HasMaxLength(450);
-        builder.Property(jp => jp.DataBase).IsRequired().HasMaxLength(500);
+        builder.Property(jp => jp.BaseDeDatosId).IsRequired(false);
         builder.Property(jp => jp.Group).IsRequired();
+
+        builder.HasOne(jp => jp.BaseDeDatos)
+            .WithMany()
+            .HasForeignKey(jp => jp.BaseDeDatosId)
+            .OnDelete(DeleteBehavior.SetNull)
+            .IsRequired(false);
 
         builder.HasOne(jp => jp.Publication)
             .WithOne(p => p.JournalPublication)

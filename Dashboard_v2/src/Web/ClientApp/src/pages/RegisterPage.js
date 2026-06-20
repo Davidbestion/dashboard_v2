@@ -123,7 +123,7 @@ export default function RegisterPage() {
           <div className="login-card__logo">
             <i className="bi bi-grid-3x3-gap-fill"></i>
           </div>
-          <h1 className="login-card__title">Dashboard v2</h1>
+          <h1 className="login-card__title">SIGIP</h1>
           <p className="login-card__subtitle">Crea tu cuenta</p>
         </div>
 

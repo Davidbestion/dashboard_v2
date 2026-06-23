@@ -5,6 +5,7 @@ import {
   Spinner, Alert,
   Input, FormGroup, Label,
   Modal, ModalHeader, ModalBody, ModalFooter,
+  Row, Col,
 } from 'reactstrap';
 import FilterableDataTable from '../components/FilterableDataTable';
 
@@ -22,29 +23,47 @@ async function apiFetch(url, options = {}) {
   return data;
 }
 
+const EMPTY_CREATE_FORM = {
+  userName: '',
+  userLastName1: '',
+  userLastName2: '',
+  email: '',
+  roleName: '',
+  areaId: '',
+};
+
 export default function UsersPage() {
   const [users, setUsers] = useState([]);
   const [roles, setRoles] = useState([]);
+  const [areas, setAreas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Modal para asignar rol
-  const [modal, setModal] = useState(false);
+  // Modal asignar rol
+  const [assignModal, setAssignModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedRole, setSelectedRole] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState('');
 
+  // Modal crear usuario
+  const [createModal, setCreateModal] = useState(false);
+  const [createForm, setCreateForm] = useState(EMPTY_CREATE_FORM);
+  const [createLoading, setCreateLoading] = useState(false);
+  const [createError, setCreateError] = useState('');
+
   const loadData = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
-      const [usersData, rolesData] = await Promise.all([
+      const [usersData, rolesData, areasData] = await Promise.all([
         apiFetch('/api/Users'),
         apiFetch('/api/Roles'),
+        apiFetch('/api/Areas'),
       ]);
       setUsers(usersData);
       setRoles(rolesData);
+      setAreas(areasData ?? []);
     } catch (e) {
       setError(e.message);
     } finally {
@@ -52,11 +71,10 @@ export default function UsersPage() {
     }
   }, []);
 
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  useEffect(() => { loadData(); }, [loadData]);
 
-  // Disponibles = roles que el usuario aún no tiene asignados
+  const pendingUsers = users.filter(u => u.roles.length === 0);
+
   function availableRoles(user) {
     return roles.filter(r => !user.roles.includes(r.name));
   }
@@ -66,7 +84,7 @@ export default function UsersPage() {
     setSelectedUser(user);
     setSelectedRole(avail.length > 0 ? avail[0].name : '');
     setActionError('');
-    setModal(true);
+    setAssignModal(true);
   }
 
   async function handleAssignRole() {
@@ -78,7 +96,7 @@ export default function UsersPage() {
         method: 'POST',
         body: JSON.stringify({ roleName: selectedRole }),
       });
-      setModal(false);
+      setAssignModal(false);
       await loadData();
     } catch (e) {
       setActionError(e.message);
@@ -89,12 +107,56 @@ export default function UsersPage() {
 
   async function handleRemoveRole(userId, roleName) {
     try {
-      await apiFetch(`/api/Users/${userId}/roles/${encodeURIComponent(roleName)}`, {
-        method: 'DELETE',
+      await apiFetch(`/api/Users/${userId}/roles/${encodeURIComponent(roleName)}`, { method: 'DELETE' });
+      await loadData();
+    } catch (e) {
+      setError(e.message);
+    }
+  }
+
+  async function handleToggleActive(user) {
+    try {
+      await apiFetch(`/api/Users/${user.id}/active`, {
+        method: 'PUT',
+        body: JSON.stringify({ active: !user.isActive }),
       });
       await loadData();
     } catch (e) {
       setError(e.message);
+    }
+  }
+
+  function openCreateModal() {
+    setCreateForm({ ...EMPTY_CREATE_FORM, roleName: roles[0]?.name ?? '' });
+    setCreateError('');
+    setCreateModal(true);
+  }
+
+  async function handleCreateUser() {
+    if (!createForm.userName.trim() || !createForm.userLastName1.trim() || !createForm.email.trim() || !createForm.roleName) {
+      setCreateError('Nombre de usuario, primer apellido, email y rol son obligatorios.');
+      return;
+    }
+    setCreateLoading(true);
+    setCreateError('');
+    try {
+      await apiFetch('/api/Users', {
+        method: 'POST',
+        body: JSON.stringify({
+          userName:      createForm.userName.trim(),
+          userLastName1: createForm.userLastName1.trim(),
+          userLastName2: createForm.userLastName2.trim() || null,
+          email:         createForm.email.trim(),
+          roleName:      createForm.roleName,
+          areaId:        createForm.areaId || null,
+        }),
+      });
+      setCreateModal(false);
+      await loadData();
+    } catch (e) {
+      setCreateError(e.message);
+    } finally {
+      setCreateLoading(false);
     }
   }
 
@@ -108,11 +170,31 @@ export default function UsersPage() {
 
   return (
     <>
-      <h2 className="mb-4">Gestión de Usuarios</h2>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h2 className="mb-0">Gestión de Usuarios</h2>
+        <Button color="primary" onClick={openCreateModal}>
+          <i className="bi bi-person-plus me-1" /> Crear usuario
+        </Button>
+      </div>
 
       {error && (
-        <Alert color="danger" toggle={() => setError('')}>
-          {error}
+        <Alert color="danger" toggle={() => setError('')}>{error}</Alert>
+      )}
+
+      {pendingUsers.length > 0 && (
+        <Alert color="warning" className="d-flex align-items-start gap-2">
+          <i className="bi bi-exclamation-triangle-fill mt-1" />
+          <div>
+            <strong>{pendingUsers.length} usuario{pendingUsers.length > 1 ? 's' : ''} pendiente{pendingUsers.length > 1 ? 's' : ''} de configuración.</strong>
+            {' '}Intentaron iniciar sesión pero aún no tienen rol asignado:{' '}
+            {pendingUsers.map((u, i) => (
+              <span key={u.id}>
+                {i > 0 && ', '}
+                <strong>{u.userName}</strong> ({u.email})
+              </span>
+            ))}.
+            {' '}Asígnales un rol desde la tabla.
+          </div>
         </Alert>
       )}
 
@@ -135,8 +217,19 @@ export default function UsersPage() {
               ],
             }}
             columns={[
-              { key: 'userName', label: 'Usuario', sortable: true, className: 'fw-semibold' },
-              { key: 'email',    label: 'Email',   sortable: true },
+              { key: 'userName', label: 'Usuario', sortable: true, className: 'fw-semibold',
+                render: (v, u) => (
+                  <>
+                    {v}
+                    {u.roles.length === 0 && (
+                      <Badge color="warning" pill className="ms-2" style={{ fontSize: '0.65em' }}>
+                        Sin rol
+                      </Badge>
+                    )}
+                  </>
+                ),
+              },
+              { key: 'email', label: 'Email', sortable: true },
               {
                 key: 'isActive',
                 label: 'Estado',
@@ -145,9 +238,9 @@ export default function UsersPage() {
               {
                 key: 'roles',
                 label: 'Roles asignados',
-                render: (roles, u) => roles.length === 0
+                render: (roleList, u) => roleList.length === 0
                   ? <span className="text-muted small">Sin roles</span>
-                  : roles.map(role => (
+                  : roleList.map(role => (
                     <Badge key={role} color="primary" className="me-1" style={{ cursor: 'default' }}>
                       {role.replace(/_/g, ' ')}
                       <button
@@ -171,6 +264,12 @@ export default function UsersPage() {
                 disabled: u => availableRoles(u).length === 0,
                 onClick: u => openAssignModal(u),
               },
+              {
+                key: 'toggle-active',
+                color: u => u.isActive ? 'outline-secondary' : 'outline-success',
+                label: u => u.isActive ? 'Desactivar' : 'Activar',
+                onClick: u => handleToggleActive(u),
+              },
             ]}
             emptyMessage="No hay usuarios registrados."
             detailConfig
@@ -179,8 +278,8 @@ export default function UsersPage() {
       </Card>
 
       {/* Modal asignar rol */}
-      <Modal isOpen={modal} toggle={() => setModal(false)}>
-        <ModalHeader toggle={() => setModal(false)}>
+      <Modal isOpen={assignModal} toggle={() => setAssignModal(false)}>
+        <ModalHeader toggle={() => setAssignModal(false)}>
           Asignar rol — {selectedUser?.userName}
         </ModalHeader>
         <ModalBody>
@@ -203,9 +302,101 @@ export default function UsersPage() {
           <Button color="primary" onClick={handleAssignRole} disabled={actionLoading || !selectedRole}>
             {actionLoading ? <Spinner size="sm" /> : 'Asignar'}
           </Button>
-          <Button color="secondary" outline onClick={() => setModal(false)}>
-            Cancelar
+          <Button color="secondary" outline onClick={() => setAssignModal(false)}>Cancelar</Button>
+        </ModalFooter>
+      </Modal>
+
+      {/* Modal crear usuario */}
+      <Modal isOpen={createModal} toggle={() => setCreateModal(false)}>
+        <ModalHeader toggle={() => setCreateModal(false)}>Crear usuario</ModalHeader>
+        <ModalBody>
+          {createError && <Alert color="danger">{createError}</Alert>}
+          <p className="text-muted small mb-3">
+            <i className="bi bi-info-circle me-1" />
+            El email debe coincidir exactamente con el registrado en LDAP para que el usuario pueda iniciar sesión.
+          </p>
+          <Row>
+            <Col md={6}>
+              <FormGroup>
+                <Label>Nombre de usuario <span className="text-danger">*</span></Label>
+                <Input
+                  value={createForm.userName}
+                  onChange={e => setCreateForm(f => ({ ...f, userName: e.target.value }))}
+                  placeholder="ej. jperez"
+                />
+              </FormGroup>
+            </Col>
+            <Col md={6}>
+              <FormGroup>
+                <Label>Email <span className="text-danger">*</span></Label>
+                <Input
+                  type="email"
+                  value={createForm.email}
+                  onChange={e => setCreateForm(f => ({ ...f, email: e.target.value }))}
+                  placeholder="ej. jperez@matcom.uh.cu"
+                />
+              </FormGroup>
+            </Col>
+          </Row>
+          <Row>
+            <Col md={6}>
+              <FormGroup>
+                <Label>Primer apellido <span className="text-danger">*</span></Label>
+                <Input
+                  value={createForm.userLastName1}
+                  onChange={e => setCreateForm(f => ({ ...f, userLastName1: e.target.value }))}
+                  placeholder="ej. Pérez"
+                />
+              </FormGroup>
+            </Col>
+            <Col md={6}>
+              <FormGroup>
+                <Label>Segundo apellido</Label>
+                <Input
+                  value={createForm.userLastName2}
+                  onChange={e => setCreateForm(f => ({ ...f, userLastName2: e.target.value }))}
+                  placeholder="ej. García"
+                />
+              </FormGroup>
+            </Col>
+          </Row>
+          <Row>
+            <Col md={6}>
+              <FormGroup>
+                <Label>Rol <span className="text-danger">*</span></Label>
+                <Input
+                  type="select"
+                  value={createForm.roleName}
+                  onChange={e => setCreateForm(f => ({ ...f, roleName: e.target.value }))}
+                >
+                  {roles.map(r => (
+                    <option key={r.name} value={r.name}>{r.name.replace(/_/g, ' ')}</option>
+                  ))}
+                </Input>
+              </FormGroup>
+            </Col>
+            <Col md={6}>
+              <FormGroup>
+                <Label>Área <span className="text-muted small">(opcional)</span></Label>
+                <Input
+                  type="select"
+                  value={createForm.areaId}
+                  onChange={e => setCreateForm(f => ({ ...f, areaId: e.target.value }))}
+                >
+                  <option value="">— Sin área asignada —</option>
+                  {areas.map(a => (
+                    <option key={a.id} value={a.id}>{a.nombre}</option>
+                  ))}
+                </Input>
+              </FormGroup>
+            </Col>
+          </Row>
+        </ModalBody>
+        <ModalFooter>
+          <Button color="primary" onClick={handleCreateUser} disabled={createLoading}>
+            {createLoading ? <Spinner size="sm" /> : 'Crear usuario'}
           </Button>
+          <Button color="secondary" outline onClick={() => setCreateModal(false)}>Cancelar</Button>
         </ModalFooter>
       </Modal>
     </>

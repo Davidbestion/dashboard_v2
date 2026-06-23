@@ -161,4 +161,90 @@ public class UserServiceTests
         result.Succeeded.ShouldBeTrue();
         (await _db.UserRoles.AnyAsync(ur => ur.UserId == "u1")).ShouldBeFalse();
     }
+
+    // ── SetActiveAsync ───────────────────────────────────────────────────────
+
+    [Test]
+    public async Task SetActiveAsync_UserNotFound_ReturnsFailure()
+    {
+        var result = await _sut.SetActiveAsync("no-existe", false);
+        result.Succeeded.ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task SetActiveAsync_ActiveUser_Deactivates()
+    {
+        await AddUserAsync("u1", isActive: true);
+
+        var result = await _sut.SetActiveAsync("u1", false);
+
+        result.Succeeded.ShouldBeTrue();
+        (await _db.Users.FindAsync("u1"))!.IsActive.ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task SetActiveAsync_InactiveUser_Activates()
+    {
+        await AddUserAsync("u1", isActive: false);
+
+        var result = await _sut.SetActiveAsync("u1", true);
+
+        result.Succeeded.ShouldBeTrue();
+        (await _db.Users.FindAsync("u1"))!.IsActive.ShouldBeTrue();
+    }
+
+    // ── CreateUserAsync ──────────────────────────────────────────────────────
+
+    [Test]
+    public async Task CreateUserAsync_ValidRequest_CreatesUserWithRole()
+    {
+        var (result, id) = await _sut.CreateUserAsync(new CreateUserRequest
+        {
+            UserName      = "jperez",
+            UserLastName1 = "Pérez",
+            Email         = "jperez@test.com",
+            RoleName      = "Profesor",
+        });
+
+        result.Succeeded.ShouldBeTrue();
+        id.ShouldNotBeNullOrEmpty();
+        var user = await _db.Users.FindAsync(id);
+        user.ShouldNotBeNull();
+        user!.UserName.ShouldBe("jperez");
+        (await _db.UserRoles.AnyAsync(ur => ur.UserId == id && ur.Role == DomainRoles.Profesor)).ShouldBeTrue();
+    }
+
+    [Test]
+    public async Task CreateUserAsync_DuplicateEmail_ReturnsFailure()
+    {
+        await AddUserAsync("u1", "existing");
+        _db.Users.Find("u1")!.Email = "dup@test.com";
+        await _db.SaveChangesAsync();
+
+        var (result, _) = await _sut.CreateUserAsync(new CreateUserRequest
+        {
+            UserName      = "other",
+            UserLastName1 = "Other",
+            Email         = "dup@test.com",
+            RoleName      = "Profesor",
+        });
+
+        result.Succeeded.ShouldBeFalse();
+        result.Errors.ShouldContain(e => e.Contains("email"));
+    }
+
+    [Test]
+    public async Task CreateUserAsync_InvalidRole_ReturnsFailure()
+    {
+        var (result, _) = await _sut.CreateUserAsync(new CreateUserRequest
+        {
+            UserName      = "jperez",
+            UserLastName1 = "Pérez",
+            Email         = "jperez@test.com",
+            RoleName      = "RolInventado",
+        });
+
+        result.Succeeded.ShouldBeFalse();
+        result.Errors.ShouldContain(e => e.Contains("Rol no válido"));
+    }
 }

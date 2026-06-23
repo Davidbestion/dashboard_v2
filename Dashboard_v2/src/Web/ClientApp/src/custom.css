@@ -1131,6 +1131,66 @@ a:hover { color: var(--primary-hover); }
   color: var(--text-secondary);
 }
 
+/* Role / area / author option list */
+.role-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 280px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.role-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  background: #f8fafc;
+  transition: border-color var(--transition), background var(--transition), box-shadow var(--transition);
+  user-select: none;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.role-option:hover {
+  border-color: var(--primary);
+  background: #f0f4ff;
+}
+
+.role-option--selected {
+  border-color: var(--primary);
+  background: #eef2ff;
+  color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+}
+
+.role-option input[type="radio"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 17px;
+  height: 17px;
+  border: 2px solid #cbd5e1;
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.role-option input[type="radio"]:checked {
+  border-color: var(--primary);
+  box-shadow: inset 0 0 0 3px #fff, inset 0 0 0 8px var(--primary);
+}
+
+.role-option--selected input[type="radio"] {
+  border-color: var(--primary);
+}
+
 /* Login button */
 .login-btn {
   display: flex;

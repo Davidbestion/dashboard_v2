@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -86,7 +87,7 @@ public sealed class UserService : IUserService
     public async Task<Result> RemoveRoleAsync(string userId, string roleName, CancellationToken ct = default)
     {
         if (!System.Enum.TryParse<RolesEnum>(roleName, out var roleEnum) || roleEnum == RolesEnum.None)
-            return Result.Failure(new[] { "Rol no válido." });
+            return Result.Failure(["Rol no válido."]);
 
         var userRole = await _context.UserRoles
             .FirstOrDefaultAsync(ur => ur.UserId == userId && ur.Role == roleEnum, ct);
@@ -98,5 +99,50 @@ public sealed class UserService : IUserService
         await _context.SaveChangesAsync(ct);
 
         return Result.Success();
+    }
+
+    public async Task<Result> SetActiveAsync(string userId, bool active, CancellationToken ct = default)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId, ct);
+        if (user == null)
+            return Result.Failure(["Usuario no encontrado."]);
+
+        user.IsActive = active;
+        await _context.SaveChangesAsync(ct);
+        return Result.Success();
+    }
+
+    public async Task<(Result Result, string? UserId)> CreateUserAsync(CreateUserRequest request, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(request.UserName))
+            return (Result.Failure(["El nombre de usuario es obligatorio."]), null);
+        if (string.IsNullOrWhiteSpace(request.Email))
+            return (Result.Failure(["El email es obligatorio."]), null);
+        if (!System.Enum.TryParse<RolesEnum>(request.RoleName, out var roleEnum) || roleEnum == RolesEnum.None)
+            return (Result.Failure(["Rol no válido."]), null);
+
+        var emailExists = await _context.Users.AnyAsync(u => u.Email == request.Email, ct);
+        if (emailExists)
+            return (Result.Failure(["Ya existe un usuario con ese email."]), null);
+
+        var user = new User
+        {
+            Id            = Guid.NewGuid().ToString(),
+            UserName      = request.UserName.Trim(),
+            UserLastName1 = request.UserLastName1.Trim(),
+            UserLastName2 = string.IsNullOrWhiteSpace(request.UserLastName2) ? null : request.UserLastName2.Trim(),
+            Email         = request.Email.Trim().ToLowerInvariant(),
+            PasswordHash  = null,
+            BirthDate     = DateTime.SpecifyKind(new DateTime(1970, 1, 1), DateTimeKind.Utc),
+            IsActive      = true,
+            AreaId        = string.IsNullOrWhiteSpace(request.AreaId) ? null : request.AreaId,
+            CreatedAt     = DateTimeOffset.UtcNow,
+        };
+
+        _context.Users.Add(user);
+        _context.UserRoles.Add(new UserRole { UserId = user.Id, Role = roleEnum });
+        await _context.SaveChangesAsync(ct);
+
+        return (Result.Success(), user.Id);
     }
 }

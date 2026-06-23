@@ -118,7 +118,7 @@ public class LdapAuthService : IIdentityService
             .ToListAsync();
 
         if (roles.Count == 0)
-            return (Result.Failure(["El usuario no tiene roles asignados."]), null);
+            return (Result.Failure(["Tu cuenta aún no tiene un rol asignado. Contacta con el administrador del sistema para que te configure el acceso."]), null);
 
         string roleToUse;
         if (selectedRole != null)

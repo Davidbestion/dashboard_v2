@@ -350,20 +350,22 @@ export default function DataTable({
                     }
 
                     const isDisabled = action.disabled ? action.disabled(item) : false;
+                    const actionColor = typeof action.color === 'function' ? action.color(item) : (action.color ?? 'outline-secondary');
+                    const actionLabel = typeof action.label === 'function' ? action.label(item) : action.label;
 
                     return (
                       <Button
                         key={action.key}
                         size="sm"
-                        color={action.color ?? 'outline-secondary'}
+                        color={actionColor}
                         className="ms-1"
-                        aria-label={action.label}
+                        aria-label={actionLabel}
                         disabled={isDisabled}
                         onClick={() => action.onClick(item)}
                       >
                         {action.icon
                           ? <i className={`bi ${action.icon}`} />
-                          : action.label}
+                          : actionLabel}
                       </Button>
                     );
                   })}

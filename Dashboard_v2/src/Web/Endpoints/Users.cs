@@ -10,7 +10,6 @@ namespace Dashboard_v2.Web.Endpoints;
 /// </summary>
 public class Users : EndpointGroupBase
 {
-    /// <summary>Registra GET (listar), POST /{id}/roles (asignar) y DELETE /{id}/roles/{rol} (quitar).</summary>
     public override void Map(RouteGroupBuilder groupBuilder)
     {
         groupBuilder.MapGet("", GetUsers)
@@ -24,6 +23,12 @@ public class Users : EndpointGroupBase
             .WithName("GetUsers")
             .Produces<List<UserWithRolesDto>>(200);
 
+        groupBuilder.MapPost("", CreateUser)
+            .RequireAuthorization(policy => policy.RequireRole(nameof(RolesEnum.Superuser)))
+            .WithName("CreateUser")
+            .Produces(201)
+            .ProducesProblem(400);
+
         groupBuilder.MapPost("{userId}/roles", AssignRole)
             .RequireAuthorization(policy => policy.RequireRole(nameof(RolesEnum.Superuser)))
             .WithName("AssignRole")
@@ -33,6 +38,12 @@ public class Users : EndpointGroupBase
         groupBuilder.MapDelete("{userId}/roles/{roleName}", RemoveRole)
             .RequireAuthorization(policy => policy.RequireRole(nameof(RolesEnum.Superuser)))
             .WithName("RemoveRole")
+            .Produces(200)
+            .ProducesProblem(400);
+
+        groupBuilder.MapPut("{userId}/active", SetActive)
+            .RequireAuthorization(policy => policy.RequireRole(nameof(RolesEnum.Superuser)))
+            .WithName("SetUserActive")
             .Produces(200)
             .ProducesProblem(400);
 
@@ -68,9 +79,6 @@ public class Users : EndpointGroupBase
             : Results.BadRequest(new { errors = result.Errors });
     }
 
-    /// <summary>
-    /// DELETE /api/Users/{userId}/roles/{roleName} — Quita el rol especificado al usuario. Solo Superuser.
-    /// </summary>
     private async Task<IResult> RemoveRole(IUserService service, string userId, string roleName)
     {
         var result = await service.RemoveRoleAsync(userId, roleName);
@@ -78,7 +86,23 @@ public class Users : EndpointGroupBase
             ? Results.Ok(new { message = "Rol eliminado correctamente." })
             : Results.BadRequest(new { errors = result.Errors });
     }
+
+    private async Task<IResult> SetActive(IUserService service, string userId, SetActiveRequest body)
+    {
+        var result = await service.SetActiveAsync(userId, body.Active);
+        return result.Succeeded
+            ? Results.Ok(new { message = body.Active ? "Usuario activado." : "Usuario desactivado." })
+            : Results.BadRequest(new { errors = result.Errors });
+    }
+
+    private async Task<IResult> CreateUser(IUserService service, CreateUserRequest body)
+    {
+        var (result, userId) = await service.CreateUserAsync(body);
+        return result.Succeeded
+            ? Results.Created($"/api/Users/{userId}", new { id = userId })
+            : Results.BadRequest(new { errors = result.Errors });
+    }
 }
 
-/// <summary>Cuerpo de la petición para asignar un rol. <paramref name="RoleName"/> debe ser un valor válido del enum Roles.</summary>
 public record AssignRoleRequest(string RoleName);
+public record SetActiveRequest(bool Active);

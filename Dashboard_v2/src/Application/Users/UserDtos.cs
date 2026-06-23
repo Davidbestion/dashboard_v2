@@ -20,6 +20,17 @@ public record UserWithRolesDto
     public List<string> Roles { get; init; } = new();
 }
 
+/// <summary>Cuerpo de la petición para pre-registrar un usuario (modo LDAP sin auto-registro).</summary>
+public record CreateUserRequest
+{
+    public string UserName { get; init; } = default!;
+    public string UserLastName1 { get; init; } = default!;
+    public string? UserLastName2 { get; init; }
+    public string Email { get; init; } = default!;
+    public string RoleName { get; init; } = default!;
+    public string? AreaId { get; init; }
+}
+
 /// <summary>DTO reducido para seleccionar un Jefe de Proyecto en el formulario de proyectos.</summary>
 public record JefeDeProyectoDto
 {

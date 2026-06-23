@@ -8127,6 +8127,48 @@ export class UsersClient {
         return Promise.resolve<UserWithRolesDto[]>(null as any);
     }
 
+    createUser(body: CreateUserRequest): Promise<void> {
+        let url_ = this.baseUrl + "/api/Users";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processCreateUser(_response);
+        });
+    }
+
+    protected processCreateUser(response: Response): Promise<void> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 201) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
     assignRole(userId: string, body: AssignRoleRequest): Promise<void> {
         let url_ = this.baseUrl + "/api/Users/{userId}/roles";
         if (userId === undefined || userId === null)
@@ -8194,6 +8236,51 @@ export class UsersClient {
     }
 
     protected processRemoveRole(response: Response): Promise<void> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 400) {
+            return response.text().then((_responseText) => {
+            let result400: any = null;
+            let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    setUserActive(userId: string, body: SetActiveRequest): Promise<void> {
+        let url_ = this.baseUrl + "/api/Users/{userId}/active";
+        if (userId === undefined || userId === null)
+            throw new globalThis.Error("The parameter 'userId' must be defined.");
+        url_ = url_.replace("{userId}", encodeURIComponent("" + userId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processSetUserActive(_response);
+        });
+    }
+
+    protected processSetUserActive(response: Response): Promise<void> {
         followIfLoginRedirect(response);
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
@@ -15028,6 +15115,62 @@ export interface IUserWithRolesDto {
     roles?: string[];
 }
 
+export class CreateUserRequest implements ICreateUserRequest {
+    userName?: string;
+    userLastName1?: string;
+    userLastName2?: string | undefined;
+    email?: string;
+    roleName?: string;
+    areaId?: string | undefined;
+
+    constructor(data?: ICreateUserRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.userName = _data["userName"];
+            this.userLastName1 = _data["userLastName1"];
+            this.userLastName2 = _data["userLastName2"];
+            this.email = _data["email"];
+            this.roleName = _data["roleName"];
+            this.areaId = _data["areaId"];
+        }
+    }
+
+    static fromJS(data: any): CreateUserRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new CreateUserRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["userName"] = this.userName;
+        data["userLastName1"] = this.userLastName1;
+        data["userLastName2"] = this.userLastName2;
+        data["email"] = this.email;
+        data["roleName"] = this.roleName;
+        data["areaId"] = this.areaId;
+        return data;
+    }
+}
+
+export interface ICreateUserRequest {
+    userName?: string;
+    userLastName1?: string;
+    userLastName2?: string | undefined;
+    email?: string;
+    roleName?: string;
+    areaId?: string | undefined;
+}
+
 export class AssignRoleRequest implements IAssignRoleRequest {
     roleName?: string;
 
@@ -15062,6 +15205,42 @@ export class AssignRoleRequest implements IAssignRoleRequest {
 
 export interface IAssignRoleRequest {
     roleName?: string;
+}
+
+export class SetActiveRequest implements ISetActiveRequest {
+    active?: boolean;
+
+    constructor(data?: ISetActiveRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.active = _data["active"];
+        }
+    }
+
+    static fromJS(data: any): SetActiveRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new SetActiveRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["active"] = this.active;
+        return data;
+    }
+}
+
+export interface ISetActiveRequest {
+    active?: boolean;
 }
 
 export class JefeDeProyectoDto implements IJefeDeProyectoDto {

@@ -99,6 +99,16 @@ const jefeDeProyectoGroups = [
   },
 ];
 
+// ── Generación de anexos (compartido) ─────────────────────────────────────────
+const generarAnexosGroup = [
+  {
+    heading: 'Generación de Anexos',
+    items: [
+      { to: '/generar-anexos', icon: 'bi-file-earmark-excel', label: 'Generar Anexos' },
+    ],
+  },
+];
+
 // ── Vicedecano de investigación ───────────────────────────────────────────────
 const vicedecanoGroups = [
   {
@@ -276,8 +286,8 @@ export default function Sidebar({ collapsed, onToggle }) {
     ...(user?.role === 'Jefe_de_Grupo_de_investigacion' ? jefeGroups           : []),
     ...(user?.role === 'Jefe_de_Redes'                  ? jefeRedesGroups      : []),
     ...(user?.role === 'Jefe_de_Proyecto'               ? jefeDeProyectoGroups : []),
-    ...(user?.role === 'Vicedecano_de_investigacion'    ? vicedecanoGroups     : []),
-    ...(user?.role === 'Superuser'                      ? adminGroups          : []),
+    ...(user?.role === 'Vicedecano_de_investigacion'    ? [...vicedecanoGroups, ...generarAnexosGroup] : []),
+    ...(user?.role === 'Superuser'                      ? [...adminGroups, ...generarAnexosGroup]     : []),
   ];
 
   return (

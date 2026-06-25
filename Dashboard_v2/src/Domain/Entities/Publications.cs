@@ -1,8 +1,9 @@
+using Dashboard_v2.Domain.Common;
 using Dashboard_v2.Domain.Enums;
 
 namespace Dashboard_v2.Domain.Entities;
 
-public class Publication
+public class Publication : IAuditableEntity
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
     public string Title { get; set; } = default!;
@@ -42,4 +43,9 @@ public class Publication
     /// <summary>Archivo de evidencia/certificado adjunto (opcional).</summary>
     public int? EvidenceFileId { get; set; }
     public StoredFile? EvidenceFile { get; set; }
+
+    public DateTimeOffset Created { get; set; }
+    public string? CreatedBy { get; set; }
+    public DateTimeOffset LastModified { get; set; }
+    public string? LastModifiedBy { get; set; }
 }

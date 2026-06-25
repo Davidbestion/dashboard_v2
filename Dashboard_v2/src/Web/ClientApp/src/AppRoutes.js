@@ -1,4 +1,5 @@
 import DashboardHome from "./pages/DashboardHome";
+import GenerarAnexosPage from "./pages/GenerarAnexosPage";
 import UsersPage from "./pages/UsersPage";
 import PublicationsPage from "./pages/PublicationsPage";
 import CurriculumPage from "./pages/CurriculumPage";
@@ -39,6 +40,12 @@ const AppRoutes = [
     index: true,
     element: <DashboardHome />,
     pageTitle: 'Inicio',
+  },
+  {
+    path: '/generar-anexos',
+    element: <GenerarAnexosPage />,
+    pageTitle: 'Generar Anexos',
+    vicedecanoOrProfesorOrAdminOnly: true,
   },
   {
     path: '/users',

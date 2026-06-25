@@ -1,3 +1,5 @@
+using Dashboard_v2.Domain.Common;
+
 namespace Dashboard_v2.Domain.Entities;
 
 /// <summary>
@@ -6,7 +8,7 @@ namespace Dashboard_v2.Domain.Entities;
 /// Mapeada con TPT: la tabla "Proyectos" contiene los campos base comunes;
 /// cada subtipo concreto tiene su propia tabla de extensión.
 /// </summary>
-public abstract class Proyecto
+public abstract class Proyecto : IAuditableEntity
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
     public string Titulo { get; set; } = default!;
@@ -38,4 +40,9 @@ public abstract class Proyecto
 
     /// <summary>Patentes derivadas de este proyecto (N:M).</summary>
     public ICollection<ProyectoPatente> PatentesDerivadas { get; set; } = new List<ProyectoPatente>();
+
+    public DateTimeOffset Created { get; set; }
+    public string? CreatedBy { get; set; }
+    public DateTimeOffset LastModified { get; set; }
+    public string? LastModifiedBy { get; set; }
 }

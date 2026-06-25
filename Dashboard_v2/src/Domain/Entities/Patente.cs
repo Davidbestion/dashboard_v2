@@ -1,6 +1,8 @@
+using Dashboard_v2.Domain.Common;
+
 namespace Dashboard_v2.Domain.Entities;
 
-public class Patente
+public class Patente : IAuditableEntity
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
     public string Titulo { get; set; } = default!;
@@ -12,4 +14,9 @@ public class Patente
 
     /// <summary>Proyectos de los que esta patente es resultado (N:M).</summary>
     public ICollection<ProyectoPatente> ProyectosDerivados { get; set; } = new List<ProyectoPatente>();
+
+    public DateTimeOffset Created { get; set; }
+    public string? CreatedBy { get; set; }
+    public DateTimeOffset LastModified { get; set; }
+    public string? LastModifiedBy { get; set; }
 }

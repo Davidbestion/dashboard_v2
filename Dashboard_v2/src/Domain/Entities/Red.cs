@@ -1,3 +1,4 @@
+using Dashboard_v2.Domain.Common;
 using Dashboard_v2.Domain.Enums;
 
 namespace Dashboard_v2.Domain.Entities;
@@ -6,7 +7,7 @@ namespace Dashboard_v2.Domain.Entities;
 /// Representa una red (colaborativa/profesional).
 /// Una red pertenece a un país (relación obligatoria conceptualmente).
 /// </summary>
-public class Red
+public class Red : IAuditableEntity
 {
     /// <summary>
     /// Identificador único de la red (GUID como cadena).
@@ -63,4 +64,9 @@ public class Red
     /// Publicaciones generadas por esta red.
     /// </summary>
     public ICollection<Publication> Publications { get; set; } = new List<Publication>();
+
+    public DateTimeOffset Created { get; set; }
+    public string? CreatedBy { get; set; }
+    public DateTimeOffset LastModified { get; set; }
+    public string? LastModifiedBy { get; set; }
 }

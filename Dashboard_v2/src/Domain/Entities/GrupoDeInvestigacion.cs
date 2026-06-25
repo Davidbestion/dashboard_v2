@@ -1,6 +1,8 @@
+using Dashboard_v2.Domain.Common;
+
 namespace Dashboard_v2.Domain.Entities;
 
-public class GrupoDeInvestigacion
+public class GrupoDeInvestigacion : IAuditableEntity
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
     public string Nombre { get; set; } = default!;
@@ -18,4 +20,9 @@ public class GrupoDeInvestigacion
     /// <summary>Id del usuario que creó el grupo (puede ser null si fue creado antes de este campo).</summary>
     public string? CreadorId { get; set; }
     public User? Creador { get; set; }
+
+    public DateTimeOffset Created { get; set; }
+    public string? CreatedBy { get; set; }
+    public DateTimeOffset LastModified { get; set; }
+    public string? LastModifiedBy { get; set; }
 }

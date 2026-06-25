@@ -1,6 +1,8 @@
+using Dashboard_v2.Domain.Common;
+
 namespace Dashboard_v2.Domain.Entities;
 
-public class ParticipacionEnEvento
+public class ParticipacionEnEvento : IAuditableEntity
 {
     public int Id { get; set; }
 
@@ -11,4 +13,9 @@ public class ParticipacionEnEvento
     public Event Event { get; set; } = null!;
 
     public DateOnly Fecha { get; set; }
+
+    public DateTimeOffset Created { get; set; }
+    public string? CreatedBy { get; set; }
+    public DateTimeOffset LastModified { get; set; }
+    public string? LastModifiedBy { get; set; }
 }

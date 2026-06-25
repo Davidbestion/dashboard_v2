@@ -1,6 +1,6 @@
 ﻿namespace Dashboard_v2.Domain.Common;
 
-public abstract class BaseAuditableEntity : BaseEntity
+public abstract class BaseAuditableEntity : BaseEntity, IAuditableEntity
 {
     public DateTimeOffset Created { get; set; }
 

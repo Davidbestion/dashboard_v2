@@ -1,6 +1,8 @@
+using Dashboard_v2.Domain.Common;
+
 namespace Dashboard_v2.Domain.Entities;
 
-public class Area
+public class Area : IAuditableEntity
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
     public string Nombre { get; set; } = default!;
@@ -19,4 +21,8 @@ public class Area
     // Investiga sobre: un Área investiga 1 o muchas Áreas del Conocimiento
     public ICollection<AreaDelConocimiento> AreasDelConocimiento { get; set; } = new List<AreaDelConocimiento>();
 
+    public DateTimeOffset Created { get; set; }
+    public string? CreatedBy { get; set; }
+    public DateTimeOffset LastModified { get; set; }
+    public string? LastModifiedBy { get; set; }
 }

@@ -5,10 +5,9 @@ import {
   TabContent, TabPane,
   Badge, Button,
   Spinner, Alert,
-  Input, Label,
   UncontrolledPopover, PopoverHeader, PopoverBody,
-  Dropdown, DropdownToggle, DropdownMenu,
 } from 'reactstrap';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import FilterableDataTable from '../components/FilterableDataTable';
 import { CertificateViewButton } from '../components/CertificateUpload';
@@ -27,15 +26,12 @@ async function apiFetch(url) {
 
 export default function PublicacionesConsultaPage({ apiUrl = '/api/Publications/todas' }) {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [publicaciones, setPublicaciones] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [generatingAnexo, setGeneratingAnexo] = useState(false);
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
   const [activeType, setActiveType] = useState(0);
   const [activeGroup, setActiveGroup] = useState(1);
-  const [anexoDropOpen, setAnexoDropOpen] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -117,39 +113,6 @@ export default function PublicacionesConsultaPage({ apiUrl = '/api/Publications/
       : <span className="text-muted">—</span>;
   }
 
-  /**
-   * Dispara la generación y descarga del anexo de publicaciones.
-   * Acepta opcionalmente fechas límite (from/to) que se pasan como query params.
-   */
-  async function handleGenerarAnexo({ from = '', to = '' } = {}) {
-    setGeneratingAnexo(true);
-    setError('');
-    try {
-      const params = new URLSearchParams();
-      if (from) params.set('from', from);
-      if (to)   params.set('to', to);
-      const qs = params.toString() ? `?${params.toString()}` : '';
-      const response = await fetch(`/api/Documents/anexo-publicaciones${qs}`, { credentials: 'include' });
-      if (!response.ok) {
-        const data = await response.json().catch(() => null);
-        throw new Error(data?.error ?? 'Error al generar el Anexo 2.');
-      }
-
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      const now = new Date();
-      a.download = `Anexo_2_Publicaciones_${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}.xlsx`;
-      a.href = url;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setGeneratingAnexo(false);
-    }
-  }
-
   return (
     <Card className="shadow-sm">
       <CardHeader className="d-flex justify-content-between align-items-center gap-2">
@@ -157,50 +120,11 @@ export default function PublicacionesConsultaPage({ apiUrl = '/api/Publications/
           <strong>Publicaciones</strong>
           <small className="text-muted ms-2">({publicationsNormalized.length})</small>
         </div>
-        {user?.role === 'Superuser' && (
-          <Button color="outline-success" onClick={() => handleGenerarAnexo()} disabled={generatingAnexo}>
-            {generatingAnexo ? <Spinner size="sm" /> : '⬇ Generar Anexo 2'}
+        {(user?.role === 'Superuser' || user?.role === 'Vicedecano_de_investigacion') && (
+          <Button color="outline-success" size="sm" onClick={() => navigate('/generar-anexos')}>
+            <i className="bi bi-file-earmark-excel me-1" />
+            Generar Anexo 2
           </Button>
-        )}
-        {user?.role === 'Vicedecano_de_investigacion' && (
-          <Dropdown isOpen={anexoDropOpen} toggle={() => setAnexoDropOpen(o => !o)}>
-            <DropdownToggle color="outline-success" size="sm" caret disabled={generatingAnexo}>
-              {generatingAnexo ? <Spinner size="sm" /> : '⬇ Generar Anexo 2'}
-            </DropdownToggle>
-            <DropdownMenu end style={{ minWidth: 280, padding: '0.75rem' }}>
-              <p className="text-muted mb-2" style={{ fontSize: '0.82em' }}>
-                <i className="bi bi-info-circle me-1" />
-                Filtra las publicaciones incluidas en el anexo por rango de meses. Deja en blanco para incluir todas.
-              </p>
-              <div className="mb-2">
-                <Label className="mb-1 fw-semibold" style={{ fontSize: '0.85em' }}>Desde (mes)</Label>
-                <Input
-                  type="month"
-                  bsSize="sm"
-                  value={dateFrom}
-                  onChange={e => setDateFrom(e.target.value)}
-                />
-              </div>
-              <div className="mb-3">
-                <Label className="mb-1 fw-semibold" style={{ fontSize: '0.85em' }}>Hasta (mes)</Label>
-                <Input
-                  type="month"
-                  bsSize="sm"
-                  value={dateTo}
-                  onChange={e => setDateTo(e.target.value)}
-                />
-              </div>
-              <Button
-                color="success"
-                size="sm"
-                className="w-100"
-                onClick={() => { setAnexoDropOpen(false); handleGenerarAnexo({ from: dateFrom, to: dateTo }); }}
-                disabled={generatingAnexo}
-              >
-                ⬇ Descargar Anexo 2
-              </Button>
-            </DropdownMenu>
-          </Dropdown>
         )}
       </CardHeader>
       <CardBody>

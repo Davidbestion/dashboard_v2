@@ -1,5 +1,6 @@
 namespace Dashboard_v2.Domain.Entities;
 
+/// <summary>Type/category of event (e.g. Conference, Workshop, Seminar), reference data.</summary>
 public class EventType
 {
     public int Id { get; set; }

@@ -1,5 +1,8 @@
 namespace Dashboard_v2.Application.Areas;
 
+/// <summary>
+/// Academic area with its associated knowledge domains.
+/// </summary>
 public record AreaDto
 {
     public string Id { get; init; } = default!;

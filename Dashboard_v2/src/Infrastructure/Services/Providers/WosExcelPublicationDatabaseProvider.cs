@@ -78,6 +78,11 @@ internal sealed class WosExcelPublicationDatabaseProvider : IPublicationDatabase
 
     // ── Public interface ──────────────────────────────────────────────────────
 
+    /// <summary>
+    /// Searches the local WoS Excel database for publications matching the given ISSN.
+    /// Returns <c>null</c> if no match is found. Uses the recorded promotion date to
+    /// auto-resolve ESCI-vs-main ambiguity when <paramref name="publishedDate"/> is provided.
+    /// </summary>
     public Task<PublicationDatabaseMatchDto?> TryResolveAsync(
         IEnumerable<string> issns,
         DateOnly? publishedDate = null,
@@ -329,7 +334,12 @@ internal sealed class WosExcelPublicationDatabaseProvider : IPublicationDatabase
                 && int.TryParse(parts[4], out int mm))
                 return (my, mm);
         }
-        catch { /* fall through */ }
+        catch (Exception ex)
+        {
+            // Sort key parsing failed for this file; it will be loaded in default order.
+            // Could not parse sort key; file loads in default order.
+            _ = ex; // suppress unused variable warning
+        }
 
         return (9999, 99);
     }

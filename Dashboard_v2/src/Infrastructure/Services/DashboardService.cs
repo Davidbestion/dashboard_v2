@@ -6,6 +6,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Dashboard_v2.Infrastructure.Services;
 
+/// <summary>
+/// Aggregates research activity statistics for the Vicedecano dashboard. Queries publications,
+/// projects, events, awards, patents, networks, and groups filtered by academic area.
+/// </summary>
 public sealed class DashboardService : IDashboardService
 {
     private readonly IApplicationDbContext _context;
@@ -17,6 +21,10 @@ public sealed class DashboardService : IDashboardService
         _currentUser = currentUser;
     }
 
+    /// <summary>
+    /// Gathers and aggregates all research activity metrics for the current user's area.
+    /// Delegates to private Gather* helper methods for each entity type.
+    /// </summary>
     public async Task<VicedecanoDashboardDto> GetVicedecanoDashboardAsync(CancellationToken ct = default)
     {
         var areaId = await _context.GetUserAreaIdAsync(_currentUser.Id, ct) ?? string.Empty;
@@ -79,6 +87,7 @@ public sealed class DashboardService : IDashboardService
 
     // ── Plantilla / Personal ──────────────────────────────────────────────────
 
+    // Collects active user counts and category breakdowns (scientific, teaching, research) for the area.
     private async Task<(int TotalUsuarios, PlantillaDto Plantilla)> GatherPlantillaAsync(string areaId, CancellationToken ct)
     {
         var users = await _context.Users
@@ -126,10 +135,11 @@ public sealed class DashboardService : IDashboardService
 
     // ── Premios ──────────────────────────────────────────────────────────────
 
+    // Collects awards received by users in the area, grouped by award type and year.
     private async Task<(int Total, List<DashboardSerieItemDto> PorTipo, List<DashboardSerieItemDto> PorAno)>
         GatherPremiosAsync(string areaId, CancellationToken ct)
     {
-        var rows = await _context.UserAwardeds
+        var rows = await _context.UserAwardees
             .AsNoTracking()
             .Where(ua => ua.User != null && ua.User.AreaId == areaId)
             .Include(ua => ua.Award).ThenInclude(a => a.AwardType)
@@ -152,6 +162,7 @@ public sealed class DashboardService : IDashboardService
 
     // ── Publicaciones ────────────────────────────────────────────────────────
 
+    // Collects publications co-authored by users in the area, grouped by bibliographic group, year, type, and author.
     private async Task<(int Total, List<DashboardSerieItemDto> PorGrupo, List<DashboardSerieItemDto> PorAno,
         List<DashboardSerieItemDto> PorTipo, List<DashboardSerieItemDto> PorProfesor)>
         GatherPublicacionesAsync(string areaId, CancellationToken ct)
@@ -214,6 +225,7 @@ public sealed class DashboardService : IDashboardService
 
     // ── Proyectos ────────────────────────────────────────────────────────────
 
+    // Collects all projects in which area members participate (as leader or collaborator), grouped by type and execution state.
     private async Task<(int Total, List<DashboardSerieItemDto> PorEstado, List<DashboardSerieItemDto> PorTipo)>
         GatherProyectosAsync(string areaId, CancellationToken ct)
     {
@@ -259,6 +271,7 @@ public sealed class DashboardService : IDashboardService
 
     // ── Eventos ──────────────────────────────────────────────────────────────
 
+    // Collects events organized or attended by area users, grouped by event type and year.
     private async Task<(int Total, List<DashboardSerieItemDto> PorTipo, List<DashboardSerieItemDto> PorAno)>
         GatherEventosAsync(string areaId, CancellationToken ct)
     {
@@ -288,6 +301,7 @@ public sealed class DashboardService : IDashboardService
 
     // ── Ponencias ────────────────────────────────────────────────────────────
 
+    // Collects paper/poster presentations by area users, grouped by year.
     private async Task<(int Total, List<DashboardSerieItemDto> PorAno)> GatherPonenciasAsync(string areaId, CancellationToken ct)
     {
         var fechas = await _context.Presentations
@@ -307,6 +321,7 @@ public sealed class DashboardService : IDashboardService
 
     // ── Redes ────────────────────────────────────────────────────────────────
 
+    // Collects scientific networks coordinated by or with participation from area users, grouped by network type.
     private async Task<(int Total, List<DashboardSerieItemDto> PorTipo, List<RedResumenDto> Detalle)>
         GatherRedesAsync(string areaId, CancellationToken ct)
     {
@@ -343,6 +358,7 @@ public sealed class DashboardService : IDashboardService
 
     // ── Grupos de Investigación ───────────────────────────────────────────────
 
+    // Counts research groups directly affiliated with the area.
     private Task<int> CountGruposAsync(string areaId, CancellationToken ct) =>
         _context.GruposDeInvestigacion
             .AsNoTracking()
@@ -350,6 +366,7 @@ public sealed class DashboardService : IDashboardService
 
     // ── Patentes ─────────────────────────────────────────────────────────────
 
+    // Collects patents by area users, grouped by origin (national vs. foreign).
     private async Task<(int Total, List<DashboardSerieItemDto> PorOrigen)> GatherPatentesAsync(string areaId, CancellationToken ct)
     {
         var flags = await _context.Patentes
@@ -369,6 +386,7 @@ public sealed class DashboardService : IDashboardService
 
     // ── Registros ────────────────────────────────────────────────────────────
 
+    // Collects registerable intellectual property (software, other) by area users, grouped by type.
     private async Task<(int Total, List<DashboardSerieItemDto> PorTipo)> GatherRegistrosAsync(string areaId, CancellationToken ct)
     {
         var flags = await _context.Registros
@@ -388,6 +406,7 @@ public sealed class DashboardService : IDashboardService
 
     // ── Normas ───────────────────────────────────────────────────────────────
 
+    // Collects technical standards authored by area users, grouped by standard type.
     private async Task<(int Total, List<DashboardSerieItemDto> PorTipo)> GatherNormasAsync(string areaId, CancellationToken ct)
     {
         var normas = await _context.Normas
@@ -407,6 +426,7 @@ public sealed class DashboardService : IDashboardService
 
     // ── Productos Comercializados ─────────────────────────────────────────────
 
+    // Collects commercialized products and services by area users, grouped by product type.
     private async Task<(int Total, List<DashboardSerieItemDto> PorTipo)> GatherProductosAsync(string areaId, CancellationToken ct)
     {
         var productos = await _context.ProductosComercializados

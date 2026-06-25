@@ -2,6 +2,9 @@
 
 namespace Dashboard_v2.Application.Common.Interfaces;
 
+/// <summary>
+/// Contract for user authentication operations (login, user creation, password management).
+/// </summary>
 public interface IIdentityService
 {
     Task<string?> GetUserNameAsync(string userId);

@@ -4,8 +4,12 @@ using RolesEnum = Dashboard_v2.Domain.Enums.Roles;
 
 namespace Dashboard_v2.Web.Endpoints;
 
+/// <summary>
+/// API endpoints for commercialized products management.
+/// </summary>
 public class ProductosComercializados : EndpointGroupBase
 {
+    /// <summary>Registers the ProductosComercializados route group with CRUD endpoints.</summary>
     public override void Map(RouteGroupBuilder groupBuilder)
     {
         groupBuilder.MapGet("", GetAll)

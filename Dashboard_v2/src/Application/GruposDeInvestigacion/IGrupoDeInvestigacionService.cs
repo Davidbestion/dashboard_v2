@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 
 namespace Dashboard_v2.Application.GruposDeInvestigacion;
 
+/// <summary>
+/// Application service for managing research groups: CRUD operations and member assignment.
+/// </summary>
 public interface IGrupoDeInvestigacionService
 {
     Task<List<GrupoDeInvestigacionDto>> GetAllAsync(CancellationToken ct = default);

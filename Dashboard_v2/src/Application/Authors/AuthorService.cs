@@ -9,8 +9,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Dashboard_v2.Application.Authors;
 
+/// <summary>
+/// Application service for author search, linking, and external-name resolution operations.
+/// </summary>
 public sealed class AuthorService : IAuthorService
 {
+    private const int MinSearchTermLength = 2;
+
     private readonly IApplicationDbContext _context;
     private readonly IUser _currentUser;
 
@@ -41,9 +46,12 @@ public sealed class AuthorService : IAuthorService
         return Result.Success();
     }
 
+    /// <summary>
+    /// Searches authors by name. Returns an empty list if the query is shorter than 2 characters.
+    /// </summary>
     public async Task<List<AuthorSearchDto>> SearchAsync(string q, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(q) || q.Trim().Length < 2)
+        if (string.IsNullOrWhiteSpace(q) || q.Trim().Length < MinSearchTermLength)
             return new List<AuthorSearchDto>();
 
         var term = q.Trim().ToLower();
@@ -57,9 +65,13 @@ public sealed class AuthorService : IAuthorService
             .ToListAsync(ct);
     }
 
+    /// <summary>
+    /// Searches both Author entities and User profiles for co-author assignment.
+    /// Results include a 'Type' field indicating the source ('author' or 'user').
+    /// </summary>
     public async Task<List<CoauthorSearchDto>> SearchCoauthorsAsync(string q, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(q) || q.Trim().Length < 2)
+        if (string.IsNullOrWhiteSpace(q) || q.Trim().Length < MinSearchTermLength)
             return new List<CoauthorSearchDto>();
 
         var term = q.Trim().ToLower();
@@ -182,6 +194,12 @@ public sealed class AuthorService : IAuthorService
         return new PotentialAuthorMatchesDto(exact, fuzzy);
     }
 
+    /// <summary>
+    /// Resolves a list of external author names (from CrossRef/OpenAire) to domain Author entities
+    /// using a 4-stage fallback: exact search key → structured match → case-insensitive → partial first-name match.
+    /// Unlike <see cref="Common.AuthorResolutionService.ResolveByNameAsync"/>, this method does NOT create new authors;
+    /// it returns null matches so the user can confirm or skip each unresolved name.
+    /// </summary>
     public async Task<List<ExternalAuthorResolutionDto>> ResolveExternalAuthorsAsync(
         List<string> names, CancellationToken ct = default)
     {
@@ -193,7 +211,7 @@ public sealed class AuthorService : IAuthorService
             var searchKey  = Dashboard_v2.Domain.Common.TextNormalizer.Normalize(raw.Trim());
             var lastKey    = Dashboard_v2.Domain.Common.TextNormalizer.Normalize(lastName);
 
-            // 1. Match on the normalized search key (tolerates diacritics & case).
+            // Stage 1: Exact normalized search key match
             var match = await _context.Authors
                 .AsNoTracking()
                 .Include(a => a.User)
@@ -201,7 +219,7 @@ public sealed class AuthorService : IAuthorService
                         .ThenInclude(ar => ar!.Universidad)
                 .FirstOrDefaultAsync(a => a.SearchKey == searchKey, ct);
 
-            // 2. Structured match: normalized LastName + normalized FirstName.
+            // Stage 2: Structured last-name + first-name match
             if (match == null && !string.IsNullOrWhiteSpace(firstName))
             {
                 var firstKey = Dashboard_v2.Domain.Common.TextNormalizer.Normalize(firstName);
@@ -215,10 +233,7 @@ public sealed class AuthorService : IAuthorService
                         ct);
             }
 
-            // 3. Fallback for rows whose SearchKey was backfilled with SQL lower() (no accent
-            //    stripping).  Compare on the raw Name column case-insensitively — both sides
-            //    retain the original accents so the comparison succeeds — then confirm with
-            //    in-memory normalization to avoid false positives.
+            // Stage 3: Case-insensitive partial match (fallback for rows without normalized keys)
             if (match == null)
             {
                 var rawLower = raw.Trim().ToLowerInvariant();

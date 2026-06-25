@@ -9,6 +9,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Dashboard_v2.Application.Awards;
 
+/// <summary>
+/// Application service for managing awards: catalog browsing, granting, updating, and deletion.
+/// </summary>
 public sealed class AwardService : IAwardService
 {
     private readonly IApplicationDbContext _context;
@@ -27,13 +30,13 @@ public sealed class AwardService : IAwardService
         if (IsSuperuser)
             return await GetAllAwardsAsync(ct);
 
-        var myAwardIds = await _context.UserAwardeds
+        var myAwardIds = await _context.UserAwardees
             .Where(ua => ua.UserId == _currentUser.Id)
             .Select(ua => ua.AwardId)
             .Distinct()
             .ToListAsync(ct);
 
-        var userAwardeds = await _context.UserAwardeds
+        var userAwardeds = await _context.UserAwardees
             .AsNoTracking()
             .Where(ua => myAwardIds.Contains(ua.AwardId))
             .Include(ua => ua.Award)
@@ -76,7 +79,7 @@ public sealed class AwardService : IAwardService
 
     public async Task<List<AwardWithGrantingsDto>> GetAllAwardsAsync(CancellationToken ct = default)
     {
-        var userAwardeds = await _context.UserAwardeds
+        var userAwardeds = await _context.UserAwardees
             .AsNoTracking()
             .Include(ua => ua.Award)
                 .ThenInclude(a => a.AwardType)
@@ -119,7 +122,7 @@ public sealed class AwardService : IAwardService
     {
         var areaId = await _context.GetUserAreaIdAsync(_currentUser.Id, ct) ?? string.Empty;
 
-        var userAwardeds = await _context.UserAwardeds
+        var userAwardeds = await _context.UserAwardees
             .AsNoTracking()
             .Include(ua => ua.Award)
                 .ThenInclude(a => a.AwardType)
@@ -210,7 +213,7 @@ public sealed class AwardService : IAwardService
             AwardedAt = request.AwardedAt,
             EvidenceFileId = request.EvidenceFileId,
         };
-        _context.UserAwardeds.Add(userAwarded);
+        _context.UserAwardees.Add(userAwarded);
         await _context.SaveChangesAsync(ct);
 
         return (Result.Success(), userAwarded.Id);
@@ -218,7 +221,7 @@ public sealed class AwardService : IAwardService
 
     public async Task<Result> UpdateAsync(int id, UpdateAwardRequest request, CancellationToken ct = default)
     {
-        var userAwarded = await _context.UserAwardeds
+        var userAwarded = await _context.UserAwardees
             .FirstOrDefaultAsync(ua => ua.Id == id, ct);
 
         if (userAwarded is null)
@@ -241,7 +244,7 @@ public sealed class AwardService : IAwardService
 
     public async Task<Result> DeleteAsync(int id, CancellationToken ct = default)
     {
-        var userAwarded = await _context.UserAwardeds
+        var userAwarded = await _context.UserAwardees
             .FirstOrDefaultAsync(ua => ua.Id == id, ct);
 
         if (userAwarded is null)
@@ -250,7 +253,7 @@ public sealed class AwardService : IAwardService
         if (!IsSuperuser && userAwarded.UserId != _currentUser.Id)
             return Result.Failure(new[] { "No tienes permiso para eliminar este premio." });
 
-        _context.UserAwardeds.Remove(userAwarded);
+        _context.UserAwardees.Remove(userAwarded);
         await _context.SaveChangesAsync(ct);
 
         return Result.Success();

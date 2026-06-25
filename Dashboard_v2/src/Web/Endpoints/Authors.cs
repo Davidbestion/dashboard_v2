@@ -3,10 +3,11 @@ using Dashboard_v2.Application.Authors;
 namespace Dashboard_v2.Web.Endpoints;
 
 /// <summary>
-/// Endpoints de gestión de autores académicos bajo /api/Authors.
+/// API endpoints for author search and co-author resolution.
 /// </summary>
 public class Authors : EndpointGroupBase
 {
+    /// <summary>Registers the Authors route group with search, co-author resolution, and linking endpoints.</summary>
     public override void Map(RouteGroupBuilder groupBuilder)
     {
         // GET /api/Authors/search?q=...

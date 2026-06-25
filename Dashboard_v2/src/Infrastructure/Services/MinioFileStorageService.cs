@@ -8,8 +8,9 @@ using Minio.DataModel.Args;
 namespace Dashboard_v2.Infrastructure.Services;
 
 /// <summary>
-/// Implementación de <see cref="IFileStorageService"/> usando el SDK oficial de MinIO.
-/// Toda la lógica de comunicación con MinIO reside aquí; Application solo conoce la interfaz.
+/// File storage implementation backed by MinIO (S3-compatible). Handles upload, download,
+/// URL generation, and deletion of evidence files and certificates.
+/// All MinIO communication resides here; Application layer depends only on <see cref="IFileStorageService"/>.
 /// </summary>
 public sealed class MinioFileStorageService : IFileStorageService, IStorageBucketInitialiser
 {
@@ -28,6 +29,10 @@ public sealed class MinioFileStorageService : IFileStorageService, IStorageBucke
         BucketName = options.Value.BucketName;
     }
 
+    /// <summary>
+    /// Uploads a file stream to MinIO under the specified object key.
+    /// Returns after the upload is confirmed by the server.
+    /// </summary>
     /// <inheritdoc />
     public async Task UploadAsync(Stream content, string objectKey, string contentType, long sizeBytes, CancellationToken ct = default)
     {
@@ -42,6 +47,9 @@ public sealed class MinioFileStorageService : IFileStorageService, IStorageBucke
         _logger.LogInformation("Archivo subido a MinIO: bucket={Bucket} key={Key}", BucketName, objectKey);
     }
 
+    /// <summary>
+    /// Downloads file content into a MemoryStream. Caller is responsible for disposing the returned stream.
+    /// </summary>
     /// <inheritdoc />
     public async Task<Stream> DownloadAsync(string objectKey, CancellationToken ct = default)
     {
@@ -50,6 +58,7 @@ public sealed class MinioFileStorageService : IFileStorageService, IStorageBucke
         var args = new GetObjectArgs()
             .WithBucket(BucketName)
             .WithObject(objectKey)
+            // WithCallbackStream reads from MinIO's response stream into memory to avoid holding the connection open.
             .WithCallbackStream(stream => stream.CopyTo(memStream));
 
         await _minio.GetObjectAsync(args, ct);
@@ -69,6 +78,7 @@ public sealed class MinioFileStorageService : IFileStorageService, IStorageBucke
         _logger.LogInformation("Archivo eliminado de MinIO: bucket={Bucket} key={Key}", BucketName, objectKey);
     }
 
+    /// <summary>Generates a pre-signed URL for temporary direct download access.</summary>
     /// <inheritdoc />
     public async Task<string> GetPresignedDownloadUrlAsync(string objectKey, int expirySeconds = 3600, CancellationToken ct = default)
     {

@@ -2,6 +2,7 @@ using Dashboard_v2.Domain.Common;
 
 namespace Dashboard_v2.Domain.Entities;
 
+/// <summary>Commercialized product or technology-transfer outcome resulting from research.</summary>
 public class ProductoComercializado : StringAuditableEntity
 {
     public string Titulo { get; set; } = default!;

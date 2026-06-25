@@ -11,6 +11,7 @@ namespace Dashboard_v2.Infrastructure.Data.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            // Migration: Adds IAuditableEntity audit columns (Created, CreatedBy, LastModified, LastModifiedBy) to all domain entity tables that implement the audit interface.
             migrationBuilder.AddColumn<DateTimeOffset>(
                 name: "Created",
                 table: "UserAwardeds",

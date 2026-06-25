@@ -2,6 +2,7 @@ using Dashboard_v2.Domain.Common;
 
 namespace Dashboard_v2.Domain.Entities;
 
+/// <summary>Patent or intellectual property filed by institution researchers.</summary>
 public class Patente : StringAuditableEntity
 {
     public string Titulo { get; set; } = default!;

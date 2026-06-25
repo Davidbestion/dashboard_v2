@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 
 namespace Dashboard_v2.Application.AreasDelConocimiento;
 
+/// <summary>
+/// Application service for managing knowledge domains (Áreas del Conocimiento): listing and CRUD operations.
+/// </summary>
 public interface IAreaDelConocimientoService
 {
     Task<List<AreaDelConocimientoDto>> GetAllAsync(CancellationToken ct = default);

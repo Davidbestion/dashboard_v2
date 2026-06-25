@@ -29,6 +29,10 @@ internal sealed class DoajPublicationDatabaseProvider : IPublicationDatabaseProv
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
+    /// <summary>
+    /// Searches the DOAJ REST API for publications matching the given ISSN.
+    /// Returns <c>null</c> if no match is found or the API is unreachable.
+    /// </summary>
     /// <inheritdoc/>
     public async Task<PublicationDatabaseMatchDto?> TryResolveAsync(IEnumerable<string> issns, DateOnly? publishedDate = null, CancellationToken ct = default)
     {
@@ -104,7 +108,12 @@ internal sealed class DoajPublicationDatabaseProvider : IPublicationDatabaseProv
                 return titleEl.GetString();
             }
         }
-        catch { /* best-effort */ }
+        catch (Exception ex)
+        {
+            // Best-effort title extraction; non-critical if it fails.
+            // _logger is not accessible here (static method) — log at call site if needed.
+            _ = ex; // suppress unused variable warning
+        }
         return null;
     }
 }

@@ -3,6 +3,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Dashboard_v2.Application.Common.Interfaces;
 
+/// <summary>
+/// Abstraction over EF Core DbContext exposing DbSets and SaveChanges. Allows application services to query and persist entities without depending on the concrete DbContext.
+/// </summary>
 public interface IApplicationDbContext
 {
     DbSet<User> Users { get; }
@@ -12,7 +15,7 @@ public interface IApplicationDbContext
     DbSet<AuthorPublication> AuthorPublications { get; }
     DbSet<Award> Awards { get; }
     DbSet<AwardType> AwardTypes { get; }
-    DbSet<UserAwarded> UserAwardeds { get; }
+    DbSet<UserAwarded> UserAwardees { get; }
     DbSet<Country> Countries { get; }
     DbSet<Event> Events { get; }
     DbSet<EventType> EventTypes { get; }

@@ -6,6 +6,11 @@ using RolesEnum = Dashboard_v2.Domain.Enums.Roles;
 
 namespace Dashboard_v2.Application.Events;
 
+/// <summary>
+/// Application service implementing event and presentation (ponencia) management.
+/// Implements both <see cref="IEventService"/> and <see cref="IPresentationService"/> since
+/// presentations are always scoped to an event.
+/// </summary>
 public sealed class EventService : IEventService, IPresentationService
 {
     private readonly IApplicationDbContext _context;

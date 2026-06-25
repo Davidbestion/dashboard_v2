@@ -6,6 +6,9 @@ using RolesEnum = global::Dashboard_v2.Domain.Enums.Roles;
 
 namespace Dashboard_v2.Application.Roles;
 
+/// <summary>
+/// Application service that returns assignable system roles (excluding Superuser and None) for the admin UI.
+/// </summary>
 public sealed class RoleService : IRoleService
 {
     public Task<List<RoleDto>> GetAssignableRolesAsync()

@@ -1,5 +1,6 @@
 namespace Dashboard_v2.Domain.Entities;
 
+/// <summary>Classification category for research projects (e.g. Strategic, Routine), managed by administrators.</summary>
 public class Clasificacion
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();

@@ -19,8 +19,14 @@ public class ApplicationDbContextFactory : IDesignTimeDbContextFactory<Applicati
             .AddEnvironmentVariables()
             .Build();
 
-        var connectionString = configuration.GetConnectionString("Dashboard_v2Db")
-            ?? "Server=127.0.0.1;Port=5432;Database=Dashboard_v2Db;Username=admin;Password=password;";
+        var connectionString = configuration.GetConnectionString("Dashboard_v2Db");
+        if (connectionString is null)
+        {
+            // IMPORTANT: Set ConnectionStrings__Dashboard_v2Db as an environment variable,
+            // or define it under "ConnectionStrings": { "Dashboard_v2Db": "..." } in appsettings.json.
+            throw new InvalidOperationException(
+                "No connection string found. Set ConnectionStrings__Dashboard_v2Db in environment or appsettings.json.");
+        }
 
         var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
         optionsBuilder.UseNpgsql(connectionString, o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery));

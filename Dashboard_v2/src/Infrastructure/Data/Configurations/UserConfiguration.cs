@@ -30,5 +30,8 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .WithMany(a => a.Users)
             .HasForeignKey(u => u.AreaId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // Index for area-based filtering in dashboard queries
+        builder.HasIndex(u => u.AreaId);
     }
 }

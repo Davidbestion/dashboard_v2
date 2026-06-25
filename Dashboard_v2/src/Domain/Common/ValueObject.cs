@@ -1,6 +1,10 @@
 ﻿namespace Dashboard_v2.Domain.Common;
 
 // Learn more: https://docs.microsoft.com/en-us/dotnet/standard/microservices-architecture/microservice-ddd-cqrs-patterns/implement-value-objects
+/// <summary>
+/// Abstract base for value objects: equality is based on components, not identity.
+/// Subclasses must implement GetEqualityComponents().
+/// </summary>
 public abstract class ValueObject
 {
     protected static bool EqualOperator(ValueObject left, ValueObject right)

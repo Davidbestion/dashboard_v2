@@ -2,6 +2,9 @@ using System.Collections.Generic;
 
 namespace Dashboard_v2.Application.Publications;
 
+/// <summary>
+/// Publication metadata fetched from the CrossRef API for import assistance.
+/// </summary>
 public class PublicationCrossRefDto
 {
     public string? Doi { get; set; }

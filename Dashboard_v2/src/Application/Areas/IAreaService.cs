@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 
 namespace Dashboard_v2.Application.Areas;
 
+/// <summary>
+/// Application service for CRUD operations on academic areas.
+/// </summary>
 public interface IAreaService
 {
     Task<List<AreaDto>> GetAllAsync(CancellationToken ct = default);

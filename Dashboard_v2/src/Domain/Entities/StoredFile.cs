@@ -3,16 +3,8 @@ using Dashboard_v2.Domain.Common;
 namespace Dashboard_v2.Domain.Entities;
 
 /// <summary>
-/// Representa un archivo almacenado en el sistema de almacenamiento de objetos (MinIO).
-/// Guarda la metadata del archivo en la base de datos relacional mientras el binario
-/// reside en MinIO identificado por <see cref="ObjectKey"/>.
-///
-/// Las entidades del dominio que necesiten asociar un archivo (ej. un certificado de premio)
-/// deben declarar una FK opcional hacia esta entidad:
-/// <code>
-///     public int? EvidenceFileId { get; set; }
-///     public StoredFile? EvidenceFile { get; set; }
-/// </code>
+/// Metadata for a file stored in MinIO object storage. Used to attach evidence or certificates to entities.
+/// The actual file bytes live in MinIO; this entity only tracks its key and URL.
 /// </summary>
 public class StoredFile : BaseAuditableEntity
 {

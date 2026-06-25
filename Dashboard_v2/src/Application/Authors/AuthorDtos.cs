@@ -2,6 +2,7 @@ using Dashboard_v2.Application.Common.Models;
 
 namespace Dashboard_v2.Application.Authors;
 
+/// <summary>Author profile for display in publication author lists.</summary>
 public record AuthorSearchDto(string Id, string Name, string LastName, string? FirstName);
 
 /// <summary>
@@ -18,8 +19,10 @@ public sealed record CoauthorSearchDto
     public LinkedUserSummaryDto? LinkedUser { get; init; }
 }
 
+/// <summary>Candidate author match for the user to review and optionally claim.</summary>
 public record PotentialAuthorMatchDto(string Id, string Name);
 
+/// <summary>Groups of candidate author matches: exact (same normalized key) and fuzzy (partial name overlap).</summary>
 public record PotentialAuthorMatchesDto(
 	IReadOnlyList<PotentialAuthorMatchDto> ExactMatches,
 	IReadOnlyList<PotentialAuthorMatchDto> FuzzyMatches);

@@ -5,13 +5,11 @@ using RolesEnum = Dashboard_v2.Domain.Enums.Roles;
 namespace Dashboard_v2.Web.Endpoints;
 
 /// <summary>
-/// CRUD de Grupos Científicos Estudiantiles bajo /api/GruposEstudiantiles.
-/// Similar a GruposDeInvestigacion pero sin relación con usuarios.
-/// GET all → Superuser o Jefe_de_Grupo_de_investigacion.
-/// POST/PUT/DELETE → Superuser o Jefe_de_Grupo_de_investigacion.
+/// API endpoints for student group management.
 /// </summary>
 public class GruposEstudiantiles : EndpointGroupBase
 {
+    /// <summary>Registers the GruposEstudiantiles route group with CRUD endpoints.</summary>
     public override void Map(RouteGroupBuilder groupBuilder)
     {
         groupBuilder.MapGet("", GetGruposEstudiantiles)

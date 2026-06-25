@@ -9,6 +9,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Dashboard_v2.Application.GruposDeInvestigacion;
 
+/// <summary>
+/// Application service implementing CRUD operations and member management for research groups.
+/// </summary>
 public sealed class GrupoDeInvestigacionService : IGrupoDeInvestigacionService
 {
     private readonly IApplicationDbContext _context;

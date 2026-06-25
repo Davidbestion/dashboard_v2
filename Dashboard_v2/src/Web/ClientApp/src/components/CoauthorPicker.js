@@ -64,8 +64,9 @@ export default function CoauthorPicker({
   };
 
   /**
-   * Lanza la búsqueda remota de coautores con un debounce corto para no disparar
-   * una petición por cada tecla.
+   * Handles input changes with a 250ms debounce to avoid excessive API calls.
+   * Queries the remote co-author search endpoint when input length >= 2.
+   * Clears suggestions if the query is too short or the component is not in "search" mode.
    */
   const handleInputChange = (event) => {
     const nextQuery = event.target.value;

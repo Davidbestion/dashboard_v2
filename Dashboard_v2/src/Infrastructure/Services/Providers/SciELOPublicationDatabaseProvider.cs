@@ -30,6 +30,10 @@ internal sealed class SciELOPublicationDatabaseProvider : IPublicationDatabasePr
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
+    /// <summary>
+    /// Searches the SciELO Article Meta API for publications matching the given ISSN.
+    /// Returns <c>null</c> if no match is found or the API is unreachable.
+    /// </summary>
     /// <inheritdoc/>
     public async Task<PublicationDatabaseMatchDto?> TryResolveAsync(IEnumerable<string> issns, DateOnly? publishedDate = null, CancellationToken ct = default)
     {

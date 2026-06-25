@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 
 namespace Dashboard_v2.Application.Users;
 
+/// <summary>
+/// Application service for user management: listing, role assignment, activation/deactivation, and creation.
+/// </summary>
 public interface IUserService
 {
     Task<List<UserWithRolesDto>> GetAllAsync(CancellationToken ct = default);

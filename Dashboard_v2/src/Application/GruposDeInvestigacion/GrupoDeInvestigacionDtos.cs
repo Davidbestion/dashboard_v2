@@ -1,5 +1,8 @@
 namespace Dashboard_v2.Application.GruposDeInvestigacion;
 
+/// <summary>
+/// Research group with members, knowledge areas, and research lines.
+/// </summary>
 public record GrupoDeInvestigacionDto
 {
     public string Id { get; init; } = default!;

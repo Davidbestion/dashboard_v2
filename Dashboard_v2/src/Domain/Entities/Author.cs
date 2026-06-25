@@ -2,6 +2,7 @@ using Dashboard_v2.Domain.Common;
 
 namespace Dashboard_v2.Domain.Entities;
 
+/// <summary>Academic author or researcher. Stores name variants and normalized search keys for accent-tolerant lookup.</summary>
 public class Author : StringAuditableEntity
 {
     /// <summary>Apellido(s) del autor. Campo prioritario en el ámbito científico-académico.</summary>
@@ -43,15 +44,13 @@ public class Author : StringAuditableEntity
     public ICollection<AuthorProductoComercializado> AuthorProductosComercializados { get; set; } = new List<AuthorProductoComercializado>();
     public ICollection<ParticipacionEnRed> ParticipacionesEnRedes { get; set; } = new List<ParticipacionEnRed>();
 
-    /// <summary>
-    /// Crea un autor a partir de apellidos y nombres de pila.
-    /// El campo <see cref="Name"/> se genera automáticamente en formato "Apellidos, Nombres".
-    /// </summary>
+    /// <summary>Creates a new Author with computed name fields and normalized search keys.</summary>
     public static Author Create(string lastName, string? firstName = null)
     {
         var ln = (lastName ?? string.Empty).Trim();
         var fn = firstName?.Trim();
         var display = string.IsNullOrWhiteSpace(fn) ? ln : $"{ln}, {fn}";
+        // NFD-normalize names for accent-tolerant search; original casing is preserved in display fields.
         return new Author
         {
             LastName     = ln,

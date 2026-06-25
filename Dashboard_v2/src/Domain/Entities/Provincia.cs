@@ -1,5 +1,6 @@
 namespace Dashboard_v2.Domain.Entities;
 
+/// <summary>Province (top-level administrative division) containing municipalities.</summary>
 public class Provincia
 {
     public int Id { get; set; }

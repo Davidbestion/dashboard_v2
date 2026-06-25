@@ -1,5 +1,9 @@
 namespace Dashboard_v2.Application.Dashboard;
 
+/// <summary>
+/// Aggregated research statistics for the Vicedecano dashboard.
+/// Contains counters and time series for publications, projects, awards, events, networks, and intellectual property.
+/// </summary>
 public sealed record VicedecanoDashboardDto
 {
     // ── Totales ────────────────────────────────────────────────────────────────
@@ -51,8 +55,10 @@ public sealed record VicedecanoDashboardDto
 
 // ── Tipos auxiliares ───────────────────────────────────────────────────────────
 
+/// <summary>Single data point in a dashboard chart series: a label and its count.</summary>
 public sealed record DashboardSerieItemDto(string Label, int Cantidad);
 
+/// <summary>Academic staff breakdown by scientific, teaching, and research categories.</summary>
 public sealed record PlantillaDto
 {
     public int TotalDocentes        { get; init; }
@@ -62,4 +68,5 @@ public sealed record PlantillaDto
     public List<DashboardSerieItemDto> PorCategoriaInvestigacion { get; init; } = [];
 }
 
+/// <summary>Minimal network entry used in the dashboard network list.</summary>
 public sealed record RedResumenDto(string Nombre, string Tipo);

@@ -1,8 +1,8 @@
 namespace Dashboard_v2.Domain.Entities;
 
 /// <summary>
-/// Clase base abstracta para proyectos en ejecución.
-/// Especializada en PE, PAP, PDL, PNE, PRCI y PNAP.
+/// Active/executing research project. Base for all concrete project types (PE, PAP, PDL, PNE, PRCI, PNAP).
+/// Tracks execution timeline, institutional codes, states, and contributing sectors.
 /// </summary>
 public abstract class ProyectoEnEjecucion : Proyecto
 {

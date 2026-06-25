@@ -4,8 +4,12 @@ using RolesEnum = Dashboard_v2.Domain.Enums.Roles;
 
 namespace Dashboard_v2.Web.Endpoints;
 
+/// <summary>
+/// API endpoints for recording event oral presentations.
+/// </summary>
 public class Presentations : EndpointGroupBase
 {
+    /// <summary>Registers the Presentations route group with all presentation endpoints.</summary>
     public override void Map(RouteGroupBuilder groupBuilder)
     {
         groupBuilder.MapGet("", GetMyPresentations)
@@ -24,19 +28,19 @@ public class Presentations : EndpointGroupBase
             .Produces<List<PresentationDto>>(200);
 
         groupBuilder.MapPost("", CreatePresentation)
-            .RequireAuthorization(p => p.RequireRole("Profesor", "Superuser"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Superuser)))
             .WithName("CreatePresentation")
             .Produces(201)
             .ProducesProblem(400);
 
         groupBuilder.MapPut("{id}", UpdatePresentation)
-            .RequireAuthorization(p => p.RequireRole("Profesor", "Superuser"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Superuser)))
             .WithName("UpdatePresentation")
             .Produces(200)
             .ProducesProblem(400);
 
         groupBuilder.MapDelete("{id}", DeletePresentation)
-            .RequireAuthorization(p => p.RequireRole("Profesor", "Superuser"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Superuser)))
             .WithName("DeletePresentation")
             .Produces(200)
             .ProducesProblem(400);

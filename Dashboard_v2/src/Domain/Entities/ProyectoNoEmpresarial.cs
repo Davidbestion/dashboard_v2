@@ -1,6 +1,6 @@
 namespace Dashboard_v2.Domain.Entities;
 
-/// <summary>Proyecto No Empresarial (PNE).</summary>
+/// <summary>Non-Business Project (PNE): research involving public or non-profit entities.</summary>
 public class ProyectoNoEmpresarial : ProyectoEnEjecucion
 {
     public override string TipoIdentificador => "PNE";

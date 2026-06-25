@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 namespace Dashboard_v2.Application.Publications;
 
+/// <summary>
+/// Request to register a new academic publication. PublishedDate must be ISO 8601 partial ('YYYY', 'YYYY-MM', or 'YYYY-MM-DD').
+/// </summary>
 public record CreatePublicationRequest
 {
     public string Title { get; init; } = default!;
@@ -27,6 +30,9 @@ public record CreatePublicationRequest
     public string? TargetUserId { get; init; }
 }
 
+/// <summary>
+/// Request to update an existing publication's metadata.
+/// </summary>
 public record UpdatePublicationRequest
 {
     public string Id { get; init; } = default!;

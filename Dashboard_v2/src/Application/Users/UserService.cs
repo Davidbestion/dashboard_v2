@@ -11,6 +11,9 @@ using RolesEnum = global::Dashboard_v2.Domain.Enums.Roles;
 
 namespace Dashboard_v2.Application.Users;
 
+/// <summary>
+/// Application service for user management: listing, role assignment, activation/deactivation, and creation.
+/// </summary>
 public sealed class UserService : IUserService
 {
     private readonly IApplicationDbContext _context;

@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 
 namespace Dashboard_v2.Application.Events;
 
+/// <summary>
+/// Application service for managing academic events: listing, creating, updating, and country/event-type lookups.
+/// </summary>
 public interface IEventService
 {
     Task<List<EventDto>> GetMyEventsAsync(CancellationToken ct = default);

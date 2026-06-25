@@ -31,6 +31,9 @@ public class ProyectoConfiguration : IEntityTypeConfiguration<Proyecto>
         builder.HasMany(p => p.Participantes)
             .WithMany(u => u.ProyectosParticipante)
             .UsingEntity(j => j.ToTable("ProyectoParticipantes"));
+
+        // Index for common dashboard filter: projects by leader
+        builder.HasIndex(p => p.JefeId);
     }
 }
 

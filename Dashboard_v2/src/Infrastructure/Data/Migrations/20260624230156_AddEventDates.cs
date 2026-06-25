@@ -11,6 +11,7 @@ namespace Dashboard_v2.Infrastructure.Data.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            // Migration: Adds nullable FechaInicio and FechaFin (DateOnly) columns to the Events table to record event start and end dates.
             migrationBuilder.AddColumn<DateOnly>(
                 name: "FechaFin",
                 table: "Events",

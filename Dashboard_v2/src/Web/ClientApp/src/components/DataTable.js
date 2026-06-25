@@ -237,6 +237,11 @@ export default function DataTable({
     }
   }
 
+  /**
+   * Sorts displayed data by the active sort column.
+   * Uses the column's sortValue() callback if defined (for custom sort logic like case-insensitive strings).
+   * Falls back to direct value comparison.
+   */
   const sortedData = useMemo(() => {
     if (!sortKey) return data;
     const col = columns.find(c => c.key === sortKey);

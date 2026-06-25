@@ -30,6 +30,10 @@ internal sealed class MedlinePublicationDatabaseProvider : IPublicationDatabaseP
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
+    /// <summary>
+    /// Searches the NLM E-utilities MEDLINE database for publications matching the given ISSN.
+    /// Returns <c>null</c> if no match is found or the API is unreachable.
+    /// </summary>
     /// <inheritdoc/>
     public async Task<PublicationDatabaseMatchDto?> TryResolveAsync(IEnumerable<string> issns, DateOnly? publishedDate = null, CancellationToken ct = default)
     {

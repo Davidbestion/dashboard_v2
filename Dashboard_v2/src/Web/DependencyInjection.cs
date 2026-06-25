@@ -10,8 +10,14 @@ using System.Text;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
+/// <summary>
+/// Registers Web layer services: authentication, exception handling, Swagger/OpenAPI, and current-user context.
+/// </summary>
 public static class DependencyInjection
 {
+    /// <summary>
+    /// Configures authentication middleware, exception filters, NSwag Swagger generation, and HTTP context services.
+    /// </summary>
     public static void AddWebServices(this IHostApplicationBuilder builder)
     {
         builder.Services.AddDatabaseDeveloperPageExceptionFilter();

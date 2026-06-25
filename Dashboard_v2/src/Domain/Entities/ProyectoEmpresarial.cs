@@ -1,6 +1,6 @@
 namespace Dashboard_v2.Domain.Entities;
 
-/// <summary>Proyecto Empresarial (PE).</summary>
+/// <summary>Business Project (PE): research involving private sector enterprises.</summary>
 public class ProyectoEmpresarial : ProyectoEnEjecucion
 {
     public override string TipoIdentificador => "PE";

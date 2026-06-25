@@ -3,10 +3,8 @@ using Dashboard_v2.Domain.Common;
 namespace Dashboard_v2.Domain.Entities;
 
 /// <summary>
-/// Entidad base abstracta para todos los tipos de proyecto.
-/// Especializada en <see cref="ProyectoEnRevision"/> y <see cref="ProyectoEnEjecucion"/>.
-/// Mapeada con TPT: la tabla "Proyectos" contiene los campos base comunes;
-/// cada subtipo concreto tiene su propia tabla de extensión.
+/// Abstract base entity for all research projects. Specialized into ProyectoEnRevision (pre-execution)
+/// and ProyectoEnEjecucion (active) subtypes via Table-Per-Type inheritance.
 /// </summary>
 public abstract class Proyecto : StringAuditableEntity
 {

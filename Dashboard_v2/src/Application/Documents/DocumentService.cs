@@ -7,6 +7,10 @@ using Dashboard_v2.Application.Common.Interfaces;
 
 namespace Dashboard_v2.Application.Documents;
 
+/// <summary>
+/// Orchestrates document report generation by dispatching to the appropriate
+/// <see cref="IDocumentReport"/> (single .xlsx) or <see cref="IZipDocumentReport"/> (ZIP bundle).
+/// </summary>
 public sealed class DocumentService : IDocumentService
 {
     private readonly IReadOnlyDictionary<string, IDocumentReport> _reports;

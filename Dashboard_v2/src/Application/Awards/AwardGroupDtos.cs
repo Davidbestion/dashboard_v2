@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 namespace Dashboard_v2.Application.Awards;
 
+/// <summary>Minimal user reference for a single award recipient row.</summary>
 public record RecipientDto
 {
     // Id de la fila UserAwarded
@@ -13,12 +14,16 @@ public record RecipientDto
     public int? EvidenceFileId { get; init; }
 }
 
+/// <summary>Grouped award granting event: a specific date with all recipients who received the award that day.</summary>
 public record GrantingDto
 {
     public DateTime AwardedAt { get; init; }
     public List<RecipientDto> Recipients { get; init; } = new();
 }
 
+/// <summary>
+/// Award type with the list of users who received it, for dashboard display.
+/// </summary>
 public record AwardWithGrantingsDto
 {
     public int AwardId { get; init; }

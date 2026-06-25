@@ -3,8 +3,12 @@ using RolesEnum = Dashboard_v2.Domain.Enums.Roles;
 
 namespace Dashboard_v2.Web.Endpoints;
 
+/// <summary>
+/// API endpoint for the Vicedecano institutional research dashboard.
+/// </summary>
 public class Dashboard : EndpointGroupBase
 {
+    /// <summary>Registers the Dashboard route group with the Vicedecano dashboard endpoint.</summary>
     public override void Map(RouteGroupBuilder groupBuilder)
     {
         groupBuilder.MapGet("vicedecano", GetVicedecanoDashboard)

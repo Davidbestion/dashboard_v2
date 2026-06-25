@@ -3,10 +3,7 @@ using Dashboard_v2.Domain.Enums;
 
 namespace Dashboard_v2.Domain.Entities;
 
-/// <summary>
-/// Representa una red (colaborativa/profesional).
-/// Una red pertenece a un país (relación obligatoria conceptualmente).
-/// </summary>
+/// <summary>Research network (university, national, or international). Coordinates events, publications, and member participation.</summary>
 public class Red : StringAuditableEntity
 {
 

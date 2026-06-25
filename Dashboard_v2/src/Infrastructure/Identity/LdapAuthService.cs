@@ -10,15 +10,15 @@ using RolesEnum = Dashboard_v2.Domain.Enums.Roles;
 namespace Dashboard_v2.Infrastructure.Identity;
 
 /// <summary>
-/// Implementación de <see cref="IIdentityService"/> que autentica usuarios contra un servidor LDAP.
-/// Las credenciales (email/contraseña) son validadas por el directorio; los roles y el perfil
-/// académico se gestionan localmente en PostgreSQL.
+/// Authentication service using OpenLDAP directory. Performs search-then-bind authentication
+/// and auto-provisions users on first login. Credentials (email/password) are validated by the
+/// directory; roles and the academic profile are managed locally in PostgreSQL.
 ///
-/// Flujo de login (patrón "search then bind"):
-///   1. El admin se conecta al LDAP para buscar el DN del usuario filtrando por atributo "mail" = email.
-///   2. Se reintenta el bind con ese DN y la contraseña que introdujo el usuario.
-///   3. Si el bind tiene éxito, busca o crea el usuario en la BD local (auto-provisioning).
-///   4. Carga sus roles desde la BD y emite un JWT.
+/// Login flow (search-then-bind pattern):
+///   1. The admin account searches the directory for the user's DN by the "mail" attribute.
+///   2. A re-bind with the found DN and the user's password verifies their credentials.
+///   3. On success, the user is found or created in the local database (auto-provisioning).
+///   4. Roles are loaded from the local database and a JWT is issued.
 /// </summary>
 public class LdapAuthService : IIdentityService
 {
@@ -44,11 +44,18 @@ public class LdapAuthService : IIdentityService
         _context = context;
         _jwtService = jwtService;
         _userAreaResolutionService = userAreaResolutionService;
-        _host = configuration["Auth:Ldap:Host"] ?? "localhost";
+        _host = configuration["Auth:Ldap:Host"]
+            ?? throw new InvalidOperationException("Auth:Ldap:Host is not configured.");
         _port = int.TryParse(configuration["Auth:Ldap:Port"], out var p) ? p : 389;
-        _usersDn = configuration["Auth:Ldap:UsersDn"] ?? "ou=people,dc=matcom,dc=uh,dc=cu";
-        _adminDn = configuration["Auth:Ldap:AdminDn"] ?? $"cn=admin,{configuration["Auth:Ldap:BaseDn"] ?? "dc=matcom,dc=uh,dc=cu"}";
-        _adminPassword = configuration["Auth:Ldap:AdminPassword"] ?? "admin";
+        _usersDn = configuration["Auth:Ldap:UsersDn"]
+            ?? throw new InvalidOperationException("Auth:Ldap:UsersDn is not configured.");
+        _adminDn = configuration["Auth:Ldap:AdminDn"]
+            ?? throw new InvalidOperationException("Auth:Ldap:AdminDn is not configured.");
+        var adminPassword = configuration["Auth:Ldap:AdminPassword"];
+        if (string.IsNullOrEmpty(adminPassword))
+            throw new InvalidOperationException(
+                "Auth:Ldap:AdminPassword is not configured. Set it via environment variable Auth__Ldap__AdminPassword.");
+        _adminPassword = adminPassword;
     }
 
     public async Task<string?> GetUserNameAsync(string userId)
@@ -94,11 +101,9 @@ public class LdapAuthService : IIdentityService
         => Task.FromResult((Result.Failure(["En modo LDAP los usuarios se gestionan en el directorio."]), string.Empty));
 
     /// <summary>
-    /// Autentica al usuario contra el servidor LDAP y emite un JWT.
-    /// Usa el patrón "search then bind":
-    ///   1. El admin se conecta al LDAP para buscar el DN del usuario por su email (atributo mail).
-    ///   2. Se reintenta el bind con ese DN y la contraseña que introdujo el usuario.
-    /// Así el formulario siempre usa email + contraseña, independientemente del uid LDAP.
+    /// Authenticates against LDAP via search-then-bind. Auto-provisions the user in the local
+    /// database if this is their first login. Returns a JWT token on success or an error result
+    /// on failure (invalid credentials, inactive account, or missing role assignment).
     /// </summary>
     public async Task<(Result Result, LoginResponse? Response)> LoginAsync(
         string email, string password, string? selectedRole = null, string? selectedAreaId = null)
@@ -176,12 +181,9 @@ public class LdapAuthService : IIdentityService
     // ── Helpers ──────────────────────────────────────────────────────────────────────────────
 
     /// <summary>
-    /// Patrón "search then bind":
-    ///   1. Se conecta al LDAP como admin.
-    ///   2. Busca el DN del usuario filtrando por atributo "mail" = <paramref name="email"/>.
-    ///   3. Reintenta el bind con ese DN y la contraseña del usuario.
-    ///   4. Si el rebind tiene éxito, lee los atributos del usuario (cn, sn, uid) y devuelve true.
-    /// Esto permite que el formulario use siempre email + contraseña.
+    /// Searches the LDAP directory for the user's DN, then binds with their password to verify credentials.
+    /// On success, populates <paramref name="attributes"/> with the user's LDAP entry attributes (cn, sn, uid).
+    /// Returns <c>true</c> if authentication succeeded; <c>false</c> on any LDAP error or invalid credentials.
     /// </summary>
     private bool TrySearchThenBind(string email, string password, out LdapAttributeSet? attributes)
     {

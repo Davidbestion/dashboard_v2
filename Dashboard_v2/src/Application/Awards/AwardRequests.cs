@@ -1,5 +1,8 @@
 namespace Dashboard_v2.Application.Awards;
 
+/// <summary>
+/// Request to grant an award to a user.
+/// </summary>
 public record CreateAwardRequest
 {
     public int? AwardId { get; init; }
@@ -12,6 +15,7 @@ public record CreateAwardRequest
     public string? TargetUserId { get; init; }
 }
 
+/// <summary>Request to update an existing award granting record.</summary>
 public record UpdateAwardRequest
 {
     public int? AwardId { get; init; }

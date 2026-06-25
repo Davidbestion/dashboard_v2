@@ -158,6 +158,10 @@ internal sealed class LocalCsvPublicationDatabaseProvider : IPublicationDatabase
         issn[..7].All(char.IsDigit) &&
         (char.IsDigit(issn[7]) || issn[7] == 'X');
 
+    /// <summary>
+    /// Searches the local CSV database for publications matching the given ISSN or title.
+    /// Returns <c>null</c> if no match is found.
+    /// </summary>
     /// <inheritdoc/>
     public Task<PublicationDatabaseMatchDto?> TryResolveAsync(IEnumerable<string> issns, DateOnly? publishedDate = null, CancellationToken ct = default)
     {

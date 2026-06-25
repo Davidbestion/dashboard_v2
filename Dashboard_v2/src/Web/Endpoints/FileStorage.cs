@@ -6,22 +6,11 @@ using RolesEnum = Dashboard_v2.Domain.Enums.Roles;
 namespace Dashboard_v2.Web.Endpoints;
 
 /// <summary>
-/// Endpoints para gestión de archivos almacenados en MinIO.
-///
-/// Cualquier usuario autenticado puede subir, listar y descargar sus propios archivos.
-/// La eliminación y el reemplazo también están restringidos al propietario del archivo
-/// (controlado en la capa de Application).
-///
-/// Flujo de subida recomendado desde el frontend:
-///   1. POST /api/FileStorage          → obtiene el Id del archivo creado.
-///   2. Guardar ese Id en la entidad correspondiente (ej. UserAwarded.CertificateFileId).
-///
-/// Flujo de descarga recomendado:
-///   - GET /api/FileStorage/{id}/url   → URL presignada directa a MinIO (sin cargar el backend).
-///   - GET /api/FileStorage/{id}/download → descarga pasando por la API (útil en entornos cerrados).
+/// API endpoints for file upload, download, and management. Files are stored in MinIO object storage.
 /// </summary>
 public class FileStorage : EndpointGroupBase
 {
+    /// <summary>Registers the FileStorage route group with upload, download, list, replace, and delete endpoints.</summary>
     public override void Map(RouteGroupBuilder groupBuilder)
     {
         // GET /api/FileStorage — lista los archivos del usuario autenticado
@@ -88,6 +77,9 @@ public class FileStorage : EndpointGroupBase
         return Results.Ok(file);
     }
 
+    /// <summary>
+    /// Generates a pre-signed download URL. expirySeconds defaults to 3600 (1 hour).
+    /// </summary>
     private static async Task<IResult> GetDownloadUrl(
         int id,
         IStoredFileService service,

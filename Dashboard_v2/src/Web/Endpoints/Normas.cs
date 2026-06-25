@@ -4,8 +4,12 @@ using RolesEnum = Dashboard_v2.Domain.Enums.Roles;
 
 namespace Dashboard_v2.Web.Endpoints;
 
+/// <summary>
+/// API endpoints for regulations/standards management.
+/// </summary>
 public class Normas : EndpointGroupBase
 {
+    /// <summary>Registers the Normas route group with CRUD endpoints.</summary>
     public override void Map(RouteGroupBuilder groupBuilder)
     {
         groupBuilder.MapGet("", GetNormas)

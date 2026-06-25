@@ -1,10 +1,6 @@
 namespace Dashboard_v2.Domain.Entities;
 
-/// <summary>
-/// Entidad principal del sistema. Representa a un usuario registrado.
-/// Almacena su perfil completo (nombre, email, contraseña hasheada, fechas y categorías académicas)
-/// y sus referencias de navegación hacia los roles asignados, recursos que posee y área institucional.
-/// </summary>
+/// <summary>Registered system user. Stores authentication credentials, academic profile, role assignments, and research participation references.</summary>
 public class User
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();

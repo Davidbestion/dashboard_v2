@@ -2,6 +2,7 @@ using Dashboard_v2.Domain.Common;
 
 namespace Dashboard_v2.Domain.Entities;
 
+/// <summary>Junction entity: records an award granted to a user on a specific date, with optional evidence.</summary>
 public class UserAwarded : BaseAuditableEntity
 {
     // FK explícito para EF Core

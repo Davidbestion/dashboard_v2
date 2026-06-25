@@ -2,6 +2,7 @@ using Dashboard_v2.Domain.Common;
 
 namespace Dashboard_v2.Domain.Entities;
 
+/// <summary>External organization (company, university, agency) that collaborates in research events or projects.</summary>
 public class Institution : StringAuditableEntity
 {
     public string Nombre { get; set; } = default!;

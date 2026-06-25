@@ -6,6 +6,9 @@ using RolesEnum = Dashboard_v2.Domain.Enums.Roles;
 
 namespace Dashboard_v2.Application.Redes;
 
+/// <summary>
+/// Application service for managing research networks (redes): listings, coordinator assignment, participants, events, and CRUD.
+/// </summary>
 public sealed class RedService : IRedService
 {
     private readonly IApplicationDbContext _context;

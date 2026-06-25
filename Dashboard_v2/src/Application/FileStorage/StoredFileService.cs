@@ -11,6 +11,8 @@ namespace Dashboard_v2.Application.FileStorage;
 /// </summary>
 public sealed class StoredFileService : IStoredFileService
 {
+    private const int DefaultUrlExpirySeconds = 3600;
+
     private readonly IApplicationDbContext _context;
     private readonly IFileStorageService _storage;
     private readonly IUser _currentUser;
@@ -28,6 +30,9 @@ public sealed class StoredFileService : IStoredFileService
         _validationService = validationService;
     }
 
+    /// <summary>
+    /// Uploads a file to object storage under the given category subfolder. Returns metadata including the assigned object key.
+    /// </summary>
     public async Task<StoredFileDto> UploadAsync(UploadFileRequest request, Stream content, CancellationToken ct = default)
     {
         await _validationService.ValidateAndThrowAsync(request, ct);
@@ -59,7 +64,10 @@ public sealed class StoredFileService : IStoredFileService
         return (stream, file.ContentType, file.FileName);
     }
 
-    public async Task<string> GetDownloadUrlAsync(int fileId, int expirySeconds = 3600, CancellationToken ct = default)
+    /// <summary>
+    /// Generates a pre-signed download URL valid for the specified duration (default <see cref="DefaultUrlExpirySeconds"/> seconds).
+    /// </summary>
+    public async Task<string> GetDownloadUrlAsync(int fileId, int expirySeconds = DefaultUrlExpirySeconds, CancellationToken ct = default)
     {
         var file = await GetFileOrThrowAsync(fileId, ct);
         return await _storage.GetPresignedDownloadUrlAsync(file.ObjectKey, expirySeconds, ct);

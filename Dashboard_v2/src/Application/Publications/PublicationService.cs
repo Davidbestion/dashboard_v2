@@ -12,6 +12,9 @@ using RolesEnum = Dashboard_v2.Domain.Enums.Roles;
 
 namespace Dashboard_v2.Application.Publications;
 
+/// <summary>
+/// Application service for managing academic publications: creation, updating, deletion, queries, and CrossRef/OpenAIRE integration.
+/// </summary>
 public sealed partial class PublicationService : IPublicationService
 {
     private readonly IApplicationDbContext _context;
@@ -40,13 +43,21 @@ public sealed partial class PublicationService : IPublicationService
         _databaseResolver = databaseResolver;
     }
 
+    private const int MinJournalGroup = 1;
+    private const int MaxJournalGroup = 4;
+
     private bool IsSuperuser => _currentUser.Roles?.Contains(nameof(RolesEnum.Superuser)) == true;
 
+    /// <summary>
+    /// Creates a new publication. Validates publication type, parses partial ISO dates (YYYY / YYYY-MM / YYYY-MM-DD),
+    /// resolves authors, and creates the appropriate specialization (JournalPublication or IndexedPublication).
+    /// </summary>
     public async Task<(Result Result, string? PublicationId)> CreateAsync(CreatePublicationRequest request, CancellationToken ct = default)
     {
         if (!Enum.IsDefined(typeof(PublicationType), request.PublicationType))
             return (Result.Failure(new[] { "Tipo de publicación no válido." }), null);
 
+        // Partial ISO 8601 dates are accepted: "YYYY", "YYYY-MM", or "YYYY-MM-DD"
         if (string.IsNullOrWhiteSpace(request.PublishedDate) || !IsValidPartialDate(request.PublishedDate))
             return (Result.Failure(new[] { "La fecha de publicación es obligatoria. Use el formato AAAA, AAAA-MM o AAAA-MM-DD." }), null);
 

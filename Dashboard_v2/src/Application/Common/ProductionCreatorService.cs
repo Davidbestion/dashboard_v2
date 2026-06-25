@@ -3,6 +3,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Dashboard_v2.Application.Common;
 
+/// <summary>
+/// Generic service for adding co-authors/creators to research outputs (publications, patents, registries).
+/// Uses a factory to build the join entity.
+/// </summary>
 public sealed class ProductionCreatorService : IProductionCreatorService
 {
     private readonly IApplicationDbContext _db;

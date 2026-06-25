@@ -2,6 +2,9 @@ using Dashboard_v2.Application.Common.Models;
 
 namespace Dashboard_v2.Application.Proyectos;
 
+/// <summary>
+/// Write-side service for research projects: create, update, delete, and relationship management (participants, publications, patents).
+/// </summary>
 public interface IProyectoCommandService
 {
     Task<Result> DeleteAsync(string id, CancellationToken ct = default);

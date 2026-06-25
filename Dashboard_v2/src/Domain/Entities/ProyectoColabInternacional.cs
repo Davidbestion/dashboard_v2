@@ -1,6 +1,6 @@
 namespace Dashboard_v2.Domain.Entities;
 
-/// <summary>Proyecto de Colaboración Internacional (PRCI).</summary>
+/// <summary>International Collaboration Project (PRCI): multinational research with international funding.</summary>
 public class ProyectoColabInternacional : ProyectoEnEjecucion
 {
     public override string TipoIdentificador => "PRCI";

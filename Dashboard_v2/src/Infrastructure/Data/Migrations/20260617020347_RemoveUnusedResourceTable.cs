@@ -12,6 +12,7 @@ namespace Dashboard_v2.Infrastructure.Data.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            // Migration: Drops the unused "Resources" table that is no longer part of the domain model.
             migrationBuilder.DropTable(
                 name: "Resources");
         }

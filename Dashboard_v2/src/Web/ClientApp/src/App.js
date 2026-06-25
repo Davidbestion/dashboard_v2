@@ -28,6 +28,8 @@ export default function App() {
         {/* Protected routes — wrapped in dashboard layout */}
         {AppRoutes.map((route, index) => {
           const { element, pageTitle, adminOnly, jefeRedesOrAdminOnly, jefeRedesOrProfesorOnly, jefeOrAdminOnly, jefeDeProyectoOrAdminOnly, profesorOnly, profesorOrAdminOnly, vicedecanoOnly, vicedecanoOrProfesorOrAdminOnly, ...rest } = route;
+          // Guard selection: adminOnly takes precedence, then role-specific guards,
+          // then generic ProtectedRoute for authenticated-only routes.
           const Guard = adminOnly
             ? AdminRoute
             : jefeRedesOrAdminOnly

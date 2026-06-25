@@ -7,11 +7,11 @@ using Microsoft.EntityFrameworkCore;
 namespace Dashboard_v2.Web.Endpoints;
 
 /// <summary>
-/// Endpoints de gestión de publicaciones académicas bajo /api/Publications.
-/// Todos requieren el rol "Profesor".
+/// API endpoints for managing academic publications: CRUD, CrossRef/OpenAire integration, and publication database resolution.
 /// </summary>
 public class Publications : EndpointGroupBase
 {
+    /// <summary>Registers the Publications route group with all publication endpoints.</summary>
     public override void Map(RouteGroupBuilder groupBuilder)
     {
         // GET /api/Publications/types — lista los tipos disponibles (para el selector)
@@ -202,6 +202,9 @@ public class Publications : EndpointGroupBase
         return Results.Ok(items);
     }
 
+    /// <summary>
+    /// Fetches CrossRef metadata for the given DOI and resolves the best bibliographic database match.
+    /// </summary>
     private async Task<IResult> ResolveDatabaseFromCrossRef(IPublicationService service, string? doi, string? title, string? issns, string? publishedDate)
         => Results.Ok(await service.ResolveDatabaseFromCrossRefAsync(doi, title, issns, publishedDate));
 

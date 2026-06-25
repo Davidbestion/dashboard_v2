@@ -2,6 +2,9 @@ using Dashboard_v2.Application.Common.Models;
 
 namespace Dashboard_v2.Application.Proyectos;
 
+/// <summary>
+/// Read-side service for research projects: list and detail queries filtered by role/area.
+/// </summary>
 public interface IProyectoQueryService
 {
     Task<List<ProyectoResumenDto>> GetAllAsync(CancellationToken ct = default);

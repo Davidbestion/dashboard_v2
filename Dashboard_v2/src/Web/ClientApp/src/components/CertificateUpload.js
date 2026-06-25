@@ -99,6 +99,11 @@ export default function CertificateUpload({
   }
 
   // ── Render ────────────────────────────────────────────────────────────────
+  // Render logic:
+  // - No file + canManage → show upload button
+  // - No file + !canManage → show "no file" message
+  // - Has file → show view/download controls
+  // - Has file + canManage → also show replace/remove controls
 
   const inputDisabled = disabled || uploading;
 

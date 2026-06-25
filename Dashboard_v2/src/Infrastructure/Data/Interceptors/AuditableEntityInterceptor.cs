@@ -7,6 +7,10 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace Dashboard_v2.Infrastructure.Data.Interceptors;
 
+/// <summary>
+/// EF Core interceptor that automatically populates audit fields (Created, CreatedBy,
+/// LastModified, LastModifiedBy) on <see cref="IAuditableEntity"/> instances before saving.
+/// </summary>
 public class AuditableEntityInterceptor : SaveChangesInterceptor
 {
     private readonly IUser _user;

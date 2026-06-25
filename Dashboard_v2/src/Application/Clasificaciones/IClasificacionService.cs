@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 
 namespace Dashboard_v2.Application.Clasificaciones;
 
+/// <summary>
+/// Application service for managing research project classification nomenclators: listing and CRUD operations.
+/// </summary>
 public interface IClasificacionService
 {
     Task<List<ClasificacionDto>> GetAllAsync(CancellationToken ct = default);

@@ -9,6 +9,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Dashboard_v2.Application.Areas;
 
+/// <summary>
+/// Application service implementing CRUD operations for academic areas.
+/// </summary>
 public sealed class AreaService : IAreaService
 {
     private readonly IApplicationDbContext _context;

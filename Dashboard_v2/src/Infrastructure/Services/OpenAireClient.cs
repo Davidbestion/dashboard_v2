@@ -12,9 +12,9 @@ using Microsoft.Extensions.Logging;
 namespace Dashboard_v2.Infrastructure.Services;
 
 /// <summary>
-/// Queries the OpenAIRE Research Graph API (v1) for publication metadata.
-/// OpenAIRE aggregates from CrossRef, SciELO, PubMed, Zenodo, institutional
-/// repositories, and many more — making it the best fallback when CrossRef lacks coverage.
+/// HTTP client for the OpenAIRE research graph API. Fetches open-access publication metadata.
+/// OpenAIRE aggregates from CrossRef, SciELO, PubMed, Zenodo, institutional repositories,
+/// and many more — making it the best fallback when CrossRef lacks coverage.
 ///
 /// API: https://api.openaire.eu/graph/v1/researchProducts
 /// Response format: JSON (default, no explicit parameter needed)

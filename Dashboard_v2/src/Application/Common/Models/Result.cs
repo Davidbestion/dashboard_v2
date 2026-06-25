@@ -1,5 +1,8 @@
 ﻿namespace Dashboard_v2.Application.Common.Models;
 
+/// <summary>
+/// Represents the outcome of an operation: success with no value, or failure with an error message.
+/// </summary>
 public class Result
 {
     internal Result(bool succeeded, IEnumerable<string> errors)

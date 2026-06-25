@@ -1,8 +1,7 @@
 namespace Dashboard_v2.Domain.Entities;
 
 /// <summary>
-/// Especialización de JournalPublication para revistas del grupo 1.
-/// PublicationId es a la vez PK y FK hacia JournalPublication.
+/// Further specialization for Group 1 (highest-impact) journal publications. Stores quartile ranking.
 /// </summary>
 public class JournalGroup1Publication
 {

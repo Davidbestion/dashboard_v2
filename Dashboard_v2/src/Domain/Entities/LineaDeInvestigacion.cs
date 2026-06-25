@@ -2,6 +2,7 @@ using Dashboard_v2.Domain.Common;
 
 namespace Dashboard_v2.Domain.Entities;
 
+/// <summary>Research line within a knowledge domain, studied by one or more research groups.</summary>
 public class LineaDeInvestigacion : StringAuditableEntity
 {
     public string Nombre { get; set; } = default!;

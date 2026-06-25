@@ -3,8 +3,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Dashboard_v2.Web.Endpoints;
 
+/// <summary>
+/// API endpoints for commercialized product type management.
+/// </summary>
 public class TipoProductosComercializados : EndpointGroupBase
 {
+    /// <summary>Registers the TipoProductosComercializados route group with the product type list endpoint.</summary>
     public override void Map(RouteGroupBuilder groupBuilder)
     {
         groupBuilder.MapGet("", GetAll)

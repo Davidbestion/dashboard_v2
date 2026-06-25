@@ -3,8 +3,12 @@ using RolesEnum = Dashboard_v2.Domain.Enums.Roles;
 
 namespace Dashboard_v2.Web.Endpoints;
 
+/// <summary>
+/// API endpoints for academic events: CRUD, organizer and participant management.
+/// </summary>
 public class Events : EndpointGroupBase
 {
+    /// <summary>Registers the Events route group with all event and country endpoints.</summary>
     public override void Map(RouteGroupBuilder groupBuilder)
     {
         groupBuilder.MapGet("", GetMyEvents)

@@ -1,5 +1,6 @@
 namespace Dashboard_v2.Domain.Entities;
 
+/// <summary>Category of commercialized product (e.g. Software, Hardware, Service).</summary>
 public class TipoProductoComercializado
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();

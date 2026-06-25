@@ -1,5 +1,6 @@
 namespace Dashboard_v2.Domain.Entities;
 
+/// <summary>Municipality (administrative subdivision) within a province.</summary>
 public class Municipio
 {
     public int Id { get; set; }

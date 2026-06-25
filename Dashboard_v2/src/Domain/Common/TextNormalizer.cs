@@ -4,15 +4,15 @@ using System.Text;
 namespace Dashboard_v2.Domain.Common;
 
 /// <summary>
-/// Normaliza cadenas de texto para búsquedas tolerantes a acentos y
-/// diferencias de mayúsculas/minúsculas.
-/// Ejemplo: "Damián" → "damian", "García López" → "garcia lopez"
+/// Utility for normalizing text by removing diacritics (accents) and converting to lowercase.
+/// Used to generate search keys for accent-tolerant lookup.
 /// </summary>
 public static class TextNormalizer
 {
     /// <summary>
-    /// Devuelve la cadena en minúsculas y sin marcas diacríticas (tildes, diéresis, etc.).
-    /// Apta para comparación en memoria y para almacenar como search key en la BD.
+    /// Returns a lowercase, diacritic-free version of the input.
+    /// NFD-decomposes to separate base chars from combining marks, removes non-spacing marks,
+    /// then NFC-recomposes. Returns empty string for null or whitespace input.
     /// </summary>
     public static string Normalize(string? input)
     {

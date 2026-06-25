@@ -5,10 +5,11 @@ using RolesEnum = Dashboard_v2.Domain.Enums.Roles;
 namespace Dashboard_v2.Web.Endpoints;
 
 /// <summary>
-/// CRUD de Universidades bajo /api/Universidades. Solo Superuser.
+/// API endpoints for university management.
 /// </summary>
 public class Universidades : EndpointGroupBase
 {
+    /// <summary>Registers the Universidades route group with CRUD endpoints. All operations require Superuser.</summary>
     public override void Map(RouteGroupBuilder groupBuilder)
     {
         groupBuilder.MapGet("", GetUniversidades)

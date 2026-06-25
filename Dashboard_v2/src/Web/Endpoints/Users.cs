@@ -5,11 +5,11 @@ using RolesEnum = Dashboard_v2.Domain.Enums.Roles;
 namespace Dashboard_v2.Web.Endpoints;
 
 /// <summary>
-/// Grupo de endpoints de administración de usuarios, mapeado bajo <c>/api/Users</c>.<br/>
-/// Todos los endpoints requieren el rol <c>Superuser</c> — cualquier otro rol recibe 403.
+/// API endpoints for user account and role management.
 /// </summary>
 public class Users : EndpointGroupBase
 {
+    /// <summary>Registers the Users route group with user listing, creation, role assignment, and activation endpoints.</summary>
     public override void Map(RouteGroupBuilder groupBuilder)
     {
         groupBuilder.MapGet("", GetUsers)

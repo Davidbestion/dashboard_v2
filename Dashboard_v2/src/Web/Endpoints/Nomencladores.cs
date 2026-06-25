@@ -6,10 +6,14 @@ using RolesEnum = Dashboard_v2.Domain.Enums.Roles;
 
 namespace Dashboard_v2.Web.Endpoints;
 
+/// <summary>
+/// API endpoints for reference data (nomenclators): states, situations, award types, strategic axes, event types, etc. Most are upsert-by-name.
+/// </summary>
 public class Nomencladores : EndpointGroupBase
 {
     private static readonly string[] NombreRequeridoError = ["El nombre es obligatorio."];
 
+    /// <summary>Registers the Nomencladores route group with GET and POST (upsert-by-name) endpoints for all reference data entities.</summary>
     public override void Map(RouteGroupBuilder g)
     {
         var canWrite = new Action<Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder>(
@@ -84,6 +88,9 @@ public class Nomencladores : EndpointGroupBase
 
     // ── POST (upsert-by-name) ─────────────────────────────────────────────────
 
+    /// <summary>
+    /// Creates the item if it doesn't exist, or returns the existing one. Idempotent.
+    /// </summary>
     private static async Task<IResult> CreateEstado(IApplicationDbContext db, NomencladorCreateRequest req, CancellationToken ct)
     {
         var nombre = req.Nombre?.Trim();

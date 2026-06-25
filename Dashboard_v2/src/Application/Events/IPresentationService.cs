@@ -2,6 +2,9 @@ using Dashboard_v2.Application.Common.Models;
 
 namespace Dashboard_v2.Application.Events;
 
+/// <summary>
+/// Application service for managing academic presentations (ponencias) within events.
+/// </summary>
 public interface IPresentationService
 {
     Task<List<PresentationDto>> GetMyPresentationsAsync(CancellationToken ct = default);

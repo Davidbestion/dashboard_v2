@@ -1,5 +1,6 @@
 namespace Dashboard_v2.Domain.Entities;
 
+/// <summary>Junction entity: users who organize a given event.</summary>
 public class EventOrganizador
 {
     public int EventId { get; set; }

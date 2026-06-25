@@ -1,8 +1,8 @@
 namespace Dashboard_v2.Domain.Entities;
 
 /// <summary>
-/// Especialización de Publication para tipos indexados (Libro, Monografía, Capítulo, Artículo de Divulgación).
-/// PublicationId es a la vez PK y FK hacia Publication.
+/// One-to-one specialization of Publication for indexed/book-type publications
+/// (PublicationId serves as both PK and FK to Publication).
 /// </summary>
 public class IndexedPublication
 {

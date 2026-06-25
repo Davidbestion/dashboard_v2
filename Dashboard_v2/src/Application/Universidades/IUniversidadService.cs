@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 
 namespace Dashboard_v2.Application.Universidades;
 
+/// <summary>
+/// Application service for managing universities: listing and CRUD operations.
+/// </summary>
 public interface IUniversidadService
 {
     Task<List<UniversidadDto>> GetAllAsync(CancellationToken ct = default);

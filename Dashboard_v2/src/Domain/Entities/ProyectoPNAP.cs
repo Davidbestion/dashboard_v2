@@ -1,6 +1,6 @@
 namespace Dashboard_v2.Domain.Entities;
 
-/// <summary>Proyecto PNAP (Plan Nacional de Alto Potencial o similar).</summary>
+/// <summary>High-Potential Project (PNAP): strategic research with priority national funding.</summary>
 public class ProyectoPNAP : ProyectoEnEjecucion
 {
     public override string TipoIdentificador => "PNAP";

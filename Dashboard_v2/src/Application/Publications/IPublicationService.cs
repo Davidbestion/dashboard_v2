@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 
 namespace Dashboard_v2.Application.Publications;
 
+/// <summary>
+/// Application service for managing academic publications: creation, updating, deletion, queries, and external database integration.
+/// </summary>
 public interface IPublicationService
 {
     Task<(Result Result, string? PublicationId)> CreateAsync(CreatePublicationRequest request, CancellationToken ct = default);

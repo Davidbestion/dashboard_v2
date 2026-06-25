@@ -1,6 +1,6 @@
 namespace Dashboard_v2.Domain.Entities;
 
-/// <summary>Proyecto en fase de revisión (no en ejecución aún).</summary>
+/// <summary>Research project in proposal/review stage, not yet executing. Will transition to a concrete ProyectoEnEjecucion subtype upon approval.</summary>
 public class ProyectoEnRevision : Proyecto
 {
     /// <summary>Tipo de proyecto al que se aspira convertir (p.ej. "PE", "PDL").</summary>

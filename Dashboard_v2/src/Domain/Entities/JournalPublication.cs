@@ -1,8 +1,8 @@
 namespace Dashboard_v2.Domain.Entities;
 
 /// <summary>
-/// Especialización para publicaciones de tipo Diario (revista/journal).
-/// PublicationId es a la vez PK y FK hacia Publication.
+/// One-to-one specialization of Publication for journal articles.
+/// Tracks the bibliographic database and impact group/quartile.
 /// </summary>
 public class JournalPublication
 {

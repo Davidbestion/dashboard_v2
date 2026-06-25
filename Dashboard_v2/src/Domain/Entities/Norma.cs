@@ -2,6 +2,7 @@ using Dashboard_v2.Domain.Common;
 
 namespace Dashboard_v2.Domain.Entities;
 
+/// <summary>Regulation, standard, or technical norm published by institution researchers.</summary>
 public class Norma : StringAuditableEntity
 {
     public string Titulo { get; set; } = default!;

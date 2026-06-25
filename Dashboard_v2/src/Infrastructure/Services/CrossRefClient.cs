@@ -15,6 +15,10 @@ using Microsoft.Extensions.Options;
 
 namespace Dashboard_v2.Infrastructure.Services;
 
+/// <summary>
+/// HTTP client for the CrossRef API. Fetches publication metadata by DOI with automatic
+/// retry/backoff. Normalizes DOIs before lookup to handle common URL and prefix variants.
+/// </summary>
 public class CrossRefClient : ICrossRefClient
 {
     private static readonly Regex DoiPattern = new(@"10\.\d{4,9}/\S+", RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -30,6 +34,10 @@ public class CrossRefClient : ICrossRefClient
         _opts = options?.Value ?? new CrossRefOptions();
     }
 
+    /// <summary>
+    /// Fetches metadata for the given DOI from CrossRef. Returns <c>null</c> if not found
+    /// or the response cannot be parsed.
+    /// </summary>
     public async Task<PublicationCrossRefDto?> GetWorkByDoiAsync(string doi, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(doi))
@@ -238,8 +246,11 @@ public class CrossRefClient : ICrossRefClient
 
             return dto;
         }
-        catch
+        catch (Exception ex)
         {
+            // CrossRef response could not be parsed; returning null signals no match to caller.
+            // ParseMessageToDto is static, so logging deferred to callers that have _logger.
+            _ = ex; // suppress unused variable warning
             return null;
         }
     }

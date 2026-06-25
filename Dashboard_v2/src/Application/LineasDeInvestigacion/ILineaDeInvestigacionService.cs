@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 
 namespace Dashboard_v2.Application.LineasDeInvestigacion;
 
+/// <summary>
+/// Application service for managing research lines: listing and CRUD operations.
+/// </summary>
 public interface ILineaDeInvestigacionService
 {
     Task<List<LineaDeInvestigacionDto>> GetAllAsync(CancellationToken ct = default);

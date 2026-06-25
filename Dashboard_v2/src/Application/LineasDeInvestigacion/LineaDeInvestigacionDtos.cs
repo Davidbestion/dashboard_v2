@@ -1,5 +1,6 @@
 namespace Dashboard_v2.Application.LineasDeInvestigacion;
 
+/// <summary>Research line with its associated knowledge domains.</summary>
 public record LineaDeInvestigacionDto
 {
     public string Id { get; init; } = default!;

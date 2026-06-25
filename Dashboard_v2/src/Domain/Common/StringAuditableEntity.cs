@@ -1,9 +1,8 @@
 namespace Dashboard_v2.Domain.Common;
 
 /// <summary>
-/// Clase base para entidades de dominio con Id de tipo <see langword="string"/> (GUID)
-/// que requieren metadatos de auditoría estándar.
-/// Las entidades con Id entero usan <see cref="BaseAuditableEntity"/>.
+/// Base class for auditable entities with a string primary key.
+/// Tracks who created and last modified the entity.
 /// </summary>
 public abstract class StringAuditableEntity : IAuditableEntity
 {

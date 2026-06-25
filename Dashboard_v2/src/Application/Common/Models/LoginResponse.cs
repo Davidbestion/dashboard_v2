@@ -1,5 +1,9 @@
 namespace Dashboard_v2.Application.Common.Models;
 
+/// <summary>
+/// Response returned after a login attempt. Contains either the JWT token (single-role users)
+/// or lists of available roles/areas from which the client must choose before a token is issued.
+/// </summary>
 public record LoginResponse
 {
     public bool RequiresRoleSelection { get; init; }
@@ -9,6 +13,7 @@ public record LoginResponse
     public string? Token { get; init; }
 }
 
+/// <summary>Minimal area entry returned during role/area selection on login.</summary>
 public record AreaOptionDto
 {
     public string Id { get; init; } = default!;

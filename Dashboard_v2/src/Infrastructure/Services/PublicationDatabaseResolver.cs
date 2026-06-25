@@ -10,8 +10,9 @@ using Microsoft.Extensions.Logging;
 namespace Dashboard_v2.Infrastructure.Services;
 
 /// <summary>
-/// Composite resolver that delegates to a chain of <see cref="IPublicationDatabaseProvider"/>
-/// instances (registered in DI) in their registration order, returning the first match found.
+/// Resolves the best bibliographic database for a publication by querying all registered
+/// <see cref="IPublicationDatabaseProvider"/> implementations in priority order.
+/// Returns the first successful match.
 /// </summary>
 public class PublicationDatabaseResolver : IPublicationDatabaseResolver
 {
@@ -26,6 +27,10 @@ public class PublicationDatabaseResolver : IPublicationDatabaseResolver
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
+    /// <summary>
+    /// Tries each provider in registration order and returns the first match.
+    /// Returns <c>null</c> if no provider recognizes the publication.
+    /// </summary>
     /// <inheritdoc/>
     public async Task<PublicationDatabaseMatchDto?> ResolveByIssnsAsync(IEnumerable<string> issns, DateOnly? publishedDate = null, CancellationToken ct = default)
     {

@@ -2,6 +2,7 @@ using Dashboard_v2.Domain.Common;
 
 namespace Dashboard_v2.Domain.Entities;
 
+/// <summary>Knowledge domain (e.g. Mathematics, Computer Science) studied by research groups.</summary>
 public class AreaDelConocimiento : StringAuditableEntity
 {
     public string Nombre { get; set; } = default!;

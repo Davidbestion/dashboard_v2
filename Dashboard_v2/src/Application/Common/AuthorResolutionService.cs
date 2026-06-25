@@ -7,6 +7,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Dashboard_v2.Application.Common;
 
+/// <summary>
+/// Resolves external author references to domain Author entities using a multi-stage name-matching strategy.
+/// </summary>
 public sealed class AuthorResolutionService : IAuthorResolutionService
 {
     private readonly IApplicationDbContext _context;
@@ -42,20 +45,28 @@ public sealed class AuthorResolutionService : IAuthorResolutionService
         return author;
     }
 
+    /// <summary>
+    /// Attempts to match a raw author name string to an existing Author entity. Applies a 4-stage matching strategy:
+    /// (1) normalized search key, (2) structured last/first match, (3) case-insensitive, (4) partial first-name match.
+    /// If no match is found, creates and persists a new Author entity.
+    /// </summary>
+    /// <param name="nameString">Raw author name, typically in "Apellidos, Nombres" format from CrossRef or OpenAIRE.</param>
+    /// <param name="cancellationToken">Token to cancel the asynchronous operation.</param>
+    /// <returns>The matched or newly-created <see cref="Author"/> entity.</returns>
     public async Task<Author> ResolveByNameAsync(string nameString, CancellationToken cancellationToken = default)
     {
         var (lastName, firstName) = AuthorNameParser.Parse(nameString);
         var searchKey = TextNormalizer.Normalize(nameString.Trim());
         var lastKey   = TextNormalizer.Normalize(lastName);
 
-        // 1. Match on the normalized search key (tolerates diacritics & case).
+        // Stage 1: Exact normalized search key match
         var existing = await _context.Authors
             .FirstOrDefaultAsync(a => a.SearchKey == searchKey, cancellationToken);
 
         if (existing != null)
             return existing;
 
-        // 2. Structured match: normalized LastName + normalized FirstName (both non-empty).
+        // Stage 2: Structured last-name + first-name match
         if (existing == null && !string.IsNullOrWhiteSpace(firstName))
         {
             var firstKey = TextNormalizer.Normalize(firstName);
@@ -65,10 +76,8 @@ public sealed class AuthorResolutionService : IAuthorResolutionService
                     cancellationToken);
         }
 
-        // 3. Fallback for rows whose SearchKey was backfilled with SQL lower() (no accent
-        //    stripping).  Compare on the raw Name column case-insensitively — both sides
-        //    retain the original accents so the comparison succeeds — then confirm with
-        //    in-memory normalization.  Self-heals the stored key on match.
+        // Stage 3: Case-insensitive partial match (fallback for rows without normalized keys;
+        //          self-heals stored search key on match)
         if (existing == null)
         {
             var rawLower = nameString.Trim().ToLowerInvariant();
@@ -109,7 +118,7 @@ public sealed class AuthorResolutionService : IAuthorResolutionService
             return existing;
         }
 
-        // 4. No match — create and persist a new author.
+        // Stage 4: Create new author if no match found
         var author = Author.Create(lastName, firstName);
         _context.Authors.Add(author);
         await _context.SaveChangesAsync(cancellationToken);

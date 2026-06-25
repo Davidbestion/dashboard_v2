@@ -8,10 +8,9 @@ using RolesEnum = Dashboard_v2.Domain.Enums.Roles;
 namespace Dashboard_v2.Infrastructure.Identity;
 
 /// <summary>
-/// Implementación de <see cref="IIdentityService"/> que gestiona toda la identidad de usuarios:
-/// creación de cuentas, login con JWT, verificación de roles y eliminación.
-/// Usa BCrypt para hashear contraseñas y EF Core para persistir en PostgreSQL.
-/// No usa ASP.NET Identity — el manejo de usuarios es custom.
+/// Authentication service using the local user database. Verifies BCrypt password hashes
+/// and issues JWT tokens on success. Manages user creation, role verification, and deletion
+/// without ASP.NET Identity — user management is fully custom.
 /// </summary>
 public class LocalAuthService : IIdentityService
 {
@@ -68,17 +67,17 @@ public class LocalAuthService : IIdentityService
     }
 
     /// <summary>
-    /// Sobrecarga de compatibilidad con <see cref="IIdentityService"/> — NO SOPORTADA.
-    /// Lanza <see cref="NotSupportedException"/>. Usar la sobrecarga con perfil completo.
+    /// Creates a new user with a hashed password. Throws <see cref="NotSupportedException"/> for this
+    /// overload — use the full profile overload instead.
     /// </summary>
     public Task<(Result Result, string UserId)> CreateUserAsync(string userName, string password)
         => throw new NotSupportedException("Use CreateUserAsync with full profile parameters.");
 
     /// <summary>
-    /// Crea un nuevo usuario con perfil completo.<br/>
-    /// Valida unicidad de email y nombre de usuario.<br/>
-    /// Hashea la contraseña con BCrypt antes de persistir (nunca se guarda en texto plano).<br/>
-    /// El usuario queda activo pero SIN roles: deben asignarse luego por un Superuser.
+    /// Creates a new user with a hashed password and full academic profile.
+    /// Validates email and username uniqueness, BCrypt-hashes the password before persisting,
+    /// and returns the new user's ID. The created user has no roles assigned — a Superuser
+    /// must assign roles separately.
     /// </summary>
     public async Task<(Result Result, string UserId)> CreateUserAsync(
         string userName,
@@ -122,14 +121,10 @@ public class LocalAuthService : IIdentityService
     }
 
     /// <summary>
-    /// Flujo completo de autenticación:<br/>
-    /// 1. Busca al usuario por email y comprueba que esté activo.<br/>
-    /// 2. Verifica la contraseña con BCrypt.Verify — si falla, retorna error genérico (no especifica si es email o contraseña).<br/>
-    /// 3. Carga los roles del usuario desde la BD.<br/>
-    /// 4. Si tiene un solo rol → genera JWT con ese rol.<br/>
-    /// 5. Si tiene múltiples roles y no se pasó <paramref name="selectedRole"/> → retorna RequiresRoleSelection=true para que el cliente elija.<br/>
-    /// 6. Si se pasó <paramref name="selectedRole"/> → valida que sea suyo y genera JWT con ese rol.<br/>
-    /// El JWT NO se almacena en el servidor; el endpoint lo guarda en una cookie HttpOnly.
+    /// Validates credentials against the local database. Returns a JWT token on success or an error result on failure.
+    /// Verifies the BCrypt password hash, checks that the account is active, loads roles, and issues a JWT.
+    /// If the user has multiple roles and <paramref name="selectedRole"/> is not provided, returns
+    /// <c>RequiresRoleSelection = true</c> so the client can prompt the user to choose.
     /// </summary>
     public async Task<(Result Result, LoginResponse? Response)> LoginAsync(string email, string password, string? selectedRole = null, string? selectedAreaId = null)
     {

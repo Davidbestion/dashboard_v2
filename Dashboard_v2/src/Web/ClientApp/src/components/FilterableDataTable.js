@@ -84,9 +84,8 @@ export default function FilterableDataTable({ filterConfig, data = [], ...tableP
   const isFiltered = text !== '' || Object.values(active).some(v => v !== '' && v != null);
 
   // ── Lógica de filtrado ────────────────────────────────────────────────────
-  // Se excluye `search` y `filters` de las dependencias de forma intencional:
-  // son configuración estática; no deben provocar re-filtrado por sí solos.
-  // El filtrado reactivo se activa al cambiar `data`, `text` o `active`.
+  // Filtering logic intentionally omits filterConfig from dependencies —
+  // config is set once and doesn't change; only data, search text, and active filters trigger re-filtering.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const filtered = useMemo(() => {
     let result = data;

@@ -3,6 +3,10 @@ using Dashboard_v2.Application.Common.Interfaces;
 
 namespace Dashboard_v2.Infrastructure.Services;
 
+/// <summary>
+/// Generates institutional Excel reports by merging domain data into embedded ClosedXML.Report
+/// templates. Supports custom renderers for complex formatting that goes beyond variable substitution.
+/// </summary>
 public sealed class DocumentRenderer : IDocumentRenderer
 {
     private const string ResourcePrefix = "Dashboard_v2.Infrastructure.Templates.";
@@ -13,6 +17,11 @@ public sealed class DocumentRenderer : IDocumentRenderer
         _customRenderers = customRenderers.ToDictionary(r => r.TemplateName, StringComparer.OrdinalIgnoreCase);
     }
 
+    /// <summary>
+    /// Generates the requested annex document. Loads the embedded template, applies data bindings,
+    /// runs any custom renderer registered for <paramref name="templateName"/>, and returns the
+    /// rendered Excel bytes.
+    /// </summary>
     public byte[] Render(string templateName, IReadOnlyDictionary<string, object> variables)
     {
         using var templateStream = LoadEmbeddedTemplate(templateName);

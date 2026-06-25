@@ -4,28 +4,28 @@ using RolesEnum = Dashboard_v2.Domain.Enums.Roles;
 namespace Dashboard_v2.Web.Endpoints;
 
 /// <summary>
-/// Endpoints de gestión de premios bajo /api/Awards.
-/// Todos requieren el rol "Profesor".
+/// API endpoints for award catalog management and granting awards to users.
 /// </summary>
 public class Awards : EndpointGroupBase
 {
+    /// <summary>Registers the Awards route group with CRUD and area-scoped endpoints.</summary>
     public override void Map(RouteGroupBuilder groupBuilder)
     {
         // GET /api/Awards — premios del usuario autenticado
         groupBuilder.MapGet("", GetMyAwards)
-            .RequireAuthorization(p => p.RequireRole("Profesor", "Superuser"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Superuser)))
             .WithName("GetMyAwards")
             .Produces<List<AwardWithGrantingsDto>>(200);
 
         // GET /api/Awards/catalogo — catálogo reutilizable de premios
         groupBuilder.MapGet("catalogo", GetCatalog)
-            .RequireAuthorization(p => p.RequireRole("Profesor", "Superuser"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Superuser)))
             .WithName("GetAwardCatalog")
             .Produces<List<AwardCatalogDto>>(200);
 
         // GET /api/Awards/todas — todas los premios (Superuser)
         groupBuilder.MapGet("todas", GetAllAwards)
-            .RequireAuthorization(p => p.RequireRole("Superuser"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser)))
             .WithName("GetAllAwards")
             .Produces<List<AwardWithGrantingsDto>>(200);
 
@@ -37,14 +37,14 @@ public class Awards : EndpointGroupBase
 
         // POST /api/Awards
         groupBuilder.MapPost("", CreateAward)
-            .RequireAuthorization(p => p.RequireRole("Profesor", "Superuser"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Superuser)))
             .WithName("CreateAward")
             .Produces(201)
             .ProducesProblem(400);
 
         // PUT /api/Awards/{id}
         groupBuilder.MapPut("{id}", UpdateAward)
-            .RequireAuthorization(p => p.RequireRole("Profesor", "Superuser"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Superuser)))
             .WithName("UpdateAward")
             .Produces(200)
             .ProducesProblem(400)
@@ -52,7 +52,7 @@ public class Awards : EndpointGroupBase
 
         // DELETE /api/Awards/{id}
         groupBuilder.MapDelete("{id}", DeleteAward)
-            .RequireAuthorization(p => p.RequireRole("Profesor", "Superuser"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Superuser)))
             .WithName("DeleteAward")
             .Produces(200)
             .ProducesProblem(400)

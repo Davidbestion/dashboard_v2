@@ -36,6 +36,9 @@ import ClasificacionesPage from "./pages/ClasificacionesPage";
 import PublicacionesConsultaPage from "./pages/PublicacionesConsultaPage";
 import ProyectoPublicacionesPage from "./pages/ProyectoPublicacionesPage";
 
+// Route configuration: each entry defines a path, the page component, its title,
+// and optional role guards (adminOnly, profesorOrAdminOnly, etc.).
+// Guards are evaluated in App.js to wrap the element with the appropriate ProtectedRoute.
 const AppRoutes = [
   {
     index: true,

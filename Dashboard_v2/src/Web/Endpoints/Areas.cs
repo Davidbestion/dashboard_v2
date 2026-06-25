@@ -1,15 +1,15 @@
 using Dashboard_v2.Application.Areas;
 using Dashboard_v2.Web.Infrastructure;
+using RolesEnum = Dashboard_v2.Domain.Enums.Roles;
 
 namespace Dashboard_v2.Web.Endpoints;
 
 /// <summary>
-/// CRUD de Áreas bajo /api/Areas. Solo Superuser.
-/// El campo <c>universidadId</c> en Create/Update relaciona el Área con una Universidad.
-/// Pasar <c>null</c> en Update desvincula el Área de su Universidad.
+/// API endpoints for academic area management.
 /// </summary>
 public class Areas : EndpointGroupBase
 {
+    /// <summary>Registers the Areas route group with CRUD endpoints. Write operations require Superuser.</summary>
     public override void Map(RouteGroupBuilder groupBuilder)
     {
         groupBuilder.MapGet("", GetAreas)
@@ -18,20 +18,20 @@ public class Areas : EndpointGroupBase
             .Produces<List<AreaDto>>(200);
 
         groupBuilder.MapPost("", CreateArea)
-            .RequireAuthorization(p => p.RequireRole("Superuser"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser)))
             .WithName("CreateArea")
             .Produces(201)
             .ProducesProblem(400);
 
         groupBuilder.MapPut("{id}", UpdateArea)
-            .RequireAuthorization(p => p.RequireRole("Superuser"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser)))
             .WithName("UpdateArea")
             .Produces(200)
             .ProducesProblem(400)
             .ProducesProblem(404);
 
         groupBuilder.MapDelete("{id}", DeleteArea)
-            .RequireAuthorization(p => p.RequireRole("Superuser"))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser)))
             .WithName("DeleteArea")
             .Produces(200)
             .ProducesProblem(404);

@@ -2,6 +2,7 @@ using Dashboard_v2.Domain.Common;
 
 namespace Dashboard_v2.Domain.Entities;
 
+/// <summary>Registered software, design, or intellectual work. Country-specific registration with a certificate number.</summary>
 public class Registro : StringAuditableEntity
 {
     public string Titulo { get; set; } = default!;

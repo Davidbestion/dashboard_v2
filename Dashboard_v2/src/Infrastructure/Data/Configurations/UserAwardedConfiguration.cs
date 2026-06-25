@@ -18,7 +18,7 @@ public class UserAwardedConfiguration : IEntityTypeConfiguration<UserAwarded>
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasOne(ua => ua.Award)
-            .WithMany(a => a.UserAwardeds)
+            .WithMany(a => a.UserAwardees)
             .HasForeignKey(ua => ua.AwardId)
             .OnDelete(DeleteBehavior.Cascade);
 

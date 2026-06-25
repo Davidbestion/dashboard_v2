@@ -3,6 +3,7 @@ using Dashboard_v2.Domain.Enums;
 
 namespace Dashboard_v2.Domain.Entities;
 
+/// <summary>Academic publication. May specialize into JournalPublication (journal articles) or IndexedPublication (books/chapters). Tracks authors, evidence files, and links to projects or networks.</summary>
 public class Publication : StringAuditableEntity
 {
     public string Title { get; set; } = default!;

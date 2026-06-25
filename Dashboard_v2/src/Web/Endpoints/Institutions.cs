@@ -3,8 +3,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Dashboard_v2.Web.Endpoints;
 
+/// <summary>
+/// API endpoints for external institution management.
+/// </summary>
 public class Institutions : EndpointGroupBase
 {
+    /// <summary>Registers the Institutions route group with list and create endpoints.</summary>
     public override void Map(RouteGroupBuilder groupBuilder)
     {
         groupBuilder.MapGet("", GetAll)

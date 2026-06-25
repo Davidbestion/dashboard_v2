@@ -40,7 +40,7 @@ public sealed class AnexoPremiosReport : IDocumentReport
         var awardTypes = await _context.AwardTypes
             .AsNoTracking()
             .Include(t => t.Awards)
-                .ThenInclude(a => a.UserAwardeds)
+                .ThenInclude(a => a.UserAwardees)
                     .ThenInclude(ua => ua.User)
             .OrderBy(t => t.Id)
             .ToListAsync(ct);
@@ -51,14 +51,14 @@ public sealed class AnexoPremiosReport : IDocumentReport
                 Numero = index + 1,
                 TipoPremio = type.Name,
                 Premios = type.Awards
-                    .Where(a => requestingAreaId == null || a.UserAwardeds.Any(ua => ua.User?.AreaId == requestingAreaId))
+                    .Where(a => requestingAreaId == null || a.UserAwardees.Any(ua => ua.User?.AreaId == requestingAreaId))
                     .GroupBy(a => NormalizeAwardKey(a.Name))
                     .OrderBy(group => group.Min(a => a.Name))
                     .ThenBy(group => group.Min(a => a.Id))
                     .Select(group =>
                     {
                         var titulo = group.OrderBy(a => a.Id).Select(a => a.Name).First();
-                        var autores = BuildAuthorsSummary(group.SelectMany(a => a.UserAwardeds), requestingAreaId);
+                        var autores = BuildAuthorsSummary(group.SelectMany(a => a.UserAwardees), requestingAreaId);
                         return new AnexoPremioDetalleRowDto
                         {
                             Titulo = titulo,

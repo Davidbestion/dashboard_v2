@@ -2,6 +2,7 @@ using Dashboard_v2.Domain.Common;
 
 namespace Dashboard_v2.Domain.Entities;
 
+/// <summary>Scientific or academic event (conference, workshop, seminar). Tracks organizers, participants, and evidence files.</summary>
 public class Event : BaseAuditableEntity
 {
     public string Name { get; set; } = default!;

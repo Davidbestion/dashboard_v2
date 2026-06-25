@@ -26,8 +26,16 @@ using Minio;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
+/// <summary>
+/// Registers all Infrastructure layer services with the DI container: EF Core, identity,
+/// file storage, document generation, publication database providers, and dashboard.
+/// </summary>
 public static class DependencyInjection
 {
+    /// <summary>
+    /// Configures and registers Infrastructure services including database, authentication,
+    /// storage, and external API clients.
+    /// </summary>
     public static void AddInfrastructureServices(this IHostApplicationBuilder builder)
     {
         var connectionString = builder.Configuration.GetConnectionString("Dashboard_v2Db");

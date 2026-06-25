@@ -4,13 +4,11 @@ using Dashboard_v2.Web.Infrastructure;
 namespace Dashboard_v2.Web.Endpoints;
 
 /// <summary>
-/// Grupo de endpoints de autenticación, registrado bajo la ruta <c>/api/Auth</c>.<br/>
-/// Login y Register son públicos (AllowAnonymous).
-/// Logout y Me requieren un JWT válido en la cookie <c>access_token</c>.
+/// API endpoints for authentication: login, logout, current user info.
 /// </summary>
 public class Auth : EndpointGroupBase
 {
-    /// <summary>Registra las cuatro rutas del grupo durante el arranque de la aplicación.</summary>
+    /// <summary>Registers the Auth route group with login, logout, register, and current-user endpoints.</summary>
     public override void Map(RouteGroupBuilder groupBuilder)
     {
         groupBuilder.MapPost("register", Register)

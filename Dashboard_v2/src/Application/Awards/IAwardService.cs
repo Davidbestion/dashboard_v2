@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 
 namespace Dashboard_v2.Application.Awards;
 
+/// <summary>
+/// Application service for managing awards: catalog browsing, granting, updating, and deletion.
+/// </summary>
 public interface IAwardService
 {
     Task<List<AwardWithGrantingsDto>> GetMyAwardsAsync(CancellationToken ct = default);

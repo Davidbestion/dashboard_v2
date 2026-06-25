@@ -29,9 +29,9 @@ public static class InitialiserExtensions
 }
 
 /// <summary>
-/// Responsable de la inicialización de la base de datos:<br/>
-/// aplica migraciones de EF Core y realiza el seeding de datos obligatorios
-/// (el superusuario por defecto).
+/// Handles database migration and initial data seeding at application startup.
+/// Responsible for applying EF Core migrations and seeding the default superuser
+/// and required reference data.
 /// </summary>
 public class ApplicationDbContextInitialiser
 {
@@ -46,7 +46,7 @@ public class ApplicationDbContextInitialiser
         _context = context;
     }
 
-    /// <summary>Aplica todas las migraciones de EF Core pendientes a la BD.</summary>
+    /// <summary>Applies any pending EF Core migrations.</summary>
     public async Task InitialiseAsync()
     {
         try
@@ -60,7 +60,7 @@ public class ApplicationDbContextInitialiser
         }
     }
 
-    /// <summary>Wrapper de TrySeedAsync que captura errores y los registra en el log.</summary>
+    /// <summary>Seeds required reference data and the default superuser if they don't exist.</summary>
     public async Task SeedAsync()
     {
         try
@@ -81,6 +81,8 @@ public class ApplicationDbContextInitialiser
     /// </summary>
     public async Task TrySeedAsync()
     {
+        // Default superuser seeded for initial setup only.
+        // IMPORTANT: Change the password immediately after first login in any non-development environment.
         const string superuserName = "superuser";
         const string superuserEmail = "superuser@localhost";
         const string superuserPassword = "Superuser1!";

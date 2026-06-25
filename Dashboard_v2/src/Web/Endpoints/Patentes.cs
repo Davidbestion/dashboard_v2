@@ -3,8 +3,12 @@ using RolesEnum = Dashboard_v2.Domain.Enums.Roles;
 
 namespace Dashboard_v2.Web.Endpoints;
 
+/// <summary>
+/// API endpoints for patent management.
+/// </summary>
 public class Patentes : EndpointGroupBase
 {
+    /// <summary>Registers the Patentes route group with CRUD and project link/unlink endpoints.</summary>
     public override void Map(RouteGroupBuilder groupBuilder)
     {
         groupBuilder.MapGet("", GetPatentes)

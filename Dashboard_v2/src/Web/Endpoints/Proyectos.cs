@@ -4,8 +4,12 @@ using AppResult = Dashboard_v2.Application.Common.Models.Result;
 
 namespace Dashboard_v2.Web.Endpoints;
 
+/// <summary>
+/// API endpoints for research project management: create, update, link/unlink publications and patents.
+/// </summary>
 public class Proyectos : EndpointGroupBase
 {
+    /// <summary>Registers the Proyectos route group with all project type endpoints and their link/unlink operations.</summary>
     public override void Map(RouteGroupBuilder g)
     {
         // ── Listado general ───────────────────────────────────────────

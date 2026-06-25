@@ -4876,6 +4876,29 @@
         }
       }
     },
+    "/api/Publications/proyecto": {
+      "get": {
+        "tags": [
+          "Publications"
+        ],
+        "operationId": "GetProyectoPublications",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PublicationDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Publications/area": {
       "get": {
         "tags": [

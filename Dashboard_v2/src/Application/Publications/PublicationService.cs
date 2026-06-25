@@ -692,6 +692,25 @@ public sealed partial class PublicationService : IPublicationService
             .ToListAsync(ct);
     }
 
+    public async Task<List<PublicationDto>> GetProyectoPublicationsAsync(CancellationToken ct = default)
+    {
+        var proyectoIds = await _context.Proyectos
+            .AsNoTracking()
+            .Where(p => p.JefeId == _currentUser.Id)
+            .Select(p => p.Id)
+            .ToListAsync(ct);
+
+        if (proyectoIds.Count == 0)
+            return new List<PublicationDto>();
+
+        return await ProjectPublicationDtos(
+            _context.Publications.AsNoTracking()
+                .Where(p => p.ProyectoId != null && proyectoIds.Contains(p.ProyectoId)))
+            .OrderBy(p => p.ProyectoTitulo)
+            .ThenBy(p => p.Title)
+            .ToListAsync(ct);
+    }
+
     public Task<List<PublicationTypeDto>> GetPublicationTypesAsync()
     {
         var types = Enum.GetValues<PublicationType>()

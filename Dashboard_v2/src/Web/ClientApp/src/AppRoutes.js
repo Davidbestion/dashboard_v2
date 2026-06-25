@@ -34,6 +34,7 @@ import ProyectosPage from "./pages/ProyectosPage";
 import MisProyectosPage from "./pages/MisProyectosPage";
 import ClasificacionesPage from "./pages/ClasificacionesPage";
 import PublicacionesConsultaPage from "./pages/PublicacionesConsultaPage";
+import ProyectoPublicacionesPage from "./pages/ProyectoPublicacionesPage";
 
 const AppRoutes = [
   {
@@ -132,8 +133,8 @@ const AppRoutes = [
   },
   {
     path: '/publicaciones',
-    element: <PublicacionesConsultaPage />,
-    pageTitle: 'Todas las publicaciones',
+    element: <ProyectoPublicacionesPage />,
+    pageTitle: 'Publicaciones de mis proyectos',
     jefeDeProyectoOrAdminOnly: true,
   },
   {

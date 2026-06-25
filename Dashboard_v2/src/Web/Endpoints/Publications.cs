@@ -20,10 +20,16 @@ public class Publications : EndpointGroupBase
             .WithName("GetPublicationTypes")
             .Produces<List<PublicationTypeDto>>(200);
 
-        // GET /api/Publications/todas — todas las publicaciones con detalle completo
+        // GET /api/Publications/todas — todas las publicaciones (solo Superuser)
         groupBuilder.MapGet("todas", GetTodasLasPublicaciones)
-            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Proyecto)))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser)))
             .WithName("GetTodasLasPublicaciones")
+            .Produces<List<PublicationDto>>(200);
+
+        // GET /api/Publications/proyecto — publicaciones vinculadas a los proyectos que lidera el jefe
+        groupBuilder.MapGet("proyecto", GetProyectoPublications)
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Jefe_de_Proyecto)))
+            .WithName("GetProyectoPublications")
             .Produces<List<PublicationDto>>(200);
 
         // GET /api/Publications/area — publicaciones del área del usuario (Vicedecano de investigación)
@@ -141,6 +147,12 @@ public class Publications : EndpointGroupBase
     private async Task<IResult> GetMyRedPublications(IPublicationService service)
     {
         var pubs = await service.GetMyRedPublicationsAsync();
+        return Results.Ok(pubs);
+    }
+
+    private async Task<IResult> GetProyectoPublications(IPublicationService service)
+    {
+        var pubs = await service.GetProyectoPublicationsAsync();
         return Results.Ok(pubs);
     }
 

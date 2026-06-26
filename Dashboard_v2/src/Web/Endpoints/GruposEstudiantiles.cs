@@ -23,20 +23,20 @@ public class GruposEstudiantiles : EndpointGroupBase
             .Produces<List<GrupoEstudiantilDto>>(200);
 
         groupBuilder.MapPost("", CreateGrupoEstudiantil)
-            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser)))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser), nameof(RolesEnum.Vicedecano_de_investigacion)))
             .WithName("CreateGrupoEstudiantil")
             .Produces(201)
             .ProducesProblem(400);
 
         groupBuilder.MapPut("{id}", UpdateGrupoEstudiantil)
-            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser)))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser), nameof(RolesEnum.Vicedecano_de_investigacion)))
             .WithName("UpdateGrupoEstudiantil")
             .Produces(200)
             .ProducesProblem(400)
             .ProducesProblem(404);
 
         groupBuilder.MapDelete("{id}", DeleteGrupoEstudiantil)
-            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser)))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser), nameof(RolesEnum.Vicedecano_de_investigacion)))
             .WithName("DeleteGrupoEstudiantil")
             .Produces(200)
             .ProducesProblem(404);

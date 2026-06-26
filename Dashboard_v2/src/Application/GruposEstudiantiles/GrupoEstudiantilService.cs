@@ -55,15 +55,30 @@ public sealed class GrupoEstudiantilService : IGrupoEstudiantilService
     public async Task<(Result Result, string? Id)> CreateAsync(CreateGrupoEstudiantilRequest request, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(request.Nombre))
-            return (Result.Failure(new[] { "El nombre es obligatorio." }), null);
+            return (Result.Failure(["El nombre es obligatorio."]), null);
 
-        if (!await _context.Areas.AnyAsync(a => a.Id == request.AreaId, ct))
-            return (Result.Failure(new[] { "El área indicada no existe." }), null);
+        var isSuperuser = _currentUser.Roles?.Contains("Superuser") == true;
+        string areaId;
+
+        if (isSuperuser)
+        {
+            if (!await _context.Areas.AnyAsync(a => a.Id == request.AreaId, ct))
+                return (Result.Failure(["El área indicada no existe."]), null);
+            areaId = request.AreaId;
+        }
+        else
+        {
+            // Vicedecano: the group is always created in their own area.
+            var vicedecanoArea = await _context.GetUserAreaIdAsync(_currentUser.Id, ct);
+            if (string.IsNullOrEmpty(vicedecanoArea))
+                return (Result.Failure(["No tienes un área asignada."]), null);
+            areaId = vicedecanoArea;
+        }
 
         var grupo = new GrupoEstudiantil
         {
             Nombre = request.Nombre.Trim(),
-            AreaId = request.AreaId,
+            AreaId = areaId,
         };
 
         if (request.LineasDeInvestigacionIds.Count > 0)
@@ -83,24 +98,37 @@ public sealed class GrupoEstudiantilService : IGrupoEstudiantilService
     public async Task<Result> UpdateAsync(string id, UpdateGrupoEstudiantilRequest request, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(request.Nombre))
-            return Result.Failure(new[] { "El nombre es obligatorio." });
+            return Result.Failure(["El nombre es obligatorio."]);
 
         var grupo = await _context.GruposEstudiantiles
             .Include(g => g.LineasDeInvestigacion)
             .FirstOrDefaultAsync(g => g.Id == id, ct);
 
         if (grupo is null)
-            return Result.Failure(new[] { "Grupo estudiantil no encontrado." });
+            return Result.Failure(["Grupo estudiantil no encontrado."]);
 
         var isSuperuser = _currentUser.Roles?.Contains("Superuser") == true;
-        if (!isSuperuser)
-            return Result.Failure(new[] { "No tienes permisos para editar este grupo." });
+        string newAreaId;
 
-        if (!await _context.Areas.AnyAsync(a => a.Id == request.AreaId, ct))
-            return Result.Failure(new[] { "El área indicada no existe." });
+        if (isSuperuser)
+        {
+            if (!await _context.Areas.AnyAsync(a => a.Id == request.AreaId, ct))
+                return Result.Failure(["El área indicada no existe."]);
+            newAreaId = request.AreaId;
+        }
+        else
+        {
+            // Vicedecano: can only edit groups in their own area.
+            var vicedecanoArea = await _context.GetUserAreaIdAsync(_currentUser.Id, ct);
+            if (string.IsNullOrEmpty(vicedecanoArea))
+                return Result.Failure(["No tienes un área asignada."]);
+            if (grupo.AreaId != vicedecanoArea)
+                return Result.Failure(["No tienes permisos para editar grupos de otra área."]);
+            newAreaId = vicedecanoArea;
+        }
 
         grupo.Nombre = request.Nombre.Trim();
-        grupo.AreaId = request.AreaId;
+        grupo.AreaId = newAreaId;
 
         var newLineas = await _context.LineasDeInvestigacion
             .Where(l => request.LineasDeInvestigacionIds.Contains(l.Id))
@@ -119,11 +147,17 @@ public sealed class GrupoEstudiantilService : IGrupoEstudiantilService
             .FirstOrDefaultAsync(g => g.Id == id, ct);
 
         if (grupo is null)
-            return Result.Failure(new[] { "Grupo estudiantil no encontrado." });
+            return Result.Failure(["Grupo estudiantil no encontrado."]);
 
         var isSuperuser = _currentUser.Roles?.Contains("Superuser") == true;
         if (!isSuperuser)
-            return Result.Failure(new[] { "No tienes permisos para eliminar este grupo." });
+        {
+            var vicedecanoArea = await _context.GetUserAreaIdAsync(_currentUser.Id, ct);
+            if (string.IsNullOrEmpty(vicedecanoArea))
+                return Result.Failure(["No tienes un área asignada."]);
+            if (grupo.AreaId != vicedecanoArea)
+                return Result.Failure(["No tienes permisos para eliminar grupos de otra área."]);
+        }
 
         _context.GruposEstudiantiles.Remove(grupo);
         await _context.SaveChangesAsync(ct);

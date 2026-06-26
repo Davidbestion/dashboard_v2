@@ -63,10 +63,6 @@ export default function TopBar({ pageTitle }) {
                 <span className="topbar__dropdown-email">{user?.email}</span>
               </div>
               <div className="topbar__dropdown-divider"></div>
-              <a href="/Identity/Account/Manage" className="topbar__dropdown-item">
-                <i className="bi bi-person-circle"></i>
-                Mi perfil
-              </a>
               <button onClick={handleLogout} className="topbar__dropdown-item topbar__dropdown-item--danger">
                 <i className="bi bi-box-arrow-right"></i>
                 Cerrar sesión

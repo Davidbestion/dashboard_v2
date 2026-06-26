@@ -148,6 +148,39 @@ public sealed class RedService : IRedService
         return Result.Success();
     }
 
+    public async Task<Result> JoinRedAsync(string redId, CancellationToken ct = default)
+    {
+        if (!await _context.Reds.AnyAsync(r => r.Id == redId, ct))
+            return Result.Failure(["Red no encontrada."]);
+
+        var author = await _context.Authors.FirstOrDefaultAsync(a => a.UserId == _currentUser.Id, ct);
+        if (author == null)
+            return Result.Failure(["No tienes un perfil de autor registrado. Contacta al administrador."]);
+
+        if (await _context.ParticipacionesEnRed.AnyAsync(p => p.RedId == redId && p.AuthorId == author.Id, ct))
+            return Result.Failure(["Ya eres participante de esta red."]);
+
+        _context.ParticipacionesEnRed.Add(new ParticipacionEnRed { RedId = redId, AuthorId = author.Id });
+        await _context.SaveChangesAsync(ct);
+        return Result.Success();
+    }
+
+    public async Task<Result> LeaveRedAsync(string redId, CancellationToken ct = default)
+    {
+        var author = await _context.Authors.FirstOrDefaultAsync(a => a.UserId == _currentUser.Id, ct);
+        if (author == null)
+            return Result.Failure(["No tienes un perfil de autor registrado."]);
+
+        var p = await _context.ParticipacionesEnRed
+            .FirstOrDefaultAsync(x => x.RedId == redId && x.AuthorId == author.Id, ct);
+        if (p == null)
+            return Result.Failure(["No eres participante de esta red."]);
+
+        _context.ParticipacionesEnRed.Remove(p);
+        await _context.SaveChangesAsync(ct);
+        return Result.Success();
+    }
+
     public async Task<(Result Result, string? Id)> CreateRedAsync(CreateRedBody body, CancellationToken ct = default)
     {
         if (!Enum.IsDefined(typeof(TipoRed), body.Tipo))

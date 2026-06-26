@@ -47,6 +47,20 @@ public class Redes : EndpointGroupBase
             .Produces(204)
             .ProducesProblem(404);
 
+        groupBuilder.MapPost("{id}/participaciones/mine", JoinRed)
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Jefe_de_Redes), nameof(RolesEnum.Superuser)))
+            .WithName("JoinRed")
+            .Produces(204)
+            .ProducesProblem(400)
+            .ProducesProblem(404);
+
+        groupBuilder.MapDelete("{id}/participaciones/mine", LeaveRed)
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Profesor), nameof(RolesEnum.Jefe_de_Redes), nameof(RolesEnum.Superuser)))
+            .WithName("LeaveRed")
+            .Produces(204)
+            .ProducesProblem(400)
+            .ProducesProblem(404);
+
         groupBuilder.MapPost("", CreateRed)
             .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Redes)))
             .WithName("CreateRed")
@@ -121,6 +135,28 @@ public class Redes : EndpointGroupBase
         var result = await redService.RemoveParticipanteAsync(id, authorId, ct);
         if (!result.Succeeded)
             return Results.NotFound(new { errors = result.Errors });
+
+        return Results.NoContent();
+    }
+
+    private static async Task<IResult> JoinRed(IRedService redService, string id, CancellationToken ct)
+    {
+        var result = await redService.JoinRedAsync(id, ct);
+        if (!result.Succeeded)
+            return HasError(result, "Red no encontrada.")
+                ? Results.NotFound(new { errors = result.Errors })
+                : Results.BadRequest(new { errors = result.Errors });
+
+        return Results.NoContent();
+    }
+
+    private static async Task<IResult> LeaveRed(IRedService redService, string id, CancellationToken ct)
+    {
+        var result = await redService.LeaveRedAsync(id, ct);
+        if (!result.Succeeded)
+            return HasError(result, "Red no encontrada.") || HasError(result, "No eres participante de esta red.")
+                ? Results.NotFound(new { errors = result.Errors })
+                : Results.BadRequest(new { errors = result.Errors });
 
         return Results.NoContent();
     }

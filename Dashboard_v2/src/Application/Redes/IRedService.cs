@@ -22,6 +22,12 @@ public interface IRedService
 
     Task<Result> RemoveParticipanteAsync(string redId, string authorId, CancellationToken ct = default);
 
+    /// <summary>Registers the current user (Profesor) as a participant in the given network using their Author profile.</summary>
+    Task<Result> JoinRedAsync(string redId, CancellationToken ct = default);
+
+    /// <summary>Removes the current user (Profesor) from the participant list of the given network.</summary>
+    Task<Result> LeaveRedAsync(string redId, CancellationToken ct = default);
+
     Task<(Result Result, string? Id)> CreateRedAsync(CreateRedBody body, CancellationToken ct = default);
 
     Task<Result> UpdateRedAsync(string id, UpdateRedBody body, CancellationToken ct = default);

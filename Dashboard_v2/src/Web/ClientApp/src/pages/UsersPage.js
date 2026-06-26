@@ -272,7 +272,23 @@ export default function UsersPage() {
               },
             ]}
             emptyMessage="No hay usuarios registrados."
-            detailConfig
+            detailConfig={{
+              title: u => [u.userName, u.userLastName1, u.userLastName2].filter(Boolean).join(' '),
+              fields: [
+                { key: 'userName',             label: 'Nombre de usuario' },
+                { key: 'userLastName1',        label: 'Primer apellido' },
+                { key: 'userLastName2',        label: 'Segundo apellido',   render: v => v ?? '—' },
+                { key: 'email',                label: 'Correo electrónico' },
+                { key: 'isActive',             label: 'Activo',             render: v => v ? 'Sí' : 'No' },
+                { key: 'isTrained',            label: 'Adiestrado',         render: v => v ? 'Sí' : 'No' },
+                { key: 'scientificCategory',   label: 'Categoría científica' },
+                { key: 'teachingCategory',     label: 'Categoría docente' },
+                { key: 'investigationCategory',label: 'Categoría de investigación' },
+                { key: 'areaNombre',           label: 'Área',               render: v => v ?? '—' },
+                { key: 'universidadNombre',    label: 'Universidad',        render: v => v ?? '—' },
+                { key: 'roles',                label: 'Roles',              render: v => v?.length ? v.map(r => r.replace(/_/g, ' ')).join(', ') : 'Sin roles' },
+              ],
+            }}
           />
         </CardBody>
       </Card>

@@ -50,7 +50,7 @@ public class AwardFlowTests : BaseTestFixture
         // Verificar que el UserAwarded se creó en BD
         var userId = GetUserId();
         var dbCount = await ExecuteDbContextAsync(db =>
-            db.UserAwardeds.CountAsync(ua => ua.UserId == userId));
+            db.UserAwardees.CountAsync(ua => ua.UserId == userId));
         dbCount.ShouldBeGreaterThanOrEqualTo(1);
     }
 
@@ -161,7 +161,7 @@ public class AwardFlowTests : BaseTestFixture
         deleteResp.StatusCode.ShouldBe(HttpStatusCode.OK);
 
         var dbCount = await ExecuteDbContextAsync(db =>
-            db.UserAwardeds.CountAsync(ua => ua.Id == userAwardedId));
+            db.UserAwardees.CountAsync(ua => ua.Id == userAwardedId));
         dbCount.ShouldBe(0, "El premio eliminado no debe existir en la BD");
     }
 

@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Dashboard_v2.Application.Common.Interfaces;
 using Dashboard_v2.Application.Common.Models;
+using Dashboard_v2.Application.FileStorage;
 using Dashboard_v2.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,10 +18,21 @@ public sealed class AwardService : IAwardService
     private readonly IApplicationDbContext _context;
     private readonly IUser _currentUser;
 
-    public AwardService(IApplicationDbContext context, IUser currentUser)
+    /// <summary>
+    /// Servicio de cola de borrado diferido. Puede ser null si MinIO no está configurado
+    /// (la sección <c>Minio</c> no existe en appsettings), en cuyo caso no se encolan jobs.
+    /// Usar con el operador <c>?.</c> para que sea seguro.
+    /// </summary>
+    private readonly IFileDeletionQueueService? _deletionQueue;
+
+    public AwardService(
+        IApplicationDbContext context,
+        IUser currentUser,
+        IFileDeletionQueueService? deletionQueue = null)
     {
-        _context = context;
-        _currentUser = currentUser;
+        _context       = context;
+        _currentUser   = currentUser;
+        _deletionQueue = deletionQueue;
     }
 
     private bool IsSuperuser => _currentUser.Roles?.Contains("Superuser") == true;
@@ -234,10 +246,26 @@ public sealed class AwardService : IAwardService
         if (!result.Succeeded || award is null)
             return result;
 
-        userAwarded.AwardId = award.Id;
+        userAwarded.AwardId   = award.Id;
         userAwarded.AwardedAt = request.AwardedAt;
+
+        // Detectar cambio de archivo: si el usuario quitó o reemplazó el adjunto,
+        // encolar el borrado del archivo anterior en MinIO dentro de la misma transacción.
+        var oldFileId = userAwarded.EvidenceFileId;
         userAwarded.EvidenceFileId = request.EvidenceFileId;
 
+        if (_deletionQueue is not null
+            && oldFileId.HasValue
+            && oldFileId != request.EvidenceFileId)
+        {
+            // Cargar el StoredFile para obtener ObjectKey y BucketName
+            var oldFile = await _context.StoredFiles.FindAsync(new object[] { oldFileId.Value }, ct);
+            if (oldFile is not null)
+                await _deletionQueue.EnqueueAsync(oldFile, ct);
+        }
+
+        // SaveChangesAsync persiste en la misma transacción: el cambio del premio
+        // Y el FileDeletionJob (si se encoló) se guardan juntos o ninguno se guarda.
         await _context.SaveChangesAsync(ct);
         return Result.Success();
     }
@@ -252,6 +280,13 @@ public sealed class AwardService : IAwardService
 
         if (!IsSuperuser && userAwarded.UserId != _currentUser.Id)
             return Result.Failure(new[] { "No tienes permiso para eliminar este premio." });
+
+        if (_deletionQueue is not null && userAwarded.EvidenceFileId.HasValue)
+        {
+            var file = await _context.StoredFiles.FindAsync([userAwarded.EvidenceFileId.Value], ct);
+            if (file is not null)
+                await _deletionQueue.EnqueueAsync(file, ct);
+        }
 
         _context.UserAwardees.Remove(userAwarded);
         await _context.SaveChangesAsync(ct);

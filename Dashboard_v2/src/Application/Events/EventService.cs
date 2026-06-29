@@ -1,5 +1,6 @@
 using Dashboard_v2.Application.Common.Interfaces;
 using Dashboard_v2.Application.Common.Models;
+using Dashboard_v2.Application.FileStorage;
 using Dashboard_v2.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using RolesEnum = Dashboard_v2.Domain.Enums.Roles;
@@ -16,10 +17,20 @@ public sealed class EventService : IEventService, IPresentationService
     private readonly IApplicationDbContext _context;
     private readonly IUser _currentUser;
 
-    public EventService(IApplicationDbContext context, IUser currentUser)
+    /// <summary>
+    /// Servicio de cola de borrado diferido. Puede ser null si MinIO no está configurado;
+    /// usar con el operador <c>?.</c>.
+    /// </summary>
+    private readonly IFileDeletionQueueService? _deletionQueue;
+
+    public EventService(
+        IApplicationDbContext context,
+        IUser currentUser,
+        IFileDeletionQueueService? deletionQueue = null)
     {
-        _context = context;
-        _currentUser = currentUser;
+        _context       = context;
+        _currentUser   = currentUser;
+        _deletionQueue = deletionQueue;
     }
 
     private bool IsSuperuser => _currentUser.Roles?.Contains(nameof(RolesEnum.Superuser)) == true;
@@ -221,13 +232,27 @@ public sealed class EventService : IEventService, IPresentationService
             !await _context.Reds.AnyAsync(r => r.Id == request.RedId, ct))
             return Result.Failure(new[] { "Red no válida." });
 
-        ev.Name = request.Name.Trim();
-        ev.CountryId = request.CountryId;
+        ev.Name        = request.Name.Trim();
+        ev.CountryId   = request.CountryId;
         ev.EventTypeId = request.EventType;
-        ev.RedId = string.IsNullOrWhiteSpace(request.RedId) ? null : request.RedId;
-        ev.EvidenceFileId = request.EvidenceFileId;
+        ev.RedId       = string.IsNullOrWhiteSpace(request.RedId) ? null : request.RedId;
         ev.FechaInicio = request.FechaInicio;
-        ev.FechaFin = request.FechaFin;
+        ev.FechaFin    = request.FechaFin;
+
+        // Detectar cambio de archivo: capturar el ID anterior ANTES de sobreescribir,
+        // y encolar su borrado en MinIO si ha cambiado. Debe hacerse antes del primer
+        // SaveChangesAsync para que el job quede en la misma transacción que el evento.
+        var oldFileId = ev.EvidenceFileId;
+        ev.EvidenceFileId = request.EvidenceFileId;
+
+        if (_deletionQueue is not null
+            && oldFileId.HasValue
+            && oldFileId != request.EvidenceFileId)
+        {
+            var oldFile = await _context.StoredFiles.FindAsync(new object[] { oldFileId.Value }, ct);
+            if (oldFile is not null)
+                await _deletionQueue.EnqueueAsync(oldFile, ct);
+        }
 
         var updatedInstitutions = new List<Institution>();
         foreach (var iname in request.Institutions
@@ -272,6 +297,13 @@ public sealed class EventService : IEventService, IPresentationService
 
         if (await _context.Presentations.AnyAsync(p => p.EventId == id, ct))
             return Result.Failure(new[] { "No se puede eliminar un evento que tiene presentaciones registradas." });
+
+        if (_deletionQueue is not null && ev.EvidenceFileId.HasValue)
+        {
+            var file = await _context.StoredFiles.FindAsync([ev.EvidenceFileId.Value], ct);
+            if (file is not null)
+                await _deletionQueue.EnqueueAsync(file, ct);
+        }
 
         _context.Events.Remove(ev);
         await _context.SaveChangesAsync(ct);

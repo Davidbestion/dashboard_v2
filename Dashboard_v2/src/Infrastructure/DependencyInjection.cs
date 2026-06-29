@@ -1,4 +1,5 @@
 ﻿using Dashboard_v2.Application.Common.Interfaces;
+using Dashboard_v2.Application.FileStorage;
 using Dashboard_v2.Application.Universidades;
 using Dashboard_v2.Application.Areas;
 using Dashboard_v2.Application.Clasificaciones;
@@ -188,6 +189,17 @@ public static class DependencyInjection
                 .WithCredentials(minioOpts.AccessKey, minioOpts.SecretKey)
                 .WithSSL(minioOpts.UseSSL));
 
+            // HttpClient dedicado para el health check de MinIO.
+            // Usa la URL /minio/health/live sin pasar por el SDK, que puede silenciar errores de red.
+            var minioScheme = minioOpts.UseSSL ? "https" : "http";
+            builder.Services.AddHttpClient(
+                Dashboard_v2.Infrastructure.Services.MinioFileStorageService.HealthClientName,
+                client =>
+                {
+                    client.BaseAddress = new Uri($"{minioScheme}://{minioOpts.Endpoint}");
+                    client.Timeout = TimeSpan.FromSeconds(5);
+                });
+
             // Registrar la implementación una sola vez y exponerla bajo ambas interfaces.
             builder.Services.AddSingleton<Dashboard_v2.Infrastructure.Services.MinioFileStorageService>();
             builder.Services.AddSingleton<Dashboard_v2.Application.Common.Interfaces.IFileStorageService>(
@@ -196,6 +208,19 @@ public static class DependencyInjection
                 sp => sp.GetRequiredService<Dashboard_v2.Infrastructure.Services.MinioFileStorageService>());
             builder.Services.AddScoped<Dashboard_v2.Application.FileStorage.IStoredFileService,
                 Dashboard_v2.Application.FileStorage.StoredFileService>();
+
+            // Cola de borrado diferido: Scoped porque depende de IApplicationDbContext (Scoped).
+            // No llama a SaveChangesAsync — el llamador lo hace en la misma transacción.
+            builder.Services.AddScoped<IFileDeletionQueueService,
+                Dashboard_v2.Infrastructure.Services.FileDeletionQueueService>();
+
+            // Leer configuración de FileDeletion (intervalos, reintentos)
+            builder.Services.Configure<Dashboard_v2.Infrastructure.Configuration.FileDeletionOptions>(
+                builder.Configuration.GetSection(Dashboard_v2.Infrastructure.Configuration.FileDeletionOptions.SectionName));
+
+            // Background service que procesa la cola periódicamente.
+            // Se registra SOLO si MinIO está configurado, ya que sin él no hay archivos que borrar.
+            builder.Services.AddHostedService<Dashboard_v2.Infrastructure.BackgroundServices.FileDeletionBackgroundService>();
         }
 
         builder.Services.AddAuthorization(options =>

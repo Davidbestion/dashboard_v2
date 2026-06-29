@@ -24,6 +24,10 @@ public class GrupoEstudiantilServiceTests
             .Options;
         _db = new ApplicationDbContext(opts);
         _userMock = new Mock<IUser>();
+        // Por defecto todos los tests operan como Superuser.
+        // Los tests que requieren un rol distinto sobreescriben este setup.
+        _userMock.Setup(u => u.Roles).Returns(["Superuser"]);
+        _userMock.Setup(u => u.Id).Returns("user-su");
         _sut = new GrupoEstudiantilService(_db, _userMock.Object);
     }
 
@@ -140,11 +144,17 @@ public class GrupoEstudiantilServiceTests
     [Test]
     public async Task UpdateAsync_WithoutSuperuserRole_ReturnsFailure()
     {
-        await AddAreaAsync();
+        // Crear grupo en area-1 como Superuser (SetUp ya configura ese rol)
+        await AddAreaAsync("area-1");
         var (_, id) = await _sut.CreateAsync(
             new CreateGrupoEstudiantilRequest { Nombre = "Grupo B", AreaId = "area-1" });
 
-        _userMock.Setup(u => u.Roles).Returns(["Estudiante"]);
+        // Poner al usuario en otra área para que el servicio llegue a la comprobación de permisos
+        _db.Areas.Add(new Area { Id = "area-2", Nombre = "Matemáticas" });
+        _db.Users.Add(new User { Id = "user-su", UserName = "user-su", Email = "su@test.cu", UserLastName1 = "Su", AreaId = "area-2" });
+        await _db.SaveChangesAsync();
+
+        _userMock.Setup(u => u.Roles).Returns(["Vicedecano"]);
 
         var result = await _sut.UpdateAsync(id!,
             new UpdateGrupoEstudiantilRequest { Nombre = "Modified", AreaId = "area-1" });

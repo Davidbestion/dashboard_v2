@@ -67,7 +67,7 @@ public class AwardServiceEvidenceFileTests
         result.Succeeded.ShouldBeTrue();
         awardedId.ShouldNotBeNull();
 
-        var created = await db.UserAwardeds.FindAsync(awardedId);
+        var created = await db.UserAwardees.FindAsync(awardedId);
         created.ShouldNotBeNull();
         created!.EvidenceFileId.ShouldBe(storedFile.Id);
     }
@@ -97,7 +97,7 @@ public class AwardServiceEvidenceFileTests
         var (result, awardedId) = await service.CreateAsync(request);
 
         result.Succeeded.ShouldBeTrue();
-        var created = await db.UserAwardeds.FindAsync(awardedId);
+        var created = await db.UserAwardees.FindAsync(awardedId);
         created.ShouldNotBeNull();
         created!.EvidenceFileId.ShouldBeNull();
     }
@@ -125,7 +125,7 @@ public class AwardServiceEvidenceFileTests
         db.AwardTypes.Add(awardType);
         db.Awards.Add(award);
         db.StoredFiles.Add(storedFile);
-        db.UserAwardeds.Add(userAwarded);
+        db.UserAwardees.Add(userAwarded);
         await db.SaveChangesAsync();
 
         var service = BuildService(db, user.Id);
@@ -139,7 +139,7 @@ public class AwardServiceEvidenceFileTests
         var result = await service.UpdateAsync(userAwarded.Id, request);
 
         result.Succeeded.ShouldBeTrue();
-        var updated = await db.UserAwardeds.FindAsync(userAwarded.Id);
+        var updated = await db.UserAwardees.FindAsync(userAwarded.Id);
         updated!.EvidenceFileId.ShouldBe(storedFile.Id);
     }
 
@@ -168,7 +168,7 @@ public class AwardServiceEvidenceFileTests
         await db.SaveChangesAsync();
 
         var userAwarded = new UserAwarded { UserId = "u4", AwardId = 1, AwardedAt = DateTime.UtcNow, EvidenceFileId = storedFile.Id };
-        db.UserAwardeds.Add(userAwarded);
+        db.UserAwardees.Add(userAwarded);
         await db.SaveChangesAsync();
 
         var service = BuildService(db, user.Id);
@@ -182,7 +182,7 @@ public class AwardServiceEvidenceFileTests
         var result = await service.UpdateAsync(userAwarded.Id, request);
 
         result.Succeeded.ShouldBeTrue();
-        var updated = await db.UserAwardeds.FindAsync(userAwarded.Id);
+        var updated = await db.UserAwardees.FindAsync(userAwarded.Id);
         updated!.EvidenceFileId.ShouldBeNull();
     }
 }

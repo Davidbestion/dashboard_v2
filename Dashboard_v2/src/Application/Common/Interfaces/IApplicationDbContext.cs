@@ -59,5 +59,12 @@ public interface IApplicationDbContext
     DbSet<SituacionProyecto> SituacionesProyecto { get; }
     DbSet<Programa> Programas { get; }
 
+    /// <summary>
+    /// Cola de trabajos de borrado diferido de archivos en MinIO. Un job se inserta
+    /// en la misma transacción que la actualización de la entidad que pierde su archivo,
+    /// y es procesado de forma asíncrona por <c>FileDeletionBackgroundService</c>.
+    /// </summary>
+    DbSet<Dashboard_v2.Domain.Entities.FileDeletionJob> FileDeletionJobs { get; }
+
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

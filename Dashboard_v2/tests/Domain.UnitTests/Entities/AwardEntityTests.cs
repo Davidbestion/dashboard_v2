@@ -17,8 +17,8 @@ public class AwardEntityTests
     {
         var award = new Award { Name = "Premio Nacional" };
 
-        award.UserAwardeds.ShouldNotBeNull();
-        award.UserAwardeds.ShouldBeEmpty();
+        award.UserAwardees.ShouldNotBeNull();
+        award.UserAwardees.ShouldBeEmpty();
     }
 
     [Test]

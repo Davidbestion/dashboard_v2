@@ -55,7 +55,7 @@ public class AwardServiceTests
     {
         await SeedBaseDataAsync();
         _db.Users.Add(new User { Id = "user-2", UserName = "bob", Email = "bob@test.com", UserLastName1 = "B" });
-        _db.UserAwardeds.Add(new UserAwarded { UserId = "user-2", AwardId = 1, AwardedAt = DateTime.Today });
+        _db.UserAwardees.Add(new UserAwarded { UserId = "user-2", AwardId = 1, AwardedAt = DateTime.Today });
         await _db.SaveChangesAsync();
 
         var result = await _sut.GetMyAwardsAsync();
@@ -66,7 +66,7 @@ public class AwardServiceTests
     public async Task GetMyAwardsAsync_WithCurrentUserAward_ReturnsAward()
     {
         await SeedBaseDataAsync();
-        _db.UserAwardeds.Add(new UserAwarded { UserId = "user-1", AwardId = 1, AwardedAt = DateTime.Today });
+        _db.UserAwardees.Add(new UserAwarded { UserId = "user-1", AwardId = 1, AwardedAt = DateTime.Today });
         await _db.SaveChangesAsync();
 
         var result = await _sut.GetMyAwardsAsync();
@@ -89,8 +89,8 @@ public class AwardServiceTests
     {
         await SeedBaseDataAsync();
         _db.Users.Add(new User { Id = "user-2", UserName = "bob", Email = "bob@test.com", UserLastName1 = "B" });
-        _db.UserAwardeds.Add(new UserAwarded { UserId = "user-1", AwardId = 1, AwardedAt = DateTime.Today });
-        _db.UserAwardeds.Add(new UserAwarded { UserId = "user-2", AwardId = 1, AwardedAt = DateTime.Today });
+        _db.UserAwardees.Add(new UserAwarded { UserId = "user-1", AwardId = 1, AwardedAt = DateTime.Today });
+        _db.UserAwardees.Add(new UserAwarded { UserId = "user-2", AwardId = 1, AwardedAt = DateTime.Today });
         await _db.SaveChangesAsync();
 
         var result = await _sut.GetAllAwardsAsync();
@@ -229,7 +229,7 @@ public class AwardServiceTests
     {
         await SeedBaseDataAsync();
         _db.Users.Add(new User { Id = "user-2", UserName = "bob", Email = "bob@test.com", UserLastName1 = "B" });
-        _db.UserAwardeds.Add(new UserAwarded { Id = 1, UserId = "user-2", AwardId = 1, AwardedAt = DateTime.Today });
+        _db.UserAwardees.Add(new UserAwarded { Id = 1, UserId = "user-2", AwardId = 1, AwardedAt = DateTime.Today });
         await _db.SaveChangesAsync();
 
         var request = new UpdateAwardRequest { AwardId = 1, AwardedAt = DateTime.Today };
@@ -243,7 +243,7 @@ public class AwardServiceTests
     public async Task UpdateAsync_ValidOwner_Succeeds()
     {
         await SeedBaseDataAsync();
-        _db.UserAwardeds.Add(new UserAwarded { Id = 1, UserId = "user-1", AwardId = 1, AwardedAt = DateTime.Today });
+        _db.UserAwardees.Add(new UserAwarded { Id = 1, UserId = "user-1", AwardId = 1, AwardedAt = DateTime.Today });
         await _db.SaveChangesAsync();
 
         var newDate = DateTime.Today.AddDays(-10);
@@ -251,7 +251,7 @@ public class AwardServiceTests
         var result = await _sut.UpdateAsync(1, request);
 
         result.Succeeded.ShouldBeTrue();
-        var ua = await _db.UserAwardeds.FindAsync(1);
+        var ua = await _db.UserAwardees.FindAsync(1);
         ua!.AwardedAt.ShouldBe(newDate);
     }
 
@@ -271,7 +271,7 @@ public class AwardServiceTests
     {
         await SeedBaseDataAsync();
         _db.Users.Add(new User { Id = "user-2", UserName = "bob", Email = "bob@test.com", UserLastName1 = "B" });
-        _db.UserAwardeds.Add(new UserAwarded { Id = 1, UserId = "user-2", AwardId = 1, AwardedAt = DateTime.Today });
+        _db.UserAwardees.Add(new UserAwarded { Id = 1, UserId = "user-2", AwardId = 1, AwardedAt = DateTime.Today });
         await _db.SaveChangesAsync();
 
         var result = await _sut.DeleteAsync(1);
@@ -283,13 +283,13 @@ public class AwardServiceTests
     public async Task DeleteAsync_ValidOwner_Succeeds()
     {
         await SeedBaseDataAsync();
-        _db.UserAwardeds.Add(new UserAwarded { Id = 1, UserId = "user-1", AwardId = 1, AwardedAt = DateTime.Today });
+        _db.UserAwardees.Add(new UserAwarded { Id = 1, UserId = "user-1", AwardId = 1, AwardedAt = DateTime.Today });
         await _db.SaveChangesAsync();
 
         var result = await _sut.DeleteAsync(1);
 
         result.Succeeded.ShouldBeTrue();
-        (await _db.UserAwardeds.AnyAsync(ua => ua.Id == 1)).ShouldBeFalse();
+        (await _db.UserAwardees.AnyAsync(ua => ua.Id == 1)).ShouldBeFalse();
     }
 
     // ─── Superuser bypass ────────────────────────────────────────────────────
@@ -305,8 +305,8 @@ public class AwardServiceTests
     {
         await SeedBaseDataAsync();
         _db.Users.Add(new User { Id = "user-2", UserName = "bob", Email = "bob@test.com", UserLastName1 = "B" });
-        _db.UserAwardeds.Add(new UserAwarded { UserId = "user-1", AwardId = 1, AwardedAt = DateTime.Today });
-        _db.UserAwardeds.Add(new UserAwarded { UserId = "user-2", AwardId = 1, AwardedAt = DateTime.Today });
+        _db.UserAwardees.Add(new UserAwarded { UserId = "user-1", AwardId = 1, AwardedAt = DateTime.Today });
+        _db.UserAwardees.Add(new UserAwarded { UserId = "user-2", AwardId = 1, AwardedAt = DateTime.Today });
         await _db.SaveChangesAsync();
 
         SetupSuperuser();
@@ -337,7 +337,7 @@ public class AwardServiceTests
         });
 
         result.Succeeded.ShouldBeTrue();
-        var record = await _db.UserAwardeds.FindAsync(id);
+        var record = await _db.UserAwardees.FindAsync(id);
         record!.UserId.ShouldBe("user-2");
     }
 
@@ -378,7 +378,7 @@ public class AwardServiceTests
     public async Task UpdateAsync_Superuser_CanUpdateAnotherUsersAward()
     {
         await SeedBaseDataAsync();
-        _db.UserAwardeds.Add(new UserAwarded { Id = 10, UserId = "user-1", AwardId = 1, AwardedAt = DateTime.Today });
+        _db.UserAwardees.Add(new UserAwarded { Id = 10, UserId = "user-1", AwardId = 1, AwardedAt = DateTime.Today });
         await _db.SaveChangesAsync();
 
         SetupSuperuser("super-1");
@@ -395,14 +395,14 @@ public class AwardServiceTests
     public async Task DeleteAsync_Superuser_CanDeleteAnotherUsersAward()
     {
         await SeedBaseDataAsync();
-        _db.UserAwardeds.Add(new UserAwarded { Id = 11, UserId = "user-1", AwardId = 1, AwardedAt = DateTime.Today });
+        _db.UserAwardees.Add(new UserAwarded { Id = 11, UserId = "user-1", AwardId = 1, AwardedAt = DateTime.Today });
         await _db.SaveChangesAsync();
 
         SetupSuperuser("super-1");
         var result = await _sut.DeleteAsync(11);
 
         result.Succeeded.ShouldBeTrue();
-        (await _db.UserAwardeds.FindAsync(11)).ShouldBeNull();
+        (await _db.UserAwardees.FindAsync(11)).ShouldBeNull();
     }
 
     // ─── GetAreaAwardsAsync ───────────────────────────────────────────────────
@@ -432,7 +432,7 @@ public class AwardServiceTests
             new User { Id = "u-2",   UserName = "bob",   Email = "b@t.com",   UserLastName1 = "B",  AreaId = "area-2" });
         _db.AwardTypes.Add(new AwardType { Id = 1, Name = "Nacional" });
         _db.Awards.Add(new Award { Id = 1, Name = "Premio X", AwardTypeId = 1 });
-        _db.UserAwardeds.AddRange(
+        _db.UserAwardees.AddRange(
             new UserAwarded { Id = 20, UserId = "u-1", AwardId = 1, AwardedAt = DateTime.Today },
             new UserAwarded { Id = 21, UserId = "u-2", AwardId = 1, AwardedAt = DateTime.Today });
         await _db.SaveChangesAsync();
@@ -457,7 +457,7 @@ public class AwardServiceTests
             new User { Id = "u-2",  UserName = "bob", Email = "b@t.com",  UserLastName1 = "B",  AreaId = "area-2" });
         _db.AwardTypes.Add(new AwardType { Id = 1, Name = "Nacional" });
         _db.Awards.Add(new Award { Id = 1, Name = "Premio X", AwardTypeId = 1 });
-        _db.UserAwardeds.Add(new UserAwarded { Id = 22, UserId = "u-2", AwardId = 1, AwardedAt = DateTime.Today });
+        _db.UserAwardees.Add(new UserAwarded { Id = 22, UserId = "u-2", AwardId = 1, AwardedAt = DateTime.Today });
         await _db.SaveChangesAsync();
 
         var result = await _sut.GetAreaAwardsAsync();

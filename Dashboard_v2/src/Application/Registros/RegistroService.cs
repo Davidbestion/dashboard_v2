@@ -1,5 +1,6 @@
 using Dashboard_v2.Application.Common.Interfaces;
 using Dashboard_v2.Application.Common.Models;
+using Dashboard_v2.Application.FileStorage;
 using Dashboard_v2.Domain.Entities;
 using RolesEnum = Dashboard_v2.Domain.Enums.Roles;
 
@@ -12,16 +13,24 @@ public sealed class RegistroService : IRegistroService
     private readonly IAuthorResolutionService _authorResolution;
     private readonly IProductionCreatorService _creatorService;
 
+    /// <summary>
+    /// Servicio de cola de borrado diferido. Puede ser null si MinIO no está configurado;
+    /// usar con el operador <c>?.</c>.
+    /// </summary>
+    private readonly IFileDeletionQueueService? _deletionQueue;
+
     public RegistroService(
         IApplicationDbContext context,
         IUser currentUser,
         IAuthorResolutionService authorResolution,
-        IProductionCreatorService creatorService)
+        IProductionCreatorService creatorService,
+        IFileDeletionQueueService? deletionQueue = null)
     {
-        _context = context;
-        _currentUser = currentUser;
+        _context          = context;
+        _currentUser      = currentUser;
         _authorResolution = authorResolution;
-        _creatorService = creatorService;
+        _creatorService   = creatorService;
+        _deletionQueue    = deletionQueue;
     }
 
     private bool IsInRole(string role) => _currentUser.Roles?.Contains(role) == true;
@@ -116,12 +125,25 @@ public sealed class RegistroService : IRegistroService
                 return Result.Failure(["No tiene permisos sobre este registro."]);
         }
 
-        registro.Titulo = body.Titulo;
+        registro.Titulo            = body.Titulo;
         registro.NumeroCertificado = body.NumeroCertificado;
-        registro.EsInformatico = body.EsInformatico;
-        registro.CountryId = body.CountryId;
-        registro.InstitutionId = body.InstitutionId;
+        registro.EsInformatico     = body.EsInformatico;
+        registro.CountryId         = body.CountryId;
+        registro.InstitutionId     = body.InstitutionId;
+
+        // Detectar cambio de archivo: si el usuario quitó o reemplazó el adjunto,
+        // encolar el borrado del archivo anterior en MinIO dentro de la misma transacción.
+        var oldFileId = registro.EvidenceFileId;
         registro.EvidenceFileId = body.EvidenceFileId;
+
+        if (_deletionQueue is not null
+            && oldFileId.HasValue
+            && oldFileId != body.EvidenceFileId)
+        {
+            var oldFile = await _context.StoredFiles.FindAsync(new object[] { oldFileId.Value }, ct);
+            if (oldFile is not null)
+                await _deletionQueue.EnqueueAsync(oldFile, ct);
+        }
 
         var toRemove = registro.Creadores.Where(c => c.AuthorId != currentAuthor.Id).ToList();
         foreach (var creator in toRemove)
@@ -152,6 +174,13 @@ public sealed class RegistroService : IRegistroService
             var esCreador = await _context.AuthorRegistros.AnyAsync(ar => ar.RegistroId == id && ar.AuthorId == currentAuthor.Id, ct);
             if (!esCreador)
                 return Result.Failure(["No tiene permisos sobre este registro."]);
+        }
+
+        if (_deletionQueue is not null && registro.EvidenceFileId.HasValue)
+        {
+            var file = await _context.StoredFiles.FindAsync([registro.EvidenceFileId.Value], ct);
+            if (file is not null)
+                await _deletionQueue.EnqueueAsync(file, ct);
         }
 
         _context.Registros.Remove(registro);

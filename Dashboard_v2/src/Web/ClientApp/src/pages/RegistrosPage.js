@@ -42,6 +42,8 @@ export default function RegistrosPage() {
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
+  const [certUploading, setCertUploading] = useState(false);
+  const [certUploadError, setCertUploadError] = useState('');
   // Inline create institution
   const [showNewInstitution, setShowNewInstitution] = useState(false);
   const [newInstitutionInput, setNewInstitutionInput] = useState('');
@@ -73,6 +75,8 @@ export default function RegistrosPage() {
     setEditing(null);
     setForm({ ...emptyForm, countryId: countries.length > 0 ? String(countries[0].id) : '' });
     setFormError('');
+    setCertUploading(false);
+    setCertUploadError('');
     setModal(true);
   }
 
@@ -87,11 +91,21 @@ export default function RegistrosPage() {
       evidenceFileId: item.evidenceFileId ?? null,
     });
     setFormError('');
+    setCertUploading(false);
+    setCertUploadError('');
     setModal(true);
   }
 
   async function handleSave(e) {
     if (e) e.preventDefault();
+    if (certUploading) {
+      setFormError('Espere a que termine la subida del archivo antes de guardar.');
+      return;
+    }
+    if (certUploadError) {
+      setFormError('No se pudo adjuntar el archivo. Elimínelo o vuelva a seleccionarlo antes de guardar.');
+      return;
+    }
     setSaving(true);
     setFormError('');
     const body = {
@@ -291,6 +305,8 @@ export default function RegistrosPage() {
               <CertificateUpload
                 fileId={form.evidenceFileId}
                 onFileIdChange={id => setForm(f => ({ ...f, evidenceFileId: id }))}
+                onUploadingChange={setCertUploading}
+                onUploadError={setCertUploadError}
                 canManage
                 canView
                 disabled={saving}
@@ -298,7 +314,11 @@ export default function RegistrosPage() {
             </FormGroup>
           </ModalBody>
           <ModalFooter>
-            <Button color="primary" type="submit" disabled={saving}>{saving ? <Spinner size="sm" /> : 'Guardar'}</Button>
+            <Button color="primary" type="submit" disabled={saving || certUploading}>
+              {saving ? <Spinner size="sm" />
+                : certUploading ? <><Spinner size="sm" className="me-1" /> Subiendo archivo…</>
+                : 'Guardar'}
+            </Button>
             <Button color="secondary" onClick={() => setModal(false)}>Cancelar</Button>
           </ModalFooter>
         </Form>

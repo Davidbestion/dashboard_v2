@@ -86,6 +86,8 @@ export default function EventsPage() {
   const [evForm, setEvForm] = useState(EMPTY_EVENT);
   const [evFormError, setEvFormError] = useState('');
   const [evFormLoading, setEvFormLoading] = useState(false);
+  const [evCertUploading, setEvCertUploading] = useState(false);
+  const [evCertUploadError, setEvCertUploadError] = useState('');
   const [evDeleteModal, setEvDeleteModal] = useState(false);
   const [evToDelete, setEvToDelete] = useState(null);
   const [evDeleteLoading, setEvDeleteLoading] = useState(false);
@@ -271,6 +273,8 @@ export default function EventsPage() {
     setSelectedInstId('');
     setSelectedOrganizadorId('');
     setEvFormError('');
+    setEvCertUploading(false);
+    setEvCertUploadError('');
     resetNewCountry();
     setShowNewInstitution(false);
     setNewInstitutionInput('');
@@ -294,6 +298,8 @@ export default function EventsPage() {
     setSelectedInstId('');
     setSelectedOrganizadorId('');
     setEvFormError('');
+    setEvCertUploading(false);
+    setEvCertUploadError('');
     resetNewCountry();
     setShowNewInstitution(false);
     setNewInstitutionInput('');
@@ -365,6 +371,14 @@ export default function EventsPage() {
 
   async function handleEvSubmit(e) {
     e.preventDefault();
+    if (evCertUploading) {
+      setEvFormError('Espere a que termine la subida del archivo antes de guardar.');
+      return;
+    }
+    if (evCertUploadError) {
+      setEvFormError('No se pudo adjuntar el archivo. Elimínelo o vuelva a seleccionarlo antes de guardar.');
+      return;
+    }
     setEvFormLoading(true);
     setEvFormError('');
 
@@ -820,6 +834,8 @@ export default function EventsPage() {
               <CertificateUpload
                 fileId={evForm.evidenceFileId}
                 onFileIdChange={id => setEvForm(f => ({ ...f, evidenceFileId: id }))}
+                onUploadingChange={setEvCertUploading}
+                onUploadError={setEvCertUploadError}
                 canManage
                 canView
                 disabled={evFormLoading}
@@ -828,8 +844,10 @@ export default function EventsPage() {
           </ModalBody>
           <ModalFooter>
             <Button color="secondary" onClick={() => setEvModal(false)} disabled={evFormLoading}>Cancelar</Button>
-            <Button color="primary" type="submit" disabled={evFormLoading}>
-              {evFormLoading ? <Spinner size="sm" /> : (evEditing ? 'Guardar cambios' : 'Crear')}
+            <Button color="primary" type="submit" disabled={evFormLoading || evCertUploading}>
+              {evFormLoading ? <Spinner size="sm" />
+                : evCertUploading ? <><Spinner size="sm" className="me-1" /> Subiendo archivo…</>
+                : (evEditing ? 'Guardar cambios' : 'Crear')}
             </Button>
           </ModalFooter>
         </Form>

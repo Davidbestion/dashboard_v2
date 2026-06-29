@@ -24,6 +24,8 @@ import { Button, Spinner, Alert, Input } from 'reactstrap';
 export default function CertificateUpload({
   fileId,
   onFileIdChange,
+  onUploadingChange,  // (isUploading: boolean) => void — optional, fired when upload starts/ends
+  onUploadError,      // (message: string) => void   — optional, fired on failure (message) or success ('')
   canManage = false,
   canView = false,
   disabled = false,
@@ -46,6 +48,8 @@ export default function CertificateUpload({
 
     setUploading(true);
     setUploadError('');
+    onUploadingChange?.(true);
+    onUploadError?.('');
     try {
       const formData = new FormData();
       formData.append('file', file);
@@ -58,6 +62,9 @@ export default function CertificateUpload({
 
       const data = await response.json().catch(() => null);
       if (!response.ok) {
+        if (response.status === 503) {
+          throw new Error('El servicio de archivos no está disponible en este momento. Inténtelo de nuevo más tarde.');
+        }
         const msg = data?.errors
           ? (Array.isArray(data.errors) ? data.errors : Object.values(data.errors).flat()).join(' ')
           : (data?.title ?? `Error ${response.status}`);
@@ -67,8 +74,10 @@ export default function CertificateUpload({
       onFileIdChange(data.id);
     } catch (err) {
       setUploadError(err.message);
+      onUploadError?.(err.message);
     } finally {
       setUploading(false);
+      onUploadingChange?.(false);
     }
   }
 
@@ -77,15 +86,22 @@ export default function CertificateUpload({
   async function handleView() {
     if (!fileId) return;
     setViewLoading(true);
+    setUploadError('');
     try {
       const response = await fetch(`/api/FileStorage/${fileId}/url`, {
         credentials: 'include',
       });
-      if (!response.ok) throw new Error(`Error ${response.status}`);
+      if (!response.ok) {
+        if (response.status === 503) {
+          throw new Error('El servicio de archivos no está disponible en este momento. Inténtelo de nuevo más tarde.');
+        }
+        const data = await response.json().catch(() => null);
+        throw new Error(data?.title ?? `Error ${response.status}`);
+      }
       const url = await response.json();
       window.open(url, '_blank', 'noopener,noreferrer');
     } catch (err) {
-      setUploadError(`No se pudo obtener el enlace: ${err.message}`);
+      setUploadError(err.message);
     } finally {
       setViewLoading(false);
     }
@@ -95,6 +111,7 @@ export default function CertificateUpload({
 
   function handleRemove() {
     setUploadError('');
+    onUploadError?.('');
     onFileIdChange(null);
   }
 
@@ -215,7 +232,13 @@ export function CertificateViewButton({ fileId, disabled = false }) {
       const response = await fetch(`/api/FileStorage/${fileId}/url`, {
         credentials: 'include',
       });
-      if (!response.ok) throw new Error(`Error ${response.status}`);
+      if (!response.ok) {
+        if (response.status === 503) {
+          throw new Error('El servicio de archivos no está disponible en este momento. Inténtelo de nuevo más tarde.');
+        }
+        const data = await response.json().catch(() => null);
+        throw new Error(data?.title ?? `Error ${response.status}`);
+      }
       const url = await response.json();
       window.open(url, '_blank', 'noopener,noreferrer');
     } catch (err) {

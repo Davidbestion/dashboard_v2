@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Dashboard_v2.Application.Common.Interfaces;
 using Dashboard_v2.Application.Common.Models;
+using Dashboard_v2.Application.FileStorage;
 using Dashboard_v2.Domain.Entities;
 using Dashboard_v2.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
@@ -25,6 +26,12 @@ public sealed partial class PublicationService : IPublicationService
     private readonly IAuthorCleanupService _authorCleanup;
     private readonly IPublicationDatabaseResolver _databaseResolver;
 
+    /// <summary>
+    /// Servicio de cola de borrado diferido. Puede ser null si MinIO no está configurado;
+    /// usar con el operador <c>?.</c>.
+    /// </summary>
+    private readonly IFileDeletionQueueService? _deletionQueue;
+
     public PublicationService(
         IApplicationDbContext context,
         IUser currentUser,
@@ -32,15 +39,17 @@ public sealed partial class PublicationService : IPublicationService
         IOpenAireClient openAireClient,
         IAuthorResolutionService authorResolution,
         IAuthorCleanupService authorCleanup,
-        IPublicationDatabaseResolver databaseResolver)
+        IPublicationDatabaseResolver databaseResolver,
+        IFileDeletionQueueService? deletionQueue = null)
     {
-        _context = context;
-        _currentUser = currentUser;
-        _crossRefClient = crossRefClient;
-        _openAireClient = openAireClient;
+        _context          = context;
+        _currentUser      = currentUser;
+        _crossRefClient   = crossRefClient;
+        _openAireClient   = openAireClient;
         _authorResolution = authorResolution;
-        _authorCleanup = authorCleanup;
+        _authorCleanup    = authorCleanup;
         _databaseResolver = databaseResolver;
+        _deletionQueue    = deletionQueue;
     }
 
     private const int MinJournalGroup = 1;
@@ -180,8 +189,21 @@ public sealed partial class PublicationService : IPublicationService
         publication.UrlDoi = string.IsNullOrWhiteSpace(request.UrlDoi) ? null : request.UrlDoi.Trim();
         publication.NormalizedUrlDoi = string.IsNullOrWhiteSpace(request.UrlDoi) ? null : NormalizeUrlDoi(request.UrlDoi);
         publication.ProyectoId = string.IsNullOrWhiteSpace(request.ProyectoId) ? null : request.ProyectoId;
-        publication.RedId = string.IsNullOrWhiteSpace(request.RedId) ? publication.RedId : request.RedId;
+        publication.RedId      = string.IsNullOrWhiteSpace(request.RedId) ? publication.RedId : request.RedId;
+
+        // Detectar cambio de archivo: capturar el ID anterior ANTES de sobreescribir
+        // para poder encolar su borrado en MinIO si ha cambiado.
+        var oldFileId = publication.EvidenceFileId;
         publication.EvidenceFileId = request.EvidenceFileId;
+
+        if (_deletionQueue is not null
+            && oldFileId.HasValue
+            && oldFileId != request.EvidenceFileId)
+        {
+            var oldFile = await _context.StoredFiles.FindAsync(new object[] { oldFileId.Value }, ct);
+            if (oldFile is not null)
+                await _deletionQueue.EnqueueAsync(oldFile, ct);
+        }
 
         var group    = request.Group;
         var cuartil  = string.IsNullOrWhiteSpace(request.Cuartil) ? null : request.Cuartil?.Trim();
@@ -473,6 +495,13 @@ public sealed partial class PublicationService : IPublicationService
             return Result.Failure(new[] { "Publicación no encontrada." });
 
         var authorIds = publication.AuthorPublications.Select(ap => ap.AuthorId).ToList();
+
+        if (_deletionQueue is not null && publication.EvidenceFileId.HasValue)
+        {
+            var file = await _context.StoredFiles.FindAsync([publication.EvidenceFileId.Value], ct);
+            if (file is not null)
+                await _deletionQueue.EnqueueAsync(file, ct);
+        }
 
         _context.Publications.Remove(publication);
         await _context.SaveChangesAsync(ct);

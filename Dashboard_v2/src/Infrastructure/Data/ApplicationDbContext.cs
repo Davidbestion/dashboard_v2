@@ -114,6 +114,13 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     /// <summary>Research programs that projects may be attached to.</summary>
     public DbSet<Programa> Programas => Set<Programa>();
 
+    /// <summary>
+    /// Cola de trabajos de borrado diferido de archivos en MinIO. Se inserta junto
+    /// al cambio de entidad en la misma transacción y se procesa de forma asíncrona
+    /// por <c>FileDeletionBackgroundService</c>.
+    /// </summary>
+    public DbSet<FileDeletionJob> FileDeletionJobs => Set<FileDeletionJob>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

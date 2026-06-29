@@ -71,7 +71,7 @@ public class AnexoPremiosReportTests
         _db.Users.Add(new User { Id = "u1", UserName = "alice", Email = "a@a.com", UserLastName1 = "Smith" });
         _db.AwardTypes.Add(new AwardType { Id = 1, Name = "Nacional" });
         _db.Awards.Add(new Award { Id = 1, Name = "Premio X", AwardTypeId = 1 });
-        _db.UserAwardeds.Add(new UserAwarded { UserId = "u1", AwardId = 1, AwardedAt = DateTime.Today });
+        _db.UserAwardees.Add(new UserAwarded { UserId = "u1", AwardId = 1, AwardedAt = DateTime.Today });
         await _db.SaveChangesAsync();
 
         var result = await _sut.GatherVariablesAsync(null, default);
@@ -89,8 +89,8 @@ public class AnexoPremiosReportTests
         _db.AwardTypes.Add(new AwardType { Id = 1, Name = "Nacional" });
         _db.Awards.Add(new Award { Id = 1, Name = "Premio X", AwardTypeId = 1 });
         _db.Awards.Add(new Award { Id = 2, Name = "Premio X", AwardTypeId = 1 });
-        _db.UserAwardeds.Add(new UserAwarded { UserId = "u1", AwardId = 1, AwardedAt = DateTime.Today });
-        _db.UserAwardeds.Add(new UserAwarded { UserId = "u1", AwardId = 2, AwardedAt = DateTime.Today });
+        _db.UserAwardees.Add(new UserAwarded { UserId = "u1", AwardId = 1, AwardedAt = DateTime.Today });
+        _db.UserAwardees.Add(new UserAwarded { UserId = "u1", AwardId = 2, AwardedAt = DateTime.Today });
         await _db.SaveChangesAsync();
 
         var result = await _sut.GatherVariablesAsync(null, default);
@@ -105,7 +105,7 @@ public class AnexoPremiosReportTests
         _db.Users.Add(new User { Id = "member-a1", AreaId = "area-a", Email = "m@t.cu", UserName = "mem", UserLastName1 = "M" });
         _db.AwardTypes.Add(new AwardType { Id = 50, Name = "Nacional" });
         _db.Awards.Add(new Award { Id = 50, Name = "Premio del Área", AwardTypeId = 50 });
-        _db.UserAwardeds.Add(new UserAwarded { UserId = "member-a1", AwardId = 50, AwardedAt = DateTime.Today });
+        _db.UserAwardees.Add(new UserAwarded { UserId = "member-a1", AwardId = 50, AwardedAt = DateTime.Today });
         await _db.SaveChangesAsync();
 
         _userMock.Setup(u => u.Id).Returns("req-a1");
@@ -124,7 +124,7 @@ public class AnexoPremiosReportTests
         _db.Users.Add(new User { Id = "member-b1", AreaId = "area-b", Email = "mb@t.cu", UserName = "mb", UserLastName1 = "MB" });
         _db.AwardTypes.Add(new AwardType { Id = 60, Name = "Internacional" });
         _db.Awards.Add(new Award { Id = 60, Name = "Premio Otra Área", AwardTypeId = 60 });
-        _db.UserAwardeds.Add(new UserAwarded { UserId = "member-b1", AwardId = 60, AwardedAt = DateTime.Today });
+        _db.UserAwardees.Add(new UserAwarded { UserId = "member-b1", AwardId = 60, AwardedAt = DateTime.Today });
         await _db.SaveChangesAsync();
 
         _userMock.Setup(u => u.Id).Returns("req-a2");

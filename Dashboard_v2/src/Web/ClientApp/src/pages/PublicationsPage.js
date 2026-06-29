@@ -168,6 +168,8 @@ export default function PublicationsPage() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [formError, setFormError] = useState('');
   const [formLoading, setFormLoading] = useState(false);
+  const [certUploading, setCertUploading] = useState(false);
+  const [certUploadError, setCertUploadError] = useState('');
   // Duplicates modal state
   const [duplicatesModal, setDuplicatesModal] = useState(false);
   const [duplicatesCandidates, setDuplicatesCandidates] = useState([]);
@@ -272,6 +274,8 @@ export default function PublicationsPage() {
     setResolvedIssns([]);
     setCoauthorTags([]);
     setAuthorNotInCrossRef(false);
+    setCertUploading(false);
+    setCertUploadError('');
     setModal(true);
   }
 
@@ -316,6 +320,8 @@ export default function PublicationsPage() {
       .filter(a => a.userId !== user?.id)
       .map(mapAuthorToPickerEntry);
     setCoauthorTags(initialTags);
+    setCertUploading(false);
+    setCertUploadError('');
     setModal(true);
   }
 
@@ -370,6 +376,14 @@ export default function PublicationsPage() {
     // If the user was not found among CrossRef authors, ask for confirmation first
     if (authorNotInCrossRef) {
       setAuthorWarningConfirmOpen(true);
+      return;
+    }
+    if (certUploading) {
+      setFormError('Espere a que termine la subida del archivo antes de guardar.');
+      return;
+    }
+    if (certUploadError) {
+      setFormError('No se pudo adjuntar el archivo. Elimínelo o vuelva a seleccionarlo antes de guardar.');
       return;
     }
     setFormLoading(true);
@@ -1229,6 +1243,8 @@ export default function PublicationsPage() {
               <CertificateUpload
                 fileId={form.evidenceFileId}
                 onFileIdChange={id => setForm(f => ({ ...f, evidenceFileId: id }))}
+                onUploadingChange={setCertUploading}
+                onUploadError={setCertUploadError}
                 canManage
                 canView
                 disabled={formLoading}
@@ -1240,9 +1256,11 @@ export default function PublicationsPage() {
           <Button color="secondary" outline onClick={() => setModal(false)} disabled={formLoading}>
             Cancelar
           </Button>
-          <Button color="primary" onClick={handleSubmit} disabled={formLoading}>
+          <Button color="primary" onClick={handleSubmit} disabled={formLoading || certUploading}>
             {formLoading
               ? <><Spinner size="sm" className="me-1" /> Guardando…</>
+              : certUploading
+              ? <><Spinner size="sm" className="me-1" /> Subiendo archivo…</>
               : editing ? 'Guardar cambios' : 'Crear publicación'
             }
           </Button>

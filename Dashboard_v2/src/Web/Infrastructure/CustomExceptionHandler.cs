@@ -1,4 +1,5 @@
 ﻿using Dashboard_v2.Application.Common.Exceptions;
+using Dashboard_v2.Application.FileStorage;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,6 +18,7 @@ public class CustomExceptionHandler : IExceptionHandler
                 { typeof(NotFoundException), HandleNotFoundException },
                 { typeof(UnauthorizedAccessException), HandleUnauthorizedAccessException },
                 { typeof(ForbiddenAccessException), HandleForbiddenAccessException },
+                { typeof(FileStorageUnavailableException), HandleFileStorageUnavailableException },
             };
     }
 
@@ -82,6 +84,19 @@ public class CustomExceptionHandler : IExceptionHandler
             Status = StatusCodes.Status403Forbidden,
             Title = "Forbidden",
             Type = "https://tools.ietf.org/html/rfc7231#section-6.5.3"
+        });
+    }
+
+    private async Task HandleFileStorageUnavailableException(HttpContext httpContext, Exception ex)
+    {
+        httpContext.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+
+        await httpContext.Response.WriteAsJsonAsync(new ProblemDetails
+        {
+            Status = StatusCodes.Status503ServiceUnavailable,
+            Title = "El servicio de almacenamiento no está disponible.",
+            Detail = ex.Message,
+            Type = "https://tools.ietf.org/html/rfc7231#section-6.6.4"
         });
     }
 }

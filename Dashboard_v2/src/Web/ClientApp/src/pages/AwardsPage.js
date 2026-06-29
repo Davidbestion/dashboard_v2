@@ -106,6 +106,8 @@ export default function AwardsPage() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [formError, setFormError] = useState('');
   const [formLoading, setFormLoading] = useState(false);
+  const [certUploading, setCertUploading] = useState(false);
+  const [certUploadError, setCertUploadError] = useState('');
 
   const [deleteModal, setDeleteModal] = useState(false);
   const [toDelete, setToDelete] = useState(null);
@@ -212,6 +214,8 @@ export default function AwardsPage() {
     setEditing(null);
     setForm(buildEmptyForm(awardCatalog));
     setFormError('');
+    setCertUploading(false);
+    setCertUploadError('');
     setModal(true);
   }
 
@@ -240,6 +244,8 @@ export default function AwardsPage() {
     }
 
     setFormError('');
+    setCertUploading(false);
+    setCertUploadError('');
     setModal(true);
   }
 
@@ -280,6 +286,14 @@ export default function AwardsPage() {
     e.preventDefault();
     if (isSuperuser && !editing && !form.targetUserId) {
       setFormError('Debes seleccionar un usuario destinatario.');
+      return;
+    }
+    if (certUploading) {
+      setFormError('Espere a que termine la subida del archivo antes de guardar.');
+      return;
+    }
+    if (certUploadError) {
+      setFormError('No se pudo adjuntar el archivo. Elimínelo o vuelva a seleccionarlo antes de guardar.');
       return;
     }
     setFormLoading(true);
@@ -579,6 +593,8 @@ export default function AwardsPage() {
               <CertificateUpload
                 fileId={form.evidenceFileId}
                 onFileIdChange={id => setForm(f => ({ ...f, evidenceFileId: id }))}
+                onUploadingChange={setCertUploading}
+                onUploadError={setCertUploadError}
                 canManage
                 canView
                 disabled={formLoading}
@@ -590,8 +606,10 @@ export default function AwardsPage() {
             <Button color="secondary" onClick={closeModal} disabled={formLoading}>
               Cancelar
             </Button>
-            <Button color="primary" type="submit" disabled={formLoading}>
-              {formLoading ? <Spinner size="sm" /> : (editing ? 'Guardar cambios' : 'Registrar')}
+            <Button color="primary" type="submit" disabled={formLoading || certUploading}>
+              {formLoading ? <Spinner size="sm" />
+                : certUploading ? <><Spinner size="sm" className="me-1" /> Subiendo archivo…</>
+                : (editing ? 'Guardar cambios' : 'Registrar')}
             </Button>
           </ModalFooter>
         </Form>

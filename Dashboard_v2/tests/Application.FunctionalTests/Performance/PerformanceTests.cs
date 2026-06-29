@@ -229,6 +229,95 @@ public class PerformanceTests : BaseTestFixture
             $"Latencia media de escritura {avg:F1} ms supera umbral de 500 ms");
     }
 
+    // ── Pruebas de rendimiento TPT (jerarquía de Proyecto) ──────────────────
+
+    /// <summary>
+    /// Siembra 500 proyectos de los 7 subtipos directamente en la BD y mide el tiempo
+    /// de GET /api/Proyectos (rol Superuser, sin filtro).
+    ///
+    /// Internamente, <c>QueryAllSubtiposAsync</c> emite 7 queries independientes
+    /// con <c>OfType&lt;T&gt;()</c>: cada uno genera un INNER JOIN entre la tabla base
+    /// <c>Proyectos</c> y la tabla de subtipo correspondiente (TPT). Este test valida
+    /// que el overhead acumulado de los 7 JOINs es aceptable para el volumen esperado
+    /// en producción.
+    /// </summary>
+    [Test]
+    public async Task GetAllProyectos_500MixedTypes_WithinThreshold()
+    {
+        await RunAsUserAsync("perf.tpt.su@local", "Testing1234!", ["Superuser"]);
+
+        var (_, clasifId, jefeId, municipioId) = await SeedBaseForTptTestAsync("su");
+        await SeedProyectosBulkAsync(count: 500, clasifId, jefeId, municipioId);
+
+        using var client = CreateClient();
+
+        // Pre-calentamiento: evita que la primera petición incluya el JIT
+        await client.GetAsync("/api/Proyectos");
+
+        var sw = Stopwatch.StartNew();
+        var response = await client.GetAsync("/api/Proyectos");
+        sw.Stop();
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        body.GetArrayLength().ShouldBeGreaterThanOrEqualTo(500);
+
+        TestContext.Out.WriteLine(
+            $"GET /api/Proyectos (Superuser, 7 subtipos TPT, 500 proyectos): {sw.ElapsedMilliseconds} ms");
+
+        sw.ElapsedMilliseconds.ShouldBeLessThan(5_000,
+            $"GET /api/Proyectos tardó {sw.ElapsedMilliseconds} ms con 500 proyectos (umbral: 5 000 ms)");
+    }
+
+    /// <summary>
+    /// Siembra 1 000 proyectos en total (500 del área del Vicedecano y 500 de otra área)
+    /// y mide el tiempo de GET /api/Proyectos con rol Vicedecano_de_investigacion.
+    /// El filtro <c>p.JefeUsuario.AreaId == areaId</c> debe descartar los 500 proyectos
+    /// ajenos y devolver solo los 500 propios, probando simultáneamente el overhead TPT
+    /// y la selectividad del filtro de área sobre un volumen total mayor.
+    /// </summary>
+    [Test]
+    public async Task GetAreaProyectos_1000Total500InArea_WithinThreshold()
+    {
+        // 500 proyectos del área del Vicedecano
+        var (areaId, clasifId, jefeId, municipioId) = await SeedBaseForTptTestAsync("vd");
+        await SeedProyectosBulkAsync(count: 500, clasifId, jefeId, municipioId);
+
+        // 500 proyectos de otra área (el Vicedecano no debe verlos)
+        var (_, clasifId2, jefeId2, municipioId2) = await SeedBaseForTptTestAsync("vd2");
+        await SeedProyectosBulkAsync(count: 500, clasifId2, jefeId2, municipioId2);
+
+        var vdId = await RunAsUserAsync("perf.tpt.vd@local", "Testing1234!", ["Vicedecano_de_investigacion"]);
+
+        await ExecuteDbContextAsync(async db =>
+        {
+            var vd = await db.Users.FindAsync(vdId);
+            vd!.AreaId = areaId;
+            await db.SaveChangesAsync();
+        });
+
+        using var client = CreateClient();
+
+        // Pre-calentamiento
+        await client.GetAsync("/api/Proyectos");
+
+        var sw = Stopwatch.StartNew();
+        var response = await client.GetAsync("/api/Proyectos");
+        sw.Stop();
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        body.GetArrayLength().ShouldBe(500, "el Vicedecano solo debe ver los proyectos de su área");
+
+        TestContext.Out.WriteLine(
+            $"GET /api/Proyectos (Vicedecano, filtro área, 7 subtipos TPT, 1 000 total / 500 en área): {sw.ElapsedMilliseconds} ms");
+
+        sw.ElapsedMilliseconds.ShouldBeLessThan(5_000,
+            $"GET /api/Proyectos filtrado por área tardó {sw.ElapsedMilliseconds} ms con 1 000 proyectos totales (umbral: 5 000 ms)");
+    }
+
     // ── Helpers ──────────────────────────────────────────────────────────────
 
     private static async Task SeedPublicationsBulkAsync(int count)
@@ -285,6 +374,119 @@ public class PerformanceTests : BaseTestFixture
 
             await db.SaveChangesAsync();
             return (area.Id, clasif.Id, jefe.Id);
+        });
+    }
+
+    /// <summary>
+    /// Crea los prerrequisitos mínimos para los tests de rendimiento TPT:
+    /// universidad, área, clasificación, jefe con area asignada y municipio.
+    /// </summary>
+    private static async Task<(string areaId, string clasifId, string jefeId, int municipioId)>
+        SeedBaseForTptTestAsync(string suffix)
+    {
+        return await ExecuteDbContextAsync(async db =>
+        {
+            var univ = new Universidad { Id = $"uh-tpt-{suffix}", Nombre = $"UH TPT {suffix}" };
+            db.Universidades.Add(univ);
+
+            var area = new Area { Id = $"area-tpt-{suffix}", Nombre = $"Área TPT {suffix}", Descripcion = "d", UniversidadId = univ.Id };
+            db.Areas.Add(area);
+
+            var clasif = new Clasificacion { Id = $"clasif-tpt-{suffix}", Nombre = $"Clasif TPT {suffix}" };
+            db.Clasificaciones.Add(clasif);
+
+            var jefe = new User
+            {
+                Id = $"jefe-tpt-{suffix}",
+                UserName = $"jefe.tpt.{suffix}@local",
+                Email = $"jefe.tpt.{suffix}@local",
+                UserLastName1 = "Jefe",
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Testing1234!"),
+                BirthDate = DateTime.SpecifyKind(new DateTime(1985, 1, 1), DateTimeKind.Utc),
+                IsActive = true,
+                CreatedAt = DateTimeOffset.UtcNow,
+                AreaId = area.Id,
+            };
+            db.Users.Add(jefe);
+
+            var prov = new Provincia { Nombre = $"Prov TPT {suffix}" };
+            db.Provincias.Add(prov);
+            await db.SaveChangesAsync();
+
+            var mun = new Municipio { Nombre = $"Mun TPT {suffix}", ProvinciaId = prov.Id };
+            db.Municipios.Add(mun);
+            await db.SaveChangesAsync();
+
+            return (area.Id, clasif.Id, jefe.Id, mun.Id);
+        });
+    }
+
+    /// <summary>
+    /// Siembra <paramref name="count"/> proyectos distribuidos entre los 7 subtipos
+    /// (ProyectoEnRevision, ProyectoEmpresarial, ProyectoNoEmpresarial,
+    /// ProyectoApoyoPrograma, ProyectoDesarrolloLocal, ProyectoColabInternacional,
+    /// ProyectoPNAP) directamente en la BD, sin pasar por la API.
+    /// </summary>
+    private static async Task SeedProyectosBulkAsync(
+        int count, string clasifId, string jefeId, int municipioId)
+    {
+        await ExecuteDbContextAsync(async db =>
+        {
+            var startDate = new DateOnly(2023, 1, 1);
+
+            for (int i = 0; i < count; i++)
+            {
+                Proyecto proyecto = (i % 7) switch
+                {
+                    0 => new ProyectoEnRevision
+                    {
+                        Tipo = "PE",
+                    },
+                    1 => new ProyectoEmpresarial
+                    {
+                        FechaInicio = startDate.AddDays(i),
+                        CodigoProyecto = $"PE-BULK-{i:D5}",
+                    },
+                    2 => new ProyectoNoEmpresarial
+                    {
+                        FechaInicio = startDate.AddDays(i),
+                        CodigoProyecto = $"PNE-BULK-{i:D5}",
+                    },
+                    3 => new ProyectoApoyoPrograma
+                    {
+                        FechaInicio = startDate.AddDays(i),
+                        CodigoProyecto = $"PAP-BULK-{i:D5}",
+                        TipoPAP = Domain.Enums.TipoPAP.Nacional,
+                    },
+                    4 => new ProyectoDesarrolloLocal
+                    {
+                        FechaInicio = startDate.AddDays(i),
+                        CodigoProyecto = $"PDL-BULK-{i:D5}",
+                        MunicipioId = municipioId,
+                    },
+                    5 => new ProyectoColabInternacional
+                    {
+                        FechaInicio = startDate.AddDays(i),
+                        CodigoProyecto = $"PRCI-BULK-{i:D5}",
+                        TerminosReferencia = $"Términos de referencia #{i}",
+                    },
+                    _ => new ProyectoPNAP
+                    {
+                        FechaInicio = startDate.AddDays(i),
+                        CodigoProyecto = $"PNAP-BULK-{i:D5}",
+                    },
+                };
+
+                proyecto.Titulo = $"Proyecto de rendimiento #{i + 1:D5}";
+                proyecto.JefeId = jefeId;
+                proyecto.ClasificacionId = clasifId;
+                proyecto.NumeroMiembros = 3;
+                proyecto.CantidadMiembrosUH = 2;
+
+                db.Proyectos.Add(proyecto);
+            }
+
+            await db.SaveChangesAsync();
         });
     }
 }

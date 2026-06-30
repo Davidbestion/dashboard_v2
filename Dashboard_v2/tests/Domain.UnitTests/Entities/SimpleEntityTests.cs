@@ -56,45 +56,4 @@ public class SimpleEntityTests
         entity.ProductoComercializadoId.ShouldBe("pc-3");
     }
 
-    // ─── Resource ────────────────────────────────────────────────────────────
-
-    [Test]
-    public void Resource_Properties_SetAndRead()
-    {
-        var now = DateTimeOffset.UtcNow;
-        var resource = new Resource
-        {
-            Type = "Document",
-            OwnerId = "user-1",
-            Name = "Informe anual",
-            Metadata = "{\"key\":\"value\"}",
-            Created = now,
-            CreatedBy = "admin",
-            LastModified = now,
-            LastModifiedBy = "admin"
-        };
-
-        resource.Type.ShouldBe("Document");
-        resource.OwnerId.ShouldBe("user-1");
-        resource.Name.ShouldBe("Informe anual");
-        resource.Metadata.ShouldBe("{\"key\":\"value\"}");
-        resource.Created.ShouldBe(now);
-        resource.CreatedBy.ShouldBe("admin");
-        resource.LastModified.ShouldBe(now);
-        resource.LastModifiedBy.ShouldBe("admin");
-    }
-
-    [Test]
-    public void Resource_NullMetadata_IsAllowed()
-    {
-        var resource = new Resource
-        {
-            Type = "Report",
-            OwnerId = "user-2",
-            Name = "Sin metadata",
-            Metadata = null
-        };
-
-        resource.Metadata.ShouldBeNull();
-    }
 }

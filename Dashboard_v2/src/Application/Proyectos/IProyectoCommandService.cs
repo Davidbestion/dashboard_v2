@@ -9,6 +9,8 @@ public interface IProyectoCommandService
 {
     Task<Result> DeleteAsync(string id, CancellationToken ct = default);
     Task<Result> SetParticipantesAsync(string proyectoId, IList<string> participantesIds, CancellationToken ct = default);
+    Task<Result> JoinProyectoAsync(string proyectoId, CancellationToken ct = default);
+    Task<Result> LeaveProyectoAsync(string proyectoId, CancellationToken ct = default);
     Task<Result> LinkPublicacionAsync(string proyectoId, string publicationId, CancellationToken ct = default);
     Task<Result> UnlinkPublicacionAsync(string proyectoId, string publicationId, CancellationToken ct = default);
     Task<Result> LinkPatenteAsync(string proyectoId, string patenteId, CancellationToken ct = default);

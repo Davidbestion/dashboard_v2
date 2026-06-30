@@ -7,20 +7,7 @@ import {
 } from 'reactstrap';
 import Select from 'react-select';
 import FilterableDataTable from '../components/FilterableDataTable';
-
-async function apiFetch(url, options = {}) {
-  const response = await fetch(url, {
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json', ...(options.headers ?? {}) },
-    ...options,
-  });
-  const data = await response.json().catch(() => null);
-  if (!response.ok) {
-    const errors = data?.errors ?? ['Error desconocido.'];
-    throw new Error(Array.isArray(errors) ? errors.join(' ') : String(errors));
-  }
-  return data;
-}
+import { apiFetch } from '../utils/apiFetch';
 
 const emptyForm = { nombre: '', areaId: '', lineasDeInvestigacionIds: [] };
 

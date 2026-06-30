@@ -7,22 +7,9 @@ import {
 import FilterableDataTable from '../components/FilterableDataTable';
 import CoauthorPicker from '../components/CoauthorPicker';
 import { useAuth } from '../contexts/AuthContext';
+import { apiFetch } from '../utils/apiFetch';
 
 const EMPTY_FORM = { titulo: '', tipoProductoComercializadoId: '', institutionId: '' };
-
-async function apiFetch(url, options = {}) {
-  const res = await fetch(url, {
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json', ...(options.headers ?? {}) },
-    ...options,
-  });
-  const data = await res.json().catch(() => null);
-  if (!res.ok) {
-    const errors = data?.errors ?? ['Error desconocido.'];
-    throw new Error(Array.isArray(errors) ? errors.join(' ') : String(errors));
-  }
-  return data;
-}
 
 function NuevoTipoProductoInline({ onCreated }) {
   const [open, setOpen] = useState(false);

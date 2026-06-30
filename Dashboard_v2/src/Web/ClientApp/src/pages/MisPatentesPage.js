@@ -8,22 +8,9 @@ import {
 import FilterableDataTable from '../components/FilterableDataTable';
 import CoauthorPicker from '../components/CoauthorPicker';
 import { useAuth } from '../contexts/AuthContext';
+import { apiFetch } from '../utils/apiFetch';
 
 const EMPTY_FORM = { titulo: '', numeroSolicitudConcesion: '', esNacional: true };
-
-async function apiFetch(url, options = {}) {
-  const response = await fetch(url, {
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json', ...(options.headers ?? {}) },
-    ...options,
-  });
-  const data = await response.json().catch(() => null);
-  if (!response.ok) {
-    const errors = data?.errors ?? ['Error desconocido.'];
-    throw new Error(Array.isArray(errors) ? errors.join(' ') : String(errors));
-  }
-  return data;
-}
 
 export default function MisPatentesPage() {
   const { user } = useAuth();

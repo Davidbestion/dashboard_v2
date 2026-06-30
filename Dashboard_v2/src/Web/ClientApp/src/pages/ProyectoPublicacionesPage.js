@@ -5,6 +5,7 @@ import {
   FormGroup, Label, Input,
 } from 'reactstrap';
 import { CertificateViewButton } from '../components/CertificateUpload';
+import { apiFetch } from '../utils/apiFetch';
 
 const PUB_TIPOS = [
   'Artículo en Revista Científica',
@@ -13,12 +14,6 @@ const PUB_TIPOS = [
   'Capítulo',
   'Artículo de Divulgación',
 ];
-
-async function apiFetch(url) {
-  const res = await fetch(url, { credentials: 'include' });
-  if (!res.ok) throw new Error(`Error ${res.status}`);
-  return res.json();
-}
 
 function authorsList(authors) {
   return (authors ?? []).map((a, i) => (

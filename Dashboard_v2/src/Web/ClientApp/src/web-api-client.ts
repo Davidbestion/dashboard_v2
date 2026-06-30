@@ -3371,6 +3371,41 @@ export class NomencladoresClient {
         return Promise.resolve<void>(null as any);
     }
 
+    createProvincia(req: NomencladorCreateRequest): Promise<void> {
+        let url_ = this.baseUrl + "/api/Nomencladores/provincias";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(req);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processCreateProvincia(_response);
+        });
+    }
+
+    protected processCreateProvincia(response: Response): Promise<void> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
     getMunicipios(): Promise<void> {
         let url_ = this.baseUrl + "/api/Nomencladores/municipios";
         url_ = url_.replace(/[?&]$/, "");
@@ -3387,6 +3422,41 @@ export class NomencladoresClient {
     }
 
     protected processGetMunicipios(response: Response): Promise<void> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    createMunicipio(req: MunicipioCreateRequest): Promise<void> {
+        let url_ = this.baseUrl + "/api/Nomencladores/municipios";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(req);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processCreateMunicipio(_response);
+        });
+    }
+
+    protected processCreateMunicipio(response: Response): Promise<void> {
         followIfLoginRedirect(response);
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
@@ -4895,6 +4965,48 @@ export class ProyectosClient {
         return Promise.resolve<ProyectoCatalogoDto[]>(null as any);
     }
 
+    getTodosProyectos(): Promise<ProyectoResumenDto[]> {
+        let url_ = this.baseUrl + "/api/Proyectos/todos";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetTodosProyectos(_response);
+        });
+    }
+
+    protected processGetTodosProyectos(response: Response): Promise<ProyectoResumenDto[]> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(ProyectoResumenDto.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<ProyectoResumenDto[]>(null as any);
+    }
+
     getMisProyectosParticipacion(): Promise<ProyectoResumenDto[]> {
         let url_ = this.baseUrl + "/api/Proyectos/participacion";
         url_ = url_.replace(/[?&]$/, "");
@@ -5287,6 +5399,88 @@ export class ProyectosClient {
             let resultData400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
             result400 = ProblemDetails.fromJS(resultData400);
             return throwException("A server side error occurred.", status, _responseText, _headers, result400);
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    joinProyecto(id: string): Promise<void> {
+        let url_ = this.baseUrl + "/api/Proyectos/{id}/participacion";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "POST",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processJoinProyecto(_response);
+        });
+    }
+
+    protected processJoinProyecto(response: Response): Promise<void> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status === 404) {
+            return response.text().then((_responseText) => {
+            let result404: any = null;
+            let resultData404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("A server side error occurred.", status, _responseText, _headers, result404);
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    leaveProyecto(id: string): Promise<void> {
+        let url_ = this.baseUrl + "/api/Proyectos/{id}/participacion";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "DELETE",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processLeaveProyecto(_response);
+        });
+    }
+
+    protected processLeaveProyecto(response: Response): Promise<void> {
+        followIfLoginRedirect(response);
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 204) {
+            return response.text().then((_responseText) => {
+            return;
             });
         } else if (status === 404) {
             return response.text().then((_responseText) => {
@@ -11481,6 +11675,46 @@ export class NomencladorCreateRequest implements INomencladorCreateRequest {
 
 export interface INomencladorCreateRequest {
     nombre?: string | undefined;
+}
+
+export class MunicipioCreateRequest implements IMunicipioCreateRequest {
+    nombre?: string | undefined;
+    provinciaId?: number;
+
+    constructor(data?: IMunicipioCreateRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.nombre = _data["nombre"];
+            this.provinciaId = _data["provinciaId"];
+        }
+    }
+
+    static fromJS(data: any): MunicipioCreateRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new MunicipioCreateRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["nombre"] = this.nombre;
+        data["provinciaId"] = this.provinciaId;
+        return data;
+    }
+}
+
+export interface IMunicipioCreateRequest {
+    nombre?: string | undefined;
+    provinciaId?: number;
 }
 
 export class NormaDto implements INormaDto {

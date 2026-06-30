@@ -7,34 +7,11 @@ import {
 } from 'reactstrap';
 import { CertificateViewButton } from '../components/CertificateUpload';
 import { useAuth } from '../contexts/AuthContext';
+import { apiFetch } from '../utils/apiFetch';
 
 const PUB_TIPOS = ['Artículo en Revista Científica', 'Libro', 'Monografía', 'Capítulo', 'Artículo de Divulgación'];
 const TIPO_RED_LABELS = ['Universitaria', 'Nacional', 'Internacional'];
 const TIPO_RED_COLORS = ['primary', 'success', 'warning'];
-
-async function apiFetch(url, options = {}) {
-  const response = await fetch(url, {
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json', ...(options.headers ?? {}) },
-    ...options,
-  });
-  const data = await response.json().catch(() => null);
-  if (!response.ok) {
-    let message;
-    if (data?.errors) {
-      const errs = Array.isArray(data.errors)
-        ? data.errors
-        : Object.values(data.errors).flat();
-      message = errs.join(' ');
-    } else if (data?.title) {
-      message = data.title;
-    } else {
-      message = `Error ${response.status}`;
-    }
-    throw new Error(message);
-  }
-  return data;
-}
 
 export default function RedesPublicacionesPage() {
   const { user } = useAuth();
@@ -64,9 +41,13 @@ export default function RedesPublicacionesPage() {
         apiFetch('/api/Redes/mis-redes'),
         apiFetch('/api/Publications/redes'),
       ]);
-      setRedes(redsData ?? []);
+      // Profesores: mostrar solo las redes que coordinan, no las que participan
+      const redesFiltradas = (!isJefe && user?.id)
+        ? (redsData ?? []).filter(r => r.coordinadorId === user.id)
+        : (redsData ?? []);
+      setRedes(redesFiltradas);
       setPublications(pubsData ?? []);
-      setSelectedRedId(prev => prev ?? (redsData?.[0]?.id ?? null));
+      setSelectedRedId(prev => prev ?? (redesFiltradas[0]?.id ?? null));
     } catch (e) {
       setError(e.message);
     } finally {

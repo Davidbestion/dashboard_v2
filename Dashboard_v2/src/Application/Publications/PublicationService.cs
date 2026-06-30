@@ -112,7 +112,7 @@ public sealed partial class PublicationService : IPublicationService
             UrlDoi = string.IsNullOrWhiteSpace(request.UrlDoi) ? null : request.UrlDoi.Trim(),
             NormalizedUrlDoi = string.IsNullOrWhiteSpace(request.UrlDoi) ? null : NormalizeUrlDoi(request.UrlDoi),
             ProyectoId = string.IsNullOrWhiteSpace(request.ProyectoId) ? null : request.ProyectoId,
-            RedId = null,
+            RedId = string.IsNullOrWhiteSpace(request.RedId) ? null : request.RedId,
             EvidenceFileId = request.EvidenceFileId,
             AuthorPublications = initialAuthors
         };
@@ -189,7 +189,7 @@ public sealed partial class PublicationService : IPublicationService
         publication.UrlDoi = string.IsNullOrWhiteSpace(request.UrlDoi) ? null : request.UrlDoi.Trim();
         publication.NormalizedUrlDoi = string.IsNullOrWhiteSpace(request.UrlDoi) ? null : NormalizeUrlDoi(request.UrlDoi);
         publication.ProyectoId = string.IsNullOrWhiteSpace(request.ProyectoId) ? null : request.ProyectoId;
-        publication.RedId      = string.IsNullOrWhiteSpace(request.RedId) ? publication.RedId : request.RedId;
+        publication.RedId      = string.IsNullOrWhiteSpace(request.RedId) ? null : request.RedId;
 
         // Detectar cambio de archivo: capturar el ID anterior ANTES de sobreescribir
         // para poder encolar su borrado en MinIO si ha cambiado.

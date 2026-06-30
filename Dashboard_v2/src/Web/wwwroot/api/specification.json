@@ -2435,6 +2435,29 @@
             "description": ""
           }
         }
+      },
+      "post": {
+        "tags": [
+          "Nomencladores"
+        ],
+        "operationId": "CreateProvincia",
+        "requestBody": {
+          "x-name": "req",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NomencladorCreateRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
       }
     },
     "/api/Nomencladores/municipios": {
@@ -2443,6 +2466,29 @@
           "Nomencladores"
         ],
         "operationId": "GetMunicipios",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Nomencladores"
+        ],
+        "operationId": "CreateMunicipio",
+        "requestBody": {
+          "x-name": "req",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MunicipioCreateRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
         "responses": {
           "200": {
             "description": ""
@@ -3528,6 +3574,29 @@
         }
       }
     },
+    "/api/Proyectos/todos": {
+      "get": {
+        "tags": [
+          "Proyectos"
+        ],
+        "operationId": "GetTodosProyectos",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProyectoResumenDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Proyectos/participacion": {
       "get": {
         "tags": [
@@ -3872,6 +3941,72 @@
                 }
               }
             }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Proyectos/{id}/participacion": {
+      "post": {
+        "tags": [
+          "Proyectos"
+        ],
+        "operationId": "JoinProyecto",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Proyectos"
+        ],
+        "operationId": "LeaveProyecto",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
           },
           "404": {
             "description": "",
@@ -7904,6 +8039,20 @@
           "nombre": {
             "type": "string",
             "nullable": true
+          }
+        }
+      },
+      "MunicipioCreateRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "nullable": true
+          },
+          "provinciaId": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },

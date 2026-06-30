@@ -5,6 +5,7 @@ import {
 } from 'reactstrap';
 import { useAuth } from '../contexts/AuthContext';
 import FilterableDataTable from '../components/FilterableDataTable';
+import { apiFetch } from '../utils/apiFetch';
 
 const TIPOS_RED = [
   { value: 0, label: 'Universitaria' },
@@ -32,13 +33,6 @@ const RED_DETAIL_CONFIG = {
     },
   ],
 };
-
-async function apiFetch(url, options) {
-  const res = await fetch(url, { credentials: 'include', ...options });
-  const data = await res.json().catch(() => null);
-  if (!res.ok) throw new Error((data?.errors ?? ['Error desconocido.']).join(' '));
-  return data;
-}
 
 // Columns shared by both tables
 const COLUMNS = [

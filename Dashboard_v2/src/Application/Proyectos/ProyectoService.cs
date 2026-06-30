@@ -203,6 +203,44 @@ public sealed class ProyectoService : IProyectoQueryService, IProyectoCommandSer
         return Result.Success();
     }
 
+    public async Task<Result> JoinProyectoAsync(string proyectoId, CancellationToken ct = default)
+    {
+        var proyecto = await _context.Proyectos
+            .Include(p => p.Participantes)
+            .FirstOrDefaultAsync(p => p.Id == proyectoId, ct);
+        if (proyecto is null)
+            return Result.Failure(["Proyecto no encontrado."]);
+
+        var userId = _currentUser.Id!;
+        if (proyecto.Participantes.Any(u => u.Id == userId))
+            return Result.Success();
+
+        var user = await _context.Users.FindAsync([userId], ct);
+        if (user is null)
+            return Result.Failure(["Usuario no encontrado."]);
+
+        proyecto.Participantes.Add(user);
+        await _context.SaveChangesAsync(ct);
+        return Result.Success();
+    }
+
+    public async Task<Result> LeaveProyectoAsync(string proyectoId, CancellationToken ct = default)
+    {
+        var proyecto = await _context.Proyectos
+            .Include(p => p.Participantes)
+            .FirstOrDefaultAsync(p => p.Id == proyectoId, ct);
+        if (proyecto is null)
+            return Result.Failure(["Proyecto no encontrado."]);
+
+        var user = proyecto.Participantes.FirstOrDefault(u => u.Id == _currentUser.Id);
+        if (user is null)
+            return Result.Success();
+
+        proyecto.Participantes.Remove(user);
+        await _context.SaveChangesAsync(ct);
+        return Result.Success();
+    }
+
     public async Task<Result> DeleteAsync(string id, CancellationToken ct = default)
     {
         var proyecto = await _context.Proyectos.FindAsync([id], ct);

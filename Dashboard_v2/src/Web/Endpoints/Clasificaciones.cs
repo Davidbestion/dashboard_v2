@@ -14,7 +14,7 @@ public class Clasificaciones : EndpointGroupBase
             .Produces<List<ClasificacionDto>>(200);
 
         groupBuilder.MapPost("", CreateClasificacion)
-            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser)))
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Proyecto)))
             .WithName("CreateClasificacion")
             .Produces(201)
             .ProducesProblem(400);
@@ -45,7 +45,7 @@ public class Clasificaciones : EndpointGroupBase
         var (result, id) = await svc.CreateAsync(body);
         if (!result.Succeeded)
             return Results.BadRequest(new { errors = result.Errors });
-        return Results.Created($"/api/Clasificaciones/{id}", new { id });
+        return Results.Created($"/api/Clasificaciones/{id}", new { id, body.Nombre });
     }
 
     private async Task<IResult> UpdateClasificacion(IClasificacionService svc, string id, UpdateClasificacionRequest body)

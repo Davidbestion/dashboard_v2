@@ -10,30 +10,7 @@ import { useAuth } from '../contexts/AuthContext';
 import FilterableDataTable from '../components/FilterableDataTable';
 import CertificateUpload, { CertificateViewButton } from '../components/CertificateUpload';
 import UserPicker from '../components/UserPicker';
-
-async function apiFetch(url, options = {}) {
-  const response = await fetch(url, {
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json', ...(options.headers ?? {}) },
-    ...options,
-  });
-  const data = await response.json().catch(() => null);
-  if (!response.ok) {
-    let message;
-    if (data?.errors) {
-      const errs = Array.isArray(data.errors)
-        ? data.errors
-        : Object.values(data.errors).flat();
-      message = errs.join(' ');
-    } else if (data?.title) {
-      message = data.title;
-    } else {
-      message = `Error ${response.status}`;
-    }
-    throw new Error(message);
-  }
-  return data;
-}
+import { apiFetch } from '../utils/apiFetch';
 
 const AWARD_TYPES = [
   { value: 0, label: 'Premio Academia de Ciencias' },

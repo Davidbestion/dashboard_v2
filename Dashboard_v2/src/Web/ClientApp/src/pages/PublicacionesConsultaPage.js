@@ -11,18 +11,10 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import FilterableDataTable from '../components/FilterableDataTable';
 import { CertificateViewButton } from '../components/CertificateUpload';
+import { apiFetch } from '../utils/apiFetch';
 
 // Etiquetas correspondientes al enum PublicationType del backend (índice = valor entero)
 const PUB_TIPOS = ['Artículo en Revista Científica', 'Libro', 'Monografía', 'Capítulo', 'Artículo de Divulgación'];
-
-async function apiFetch(url) {
-  const response = await fetch(url, { credentials: 'include' });
-  const data = await response.json().catch(() => null);
-  if (!response.ok) {
-    throw new Error(data?.title ?? `Error ${response.status}`);
-  }
-  return data;
-}
 
 export default function PublicacionesConsultaPage({ apiUrl = '/api/Publications/todas' }) {
   const { user } = useAuth();

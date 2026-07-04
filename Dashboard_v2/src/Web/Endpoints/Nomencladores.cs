@@ -36,7 +36,9 @@ public class Nomencladores : EndpointGroupBase
         g.MapGet("programas",  GetProgramas)     .RequireAuthorization(canRead) .WithName("GetProgramas");
         g.MapPost("programas", CreatePrograma)   .RequireAuthorization(canWrite).WithName("CreatePrograma");
         g.MapGet("provincias", GetProvincias)    .RequireAuthorization(canRead) .WithName("GetProvincias");
+        g.MapPost("provincias", CreateProvincia) .RequireAuthorization(canWrite).WithName("CreateProvincia");
         g.MapGet("municipios", GetMunicipios)    .RequireAuthorization(canRead) .WithName("GetMunicipios");
+        g.MapPost("municipios", CreateMunicipio) .RequireAuthorization(canWrite).WithName("CreateMunicipio");
         g.MapGet("basesdedatos",  GetBasesDeDatos)   .RequireAuthorization().WithName("GetBasesDeDatosPublicacion");
         g.MapPost("basesdedatos", CreateBaseDeDatos) .RequireAuthorization().WithName("CreateBaseDeDatosPublicacion");
         g.MapGet("tiposnorma",    GetTiposNorma)     .RequireAuthorization().WithName("GetTiposNorma");
@@ -70,6 +72,34 @@ public class Nomencladores : EndpointGroupBase
 
     private static async Task<IResult> GetMunicipios(IApplicationDbContext db, CancellationToken ct)
         => Results.Ok(await db.Municipios.OrderBy(x => x.Nombre).Select(x => new { x.Id, x.Nombre, x.ProvinciaId }).ToListAsync(ct));
+
+    private static async Task<IResult> CreateProvincia(IApplicationDbContext db, NomencladorCreateRequest req, CancellationToken ct)
+    {
+        var nombre = req.Nombre?.Trim();
+        if (string.IsNullOrEmpty(nombre)) return Results.BadRequest(new { errors = NombreRequeridoError });
+        var ex = await db.Provincias.FirstOrDefaultAsync(p => p.Nombre.ToLower() == nombre.ToLower(), ct);
+        if (ex is not null) return Results.Ok(new { ex.Id, ex.Nombre });
+        var p2 = new Provincia { Nombre = nombre };
+        db.Provincias.Add(p2);
+        await db.SaveChangesAsync(ct);
+        return Results.Created($"/api/Nomencladores/provincias/{p2.Id}", new { p2.Id, p2.Nombre });
+    }
+
+    private static async Task<IResult> CreateMunicipio(IApplicationDbContext db, MunicipioCreateRequest req, CancellationToken ct)
+    {
+        var nombre = req.Nombre?.Trim();
+        if (string.IsNullOrEmpty(nombre)) return Results.BadRequest(new { errors = new[] { "El nombre es obligatorio." } });
+        if (req.ProvinciaId <= 0) return Results.BadRequest(new { errors = new[] { "La provincia es obligatoria." } });
+        var provinciaExists = await db.Provincias.AnyAsync(p => p.Id == req.ProvinciaId, ct);
+        if (!provinciaExists) return Results.BadRequest(new { errors = new[] { "Provincia no encontrada." } });
+        var ex = await db.Municipios.FirstOrDefaultAsync(
+            m => m.ProvinciaId == req.ProvinciaId && m.Nombre.ToLower() == nombre.ToLower(), ct);
+        if (ex is not null) return Results.Ok(new { ex.Id, ex.Nombre, ex.ProvinciaId });
+        var m2 = new Municipio { Nombre = nombre, ProvinciaId = req.ProvinciaId };
+        db.Municipios.Add(m2);
+        await db.SaveChangesAsync(ct);
+        return Results.Created($"/api/Nomencladores/municipios/{m2.Id}", new { m2.Id, m2.Nombre, m2.ProvinciaId });
+    }
 
     private static async Task<IResult> GetBasesDeDatos(IApplicationDbContext db, CancellationToken ct)
         => Results.Ok(await db.BasesDeDatosPublicacion.OrderBy(x => x.Nombre).Select(x => new { x.Id, x.Nombre }).ToListAsync(ct));
@@ -194,3 +224,4 @@ public class Nomencladores : EndpointGroupBase
 }
 
 internal record NomencladorCreateRequest(string? Nombre);
+internal record MunicipioCreateRequest(string? Nombre, int ProvinciaId);

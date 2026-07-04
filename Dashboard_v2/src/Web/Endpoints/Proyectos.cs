@@ -28,6 +28,11 @@ public class Proyectos : EndpointGroupBase
             .WithName("GetProyectosCatalogo")
             .Produces<List<ProyectoCatalogoDto>>(200);
 
+        g.MapGet("todos", GetTodos)
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Proyecto), nameof(RolesEnum.Profesor)))
+            .WithName("GetTodosProyectos")
+            .Produces<List<ProyectoResumenDto>>(200);
+
         g.MapGet("participacion", GetMisProyectosParticipacion)
             .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Proyecto), nameof(RolesEnum.Profesor)))
             .WithName("GetMisProyectosParticipacion")
@@ -84,6 +89,18 @@ public class Proyectos : EndpointGroupBase
             .WithName("SetParticipantesProyecto")
             .Produces(200)
             .ProducesProblem(400)
+            .ProducesProblem(404);
+
+        g.MapPost("{id}/participacion", JoinProyecto)
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Proyecto), nameof(RolesEnum.Profesor)))
+            .WithName("JoinProyecto")
+            .Produces(204)
+            .ProducesProblem(404);
+
+        g.MapDelete("{id}/participacion", LeaveProyecto)
+            .RequireAuthorization(p => p.RequireRole(nameof(RolesEnum.Superuser), nameof(RolesEnum.Jefe_de_Proyecto), nameof(RolesEnum.Profesor)))
+            .WithName("LeaveProyecto")
+            .Produces(204)
             .ProducesProblem(404);
 
         // ── Delete compartido ─────────────────────────────────────────
@@ -220,6 +237,9 @@ public class Proyectos : EndpointGroupBase
     private static async Task<IResult> GetCatalogo(IProyectoQueryService svc, CancellationToken ct)
         => Results.Ok(await svc.GetCatalogoAsync(ct));
 
+    private static async Task<IResult> GetTodos(IProyectoQueryService svc, CancellationToken ct)
+        => Results.Ok(await svc.GetAreaProyectosAsync(ct));
+
     private static async Task<IResult> GetMisProyectosParticipacion(IProyectoQueryService svc, CancellationToken ct)
         => Results.Ok(await svc.GetMisProyectosParticipacionAsync(ct));
 
@@ -278,6 +298,18 @@ public class Proyectos : EndpointGroupBase
                 ? Results.NotFound(new { errors = result.Errors })
                 : Results.BadRequest(new { errors = result.Errors });
         return Results.Ok(new { message = "Participantes actualizados." });
+    }
+
+    private static async Task<IResult> JoinProyecto(IProyectoCommandService svc, string id, CancellationToken ct)
+    {
+        var result = await svc.JoinProyectoAsync(id, ct);
+        return result.Succeeded ? Results.NoContent() : Results.NotFound(new { errors = result.Errors });
+    }
+
+    private static async Task<IResult> LeaveProyecto(IProyectoCommandService svc, string id, CancellationToken ct)
+    {
+        var result = await svc.LeaveProyectoAsync(id, ct);
+        return result.Succeeded ? Results.NoContent() : Results.NotFound(new { errors = result.Errors });
     }
 
     private static async Task<IResult> DeleteProyecto(IProyectoCommandService svc, string id, CancellationToken ct)

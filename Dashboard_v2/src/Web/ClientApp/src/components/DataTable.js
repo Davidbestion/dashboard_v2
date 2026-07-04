@@ -99,11 +99,11 @@ function objectToDisplay(obj) {
     return [obj.userName, obj.userLastName1, obj.userLastName2].filter(Boolean).join(' ');
   }
   // Generic: prefer a label field
-  const label = obj.nombre ?? obj.name ?? obj.titulo ?? obj.title ?? obj.displayName;
+  const label = obj.nombre ?? obj.name ?? obj.titulo ?? obj.title ?? obj.displayName ?? obj.nombreCompleto ?? obj.authorNombre;
   if (label != null) return String(label);
-  // Last resort: show key=value pairs of primitive properties
+  // Last resort: show key=value pairs of primitive properties (skip ID fields)
   const pairs = Object.entries(obj)
-    .filter(([, v]) => v != null && typeof v !== 'object')
+    .filter(([k, v]) => v != null && typeof v !== 'object' && !isInternalKey(k))
     .map(([k, v]) => `${camelToLabel(k)}: ${v}`)
     .slice(0, 4);
   return pairs.length ? pairs.join(' · ') : JSON.stringify(obj);

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardBody, CardHeader, Spinner, Alert, Button } from 'reactstrap';
 import FilterableDataTable from '../components/FilterableDataTable';
+import { apiFetch } from '../utils/apiFetch';
 
 const TIPOS_RED = [
   { value: 0, label: 'Universitaria' },
@@ -12,13 +13,6 @@ const ANEXOS = [
   { reportName: 'anexo-redes-universitarias', label: 'Anexo Redes Universitarias', fileLabel: 'Anexo_Redes_Universitarias' },
   { reportName: 'anexo-redes-nac-inter',      label: 'Anexo Redes Nac./Inter.',    fileLabel: 'Anexo_Redes_Nac_Inter'       },
 ];
-
-async function apiFetch(url) {
-  const res = await fetch(url, { credentials: 'include' });
-  const data = await res.json().catch(() => null);
-  if (!res.ok) throw new Error((data?.errors ?? ['Error desconocido.']).join(' '));
-  return data;
-}
 
 export default function RedesAreaPage() {
   const [items, setItems]             = useState([]);

@@ -16,6 +16,7 @@ import UserPicker from '../components/UserPicker';
 import AuthorResolutionModal from '../components/AuthorResolutionModal';
 import FilterableDataTable from '../components/FilterableDataTable';
 import CertificateUpload, { CertificateViewButton } from '../components/CertificateUpload';
+import { apiFetch } from '../utils/apiFetch';
 
 function SingleSelectPicker({ label, options, value, onChange, onCreate }) {
   const [inputVal, setInputVal] = useState('');
@@ -106,33 +107,6 @@ function SingleSelectPicker({ label, options, value, onChange, onCreate }) {
   );
 }
 
-async function apiFetch(url, options = {}) {
-  const response = await fetch(url, {
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json', ...(options.headers ?? {}) },
-    ...options,
-  });
-  const data = await response.json().catch(() => null);
-  if (!response.ok) {
-    let message;
-    if (data?.errors) {
-      // { errors: string[] }  — nuestro formato
-      // { errors: { Field: string[] } } — ProblemDetails con validación
-      const errs = Array.isArray(data.errors)
-        ? data.errors
-        : Object.values(data.errors).flat();
-      message = errs.join(' ');
-    } else if (data?.title) {
-      // ProblemDetails estándar de ASP.NET Core
-      message = data.title;
-    } else {
-      message = `Error ${response.status}`;
-    }
-    throw new Error(message);
-  }
-  return data;
-}
-
 const EMPTY_FORM = {
   title: '',
   publicationData: '',
@@ -140,6 +114,7 @@ const EMPTY_FORM = {
   publishedDate: '',
   publicationType: 0,
   proyectoId: '',
+  redId: '',
   // Indexadas (tipos 1-4)
   index: '',
   // Revista (tipo 0)
@@ -158,6 +133,8 @@ export default function PublicationsPage() {
   const [basesdedatos, setBasesdedatos] = useState([]);
   const [proyectos, setProyectos] = useState([]);
   const [proyectosError, setProyectosError] = useState(false);
+  const [redes, setRedes] = useState([]);
+  const [redesError, setRedesError] = useState(false);
   const [allUsers, setAllUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -221,11 +198,12 @@ export default function PublicationsPage() {
     setLoading(true);
     setError('');
     try {
-      const [pubs, pubTypes, cats, dbs] = await Promise.all([
+      const [pubs, pubTypes, cats, dbs, nets] = await Promise.all([
         apiFetch(isSuperuser ? '/api/Publications/todas' : '/api/Publications'),
         apiFetch('/api/Publications/types'),
         apiFetch('/api/Proyectos/catalogo').catch(() => null),
         apiFetch('/api/Nomencladores/basesdedatos'),
+        apiFetch('/api/Redes').catch(() => null),
       ]);
       setPublications(pubs);
       setTypes(pubTypes);
@@ -236,6 +214,13 @@ export default function PublicationsPage() {
       } else {
         setProyectosError(false);
         setProyectos(cats);
+      }
+      if (nets === null) {
+        setRedesError(true);
+        setRedes([]);
+      } else {
+        setRedesError(false);
+        setRedes(nets);
       }
     } catch (e) {
       setError(e.message);
@@ -301,6 +286,7 @@ export default function PublicationsPage() {
       publishedDate: pub.publishedDate ?? '',
       publicationType: pub.publicationType,
       proyectoId: pub.proyectoId ?? '',
+      redId: pub.redId ?? '',
       // Indexadas
       index: pub.indexedPublication?.index ?? '',
       // Revista
@@ -443,6 +429,7 @@ export default function PublicationsPage() {
         urlDoi: form.urlDoi || null,
         publishedDate: form.publishedDate || null,
         proyectoId: form.proyectoId || null,
+        redId: form.redId || null,
         additionalAuthorIds: coauthorTags.filter(t => t.type === 'author').map(t => t.id),
         additionalAuthorNames: coauthorTags.filter(t => t.type === 'new').map(t => t.name),
         additionalUserIds: coauthorTags.filter(t => t.type === 'user').map(t => t.id),
@@ -470,6 +457,7 @@ export default function PublicationsPage() {
         urlDoi: form.urlDoi || null,
         publishedDate: form.publishedDate || null,
         proyectoId: form.proyectoId || null,
+        redId: form.redId || null,
         additionalAuthorIds: coauthorTags.filter(t => t.type === 'author').map(t => t.id),
         additionalAuthorNames: coauthorTags.filter(t => t.type === 'new').map(t => t.name),
         additionalUserIds: coauthorTags.filter(t => t.type === 'user').map(t => t.id),
@@ -1168,6 +1156,33 @@ export default function PublicationsPage() {
                 </Input>
                 {proyectos.length === 0 && (
                   <small className="text-muted">No hay proyectos disponibles.</small>
+                )}
+              </FormGroup>
+            )}
+
+            {redesError ? (
+              <FormGroup>
+                <Label>Red de investigación <small className="text-muted">(opcional)</small></Label>
+                <Input disabled value="" />
+                <small className="text-danger">No se pudieron cargar las redes.</small>
+              </FormGroup>
+            ) : (
+              <FormGroup>
+                <Label for="redId">Red de investigación <small className="text-muted">(opcional)</small></Label>
+                <Input
+                  type="select"
+                  id="redId"
+                  name="redId"
+                  value={form.redId}
+                  onChange={handleFormChange}
+                >
+                  <option value="">— Sin red asociada —</option>
+                  {redes.map(r => (
+                    <option key={r.id} value={r.id}>{r.nombre}</option>
+                  ))}
+                </Input>
+                {redes.length === 0 && (
+                  <small className="text-muted">No hay redes disponibles.</small>
                 )}
               </FormGroup>
             )}

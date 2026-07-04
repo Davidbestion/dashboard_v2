@@ -1,13 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardBody, CardHeader, Spinner, Alert } from 'reactstrap';
 import FilterableDataTable from '../components/FilterableDataTable';
-
-async function apiFetch(url) {
-  const res = await fetch(url, { credentials: 'include' });
-  const data = await res.json().catch(() => null);
-  if (!res.ok) throw new Error((data?.errors ?? ['Error desconocido.']).join(' '));
-  return data;
-}
+import { apiFetch } from '../utils/apiFetch';
 
 export default function NormasAreaPage() {
   const [items, setItems]     = useState([]);

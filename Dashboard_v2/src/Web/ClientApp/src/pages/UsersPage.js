@@ -8,20 +8,7 @@ import {
   Row, Col,
 } from 'reactstrap';
 import FilterableDataTable from '../components/FilterableDataTable';
-
-async function apiFetch(url, options = {}) {
-  const response = await fetch(url, {
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json', ...(options.headers ?? {}) },
-    ...options,
-  });
-  const data = await response.json().catch(() => null);
-  if (!response.ok) {
-    const errors = data?.errors ?? ['Error desconocido.'];
-    throw new Error(Array.isArray(errors) ? errors.join(' ') : String(errors));
-  }
-  return data;
-}
+import { apiFetch } from '../utils/apiFetch';
 
 const EMPTY_CREATE_FORM = {
   userName: '',
@@ -281,9 +268,9 @@ export default function UsersPage() {
                 { key: 'email',                label: 'Correo electrónico' },
                 { key: 'isActive',             label: 'Activo',             render: v => v ? 'Sí' : 'No' },
                 { key: 'isTrained',            label: 'Adiestrado',         render: v => v ? 'Sí' : 'No' },
-                { key: 'scientificCategory',   label: 'Categoría científica' },
-                { key: 'teachingCategory',     label: 'Categoría docente' },
-                { key: 'investigationCategory',label: 'Categoría de investigación' },
+                { key: 'scientificCategory',   label: 'Categoría científica',       render: v => ({ 1: 'Licenciado', 2: 'Master', 3: 'Doctor' }[v] ?? '—') },
+                { key: 'teachingCategory',     label: 'Categoría docente',          render: v => ({ 1: 'Profesor Titular', 2: 'Profesor Auxiliar', 3: 'Profesor Asistente', 4: 'Instructor' }[v] ?? '—') },
+                { key: 'investigationCategory',label: 'Categoría de investigación', render: v => ({ 1: 'Investigador Titular', 2: 'Investigador Auxiliar', 3: 'Investigador Agregado', 4: 'Investigador Asociado' }[v] ?? '—') },
                 { key: 'areaNombre',           label: 'Área',               render: v => v ?? '—' },
                 { key: 'universidadNombre',    label: 'Universidad',        render: v => v ?? '—' },
                 { key: 'roles',                label: 'Roles',              render: v => v?.length ? v.map(r => r.replace(/_/g, ' ')).join(', ') : 'Sin roles' },

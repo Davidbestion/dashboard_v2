@@ -12,22 +12,7 @@ import { useAuth } from '../contexts/AuthContext';
 import FilterableDataTable from '../components/FilterableDataTable';
 import CertificateUpload, { CertificateViewButton } from '../components/CertificateUpload';
 import UserPicker from '../components/UserPicker';
-
-async function apiFetch(url, options = {}) {
-  const response = await fetch(url, {
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json', ...(options.headers ?? {}) },
-    ...options,
-  });
-  const data = await response.json().catch(() => null);
-  if (!response.ok) {
-    const errs = data?.errors
-      ? (Array.isArray(data.errors) ? data.errors : Object.values(data.errors).flat())
-      : [data?.title ?? `Error ${response.status}`];
-    throw new Error(errs.join(' '));
-  }
-  return data;
-}
+import { apiFetch } from '../utils/apiFetch';
 
 // ─── Shared helpers ────────────────────────────────────────────────────────────
 

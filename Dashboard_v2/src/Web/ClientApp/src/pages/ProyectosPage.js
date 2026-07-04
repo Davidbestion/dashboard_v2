@@ -9,24 +9,7 @@ import { useAuth } from '../contexts/AuthContext';
 import DataTable from '../components/DataTable';
 import FilterableDataTable from '../components/FilterableDataTable';
 import UserCard from '../components/UserCard';
-
-async function apiFetch(url, options = {}) {
-  const response = await fetch(url, {
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json', ...(options.headers ?? {}) },
-    ...options,
-  });
-  const data = await response.json().catch(() => null);
-  if (!response.ok) {
-    let errors = data?.errors ?? ['Error desconocido.'];
-    // ValidationProblemDetails devuelve errors como { campo: [msg, ...], ... }
-    if (!Array.isArray(errors) && typeof errors === 'object' && errors !== null) {
-      errors = Object.values(errors).flat();
-    }
-    throw new Error(errors.join(' '));
-  }
-  return data;
-}
+import { apiFetch } from '../utils/apiFetch';
 
 // value = slug de URL; sincronizado con rutas del backend
 const TIPOS = [
@@ -61,7 +44,7 @@ const emptyForm = {
   // EnRevision
   situacionesIds: [], tipoRevision: '',
   // EnEjecucion
-  fechaInicio: '', fechaInicioDay: '', fechaCierre: '', fechaCierreDay: '',
+  fechaInicio: '', fechaCierre: '',
   estadosDeEjecucionIds: [], codigoProyecto: '',
   entidadesEjecutorasPrincipalesIds: [], entidadesEjecutorasParticipantesIds: [],
   sectoresEstrategicosIds: [], ejesEstrategicosIds: [],
@@ -236,12 +219,96 @@ export default function ProyectosPage() {
 
   const [generatingAnexo, setGeneratingAnexo] = useState(false);
 
+  // ─ Inline clasificacion / provincia / municipio creation ─────────────────
+  const [showNewClasificacion, setShowNewClasificacion] = useState(false);
+  const [newClasificacionName, setNewClasificacionName] = useState('');
+  const [creatingClasificacion, setCreatingClasificacion] = useState(false);
+  const [createClasificacionError, setCreateClasificacionError] = useState('');
+  const [showNewProvincia, setShowNewProvincia] = useState(false);
+  const [newProvinciaName, setNewProvinciaName] = useState('');
+  const [creatingProvincia, setCreatingProvincia] = useState(false);
+  const [createProvinciaError, setCreateProvinciaError] = useState('');
+  const [showNewMunicipio, setShowNewMunicipio] = useState(false);
+  const [newMunicipioName, setNewMunicipioName] = useState('');
+  const [creatingMunicipio, setCreatingMunicipio] = useState(false);
+  const [createMunicipioError, setCreateMunicipioError] = useState('');
+
   async function createInstitution(nombre) {
     const created = await apiFetch('/api/Institutions', {
       method: 'POST', body: JSON.stringify({ nombre }),
     });
     setInstitutions(prev => [...prev, created].sort((a, b) => a.nombre.localeCompare(b.nombre)));
     return created;
+  }
+
+  async function handleCreateClasificacion() {
+    const nombre = newClasificacionName.trim();
+    if (!nombre) return;
+    setCreatingClasificacion(true);
+    setCreateClasificacionError('');
+    try {
+      const created = await apiFetch('/api/Clasificaciones', {
+        method: 'POST',
+        body: JSON.stringify({ nombre }),
+      });
+      setClasificaciones(prev => [...prev, { id: created.id, nombre: created.Nombre ?? nombre }]
+        .sort((a, b) => a.nombre.localeCompare(b.nombre)));
+      setForm(f => ({ ...f, clasificacionId: created.id }));
+      setShowNewClasificacion(false);
+      setNewClasificacionName('');
+    } catch (e) {
+      setCreateClasificacionError(e.message);
+    } finally {
+      setCreatingClasificacion(false);
+    }
+  }
+
+  async function handleCreateProvincia() {
+    const nombre = newProvinciaName.trim();
+    if (!nombre) return;
+    setCreatingProvincia(true);
+    setCreateProvinciaError('');
+    try {
+      const created = await apiFetch('/api/Nomencladores/provincias', {
+        method: 'POST',
+        body: JSON.stringify({ nombre }),
+      });
+      setNomencladores(prev => ({
+        ...prev,
+        provincias: [...prev.provincias, created].sort((a, b) => a.nombre.localeCompare(b.nombre)),
+      }));
+      setForm(f => ({ ...f, provinciaId: String(created.id), municipioId: '' }));
+      setShowNewProvincia(false);
+      setNewProvinciaName('');
+    } catch (e) {
+      setCreateProvinciaError(e.message);
+    } finally {
+      setCreatingProvincia(false);
+    }
+  }
+
+  async function handleCreateMunicipio() {
+    const nombre = newMunicipioName.trim();
+    if (!nombre || !form.provinciaId) return;
+    setCreatingMunicipio(true);
+    setCreateMunicipioError('');
+    try {
+      const created = await apiFetch('/api/Nomencladores/municipios', {
+        method: 'POST',
+        body: JSON.stringify({ nombre, provinciaId: parseInt(form.provinciaId) }),
+      });
+      setNomencladores(prev => ({
+        ...prev,
+        municipios: [...prev.municipios, created].sort((a, b) => a.nombre.localeCompare(b.nombre)),
+      }));
+      setForm(f => ({ ...f, municipioId: String(created.id) }));
+      setShowNewMunicipio(false);
+      setNewMunicipioName('');
+    } catch (e) {
+      setCreateMunicipioError(e.message);
+    } finally {
+      setCreatingMunicipio(false);
+    }
   }
 
   function makeNomencladr(key, endpoint) {
@@ -336,6 +403,15 @@ export default function ProyectosPage() {
       jefeId: isJefeDeProyecto ? (user?.id ?? '') : '',
     });
     setFormError('');
+    setShowNewClasificacion(false);
+    setNewClasificacionName('');
+    setCreateClasificacionError('');
+    setShowNewProvincia(false);
+    setNewProvinciaName('');
+    setCreateProvinciaError('');
+    setShowNewMunicipio(false);
+    setNewMunicipioName('');
+    setCreateMunicipioError('');
     setModal(true);
   }
 
@@ -359,10 +435,8 @@ export default function ProyectosPage() {
         clasificacionId: full.clasificacionId ?? '',
         situacionesIds: (full.situaciones ?? []).map(s => s.id),
         tipoRevision: full.tipo ?? '',
-        fechaInicio: full.fechaInicio ? full.fechaInicio.substring(0, 7) : '',
-        fechaInicioDay: full.fechaInicio ? String(parseInt(full.fechaInicio.substring(8, 10))) : '',
-        fechaCierre: full.fechaCierre ? full.fechaCierre.substring(0, 7) : '',
-        fechaCierreDay: full.fechaCierre ? String(parseInt(full.fechaCierre.substring(8, 10))) : '',
+        fechaInicio: full.fechaInicio ?? '',
+        fechaCierre: full.fechaCierre ?? '',
         estadosDeEjecucionIds: (full.estadosDeEjecucion ?? []).map(e => e.id),
         codigoProyecto: full.codigoProyecto ?? '',
         entidadesEjecutorasPrincipalesIds: (full.entidadesEjecutorasPrincipales ?? []).map(e => e.id),
@@ -405,8 +479,8 @@ export default function ProyectosPage() {
     if (t === 'en-revision') return { ...base, situacionesIds: form.situacionesIds, tipo: form.tipoRevision };
     const ejecucion = {
       ...base,
-      fechaInicio: form.fechaInicio ? `${form.fechaInicio}-${String(parseInt(form.fechaInicioDay) || 1).padStart(2, '0')}` : null,
-      fechaCierre: form.fechaCierre ? `${form.fechaCierre}-${String(parseInt(form.fechaCierreDay) || 1).padStart(2, '0')}` : null,
+      fechaInicio: form.fechaInicio || null,
+      fechaCierre: form.fechaCierre || null,
       estadosDeEjecucionIds: form.estadosDeEjecucionIds,
       codigoProyecto: form.codigoProyecto,
       entidadesEjecutorasPrincipalesIds: form.entidadesEjecutorasPrincipalesIds,
@@ -426,7 +500,47 @@ export default function ProyectosPage() {
     }
   }
 
+  function validateForm() {
+    const t = form.tipo;
+    const errors = [];
+
+    if (!t) errors.push('El tipo de proyecto es obligatorio.');
+    if (!form.titulo?.trim()) errors.push('El título es obligatorio.');
+    if (!form.jefeId) errors.push('El jefe de proyecto es obligatorio.');
+    if (!form.clasificacionId) errors.push('La clasificación es obligatoria.');
+
+    if (t === 'en-revision') {
+      if (!form.tipoRevision) errors.push('El tipo de revisión es obligatorio.');
+    }
+
+    if (isEjecucion(t) && t) {
+      if (!form.fechaInicio) errors.push('La fecha de inicio es obligatoria.');
+      if (!form.codigoProyecto?.trim()) errors.push('El código del proyecto es obligatorio.');
+    }
+
+    switch (t) {
+      case 'apoyo-programa':
+        if (!parseInt(form.tipoPAP)) errors.push('El tipo PAP es obligatorio.');
+        break;
+      case 'desarrollo-local':
+        if (!(parseInt(form.municipioId) > 0)) errors.push('El municipio es obligatorio.');
+        break;
+      case 'colaboracion-internacional':
+        if (!form.terminosReferencia?.trim()) errors.push('Los términos de referencia son obligatorios.');
+        break;
+      default: break;
+    }
+
+    return errors;
+  }
+
   async function handleSave() {
+    const validationErrors = validateForm();
+    if (validationErrors.length > 0) {
+      setFormError(validationErrors.join('\n'));
+      return;
+    }
+
     setSaving(true);
     setFormError('');
     try {
@@ -720,7 +834,13 @@ export default function ProyectosPage() {
           {editing ? 'Editar proyecto' : 'Nuevo proyecto'}
         </ModalHeader>
         <ModalBody>
-          {formError && <Alert color="danger">{formError}</Alert>}
+          {formError && (
+            <Alert color="danger">
+              {formError.includes('\n')
+                ? <ul className="mb-0 ps-3">{formError.split('\n').map((msg, i) => <li key={i}>{msg}</li>)}</ul>
+                : formError}
+            </Alert>
+          )}
           <Form>
             {/* Tipo — solo visible al crear */}
             {!editing && (
@@ -795,10 +915,37 @@ export default function ProyectosPage() {
 
             <FormGroup>
               <Label>Clasificación *</Label>
-              <Input type="select" value={form.clasificacionId} onChange={set('clasificacionId')}>
-                <option value="">-- Seleccionar --</option>
-                {clasificaciones.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
-              </Input>
+              <div className="d-flex gap-2">
+                <Input type="select" value={form.clasificacionId} onChange={set('clasificacionId')}>
+                  <option value="">-- Seleccionar --</option>
+                  {clasificaciones.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+                </Input>
+                <Button type="button" color="outline-secondary" size="sm"
+                  title="Crear nueva clasificación"
+                  onClick={() => { setShowNewClasificacion(v => !v); setNewClasificacionName(''); setCreateClasificacionError(''); }}>
+                  <i className="bi bi-plus-lg" />
+                </Button>
+              </div>
+              {showNewClasificacion && (
+                <div className="d-flex gap-2 mt-2">
+                  <Input
+                    placeholder="Nombre de la nueva clasificación"
+                    value={newClasificacionName}
+                    onChange={e => setNewClasificacionName(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleCreateClasificacion(); } }}
+                  />
+                  <Button type="button" color="primary" size="sm"
+                    disabled={creatingClasificacion || !newClasificacionName.trim()}
+                    onClick={handleCreateClasificacion}>
+                    {creatingClasificacion ? <Spinner size="sm" /> : 'Crear'}
+                  </Button>
+                  <Button type="button" color="secondary" size="sm" outline
+                    onClick={() => setShowNewClasificacion(false)}>
+                    <i className="bi bi-x" />
+                  </Button>
+                </div>
+              )}
+              {createClasificacionError && <small className="text-danger mt-1 d-block">{createClasificacionError}</small>}
             </FormGroup>
 
             <hr />
@@ -831,31 +978,13 @@ export default function ProyectosPage() {
                   <div className="col-md-6">
                     <FormGroup>
                       <Label>Fecha de inicio *</Label>
-                      <Input type="month" value={form.fechaInicio} onChange={set('fechaInicio')} />
-                      <div className="d-flex align-items-center gap-2 mt-1">
-                        <small className="text-muted text-nowrap">Día (opcional):</small>
-                        <Input
-                          type="number" min={1} max={31} placeholder="1–31"
-                          value={form.fechaInicioDay}
-                          onChange={e => setForm(f => ({ ...f, fechaInicioDay: e.target.value }))}
-                          style={{ width: '5rem' }}
-                        />
-                      </div>
+                      <Input type="date" value={form.fechaInicio} onChange={set('fechaInicio')} />
                     </FormGroup>
                   </div>
                   <div className="col-md-6">
                     <FormGroup>
                       <Label>Fecha de cierre</Label>
-                      <Input type="month" value={form.fechaCierre} onChange={set('fechaCierre')} />
-                      <div className="d-flex align-items-center gap-2 mt-1">
-                        <small className="text-muted text-nowrap">Día (opcional):</small>
-                        <Input
-                          type="number" min={1} max={31} placeholder="1–31"
-                          value={form.fechaCierreDay}
-                          onChange={e => setForm(f => ({ ...f, fechaCierreDay: e.target.value }))}
-                          style={{ width: '5rem' }}
-                        />
-                      </div>
+                      <Input type="date" value={form.fechaCierre} onChange={set('fechaCierre')} />
                     </FormGroup>
                   </div>
                 </div>
@@ -950,12 +1079,78 @@ export default function ProyectosPage() {
             {tipo === 'desarrollo-local' && (
               <>
                 <FormGroup>
+                  <Label>Provincia *</Label>
+                  <div className="d-flex gap-2">
+                    <Input type="select" value={form.provinciaId}
+                      onChange={e => setForm(f => ({ ...f, provinciaId: e.target.value, municipioId: '' }))}>
+                      <option value="">— Seleccionar provincia —</option>
+                      {nomencladores.provincias.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+                    </Input>
+                    <Button type="button" color="outline-secondary" size="sm"
+                      title="Crear nueva provincia"
+                      onClick={() => { setShowNewProvincia(v => !v); setNewProvinciaName(''); setCreateProvinciaError(''); }}>
+                      <i className="bi bi-plus-lg" />
+                    </Button>
+                  </div>
+                  {showNewProvincia && (
+                    <div className="d-flex gap-2 mt-2">
+                      <Input
+                        placeholder="Nombre de la nueva provincia"
+                        value={newProvinciaName}
+                        onChange={e => setNewProvinciaName(e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleCreateProvincia(); } }}
+                      />
+                      <Button type="button" color="primary" size="sm"
+                        disabled={creatingProvincia || !newProvinciaName.trim()}
+                        onClick={handleCreateProvincia}>
+                        {creatingProvincia ? <Spinner size="sm" /> : 'Crear'}
+                      </Button>
+                      <Button type="button" color="secondary" size="sm" outline
+                        onClick={() => setShowNewProvincia(false)}>
+                        <i className="bi bi-x" />
+                      </Button>
+                    </div>
+                  )}
+                  {createProvinciaError && <small className="text-danger mt-1 d-block">{createProvinciaError}</small>}
+                </FormGroup>
+                <FormGroup>
                   <Label>Municipio *</Label>
-                  <Input type="select" value={form.municipioId}
-                    onChange={e => setForm(f => ({ ...f, municipioId: e.target.value }))}>
-                    <option value="">— Seleccionar —</option>
-                    {nomencladores.municipios.map(m => <option key={m.id} value={m.id}>{m.nombre}</option>)}
-                  </Input>
+                  <div className="d-flex gap-2">
+                    <Input type="select" value={form.municipioId}
+                      disabled={!form.provinciaId}
+                      onChange={e => setForm(f => ({ ...f, municipioId: e.target.value }))}>
+                      <option value="">— Seleccionar municipio —</option>
+                      {nomencladores.municipios
+                        .filter(m => String(m.provinciaId) === String(form.provinciaId))
+                        .map(m => <option key={m.id} value={m.id}>{m.nombre}</option>)}
+                    </Input>
+                    <Button type="button" color="outline-secondary" size="sm"
+                      disabled={!form.provinciaId}
+                      title="Crear nuevo municipio"
+                      onClick={() => { setShowNewMunicipio(v => !v); setNewMunicipioName(''); setCreateMunicipioError(''); }}>
+                      <i className="bi bi-plus-lg" />
+                    </Button>
+                  </div>
+                  {showNewMunicipio && (
+                    <div className="d-flex gap-2 mt-2">
+                      <Input
+                        placeholder="Nombre del nuevo municipio"
+                        value={newMunicipioName}
+                        onChange={e => setNewMunicipioName(e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleCreateMunicipio(); } }}
+                      />
+                      <Button type="button" color="primary" size="sm"
+                        disabled={creatingMunicipio || !newMunicipioName.trim()}
+                        onClick={handleCreateMunicipio}>
+                        {creatingMunicipio ? <Spinner size="sm" /> : 'Crear'}
+                      </Button>
+                      <Button type="button" color="secondary" size="sm" outline
+                        onClick={() => setShowNewMunicipio(false)}>
+                        <i className="bi bi-x" />
+                      </Button>
+                    </div>
+                  )}
+                  {createMunicipioError && <small className="text-danger mt-1 d-block">{createMunicipioError}</small>}
                 </FormGroup>
                 <FormGroup check className="mb-2">
                   <Input type="checkbox" id="tributaDesarrolloLocalPDL" checked disabled />
